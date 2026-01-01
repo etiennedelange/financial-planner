@@ -3,7 +3,10 @@
     "allow": [
       "Bash(git init:*)",
       "Bash(curl:*)",
-      "Bash(bash)"
+      "Bash(bash)",
+      "Bash(npx create-next-app@14:*)",
+      "Bash(npm install)",
+      "Bash(npm install:*)"
     ]
   }
 }

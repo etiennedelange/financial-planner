@@ -1,0 +1,217 @@
+import type {
+  Account,
+  PersonalInfo,
+  RetirementGoals,
+  DrawdownConfig,
+  SimulationConfig,
+  SimulationRun,
+  SimulationResult,
+} from "@/types"
+import { generateReturnSequence, getPercentile } from "./random-returns"
+import { SA_DEFAULTS } from "@/lib/constants/defaults"
+
+/**
+ * Calculate weighted average return from accounts
+ */
+function calculateWeightedReturn(accounts: Account[]): number {
+  const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
+  if (totalBalance === 0) return SA_DEFAULTS.equityReturn
+  return accounts.reduce(
+    (sum, acc) =>
+      sum + (acc.expectedReturn / 100) * (acc.currentBalance / totalBalance),
+    0
+  )
+}
+
+/**
+ * Calculate weighted average fees from accounts
+ */
+function calculateWeightedFees(accounts: Account[]): number {
+  const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
+  if (totalBalance === 0) return 0.01
+  return accounts.reduce(
+    (sum, acc) =>
+      sum + (acc.annualFees / 100) * (acc.currentBalance / totalBalance),
+    0
+  )
+}
+
+/**
+ * Calculate average contribution escalation rate
+ */
+function calculateAverageEscalation(accounts: Account[]): number {
+  if (accounts.length === 0) return SA_DEFAULTS.contributionEscalation
+  return (
+    accounts.reduce((sum, acc) => sum + acc.contributionEscalation / 100, 0) /
+    accounts.length
+  )
+}
+
+/**
+ * Simulate a single run with stochastic returns
+ */
+function simulateSingleRun(
+  runId: number,
+  initialBalance: number,
+  initialContribution: number,
+  expectedReturn: number,
+  volatility: number,
+  fees: number,
+  escalation: number,
+  yearsToRetirement: number,
+  yearsInRetirement: number,
+  inflationRate: number,
+  initialWithdrawalRate: number,
+  lifeExpectancy: number,
+  currentAge: number
+): SimulationRun {
+  const totalYears = yearsToRetirement + yearsInRetirement
+  const returns = generateReturnSequence(expectedReturn - fees, volatility, totalYears)
+
+  let balance = initialBalance
+  let contribution = initialContribution
+  const yearlyBalances: number[] = []
+  let depletionAge: number | null = null
+
+  // Accumulation phase
+  for (let year = 0; year < yearsToRetirement; year++) {
+    balance = balance * (1 + returns[year]) + contribution
+    yearlyBalances.push(balance)
+    contribution *= 1 + escalation
+  }
+
+  // Drawdown phase
+  let withdrawal = balance * initialWithdrawalRate
+
+  for (let year = yearsToRetirement; year < totalYears; year++) {
+    if (balance <= 0 && !depletionAge) {
+      depletionAge = currentAge + year
+    }
+
+    balance = Math.max(0, balance - withdrawal)
+    if (balance > 0) {
+      balance = balance * (1 + returns[year])
+    }
+    yearlyBalances.push(balance)
+
+    withdrawal *= 1 + inflationRate
+  }
+
+  return {
+    runId,
+    yearlyBalances,
+    finalBalance: balance,
+    depletionAge,
+    success: balance > 0,
+  }
+}
+
+/**
+ * Aggregate results from all simulation runs
+ */
+function aggregateResults(
+  runs: SimulationRun[],
+  totalYears: number
+): SimulationResult {
+  const successCount = runs.filter((r) => r.success).length
+  const successRate = (successCount / runs.length) * 100
+
+  // Calculate percentiles for each year
+  const percentiles = {
+    p10: [] as number[],
+    p25: [] as number[],
+    p50: [] as number[],
+    p75: [] as number[],
+    p90: [] as number[],
+  }
+
+  for (let year = 0; year < totalYears; year++) {
+    const balancesAtYear = runs
+      .map((r) => r.yearlyBalances[year] || 0)
+      .sort((a, b) => a - b)
+
+    percentiles.p10.push(getPercentile(balancesAtYear, 10))
+    percentiles.p25.push(getPercentile(balancesAtYear, 25))
+    percentiles.p50.push(getPercentile(balancesAtYear, 50))
+    percentiles.p75.push(getPercentile(balancesAtYear, 75))
+    percentiles.p90.push(getPercentile(balancesAtYear, 90))
+  }
+
+  const depletionAges = runs
+    .map((r) => r.depletionAge)
+    .filter((age): age is number => age !== null)
+    .sort((a, b) => a - b)
+
+  return {
+    runs,
+    successRate,
+    percentiles,
+    medianDepletionAge:
+      depletionAges.length > 0 ? getPercentile(depletionAges, 50) : null,
+    averageFinalBalance:
+      runs.reduce((sum, r) => sum + r.finalBalance, 0) / runs.length,
+  }
+}
+
+/**
+ * Run Monte Carlo simulation
+ */
+export function runMonteCarloSimulation(
+  accounts: Account[],
+  personalInfo: PersonalInfo,
+  retirementGoals: RetirementGoals,
+  drawdownConfig: DrawdownConfig,
+  config: SimulationConfig
+): SimulationResult {
+  // Handle empty accounts
+  if (accounts.length === 0) {
+    return {
+      runs: [],
+      successRate: 0,
+      percentiles: { p10: [], p25: [], p50: [], p75: [], p90: [] },
+      medianDepletionAge: personalInfo.retirementAge,
+      averageFinalBalance: 0,
+    }
+  }
+
+  const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
+  const yearsInRetirement = personalInfo.lifeExpectancy - personalInfo.retirementAge
+  const totalYears = yearsToRetirement + yearsInRetirement
+  const inflationRate = retirementGoals.inflationRate / 100
+
+  // Aggregate account data
+  const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
+  const totalContribution = accounts.reduce(
+    (sum, acc) => sum + acc.monthlyContribution * 12,
+    0
+  )
+  const weightedReturn = calculateWeightedReturn(accounts)
+  const weightedFees = calculateWeightedFees(accounts)
+  const avgEscalation = calculateAverageEscalation(accounts)
+
+  // Use equity volatility as default (could be weighted by asset allocation)
+  const volatility = SA_DEFAULTS.equityVolatility
+
+  const runs: SimulationRun[] = []
+
+  for (let runId = 0; runId < config.numberOfRuns; runId++) {
+    const run = simulateSingleRun(
+      runId,
+      totalBalance,
+      totalContribution,
+      weightedReturn,
+      volatility,
+      weightedFees,
+      avgEscalation,
+      yearsToRetirement,
+      yearsInRetirement,
+      inflationRate,
+      drawdownConfig.initialWithdrawalRate / 100,
+      personalInfo.lifeExpectancy,
+      personalInfo.currentAge
+    )
+    runs.push(run)
+  }
+
+  return aggregateResults(runs, totalYears)
+}
