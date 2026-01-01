@@ -2,6 +2,7 @@ import type {
   Account,
   PersonalInfo,
   RetirementGoals,
+  MarketAssumptions,
   DrawdownConfig,
   SimulationConfig,
   SimulationRun,
@@ -222,7 +223,8 @@ export function runMonteCarloSimulation(
   personalInfo: PersonalInfo,
   retirementGoals: RetirementGoals,
   drawdownConfig: DrawdownConfig,
-  config: SimulationConfig
+  config: SimulationConfig,
+  marketAssumptions?: MarketAssumptions
 ): SimulationResult {
   // Handle empty accounts
   if (accounts.length === 0) {
@@ -250,8 +252,10 @@ export function runMonteCarloSimulation(
   const weightedFees = calculateWeightedFees(accounts)
   const avgEscalation = calculateAverageEscalation(accounts)
 
-  // Use equity volatility as default (could be weighted by asset allocation)
-  const volatility = SA_DEFAULTS.equityVolatility
+  // Use volatility from market assumptions if provided, otherwise use default
+  const volatility = marketAssumptions
+    ? marketAssumptions.equityVolatility / 100
+    : SA_DEFAULTS.equityVolatility
 
   const runs: SimulationRun[] = []
 

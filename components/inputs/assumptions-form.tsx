@@ -55,6 +55,10 @@ export function AssumptionsForm() {
     <Card>
       <CardHeader>
         <CardTitle>Market Assumptions</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Reference values for asset class returns. Each account uses its own expected return setting.
+          Volatility is used in Monte Carlo simulations.
+        </p>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">

@@ -12,6 +12,8 @@ import { PortfolioGrowthChart } from "@/components/charts/portfolio-growth-chart
 import { MonteCarloChart } from "@/components/charts/monte-carlo-chart"
 import { SuccessGauge } from "@/components/charts/success-gauge"
 import { ProjectionSummary } from "@/components/results/projection-summary"
+import { InsightsPanel } from "@/components/results/insights-panel"
+import { CalculationsBreakdown } from "@/components/results/calculations-breakdown"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { calculateProjection } from "@/lib/calculations/projection-engine"
 import { runMonteCarloSimulation } from "@/lib/monte-carlo/simulation-engine"
@@ -22,6 +24,7 @@ export default function CalculatorPage() {
     accounts,
     personalInfo,
     retirementGoals,
+    assumptions,
     drawdownConfig,
     resetToDefaults,
   } = useCalculatorStore()
@@ -44,7 +47,7 @@ export default function CalculatorPage() {
   // Clear simulation results when inputs change
   useEffect(() => {
     setSimulationResult(null)
-  }, [accounts, personalInfo, retirementGoals, drawdownConfig])
+  }, [accounts, personalInfo, retirementGoals, assumptions, drawdownConfig])
 
   const handleRunSimulation = () => {
     if (accounts.length === 0) return
@@ -58,7 +61,8 @@ export default function CalculatorPage() {
         personalInfo,
         retirementGoals,
         drawdownConfig,
-        { numberOfRuns: 1000 }
+        { numberOfRuns: 1000 },
+        assumptions
       )
       setSimulationResult(result)
       setIsSimulating(false)
@@ -125,11 +129,13 @@ export default function CalculatorPage() {
 
       {/* Input Tabs */}
       <Tabs defaultValue="accounts" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="accounts">Accounts</TabsTrigger>
           <TabsTrigger value="personal">Personal</TabsTrigger>
           <TabsTrigger value="goals">Goals</TabsTrigger>
           <TabsTrigger value="assumptions">Assumptions</TabsTrigger>
+          <TabsTrigger value="insights">Insights</TabsTrigger>
+          <TabsTrigger value="calculations">Calculations</TabsTrigger>
         </TabsList>
 
         <TabsContent value="accounts">
@@ -146,6 +152,14 @@ export default function CalculatorPage() {
 
         <TabsContent value="assumptions">
           <AssumptionsForm />
+        </TabsContent>
+
+        <TabsContent value="insights">
+          <InsightsPanel />
+        </TabsContent>
+
+        <TabsContent value="calculations">
+          <CalculationsBreakdown />
         </TabsContent>
       </Tabs>
     </div>
