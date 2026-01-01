@@ -48,6 +48,34 @@ function calculateAverageEscalation(accounts: Account[]): number {
 }
 
 /**
+ * Calculate initial withdrawal for simulation based on strategy
+ */
+function calculateSimulationWithdrawal(
+  portfolioAtRetirement: number,
+  desiredMonthlyIncomeToday: number,
+  strategy: string,
+  withdrawalRate: number,
+  yearsToRetirement: number,
+  inflationRate: number
+): number {
+  // Inflate desired income to retirement date
+  const desiredMonthlyAtRetirement =
+    desiredMonthlyIncomeToday * Math.pow(1 + inflationRate, yearsToRetirement)
+
+  switch (strategy) {
+    case "fixed_percentage":
+      return portfolioAtRetirement * withdrawalRate
+    case "fixed_amount_inflation_adjusted":
+      return desiredMonthlyAtRetirement * 12
+    case "variable_percentage":
+    case "guardrails":
+      return desiredMonthlyAtRetirement * 12
+    default:
+      return portfolioAtRetirement * withdrawalRate
+  }
+}
+
+/**
  * Simulate a single run with stochastic returns
  */
 function simulateSingleRun(
@@ -61,7 +89,9 @@ function simulateSingleRun(
   yearsToRetirement: number,
   yearsInRetirement: number,
   inflationRate: number,
-  initialWithdrawalRate: number,
+  desiredMonthlyIncome: number,
+  strategy: string,
+  withdrawalRate: number,
   lifeExpectancy: number,
   currentAge: number
 ): SimulationRun {
@@ -80,8 +110,15 @@ function simulateSingleRun(
     contribution *= 1 + escalation
   }
 
-  // Drawdown phase
-  let withdrawal = balance * initialWithdrawalRate
+  // Drawdown phase - calculate withdrawal based on strategy
+  let withdrawal = calculateSimulationWithdrawal(
+    balance,
+    desiredMonthlyIncome,
+    strategy,
+    withdrawalRate,
+    yearsToRetirement,
+    inflationRate
+  )
 
   for (let year = yearsToRetirement; year < totalYears; year++) {
     if (balance <= 0 && !depletionAge) {
@@ -206,6 +243,8 @@ export function runMonteCarloSimulation(
       yearsToRetirement,
       yearsInRetirement,
       inflationRate,
+      retirementGoals.desiredMonthlyIncome,
+      drawdownConfig.strategy,
       drawdownConfig.initialWithdrawalRate / 100,
       personalInfo.lifeExpectancy,
       personalInfo.currentAge

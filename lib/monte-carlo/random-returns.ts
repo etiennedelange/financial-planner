@@ -22,7 +22,7 @@ export function generateReturnSequence(
   for (let i = 0; i < years; i++) {
     // Use log-normal distribution for realistic return modeling
     // Adjust mean to account for volatility drag
-    const logMean = Math.log(1 + expectedReturn) - (volatility * volatility) / 21
+    const logMean = Math.log(1 + expectedReturn) - (volatility * volatility) / 2
     const logReturn = randomNormal(logMean, volatility)
     returns.push(Math.exp(logReturn) - 1)
   }

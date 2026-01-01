@@ -47,22 +47,36 @@ function calculateAverageEscalation(accounts: Account[]): number {
 
 /**
  * Calculate initial annual withdrawal based on strategy
+ * @param portfolioValue - Portfolio value at retirement
+ * @param desiredMonthlyIncomeToday - Desired monthly income in today's Rands
+ * @param config - Drawdown configuration
+ * @param yearsToRetirement - Years until retirement (for inflation adjustment)
+ * @param inflationRate - Annual inflation rate (decimal)
  */
 function calculateInitialWithdrawal(
   portfolioValue: number,
-  desiredMonthlyIncome: number,
-  config: DrawdownConfig
+  desiredMonthlyIncomeToday: number,
+  config: DrawdownConfig,
+  yearsToRetirement: number,
+  inflationRate: number
 ): number {
+  // Inflate desired income to retirement date (nominal value at retirement)
+  const desiredMonthlyAtRetirement =
+    desiredMonthlyIncomeToday * Math.pow(1 + inflationRate, yearsToRetirement)
+
   switch (config.strategy) {
     case "fixed_percentage":
       return portfolioValue * (config.initialWithdrawalRate / 100)
     case "fixed_amount_inflation_adjusted":
-      return desiredMonthlyIncome * 12
+      return desiredMonthlyAtRetirement * 12
     case "variable_percentage":
     case "guardrails":
+      // Also inflate min/max to retirement values
+      const minAtRetirement = config.minimumWithdrawal * Math.pow(1 + inflationRate, yearsToRetirement)
+      const maxAtRetirement = config.maximumWithdrawal * Math.pow(1 + inflationRate, yearsToRetirement)
       return Math.min(
-        Math.max(desiredMonthlyIncome * 12, config.minimumWithdrawal * 12),
-        config.maximumWithdrawal * 12
+        Math.max(desiredMonthlyAtRetirement * 12, minAtRetirement * 12),
+        maxAtRetirement * 12
       )
     default:
       return portfolioValue * SA_DEFAULTS.safeWithdrawalRate
@@ -138,7 +152,9 @@ export function calculateProjection(
   let annualWithdrawal = calculateInitialWithdrawal(
     portfolioAtRetirement,
     retirementGoals.desiredMonthlyIncome,
-    drawdownConfig
+    drawdownConfig,
+    yearsToRetirement,
+    inflationRate
   )
 
   // Drawdown phase
@@ -194,11 +210,16 @@ export function calculateProjection(
     calculateInitialWithdrawal(
       portfolioAtRetirement,
       retirementGoals.desiredMonthlyIncome,
-      drawdownConfig
+      drawdownConfig,
+      yearsToRetirement,
+      inflationRate
     ) / 12
 
+  // Calculate shortfall based on inflation-adjusted desired income at retirement
+  const desiredMonthlyAtRetirement =
+    retirementGoals.desiredMonthlyIncome * Math.pow(1 + inflationRate, yearsToRetirement)
   const shortfallAmount =
-    Math.max(0, retirementGoals.desiredMonthlyIncome - monthlyIncomeAtRetirement) *
+    Math.max(0, desiredMonthlyAtRetirement - monthlyIncomeAtRetirement) *
     12 *
     yearsInRetirement
 
