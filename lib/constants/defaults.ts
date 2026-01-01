@@ -11,7 +11,7 @@ export const SA_DEFAULTS = {
   bondVolatility: 0.06, // 6%
 
   // Retirement planning
-  safeWithdrawalRate: 0.04, // 4%
+  safeWithdrawalRate: 0.035, // 3.5% (more conservative for SA conditions)
   lifeExpectancy: 90,
   contributionEscalation: 0.06, // 6%
 

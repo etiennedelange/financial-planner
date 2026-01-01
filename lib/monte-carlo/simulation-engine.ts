@@ -11,6 +11,22 @@ import { generateReturnSequence, getPercentile } from "./random-returns"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
 
 /**
+ * Calculate spending phase multiplier based on years in retirement
+ * Models the "Go-Go, Slow-Go, No-Go" retirement phases
+ */
+function getSpendingPhaseMultiplier(yearsInRetirement: number): number {
+  if (yearsInRetirement <= 15) {
+    return 1.0 // Go-Go phase
+  } else if (yearsInRetirement <= 25) {
+    return 0.8 // Slow-Go phase
+  } else {
+    const baseRate = 0.7
+    const medicalPremium = 0.15 * (yearsInRetirement - 25) / 10
+    return Math.min(baseRate + medicalPremium, 1.2)
+  }
+}
+
+/**
  * Calculate weighted average return from accounts
  */
 function calculateWeightedReturn(accounts: Account[]): number {
@@ -125,10 +141,18 @@ function simulateSingleRun(
       depletionAge = currentAge + year
     }
 
-    balance = Math.max(0, balance - withdrawal)
+    // Apply return FIRST (on full balance before withdrawal)
     if (balance > 0) {
       balance = balance * (1 + returns[year])
     }
+
+    // Apply spending phase multiplier (Go-Go/Slow-Go/No-Go)
+    const yearsInRetirement = year - yearsToRetirement
+    const spendingMultiplier = getSpendingPhaseMultiplier(yearsInRetirement)
+    const adjustedWithdrawal = withdrawal * spendingMultiplier
+
+    // THEN withdraw
+    balance = Math.max(0, balance - adjustedWithdrawal)
     yearlyBalances.push(balance)
 
     withdrawal *= 1 + inflationRate

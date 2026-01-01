@@ -9,6 +9,28 @@ import type {
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
 
 /**
+ * Calculate spending phase multiplier based on years in retirement
+ * Models the "Go-Go, Slow-Go, No-Go" retirement phases:
+ * - Years 0-15: Active years with full spending (100%)
+ * - Years 15-25: Slower years with reduced spending (80%)
+ * - Years 25+: Less active with lower base (70%) but higher medical costs
+ */
+function getSpendingPhaseMultiplier(yearsInRetirement: number): number {
+  if (yearsInRetirement <= 15) {
+    // Go-Go phase: full spending
+    return 1.0
+  } else if (yearsInRetirement <= 25) {
+    // Slow-Go phase: reduced activity spending
+    return 0.8
+  } else {
+    // No-Go phase: lower base but add medical premium (SA medical inflation is high)
+    const baseRate = 0.7
+    const medicalPremium = 0.15 * (yearsInRetirement - 25) / 10
+    return Math.min(baseRate + medicalPremium, 1.2) // Cap at 120%
+  }
+}
+
+/**
  * Calculate weighted average return from accounts
  */
 function calculateWeightedReturn(accounts: Account[]): number {
@@ -122,28 +144,48 @@ export function calculateProjection(
     }
   }
 
-  // Accumulation phase
+  // Accumulation phase with monthly compounding for accuracy
+  const monthlyReturn = Math.pow(1 + netReturn, 1 / 12) - 1
+  const monthlyFeeRate = Math.pow(1 + weightedFees, 1 / 12) - 1
+  const baseMonthlyContribution = totalContribution / 12
+
   for (let year = 0; year < yearsToRetirement; year++) {
     const age = personalInfo.currentAge + year
     const startingBalance = totalBalance
-    const growth = totalBalance * netReturn
-    const fees = totalBalance * weightedFees
+    let yearlyGrowth = 0
+    let yearlyFees = 0
+    let yearlyContributions = 0
 
-    totalBalance = startingBalance + totalContribution + growth
+    // Monthly compounding within each year
+    for (let month = 0; month < 12; month++) {
+      // Calculate contribution for this month (smooth escalation)
+      const monthlyContribution =
+        baseMonthlyContribution * Math.pow(1 + avgEscalation, year + month / 12)
+      yearlyContributions += monthlyContribution
+
+      // Add contribution first
+      totalBalance += monthlyContribution
+
+      // Then apply monthly growth and fees
+      const monthGrowth = totalBalance * monthlyReturn
+      const monthFees = totalBalance * monthlyFeeRate
+      yearlyGrowth += monthGrowth
+      yearlyFees += monthFees
+
+      totalBalance += monthGrowth
+    }
 
     yearlyProjections.push({
       year: year + 1,
       age,
       startingBalance,
-      contributions: totalContribution,
-      growth,
-      fees,
+      contributions: yearlyContributions,
+      growth: yearlyGrowth,
+      fees: yearlyFees,
       withdrawals: 0,
       endingBalance: totalBalance,
       inflationAdjustedWithdrawal: 0,
     })
-
-    totalContribution *= 1 + avgEscalation
   }
 
   const portfolioAtRetirement = totalBalance
@@ -183,12 +225,18 @@ export function calculateProjection(
       continue
     }
 
-    const withdrawal = Math.min(annualWithdrawal, totalBalance)
-    const postWithdrawalBalance = totalBalance - withdrawal
-    const growth = postWithdrawalBalance * netReturn
-    const fees = postWithdrawalBalance * weightedFees
+    // Apply return FIRST (on full balance before withdrawal)
+    const growth = totalBalance * netReturn
+    const fees = totalBalance * weightedFees
+    const balanceAfterGrowth = totalBalance + growth
 
-    totalBalance = postWithdrawalBalance + growth
+    // Apply spending phase multiplier (Go-Go/Slow-Go/No-Go)
+    const spendingMultiplier = getSpendingPhaseMultiplier(year)
+    const adjustedWithdrawal = annualWithdrawal * spendingMultiplier
+
+    // THEN withdraw
+    const withdrawal = Math.min(adjustedWithdrawal, balanceAfterGrowth)
+    totalBalance = balanceAfterGrowth - withdrawal
 
     yearlyProjections.push({
       year: yearsToRetirement + year + 1,
