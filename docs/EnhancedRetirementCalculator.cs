@@ -30,7 +30,7 @@ class EnhancedRetirementCalculator
         yearsToRetirement,
         contributionGrowthRate,
         inflation,
-        monthlyExpensesNow,
+        monthlyExpensesNow, 
         desiredRetirementYears,
         socialSecurityMonthly,
         pensionMonthly,
