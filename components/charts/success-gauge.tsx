@@ -8,11 +8,12 @@ interface SuccessGaugeProps {
 
 export function SuccessGauge({ successRate }: SuccessGaugeProps) {
   const getColor = (rate: number) => {
-    if (rate >= 90) return { bg: "bg-green-500", text: "text-green-500" }
-    if (rate >= 75) return { bg: "bg-lime-500", text: "text-lime-500" }
-    if (rate >= 50) return { bg: "bg-yellow-500", text: "text-yellow-500" }
-    if (rate >= 25) return { bg: "bg-orange-500", text: "text-orange-500" }
-    return { bg: "bg-red-500", text: "text-red-500" }
+    // Using darker text colors for better contrast/readability
+    if (rate >= 90) return { bg: "bg-green-500", text: "text-green-700 dark:text-green-400" }
+    if (rate >= 75) return { bg: "bg-lime-500", text: "text-lime-700 dark:text-lime-400" }
+    if (rate >= 50) return { bg: "bg-yellow-500", text: "text-yellow-700 dark:text-yellow-400" }
+    if (rate >= 25) return { bg: "bg-orange-500", text: "text-orange-700 dark:text-orange-400" }
+    return { bg: "bg-red-500", text: "text-red-700 dark:text-red-400" }
   }
 
   const getMessage = (rate: number) => {
@@ -24,7 +25,18 @@ export function SuccessGauge({ successRate }: SuccessGaugeProps) {
   }
 
   const colors = getColor(successRate)
-  const angle = (successRate / 100) * 180 - 90 // -90 to 90 degrees
+  // Angle in radians: 0% = π (left), 50% = π/2 (top), 100% = 0 (right)
+  const angleRadians = Math.PI * (1 - successRate / 100)
+
+  // Calculate the point on the arc (center at 50%, 100%)
+  const pointX = 50 + 50 * Math.cos(angleRadians)
+  const pointY = 100 - 100 * Math.sin(angleRadians)
+
+  // For rates > 50%, we need to extend the polygon to cover the right side
+  const clipPath =
+    successRate <= 50
+      ? `polygon(50% 100%, 0% 100%, 0% 0%, ${pointX}% ${pointY}%, 50% 100%)`
+      : `polygon(50% 100%, 0% 100%, 0% 0%, 100% 0%, 100% 100%, ${pointX}% ${pointY}%, 50% 100%)`
 
   return (
     <Card>
@@ -41,9 +53,7 @@ export function SuccessGauge({ successRate }: SuccessGaugeProps) {
           {/* Filled arc - using clip-path for the fill effect */}
           <div
             className="absolute inset-0 overflow-hidden"
-            style={{
-              clipPath: `polygon(50% 100%, 0% 100%, 0% 0%, ${50 + 50 * Math.cos((angle * Math.PI) / 180)}% ${100 - 100 * Math.sin((angle * Math.PI) / 180)}%, 50% 100%)`,
-            }}
+            style={{ clipPath }}
           >
             <div
               className={`absolute bottom-0 left-0 right-0 h-24 rounded-t-full border-8 ${colors.bg}`}
