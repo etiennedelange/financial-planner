@@ -30,17 +30,18 @@ function projectFinalSavings(
   realReturn: number
 ): number {
   let totalSavings = currentSavings
-  const monthlyReturn = Math.pow(1 + realReturn, 1 / 12) - 1
+  // Using simple division to match Excel FV and industry convention (nominal annual rate)
+  // Original: const monthlyReturn = Math.pow(1 + realReturn, 1 / 12) - 1
+  const monthlyReturn = realReturn / 12
 
   for (let year = 0; year < years; year++) {
     for (let month = 0; month < 12; month++) {
-      // Calculate contribution for this month (smooth escalation)
+      // Apply growth first (end-of-period contributions, matches Excel FV type=0)
+      totalSavings *= 1 + monthlyReturn
+      // Then add contribution (smooth escalation)
       const monthlyContributionAdjusted =
         monthlyContribution * Math.pow(1 + contributionGrowth, year + month / 12)
-
-      // Add contribution first, then apply monthly growth
       totalSavings += monthlyContributionAdjusted
-      totalSavings *= 1 + monthlyReturn
     }
   }
 

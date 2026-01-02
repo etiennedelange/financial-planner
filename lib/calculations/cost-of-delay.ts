@@ -36,14 +36,18 @@ function projectFinalSavings(
   if (years <= 0) return currentSavings
 
   let totalSavings = currentSavings
-  const monthlyReturn = Math.pow(1 + realReturn, 1 / 12) - 1
+  // Using simple division to match Excel FV and industry convention (nominal annual rate)
+  // Original: const monthlyReturn = Math.pow(1 + realReturn, 1 / 12) - 1
+  const monthlyReturn = realReturn / 12
 
   for (let year = 0; year < years; year++) {
     for (let month = 0; month < 12; month++) {
+      // Apply growth first (end-of-period contributions, matches Excel FV type=0)
+      totalSavings *= 1 + monthlyReturn
+      // Then add contribution
       const monthlyContributionAdjusted =
         monthlyContribution * Math.pow(1 + contributionGrowth, year + month / 12)
       totalSavings += monthlyContributionAdjusted
-      totalSavings *= 1 + monthlyReturn
     }
   }
 

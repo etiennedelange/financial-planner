@@ -72,14 +72,18 @@ function projectFinalSavings(
   if (years <= 0) return currentSavings
 
   let totalSavings = currentSavings
-  const monthlyReturn = Math.pow(1 + realReturn, 1 / 12) - 1
+  // Using simple division to match Excel FV and industry convention (nominal annual rate)
+  // Original: const monthlyReturn = Math.pow(1 + realReturn, 1 / 12) - 1
+  const monthlyReturn = realReturn / 12
 
   for (let year = 0; year < years; year++) {
     for (let month = 0; month < 12; month++) {
+      // Apply growth first (end-of-period contributions, matches Excel FV type=0)
+      totalSavings *= 1 + monthlyReturn
+      // Then add contribution
       const monthlyContributionAdjusted =
         monthlyContribution * Math.pow(1 + contributionGrowth, year + month / 12)
       totalSavings += monthlyContributionAdjusted
-      totalSavings *= 1 + monthlyReturn
     }
   }
 
@@ -203,15 +207,18 @@ export function compareScenarios(
 
   for (const [key, scenario] of Object.entries(INVESTMENT_SCENARIOS)) {
     const scenarioKey = key as ScenarioType
+    // Nominal return for accumulation phase (consistent with main projection)
+    const nominalReturn = scenario.nominalReturn - fees
+    // Real return for sustainability/drawdown analysis (accounts for inflation)
     const realReturn = scenario.nominalReturn - inflationRate - fees
 
-    // Project nest egg at retirement
+    // Project nest egg at retirement using nominal returns
     const projectedNestEgg = projectFinalSavings(
       currentSavings,
       monthlyContribution,
       yearsToRetirement,
       contributionEscalation,
-      realReturn
+      nominalReturn
     )
 
     // Calculate annual withdrawal at retirement

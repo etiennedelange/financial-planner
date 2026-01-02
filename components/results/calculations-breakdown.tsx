@@ -82,7 +82,9 @@ export function CalculationsBreakdown() {
     const yearsInRetirement = personalInfo.lifeExpectancy - personalInfo.retirementAge
 
     // Monthly compounding rates
-    const monthlyReturn = Math.pow(1 + netReturn, 1 / 12) - 1
+    // Using simple division to match Excel FV and industry convention (nominal annual rate)
+    // Original: const monthlyReturn = Math.pow(1 + netReturn, 1 / 12) - 1
+    const monthlyReturn = netReturn / 12
 
     // Project accumulation phase with monthly compounding
     let projectedBalance = totalBalance
@@ -101,14 +103,16 @@ export function CalculationsBreakdown() {
       let yearGrowth = 0
 
       for (let month = 0; month < 12; month++) {
+        // Apply growth first (end-of-period contributions, matches Excel FV type=0)
+        const monthGrowth = projectedBalance * monthlyReturn
+        yearGrowth += monthGrowth
+        projectedBalance += monthGrowth
+        // Then add contribution
         const monthlyContribution =
           (totalAnnualContribution / 12) *
           Math.pow(1 + avgEscalation, year + month / 12)
         yearContributions += monthlyContribution
         projectedBalance += monthlyContribution
-        const monthGrowth = projectedBalance * monthlyReturn
-        yearGrowth += monthGrowth
-        projectedBalance += monthGrowth
       }
 
       yearlyProjections.push({

@@ -1,12 +1,12 @@
+import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import type {
   Account,
-  PersonalInfo,
-  RetirementGoals,
   DrawdownConfig,
-  YearlyProjection,
+  PersonalInfo,
   ProjectionResult,
+  RetirementGoals,
+  YearlyProjection,
 } from "@/types"
-import { SA_DEFAULTS } from "@/lib/constants/defaults"
 
 /**
  * Calculate spending phase multiplier based on years in retirement
@@ -144,8 +144,12 @@ export function calculateProjection(
     }
   }
 
-  // Accumulation phase with monthly compounding for accuracy
-  const monthlyReturn = Math.pow(1 + netReturn, 1 / 12) - 1
+  // Accumulation phase with monthly compounding
+  // Original: compound conversion (mathematically correct for effective annual rate)
+  // const monthlyReturn = Math.pow(1 + netReturn, 1 / 12) - 1
+  // Using simple division to match Excel FV and industry convention (nominal annual rate)
+  const monthlyReturn = netReturn / 12
+
   const monthlyFeeRate = Math.pow(1 + weightedFees, 1 / 12) - 1
   const baseMonthlyContribution = totalContribution / 12
 
@@ -163,16 +167,16 @@ export function calculateProjection(
         baseMonthlyContribution * Math.pow(1 + avgEscalation, year + month / 12)
       yearlyContributions += monthlyContribution
 
-      // Add contribution first
-      totalBalance += monthlyContribution
-
-      // Then apply monthly growth and fees
+      // Apply growth first (end-of-period contributions, matches Excel FV type=0)
+      // Original (beginning-of-period, type=1): contribution added before growth
       const monthGrowth = totalBalance * monthlyReturn
       const monthFees = totalBalance * monthlyFeeRate
       yearlyGrowth += monthGrowth
       yearlyFees += monthFees
-
       totalBalance += monthGrowth
+
+      // Then add contribution (doesn't earn interest until next month)
+      totalBalance += monthlyContribution
     }
 
     yearlyProjections.push({
