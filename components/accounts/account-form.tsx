@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -13,7 +14,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
 import type { Account, AccountType } from "@/types"
 import { ACCOUNT_TYPE_LABELS } from "@/types"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
@@ -37,42 +44,72 @@ const accountSchema = z.object({
 
 type AccountFormData = z.infer<typeof accountSchema>
 
-interface AccountFormProps {
-  account?: Account
+interface AccountFormDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  account?: Account | null
   onSubmit: (data: AccountFormData) => void
-  onCancel: () => void
 }
 
-export function AccountForm({ account, onSubmit, onCancel }: AccountFormProps) {
+const getDefaultValues = (account?: Account | null): AccountFormData => ({
+  name: account?.name || "",
+  provider: account?.provider || "",
+  type: account?.type || "retirement_annuity",
+  currentBalance: account?.currentBalance || 0,
+  monthlyContribution: account?.monthlyContribution || 0,
+  expectedReturn: account?.expectedReturn ?? SA_DEFAULTS.defaultExpectedReturn,
+  annualFees: account?.annualFees ?? SA_DEFAULTS.defaultAnnualFees,
+  contributionEscalation:
+    account?.contributionEscalation ?? SA_DEFAULTS.defaultContributionEscalation,
+})
+
+export function AccountFormDialog({
+  open,
+  onOpenChange,
+  account,
+  onSubmit,
+}: AccountFormDialogProps) {
   const {
     register,
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors },
   } = useForm<AccountFormData>({
     resolver: zodResolver(accountSchema),
-    defaultValues: account || {
-      name: "",
-      provider: "",
-      type: "retirement_annuity",
-      currentBalance: 0,
-      monthlyContribution: 0,
-      expectedReturn: SA_DEFAULTS.defaultExpectedReturn,
-      annualFees: SA_DEFAULTS.defaultAnnualFees,
-      contributionEscalation: SA_DEFAULTS.defaultContributionEscalation,
-    },
+    defaultValues: getDefaultValues(account),
   })
+
+  // Reset form when account changes or dialog opens
+  useEffect(() => {
+    if (open) {
+      reset(getDefaultValues(account))
+    }
+  }, [open, account, reset])
 
   const selectedType = watch("type")
 
+  const handleFormSubmit = (data: AccountFormData) => {
+    onSubmit(data)
+    onOpenChange(false)
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{account ? "Edit Account" : "Add New Account"}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>
+            {account ? "Edit Account" : "Add New Account"}
+          </DialogTitle>
+          <DialogDescription>
+            {account
+              ? "Update your retirement account details."
+              : "Add a new retirement account to track."}
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Account Name</Label>
@@ -190,13 +227,17 @@ export function AccountForm({ account, onSubmit, onCancel }: AccountFormProps) {
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
             <Button type="submit">{account ? "Update" : "Add"} Account</Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   )
 }

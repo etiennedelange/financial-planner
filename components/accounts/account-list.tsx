@@ -5,7 +5,7 @@ import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AccountCard } from "./account-card"
-import { AccountForm } from "./account-form"
+import { AccountFormDialog } from "./account-form"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import type { Account } from "@/types"
 import { formatCurrency } from "@/lib/utils/formatters"
@@ -13,7 +13,7 @@ import { formatCurrency } from "@/lib/utils/formatters"
 export function AccountList() {
   const { accounts, addAccount, updateAccount, removeAccount } =
     useCalculatorStore()
-  const [isAdding, setIsAdding] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(false)
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
 
   const totalBalance = accounts.reduce(
@@ -25,46 +25,33 @@ export function AccountList() {
     0
   )
 
-  const handleAddSubmit = (data: Omit<Account, "id">) => {
-    const newAccount: Account = {
-      ...data,
-      id: crypto.randomUUID(),
-    }
-    addAccount(newAccount)
-    setIsAdding(false)
+  const handleAddClick = () => {
+    setEditingAccount(null)
+    setDialogOpen(true)
   }
 
-  const handleEditSubmit = (data: Omit<Account, "id">) => {
+  const handleEditClick = (account: Account) => {
+    setEditingAccount(account)
+    setDialogOpen(true)
+  }
+
+  const handleSubmit = (data: Omit<Account, "id">) => {
     if (editingAccount) {
       updateAccount(editingAccount.id, data)
-      setEditingAccount(null)
+    } else {
+      const newAccount: Account = {
+        ...data,
+        id: crypto.randomUUID(),
+      }
+      addAccount(newAccount)
     }
-  }
-
-  if (isAdding) {
-    return (
-      <AccountForm
-        onSubmit={handleAddSubmit}
-        onCancel={() => setIsAdding(false)}
-      />
-    )
-  }
-
-  if (editingAccount) {
-    return (
-      <AccountForm
-        account={editingAccount}
-        onSubmit={handleEditSubmit}
-        onCancel={() => setEditingAccount(null)}
-      />
-    )
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Retirement Accounts</h2>
-        <Button onClick={() => setIsAdding(true)}>
+        <Button onClick={handleAddClick}>
           <Plus className="mr-2 h-4 w-4" />
           Add Account
         </Button>
@@ -77,7 +64,7 @@ export function AccountList() {
               No accounts added yet. Add your first retirement account to get
               started.
             </p>
-            <Button className="mt-4" onClick={() => setIsAdding(true)}>
+            <Button className="mt-4" onClick={handleAddClick}>
               <Plus className="mr-2 h-4 w-4" />
               Add Your First Account
             </Button>
@@ -118,13 +105,20 @@ export function AccountList() {
               <AccountCard
                 key={account.id}
                 account={account}
-                onEdit={setEditingAccount}
+                onEdit={handleEditClick}
                 onDelete={removeAccount}
               />
             ))}
           </div>
         </>
       )}
+
+      <AccountFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        account={editingAccount}
+        onSubmit={handleSubmit}
+      />
     </div>
   )
 }

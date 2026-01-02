@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
-import { Play, RotateCcw } from "lucide-react"
+import { useState, useEffect, useMemo, useRef } from "react"
+import { RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AccountList } from "@/components/accounts/account-list"
@@ -32,6 +32,7 @@ export default function CalculatorPage() {
   const [simulationResult, setSimulationResult] =
     useState<SimulationResult | null>(null)
   const [isSimulating, setIsSimulating] = useState(false)
+  const simulationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Calculate projection whenever inputs change
   const projection: ProjectionResult | null = useMemo(() => {
@@ -44,18 +45,23 @@ export default function CalculatorPage() {
     )
   }, [accounts, personalInfo, retirementGoals, drawdownConfig])
 
-  // Clear simulation results when inputs change
+  // Auto-run Monte Carlo simulation when inputs change (debounced)
   useEffect(() => {
-    setSimulationResult(null)
-  }, [accounts, personalInfo, retirementGoals, assumptions, drawdownConfig])
+    // Clear any pending simulation
+    if (simulationTimeoutRef.current) {
+      clearTimeout(simulationTimeoutRef.current)
+    }
 
-  const handleRunSimulation = () => {
-    if (accounts.length === 0) return
+    // Don't run if no accounts
+    if (accounts.length === 0) {
+      setSimulationResult(null)
+      return
+    }
 
     setIsSimulating(true)
 
-    // Run simulation in next tick to allow UI to update
-    setTimeout(() => {
+    // Debounce simulation by 300ms to avoid running while user is typing
+    simulationTimeoutRef.current = setTimeout(() => {
       const result = runMonteCarloSimulation(
         accounts,
         personalInfo,
@@ -66,8 +72,15 @@ export default function CalculatorPage() {
       )
       setSimulationResult(result)
       setIsSimulating(false)
-    }, 50)
-  }
+    }, 300)
+
+    // Cleanup on unmount or before next effect
+    return () => {
+      if (simulationTimeoutRef.current) {
+        clearTimeout(simulationTimeoutRef.current)
+      }
+    }
+  }, [accounts, personalInfo, retirementGoals, assumptions, drawdownConfig])
 
   const handleReset = () => {
     resetToDefaults()
@@ -83,19 +96,10 @@ export default function CalculatorPage() {
             Plan your retirement with Monte Carlo simulations
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={handleRunSimulation}
-            disabled={accounts.length === 0 || isSimulating}
-          >
-            <Play className="mr-2 h-4 w-4" />
-            {isSimulating ? "Simulating..." : "Run Simulation"}
-          </Button>
-          <Button variant="outline" onClick={handleReset}>
-            <RotateCcw className="mr-2 h-4 w-4" />
-            Reset
-          </Button>
-        </div>
+        <Button variant="outline" onClick={handleReset}>
+          <RotateCcw className="mr-2 h-4 w-4" />
+          Reset
+        </Button>
       </div>
 
       {/* Results Summary */}
