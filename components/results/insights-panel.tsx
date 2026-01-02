@@ -48,20 +48,26 @@ export function InsightsPanel() {
       0
     )
     const weightedReturn =
-      accounts.reduce(
-        (sum, acc) =>
-          sum + (acc.expectedReturn / 100) * (acc.currentBalance / totalBalance || 0),
-        0
-      ) || 0.1
+      totalBalance > 0
+        ? accounts.reduce(
+            (sum, acc) =>
+              sum + (acc.expectedReturn / 100) * (acc.currentBalance / totalBalance),
+            0
+          )
+        : 0.1
     const weightedFees =
-      accounts.reduce(
-        (sum, acc) =>
-          sum + (acc.annualFees / 100) * (acc.currentBalance / totalBalance || 0),
-        0
-      ) || 0.01
+      totalBalance > 0
+        ? accounts.reduce(
+            (sum, acc) =>
+              sum + (acc.annualFees / 100) * (acc.currentBalance / totalBalance),
+            0
+          )
+        : 0.01
     const avgEscalation =
-      accounts.reduce((sum, acc) => sum + acc.contributionEscalation / 100, 0) /
-        accounts.length || 0.06
+      accounts.length > 0
+        ? accounts.reduce((sum, acc) => sum + acc.contributionEscalation / 100, 0) /
+            accounts.length
+        : 0.06
 
     // Optimal contribution
     const optimalResult = calculateOptimalContribution({
