@@ -143,6 +143,10 @@ export function InsightsPanel() {
             <Target className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg">Optimal Contribution</CardTitle>
           </div>
+          <CardDescription>
+            The <strong>minimum</strong> monthly contribution needed to reach your target nest egg.
+            Contributing more builds a larger safety margin and retirement surplus.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -151,6 +155,10 @@ export function InsightsPanel() {
               <span className="font-semibold">
                 {formatCurrency(insights.optimal.targetNestEgg, displayMode, insights.yearsToRetirement, insights.inflationRate)}
               </span>
+            </div>
+            <div className="text-xs text-muted-foreground italic -mt-1 mb-2">
+              Based on {formatCurrency(retirementGoals.desiredMonthlyIncome, displayMode, 0, insights.inflationRate)}/month
+              desired income @ {drawdownConfig.initialWithdrawalRate}% withdrawal rate
             </div>
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Recommended monthly:</span>

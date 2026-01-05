@@ -1,5 +1,6 @@
 import type { PersonalInfo, RetirementGoals, DrawdownConfig, CompoundingMethod } from "@/types"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
+import { projectFinalSavings } from "./utils/projection"
 
 interface OptimalContributionParams {
   currentSavings: number
@@ -17,38 +18,6 @@ interface OptimalContributionResult {
   targetNestEgg: number
   projectedNestEgg: number
   yearsToRetirement: number
-}
-
-/**
- * Project final savings using monthly compounding
- * Matches the C# calculator's ProjectFinalSavings logic
- */
-function projectFinalSavings(
-  currentSavings: number,
-  monthlyContribution: number,
-  years: number,
-  contributionGrowth: number,
-  realReturn: number,
-  compoundingMethod: CompoundingMethod
-): number {
-  let totalSavings = currentSavings
-  // Calculate monthly return based on compounding method
-  const monthlyReturn = compoundingMethod === 'compound'
-    ? Math.pow(1 + realReturn, 1 / 12) - 1  // Actuarially correct
-    : realReturn / 12  // Excel-compatible nominal
-
-  for (let year = 0; year < years; year++) {
-    for (let month = 0; month < 12; month++) {
-      // Apply growth first (end-of-period contributions, matches Excel FV type=0)
-      totalSavings *= 1 + monthlyReturn
-      // Then add contribution (smooth escalation)
-      const monthlyContributionAdjusted =
-        monthlyContribution * Math.pow(1 + contributionGrowth, year + month / 12)
-      totalSavings += monthlyContributionAdjusted
-    }
-  }
-
-  return totalSavings
 }
 
 /**

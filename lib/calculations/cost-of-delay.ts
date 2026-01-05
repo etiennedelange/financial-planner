@@ -1,4 +1,5 @@
 import type { PersonalInfo, RetirementGoals, CompoundingMethod } from "@/types"
+import { projectFinalSavings } from "./utils/projection"
 
 interface CostOfDelayParams {
   currentSavings: number
@@ -22,39 +23,6 @@ interface CostOfDelayResult {
   percentageLostOneYear: number
   percentageLostTwoYear: number
   percentageLostFiveYear: number
-}
-
-/**
- * Project final savings using monthly compounding
- */
-function projectFinalSavings(
-  currentSavings: number,
-  monthlyContribution: number,
-  years: number,
-  contributionGrowth: number,
-  realReturn: number,
-  compoundingMethod: CompoundingMethod
-): number {
-  if (years <= 0) return currentSavings
-
-  let totalSavings = currentSavings
-  // Calculate monthly return based on compounding method
-  const monthlyReturn = compoundingMethod === 'compound'
-    ? Math.pow(1 + realReturn, 1 / 12) - 1  // Actuarially correct
-    : realReturn / 12  // Excel-compatible nominal
-
-  for (let year = 0; year < years; year++) {
-    for (let month = 0; month < 12; month++) {
-      // Apply growth first (end-of-period contributions, matches Excel FV type=0)
-      totalSavings *= 1 + monthlyReturn
-      // Then add contribution
-      const monthlyContributionAdjusted =
-        monthlyContribution * Math.pow(1 + contributionGrowth, year + month / 12)
-      totalSavings += monthlyContributionAdjusted
-    }
-  }
-
-  return totalSavings
 }
 
 /**

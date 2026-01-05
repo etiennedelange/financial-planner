@@ -15,6 +15,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
+import { calculateMonthlyReturn, formatMonthlyReturnFormula } from "@/lib/calculations/utils/projection"
+import { COMPOUNDING_METHOD_LABELS, COMPOUNDING_METHOD_DESCRIPTIONS } from "@/types"
 import type { Account, ProjectionResult, SimulationResult } from "@/types"
 
 interface DebugWindowProps {
@@ -30,6 +32,7 @@ export function DebugWindow({ className, projection, simulationResult }: DebugWi
     retirementGoals,
     assumptions,
     drawdownConfig,
+    displayMode,
   } = useCalculatorStore()
 
   const [isOpen, setIsOpen] = useState(false)
@@ -81,11 +84,18 @@ export function DebugWindow({ className, projection, simulationResult }: DebugWi
   const yearsInRetirement = personalInfo.lifeExpectancy - personalInfo.retirementAge
   const inflationRate = retirementGoals.inflationRate / 100
   const netReturn = weightedReturn - weightedFees
-  const monthlyReturn = netReturn / 12
+
+  // Calculate monthly return using the proper compounding method
+  const compoundingMethod = assumptions?.compoundingMethod || 'nominal'
+  const monthlyReturn = calculateMonthlyReturn(netReturn, compoundingMethod)
+  const monthlyReturnFormula = formatMonthlyReturnFormula(netReturn, compoundingMethod)
   const monthlyFeeRate = Math.pow(1 + weightedFees, 1 / 12) - 1
 
   // Volatility from assumptions or defaults
   const volatility = assumptions?.equityVolatility || SA_DEFAULTS.equityVolatility * 100
+
+  // Display mode labels
+  const displayModeLabel = displayMode === 'real' ? "Today's Value (Real)" : "Future Value (Nominal)"
 
   const formatPercent = (value: number) => `${(value * 100).toFixed(2)}%`
   const formatCurrency = (value: number) => `R ${value.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -103,6 +113,26 @@ export function DebugWindow({ className, projection, simulationResult }: DebugWi
     const debugText = `
 SA RETIREMENT CALCULATOR - DEBUG INFORMATION
 Generated: ${new Date().toLocaleString('en-ZA')}
+
+=====================================================
+CALCULATION METHOD ⚙️
+=====================================================
+Compounding Method: ${COMPOUNDING_METHOD_LABELS[compoundingMethod]}
+Description: ${COMPOUNDING_METHOD_DESCRIPTIONS[compoundingMethod]}
+Monthly Return Formula: ${monthlyReturnFormula}
+Calculated Monthly Return: ${formatPercent(monthlyReturn)}
+
+Display Mode: ${displayModeLabel}
+${displayMode === 'real' ? 'All currency values are inflation-adjusted to show purchasing power in today\'s terms.' : 'All currency values are shown in future nominal terms (not adjusted for inflation).'}
+
+CALCULATION CHECKSUMS:
+- Total Accounts: ${accounts.length}
+- Total Balance: ${formatCurrency(totalBalance)}
+- Total Monthly Contributions: ${formatCurrency(totalMonthlyContribution)}
+- Weighted Return: ${formatPercent(weightedReturn)}
+- Weighted Fees: ${formatPercent(weightedFees)}
+- Net Return: ${formatPercent(netReturn)}
+- Calculated At: ${new Date().toISOString()}
 
 =====================================================
 PERSONAL INFORMATION
@@ -237,11 +267,20 @@ P90 (90th percentile): ${formatCurrency(simulationResult.percentiles.p90[simulat
 ACCURACY NOTES
 =====================================================
 This data can be used to verify calculations independently.
-Key formulas used:
-- Monthly Return = (Expected Return - Fees) / 12
+
+Compounding Method: ${compoundingMethod.toUpperCase()}
+- ${COMPOUNDING_METHOD_DESCRIPTIONS[compoundingMethod]}
+- Formula used: ${monthlyReturnFormula}
+
+Key calculation details:
 - Weighted metrics use contribution weights when balance = 0
 - Monte Carlo uses log-normal distribution with volatility adjustment
 - Spending phases: Go-Go (100%), Slow-Go (80%), No-Go (70%+medical)
+- Display mode: ${displayModeLabel}
+
+Single Source of Truth:
+- All projections use lib/calculations/utils/projection.ts::projectFinalSavings
+- Ensures consistency across all tabs (Projection, Insights, Scenarios)
 `.trim()
 
     try {
@@ -292,6 +331,53 @@ Key formulas used:
 
         <ScrollArea className="h-[calc(100vh-120px)] mt-6 pr-4">
           <div className="space-y-6">
+            {/* Calculation Method - Prominent Display */}
+            <div className="rounded-lg border-2 border-primary/50 bg-primary/5 p-4">
+              <h3 className="font-semibold text-sm mb-3 text-primary flex items-center gap-2">
+                ⚙️ Calculation Method
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <div className="text-xs text-muted-foreground mb-1">Compounding Method:</div>
+                  <div className="font-semibold text-primary text-base">
+                    {COMPOUNDING_METHOD_LABELS[compoundingMethod]}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1 italic">
+                    {COMPOUNDING_METHOD_DESCRIPTIONS[compoundingMethod]}
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-primary/20">
+                  <div className="text-xs text-muted-foreground mb-1">Monthly Return Formula:</div>
+                  <div className="font-mono text-xs bg-muted/50 p-2 rounded">
+                    {monthlyReturnFormula}
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-primary/20">
+                  <div className="text-xs text-muted-foreground mb-1">Display Mode:</div>
+                  <div className="font-semibold text-sm">{displayModeLabel}</div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {displayMode === 'real'
+                      ? 'Currency values show purchasing power in today\'s terms (inflation-adjusted)'
+                      : 'Currency values show future nominal amounts (not inflation-adjusted)'}
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-primary/20">
+                  <div className="text-xs font-semibold mb-2 text-muted-foreground">CALCULATION CHECKSUMS:</div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <Param label="Total Accounts" value={accounts.length} small />
+                    <Param label="Total Balance" value={formatCurrency(totalBalance)} small />
+                    <Param label="Monthly Contrib" value={formatCurrency(totalMonthlyContribution)} small />
+                    <Param label="Weighted Return" value={formatPercent(weightedReturn)} small />
+                    <Param label="Weighted Fees" value={formatPercent(weightedFees)} small />
+                    <Param label="Net Return" value={formatPercent(netReturn)} small />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Personal Information */}
             <Section title="Personal Information">
               <Param label="Current Age" value={personalInfo.currentAge} />

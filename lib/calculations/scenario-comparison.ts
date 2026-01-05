@@ -1,5 +1,6 @@
 import type { PersonalInfo, RetirementGoals, DrawdownConfig, CompoundingMethod } from "@/types"
 import { runMonteCarloSimulation as runMonteCarlo } from "@/lib/monte-carlo/simulation-engine"
+import { projectFinalSavings } from "./utils/projection"
 
 // SA-specific investment scenarios (nominal returns)
 export const INVESTMENT_SCENARIOS = {
@@ -58,39 +59,6 @@ interface ScenarioComparisonResult {
   aggressive: ScenarioResult
   recommendedScenario: ScenarioType
   recommendation: string
-}
-
-/**
- * Project final savings using monthly compounding
- */
-function projectFinalSavings(
-  currentSavings: number,
-  monthlyContribution: number,
-  years: number,
-  contributionGrowth: number,
-  realReturn: number,
-  compoundingMethod: CompoundingMethod
-): number {
-  if (years <= 0) return currentSavings
-
-  let totalSavings = currentSavings
-  // Calculate monthly return based on compounding method
-  const monthlyReturn = compoundingMethod === 'compound'
-    ? Math.pow(1 + realReturn, 1 / 12) - 1  // Actuarially correct
-    : realReturn / 12  // Excel-compatible nominal
-
-  for (let year = 0; year < years; year++) {
-    for (let month = 0; month < 12; month++) {
-      // Apply growth first (end-of-period contributions, matches Excel FV type=0)
-      totalSavings *= 1 + monthlyReturn
-      // Then add contribution
-      const monthlyContributionAdjusted =
-        monthlyContribution * Math.pow(1 + contributionGrowth, year + month / 12)
-      totalSavings += monthlyContributionAdjusted
-    }
-  }
-
-  return totalSavings
 }
 
 /**
