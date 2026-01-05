@@ -134,7 +134,8 @@ function simulateSingleRun(
   strategy: string,
   withdrawalRate: number,
   lifeExpectancy: number,
-  currentAge: number
+  currentAge: number,
+  compoundingMethod: 'nominal' | 'compound'
 ): SimulationRun {
   const totalYears = yearsToRetirement + yearsInRetirement
   const returns = generateReturnSequence(expectedReturn - fees, volatility, totalYears)
@@ -146,7 +147,11 @@ function simulateSingleRun(
   // Accumulation phase with MONTHLY compounding (matches deterministic projection)
   for (let year = 0; year < yearsToRetirement; year++) {
     const annualReturn = returns[year]
-    const monthlyReturn = annualReturn / 12 // Simple division for nominal rate
+
+    // Calculate monthly return based on compounding method
+    const monthlyReturn = compoundingMethod === 'compound'
+      ? Math.pow(1 + annualReturn, 1 / 12) - 1  // Mathematically correct
+      : annualReturn / 12                        // Nominal (Excel-compatible)
 
     // Monthly compounding within each year
     for (let month = 0; month < 12; month++) {
@@ -293,6 +298,9 @@ export function runMonteCarloSimulation(
     ? marketAssumptions.equityVolatility / 100
     : SA_DEFAULTS.equityVolatility
 
+  // Use compounding method from market assumptions, default to nominal for backward compatibility
+  const compoundingMethod = marketAssumptions?.compoundingMethod || 'nominal'
+
   const runs: SimulationRun[] = []
 
   for (let runId = 0; runId < config.numberOfRuns; runId++) {
@@ -311,7 +319,8 @@ export function runMonteCarloSimulation(
       drawdownConfig.strategy,
       drawdownConfig.initialWithdrawalRate / 100,
       personalInfo.lifeExpectancy,
-      personalInfo.currentAge
+      personalInfo.currentAge,
+      compoundingMethod
     )
     runs.push(run)
   }

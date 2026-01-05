@@ -1,4 +1,4 @@
-import type { PersonalInfo, RetirementGoals } from "@/types"
+import type { PersonalInfo, RetirementGoals, CompoundingMethod } from "@/types"
 
 interface CostOfDelayParams {
   currentSavings: number
@@ -8,6 +8,7 @@ interface CostOfDelayParams {
   expectedReturn: number // decimal
   fees: number // decimal
   contributionEscalation: number // decimal
+  compoundingMethod: CompoundingMethod
 }
 
 interface CostOfDelayResult {
@@ -31,14 +32,16 @@ function projectFinalSavings(
   monthlyContribution: number,
   years: number,
   contributionGrowth: number,
-  realReturn: number
+  realReturn: number,
+  compoundingMethod: CompoundingMethod
 ): number {
   if (years <= 0) return currentSavings
 
   let totalSavings = currentSavings
-  // Using simple division to match Excel FV and industry convention (nominal annual rate)
-  // Original: const monthlyReturn = Math.pow(1 + realReturn, 1 / 12) - 1
-  const monthlyReturn = realReturn / 12
+  // Calculate monthly return based on compounding method
+  const monthlyReturn = compoundingMethod === 'compound'
+    ? Math.pow(1 + realReturn, 1 / 12) - 1  // Actuarially correct
+    : realReturn / 12  // Excel-compatible nominal
 
   for (let year = 0; year < years; year++) {
     for (let month = 0; month < 12; month++) {
@@ -67,6 +70,7 @@ export function calculateCostOfDelay(params: CostOfDelayParams): CostOfDelayResu
     expectedReturn,
     fees,
     contributionEscalation,
+    compoundingMethod,
   } = params
 
   const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
@@ -78,7 +82,8 @@ export function calculateCostOfDelay(params: CostOfDelayParams): CostOfDelayResu
     monthlyContribution,
     yearsToRetirement,
     contributionEscalation,
-    netReturn
+    netReturn,
+    compoundingMethod
   )
 
   // Scenario: delay 1 year
@@ -89,7 +94,8 @@ export function calculateCostOfDelay(params: CostOfDelayParams): CostOfDelayResu
     monthlyContribution,
     yearsToRetirement - 1,
     contributionEscalation,
-    netReturn
+    netReturn,
+    compoundingMethod
   )
 
   // Scenario: delay 2 years
@@ -99,7 +105,8 @@ export function calculateCostOfDelay(params: CostOfDelayParams): CostOfDelayResu
     monthlyContribution,
     yearsToRetirement - 2,
     contributionEscalation,
-    netReturn
+    netReturn,
+    compoundingMethod
   )
 
   // Scenario: delay 5 years
@@ -109,7 +116,8 @@ export function calculateCostOfDelay(params: CostOfDelayParams): CostOfDelayResu
     monthlyContribution,
     Math.max(0, yearsToRetirement - 5),
     contributionEscalation,
-    netReturn
+    netReturn,
+    compoundingMethod
   )
 
   const costOfOneYearDelay = baselineNestEgg - oneYearDelayNestEgg

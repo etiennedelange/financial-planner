@@ -3,33 +3,55 @@
 import { TrendingUp, TrendingDown, Wallet, Calendar } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import type { ProjectionResult } from "@/types"
-import { formatCurrency } from "@/lib/utils/formatters"
+import { formatCurrency } from "@/lib/utils/currency"
+import { useCalculatorStore } from "@/lib/store/calculator-store"
 
 interface ProjectionSummaryProps {
   projection: ProjectionResult | null
   retirementAge: number
+  currentAge: number
+  lifeExpectancy: number
+  inflationRate: number
 }
 
 export function ProjectionSummary({
   projection,
   retirementAge,
+  currentAge,
+  lifeExpectancy,
+  inflationRate,
 }: ProjectionSummaryProps) {
+  const { displayMode } = useCalculatorStore()
+
   if (!projection) {
     return null
   }
 
+  const yearsToRetirement = retirementAge - currentAge
+  const yearsToLifeExpectancy = lifeExpectancy - currentAge
+
   const metrics = [
     {
       label: "Portfolio at Retirement",
-      value: formatCurrency(projection.portfolioAtRetirement),
+      value: formatCurrency(
+        projection.portfolioAtRetirement,
+        displayMode,
+        yearsToRetirement,
+        inflationRate / 100
+      ),
       icon: Wallet,
-      description: `At age ${retirementAge}`,
+      description: `At age ${retirementAge}${displayMode === 'real' ? " (today's value)" : ''}`,
     },
     {
       label: "Monthly Income",
-      value: formatCurrency(projection.monthlyIncomeAtRetirement),
+      value: formatCurrency(
+        projection.monthlyIncomeAtRetirement,
+        displayMode,
+        yearsToRetirement,
+        inflationRate / 100
+      ),
       icon: TrendingUp,
-      description: "Initial withdrawal",
+      description: `Initial withdrawal${displayMode === 'real' ? " (today's value)" : ''}`,
     },
     {
       label: "Portfolio Depletion",
@@ -44,9 +66,14 @@ export function ProjectionSummary({
     },
     {
       label: "Final Balance",
-      value: formatCurrency(projection.surplusAmount),
+      value: formatCurrency(
+        projection.surplusAmount,
+        displayMode,
+        yearsToLifeExpectancy,
+        inflationRate / 100
+      ),
       icon: Calendar,
-      description: "At life expectancy",
+      description: `At life expectancy${displayMode === 'real' ? " (today's value)" : ''}`,
     },
   ]
 

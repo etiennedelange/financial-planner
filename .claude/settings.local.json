@@ -7,7 +7,9 @@
       "Bash(npx create-next-app@14:*)",
       "Bash(npm install)",
       "Bash(npm install:*)",
-      "Bash(git worktree:*)"
+      "Bash(git worktree:*)",
+      "mcp__ide__executeCode",
+      "Bash(npm run build:*)"
     ]
   }
 }

@@ -18,8 +18,74 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 - [x] JavaScript operator precedence fixes
 - [x] Auto-calculate Monte Carlo with debouncing
 - [x] Account form dialog conversion
+- [x] Compounding method configuration (nominal vs compound)
+- [x] Display mode toggle (today's value vs future value)
+- [x] Debug window with calculation parameters
 
 **Documentation:** See `history/2026-01-02-calculation-fixes-and-ui-improvements.md`
+
+---
+
+## Phase 1.5: Testing & Validation Framework 🔄 IN PROGRESS
+
+**Goal:** Establish comprehensive testing to maintain calculation accuracy and cross-tab consistency.
+
+**Priority Tasks:**
+- [ ] **P0: Consolidate duplicate `projectFinalSavings` functions** (Critical)
+  - Currently duplicated in: optimal-contribution.ts, cost-of-delay.ts, scenario-comparison.ts
+  - Create single source of truth in `lib/calculations/utils/projection.ts`
+  - Prevents drift between calculation engines
+  - **Estimated effort:** 30 minutes
+
+- [ ] **P0: Add compounding method to Debug Window** (Critical)
+  - Show which formula is being used (nominal vs compound)
+  - Display calculated monthly return for verification
+  - Add calculation checksums
+  - **Estimated effort:** 20 minutes
+
+- [ ] **P1: Unit tests for core calculations** (High Priority)
+  - Test `projectFinalSavings` with known Excel FV results
+  - Test compounding method differences
+  - Test edge cases (zero balance, zero contributions)
+  - Test weighted return calculations
+  - **Estimated effort:** 2-3 hours
+
+- [ ] **P1: Cross-tab consistency tests** (High Priority)
+  - Ensure Debug Window matches Projection Summary
+  - Ensure Debug Window matches Insights tab
+  - Ensure Monte Carlo uses same parameters as deterministic
+  - **Estimated effort:** 1-2 hours
+
+- [ ] **P2: Display mode tests** (Medium Priority)
+  - Verify real vs nominal conversion across all tabs
+  - Test that toggling updates all currency values
+  - Snapshot testing for UI updates
+  - **Estimated effort:** 1 hour
+
+- [ ] **P2: Create validation script** (Medium Priority)
+  - Automated debug output validation
+  - Check calculation consistency
+  - Verify compounding method is applied correctly
+  - **Estimated effort:** 1 hour
+
+- [ ] **P3: Property-based testing** (Optional)
+  - Mathematical property tests (e.g., delay composition)
+  - Fuzzing with random valid inputs
+  - **Estimated effort:** 2 hours
+
+**Testing Strategy:**
+1. **Unit Tests:** Individual calculation functions with known inputs/outputs
+2. **Integration Tests:** Cross-tab consistency and state management
+3. **Visual Regression:** Snapshot tests for display mode toggles
+4. **Property-Based:** Mathematical invariants and edge cases
+5. **Manual Validation:** SA retirement validator agent for complex scenarios
+
+**Test Coverage Goals:**
+- Core calculations: 100%
+- UI components: 80%
+- Integration flows: 90%
+
+**Documentation:** See `history/testing-and-validation-plan.md` (to be created)
 
 ---
 
@@ -145,6 +211,7 @@ From REQUIREMENTS.md:
 | Phase | Status | Progress |
 |-------|--------|----------|
 | Phase 1: Calculation Accuracy | ✅ Complete | 100% |
+| Phase 1.5: Testing & Validation | 🔄 In Progress | 0% |
 | Phase 2: Supabase Integration | 🔲 Pending | 0% |
 | Phase 3: User Accounts | 🔲 Pending | 0% |
 | Phase 4: Data Persistence | 🔲 Pending | 0% |

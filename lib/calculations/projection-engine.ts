@@ -2,6 +2,7 @@ import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import type {
   Account,
   DrawdownConfig,
+  MarketAssumptions,
   PersonalInfo,
   ProjectionResult,
   RetirementGoals,
@@ -130,13 +131,27 @@ function calculateInitialWithdrawal(
 }
 
 /**
+ * Calculate monthly return from annual return based on compounding method
+ */
+function calculateMonthlyReturn(annualReturn: number, method: 'nominal' | 'compound'): number {
+  if (method === 'compound') {
+    // Mathematically correct: (1 + annual)^(1/12) - 1
+    return Math.pow(1 + annualReturn, 1 / 12) - 1
+  } else {
+    // Nominal rate (Excel FV compatible): annual / 12
+    return annualReturn / 12
+  }
+}
+
+/**
  * Main projection calculation
  */
 export function calculateProjection(
   accounts: Account[],
   personalInfo: PersonalInfo,
   retirementGoals: RetirementGoals,
-  drawdownConfig: DrawdownConfig
+  drawdownConfig: DrawdownConfig,
+  assumptions?: MarketAssumptions
 ): ProjectionResult {
   const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
   const yearsInRetirement = personalInfo.lifeExpectancy - personalInfo.retirementAge
@@ -169,11 +184,8 @@ export function calculateProjection(
   }
 
   // Accumulation phase with monthly compounding
-  // Original: compound conversion (mathematically correct for effective annual rate)
-  // const monthlyReturn = Math.pow(1 + netReturn, 1 / 12) - 1
-  // Using simple division to match Excel FV and industry convention (nominal annual rate)
-  const monthlyReturn = netReturn / 12
-
+  const compoundingMethod = assumptions?.compoundingMethod || 'nominal'
+  const monthlyReturn = calculateMonthlyReturn(netReturn, compoundingMethod)
   const monthlyFeeRate = Math.pow(1 + weightedFees, 1 / 12) - 1
   const baseMonthlyContribution = totalContribution / 12
 

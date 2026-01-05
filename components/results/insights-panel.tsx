@@ -26,17 +26,10 @@ import {
   type ScenarioType,
 } from "@/lib/calculations/scenario-comparison"
 import { projectMedicalCosts } from "@/lib/calculations/medical-costs"
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("en-ZA", {
-    style: "currency",
-    currency: "ZAR",
-    maximumFractionDigits: 0,
-  }).format(value)
-}
+import { formatCurrency } from "@/lib/utils/currency"
 
 export function InsightsPanel() {
-  const { accounts, personalInfo, retirementGoals, drawdownConfig } =
+  const { accounts, personalInfo, retirementGoals, drawdownConfig, assumptions, displayMode } =
     useCalculatorStore()
 
   const insights = useMemo(() => {
@@ -69,6 +62,9 @@ export function InsightsPanel() {
             accounts.length
         : 0.06
 
+    const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
+    const inflationRate = retirementGoals.inflationRate / 100
+
     // Optimal contribution
     const optimalResult = calculateOptimalContribution({
       currentSavings: totalBalance,
@@ -78,6 +74,7 @@ export function InsightsPanel() {
       expectedReturn: weightedReturn,
       fees: weightedFees,
       contributionEscalation: avgEscalation,
+      compoundingMethod: assumptions.compoundingMethod,
     })
 
     // Cost of delay
@@ -89,6 +86,7 @@ export function InsightsPanel() {
       expectedReturn: weightedReturn,
       fees: weightedFees,
       contributionEscalation: avgEscalation,
+      compoundingMethod: assumptions.compoundingMethod,
     })
 
     // Scenario comparison
@@ -100,6 +98,7 @@ export function InsightsPanel() {
       drawdownConfig,
       contributionEscalation: avgEscalation,
       fees: weightedFees,
+      compoundingMethod: assumptions.compoundingMethod,
     })
 
     // Medical costs
@@ -115,8 +114,10 @@ export function InsightsPanel() {
       scenarios: scenarioResult,
       medical: medicalResult,
       currentContribution: totalContribution,
+      yearsToRetirement,
+      inflationRate,
     }
-  }, [accounts, personalInfo, retirementGoals, drawdownConfig])
+  }, [accounts, personalInfo, retirementGoals, drawdownConfig, assumptions, displayMode])
 
   if (!insights) {
     return (
@@ -148,19 +149,19 @@ export function InsightsPanel() {
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Target nest egg:</span>
               <span className="font-semibold">
-                {formatCurrency(insights.optimal.targetNestEgg)}
+                {formatCurrency(insights.optimal.targetNestEgg, displayMode, insights.yearsToRetirement, insights.inflationRate)}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Recommended monthly:</span>
               <span className="font-semibold">
-                {formatCurrency(insights.optimal.optimalMonthlyContribution)}
+                {formatCurrency(insights.optimal.optimalMonthlyContribution, displayMode, 0, insights.inflationRate)}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Current monthly:</span>
               <span className="font-semibold">
-                {formatCurrency(insights.currentContribution)}
+                {formatCurrency(insights.currentContribution, displayMode, 0, insights.inflationRate)}
               </span>
             </div>
 
@@ -176,7 +177,7 @@ export function InsightsPanel() {
                 <AlertTriangle className="h-4 w-4" />
                 <span className="text-sm">
                   Consider increasing contributions by{" "}
-                  {formatCurrency(contributionDiff)}/month
+                  {formatCurrency(contributionDiff, displayMode, 0, insights.inflationRate)}/month
                 </span>
               </div>
             )}
@@ -201,7 +202,7 @@ export function InsightsPanel() {
               <span className="text-muted-foreground">1 year delay:</span>
               <div className="text-right">
                 <span className="font-semibold text-red-600 dark:text-red-400">
-                  -{formatCurrency(insights.costOfDelay.costOfOneYearDelay)}
+                  -{formatCurrency(insights.costOfDelay.costOfOneYearDelay, displayMode, insights.yearsToRetirement, insights.inflationRate)}
                 </span>
                 <span className="ml-2 text-sm text-muted-foreground">
                   ({insights.costOfDelay.percentageLostOneYear.toFixed(1)}%)
@@ -212,7 +213,7 @@ export function InsightsPanel() {
               <span className="text-muted-foreground">2 year delay:</span>
               <div className="text-right">
                 <span className="font-semibold text-red-600 dark:text-red-400">
-                  -{formatCurrency(insights.costOfDelay.costOfTwoYearDelay)}
+                  -{formatCurrency(insights.costOfDelay.costOfTwoYearDelay, displayMode, insights.yearsToRetirement, insights.inflationRate)}
                 </span>
                 <span className="ml-2 text-sm text-muted-foreground">
                   ({insights.costOfDelay.percentageLostTwoYear.toFixed(1)}%)
@@ -223,7 +224,7 @@ export function InsightsPanel() {
               <span className="text-muted-foreground">5 year delay:</span>
               <div className="text-right">
                 <span className="font-semibold text-red-600 dark:text-red-400">
-                  -{formatCurrency(insights.costOfDelay.costOfFiveYearDelay)}
+                  -{formatCurrency(insights.costOfDelay.costOfFiveYearDelay, displayMode, insights.yearsToRetirement, insights.inflationRate)}
                 </span>
                 <span className="ml-2 text-sm text-muted-foreground">
                   ({insights.costOfDelay.percentageLostFiveYear.toFixed(1)}%)
@@ -273,7 +274,7 @@ export function InsightsPanel() {
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div>
                         <span className="text-muted-foreground">Nest egg: </span>
-                        <span>{formatCurrency(scenario.projectedNestEgg)}</span>
+                        <span>{formatCurrency(scenario.projectedNestEgg, displayMode, insights.yearsToRetirement, insights.inflationRate)}</span>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Success: </span>
@@ -325,19 +326,19 @@ export function InsightsPanel() {
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">At retirement:</span>
               <span className="font-semibold">
-                {formatCurrency(insights.medical.medicalCostAtRetirement)}/month
+                {formatCurrency(insights.medical.medicalCostAtRetirement, displayMode, insights.yearsToRetirement, insights.inflationRate)}/month
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">At age 75:</span>
               <span className="font-semibold">
-                {formatCurrency(insights.medical.medicalCostAt75)}/month
+                {formatCurrency(insights.medical.medicalCostAt75, displayMode, 75 - personalInfo.currentAge, insights.inflationRate)}/month
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">At age 85:</span>
               <span className="font-semibold">
-                {formatCurrency(insights.medical.medicalCostAt85)}/month
+                {formatCurrency(insights.medical.medicalCostAt85, displayMode, 85 - personalInfo.currentAge, insights.inflationRate)}/month
               </span>
             </div>
             <div className="mt-3 border-t pt-3">
@@ -346,7 +347,7 @@ export function InsightsPanel() {
                   Total medical in retirement:
                 </span>
                 <span className="font-semibold text-lg">
-                  {formatCurrency(insights.medical.totalMedicalCostInRetirement)}
+                  {formatCurrency(insights.medical.totalMedicalCostInRetirement, displayMode, insights.yearsToRetirement, insights.inflationRate)}
                 </span>
               </div>
             </div>

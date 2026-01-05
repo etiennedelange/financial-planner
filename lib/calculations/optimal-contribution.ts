@@ -1,4 +1,4 @@
-import type { PersonalInfo, RetirementGoals, DrawdownConfig } from "@/types"
+import type { PersonalInfo, RetirementGoals, DrawdownConfig, CompoundingMethod } from "@/types"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
 
 interface OptimalContributionParams {
@@ -9,6 +9,7 @@ interface OptimalContributionParams {
   expectedReturn: number // decimal
   fees: number // decimal
   contributionEscalation: number // decimal
+  compoundingMethod: CompoundingMethod
 }
 
 interface OptimalContributionResult {
@@ -27,12 +28,14 @@ function projectFinalSavings(
   monthlyContribution: number,
   years: number,
   contributionGrowth: number,
-  realReturn: number
+  realReturn: number,
+  compoundingMethod: CompoundingMethod
 ): number {
   let totalSavings = currentSavings
-  // Using simple division to match Excel FV and industry convention (nominal annual rate)
-  // Original: const monthlyReturn = Math.pow(1 + realReturn, 1 / 12) - 1
-  const monthlyReturn = realReturn / 12
+  // Calculate monthly return based on compounding method
+  const monthlyReturn = compoundingMethod === 'compound'
+    ? Math.pow(1 + realReturn, 1 / 12) - 1  // Actuarially correct
+    : realReturn / 12  // Excel-compatible nominal
 
   for (let year = 0; year < years; year++) {
     for (let month = 0; month < 12; month++) {
@@ -63,6 +66,7 @@ export function calculateOptimalContribution(
     expectedReturn,
     fees,
     contributionEscalation,
+    compoundingMethod,
   } = params
 
   const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
@@ -89,7 +93,8 @@ export function calculateOptimalContribution(
     0,
     yearsToRetirement,
     contributionEscalation,
-    netReturn
+    netReturn,
+    compoundingMethod
   )
   if (currentProjection >= targetNestEgg) {
     return {
@@ -109,7 +114,8 @@ export function calculateOptimalContribution(
       midContribution,
       yearsToRetirement,
       contributionEscalation,
-      netReturn
+      netReturn,
+      compoundingMethod
     )
 
     if (finalSavings >= targetNestEgg) {
@@ -126,7 +132,8 @@ export function calculateOptimalContribution(
     optimalContribution,
     yearsToRetirement,
     contributionEscalation,
-    netReturn
+    netReturn,
+    compoundingMethod
   )
 
   return {

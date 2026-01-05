@@ -11,6 +11,18 @@ export interface RetirementGoals {
   legacyAmount: number // desired inheritance
 }
 
+export type CompoundingMethod = "nominal" | "compound"
+
+export const COMPOUNDING_METHOD_LABELS: Record<CompoundingMethod, string> = {
+  nominal: "Nominal (Excel-compatible)",
+  compound: "Compound (Actuarially correct)",
+}
+
+export const COMPOUNDING_METHOD_DESCRIPTIONS: Record<CompoundingMethod, string> = {
+  nominal: "Simple division: 12% ÷ 12 = 1% per month. Matches Excel FV function but overstates effective returns by ~0.7% annually.",
+  compound: "Compound conversion: (1.12)^(1/12) - 1 = 0.95% per month. Mathematically precise and recommended for accurate long-term projections.",
+}
+
 export interface MarketAssumptions {
   equityReturn: number // nominal annual %
   bondReturn: number
@@ -18,6 +30,7 @@ export interface MarketAssumptions {
   equityVolatility: number // standard deviation %
   bondVolatility: number
   inflationRate: number
+  compoundingMethod: CompoundingMethod
 }
 
 export type DrawdownStrategy =

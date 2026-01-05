@@ -19,6 +19,9 @@ interface CalculatorState {
   assumptions: MarketAssumptions
   drawdownConfig: DrawdownConfig
 
+  // UI Preferences
+  displayMode: 'nominal' | 'real' // Show values in nominal or real (today's) terms
+
   // Actions
   addAccount: (account: Account) => void
   updateAccount: (id: string, account: Partial<Account>) => void
@@ -27,6 +30,7 @@ interface CalculatorState {
   setRetirementGoals: (goals: Partial<RetirementGoals>) => void
   setAssumptions: (assumptions: Partial<MarketAssumptions>) => void
   setDrawdownConfig: (config: Partial<DrawdownConfig>) => void
+  setDisplayMode: (mode: 'nominal' | 'real') => void
   resetToDefaults: () => void
 }
 
@@ -50,6 +54,7 @@ const initialState = {
     equityVolatility: SA_DEFAULTS_DISPLAY.equityVolatility,
     bondVolatility: SA_DEFAULTS_DISPLAY.bondVolatility,
     inflationRate: SA_DEFAULTS_DISPLAY.inflation,
+    compoundingMethod: 'nominal' as const, // Default to Excel-compatible for backward compatibility
   },
   drawdownConfig: {
     strategy: "fixed_percentage" as const,
@@ -57,6 +62,7 @@ const initialState = {
     minimumWithdrawal: 15000,
     maximumWithdrawal: 60000,
   },
+  displayMode: 'nominal' as const, // Default to showing nominal (future) values
 }
 
 export const useCalculatorStore = create<CalculatorState>()(
@@ -98,6 +104,8 @@ export const useCalculatorStore = create<CalculatorState>()(
         set((state) => ({
           drawdownConfig: { ...state.drawdownConfig, ...config },
         })),
+
+      setDisplayMode: (mode) => set({ displayMode: mode }),
 
       resetToDefaults: () => set(initialState),
     }),

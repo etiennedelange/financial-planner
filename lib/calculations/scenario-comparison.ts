@@ -1,4 +1,4 @@
-import type { PersonalInfo, RetirementGoals, DrawdownConfig } from "@/types"
+import type { PersonalInfo, RetirementGoals, DrawdownConfig, CompoundingMethod } from "@/types"
 import { runMonteCarloSimulation as runMonteCarlo } from "@/lib/monte-carlo/simulation-engine"
 
 // SA-specific investment scenarios (nominal returns)
@@ -36,6 +36,7 @@ interface ScenarioComparisonParams {
   drawdownConfig: DrawdownConfig
   contributionEscalation: number // decimal
   fees: number // decimal
+  compoundingMethod: CompoundingMethod
 }
 
 interface ScenarioResult {
@@ -67,14 +68,16 @@ function projectFinalSavings(
   monthlyContribution: number,
   years: number,
   contributionGrowth: number,
-  realReturn: number
+  realReturn: number,
+  compoundingMethod: CompoundingMethod
 ): number {
   if (years <= 0) return currentSavings
 
   let totalSavings = currentSavings
-  // Using simple division to match Excel FV and industry convention (nominal annual rate)
-  // Original: const monthlyReturn = Math.pow(1 + realReturn, 1 / 12) - 1
-  const monthlyReturn = realReturn / 12
+  // Calculate monthly return based on compounding method
+  const monthlyReturn = compoundingMethod === 'compound'
+    ? Math.pow(1 + realReturn, 1 / 12) - 1  // Actuarially correct
+    : realReturn / 12  // Excel-compatible nominal
 
   for (let year = 0; year < years; year++) {
     for (let month = 0; month < 12; month++) {
@@ -194,6 +197,7 @@ export function compareScenarios(
     drawdownConfig,
     contributionEscalation,
     fees,
+    compoundingMethod,
   } = params
 
   const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
@@ -218,7 +222,8 @@ export function compareScenarios(
       monthlyContribution,
       yearsToRetirement,
       contributionEscalation,
-      nominalReturn
+      nominalReturn,
+      compoundingMethod
     )
 
     // Calculate annual withdrawal at retirement
