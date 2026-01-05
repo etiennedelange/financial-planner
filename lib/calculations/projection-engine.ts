@@ -32,10 +32,22 @@ function getSpendingPhaseMultiplier(yearsInRetirement: number): number {
 
 /**
  * Calculate weighted average return from accounts
+ * When balance is 0, weight by contributions instead of balance
  */
 function calculateWeightedReturn(accounts: Account[]): number {
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
-  if (totalBalance === 0) return SA_DEFAULTS.equityReturn
+
+  // If balance is 0, weight by monthly contributions
+  if (totalBalance === 0) {
+    const totalContribution = accounts.reduce((sum, acc) => sum + acc.monthlyContribution, 0)
+    if (totalContribution === 0) return SA_DEFAULTS.equityReturn
+    return accounts.reduce(
+      (sum, acc) =>
+        sum + (acc.expectedReturn / 100) * (acc.monthlyContribution / totalContribution),
+      0
+    )
+  }
+
   return accounts.reduce(
     (sum, acc) =>
       sum + (acc.expectedReturn / 100) * (acc.currentBalance / totalBalance),
@@ -45,10 +57,22 @@ function calculateWeightedReturn(accounts: Account[]): number {
 
 /**
  * Calculate weighted average fees from accounts
+ * When balance is 0, weight by contributions instead of balance
  */
 function calculateWeightedFees(accounts: Account[]): number {
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
-  if (totalBalance === 0) return 0.01
+
+  // If balance is 0, weight by monthly contributions
+  if (totalBalance === 0) {
+    const totalContribution = accounts.reduce((sum, acc) => sum + acc.monthlyContribution, 0)
+    if (totalContribution === 0) return 0.01
+    return accounts.reduce(
+      (sum, acc) =>
+        sum + (acc.annualFees / 100) * (acc.monthlyContribution / totalContribution),
+      0
+    )
+  }
+
   return accounts.reduce(
     (sum, acc) =>
       sum + (acc.annualFees / 100) * (acc.currentBalance / totalBalance),

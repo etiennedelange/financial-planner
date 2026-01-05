@@ -1,0 +1,623 @@
+"use client"
+
+import { useState } from "react"
+import { Bug, Copy, Check } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { SA_DEFAULTS } from "@/lib/constants/defaults"
+import type { Account, ProjectionResult, SimulationResult } from "@/types"
+
+interface DebugWindowProps {
+  className?: string
+  projection?: ProjectionResult | null
+  simulationResult?: SimulationResult | null
+}
+
+export function DebugWindow({ className, projection, simulationResult }: DebugWindowProps) {
+  const {
+    accounts,
+    personalInfo,
+    retirementGoals,
+    assumptions,
+    drawdownConfig,
+  } = useCalculatorStore()
+
+  const [isOpen, setIsOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  // Calculate derived parameters (matching the calculation engine)
+  const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
+  const totalMonthlyContribution = accounts.reduce(
+    (sum, acc) => sum + acc.monthlyContribution,
+    0
+  )
+
+  // Match the calculation engine logic exactly (projection-engine.ts:37-81)
+  // When balance is 0, weight by contributions instead of balance
+  const weightedReturn = totalBalance === 0
+    ? (totalMonthlyContribution === 0
+        ? SA_DEFAULTS.equityReturn
+        : accounts.reduce(
+            (sum, acc) =>
+              sum + (acc.expectedReturn / 100) * (acc.monthlyContribution / totalMonthlyContribution),
+            0
+          ))
+    : accounts.reduce(
+        (sum, acc) =>
+          sum + (acc.expectedReturn / 100) * (acc.currentBalance / totalBalance),
+        0
+      )
+
+  const weightedFees = totalBalance === 0
+    ? (totalMonthlyContribution === 0
+        ? 0.01
+        : accounts.reduce(
+            (sum, acc) =>
+              sum + (acc.annualFees / 100) * (acc.monthlyContribution / totalMonthlyContribution),
+            0
+          ))
+    : accounts.reduce(
+        (sum, acc) =>
+          sum + (acc.annualFees / 100) * (acc.currentBalance / totalBalance),
+        0
+      )
+
+  const avgEscalation = accounts.length > 0
+    ? accounts.reduce((sum, acc) => sum + acc.contributionEscalation / 100, 0) /
+      accounts.length
+    : SA_DEFAULTS.contributionEscalation
+
+  const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
+  const yearsInRetirement = personalInfo.lifeExpectancy - personalInfo.retirementAge
+  const inflationRate = retirementGoals.inflationRate / 100
+  const netReturn = weightedReturn - weightedFees
+  const monthlyReturn = netReturn / 12
+  const monthlyFeeRate = Math.pow(1 + weightedFees, 1 / 12) - 1
+
+  // Volatility from assumptions or defaults
+  const volatility = assumptions?.equityVolatility || SA_DEFAULTS.equityVolatility * 100
+
+  const formatPercent = (value: number) => `${(value * 100).toFixed(2)}%`
+  const formatCurrency = (value: number) => `R ${value.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
+  // Calculate retirement eligibility and tax deductions
+  const taxableIncome = personalInfo.annualIncome
+  const annualContribution = totalMonthlyContribution * 12
+  const maxRADeduction = Math.min(annualContribution, taxableIncome * 0.275, 350000)
+  const taxSavings = maxRADeduction * 0.45 // Assume max marginal rate of 45%
+  const retirementEligible = personalInfo.currentAge >= 55 && totalBalance > 0
+  const canAccessRA = personalInfo.currentAge >= 55
+  const canAccessPreservation = totalBalance > 0 // Can access 1/3 lump sum before retirement
+
+  const copyDebugInfo = async () => {
+    const debugText = `
+SA RETIREMENT CALCULATOR - DEBUG INFORMATION
+Generated: ${new Date().toLocaleString('en-ZA')}
+
+=====================================================
+PERSONAL INFORMATION
+=====================================================
+Current Age: ${personalInfo.currentAge}
+Retirement Age: ${personalInfo.retirementAge}
+Life Expectancy: ${personalInfo.lifeExpectancy}
+Annual Income: ${formatCurrency(personalInfo.annualIncome)}
+Years to Retirement: ${yearsToRetirement}
+Years in Retirement: ${yearsInRetirement}
+
+=====================================================
+RETIREMENT ELIGIBILITY (SA TAX RULES)
+=====================================================
+Can Access RA: ${canAccessRA ? 'YES (Age 55+)' : 'NO (Must be 55+)'}
+Can Access Preservation Fund: ${canAccessPreservation ? 'YES (1/3 lump sum available)' : 'NO'}
+Retirement Eligible: ${retirementEligible ? 'YES' : 'NO'}
+
+TAX DEDUCTIONS (2024/2025):
+Annual Contribution: ${formatCurrency(annualContribution)}
+Max RA Deduction: ${formatCurrency(maxRADeduction)} (27.5% of income, max R350k)
+Estimated Tax Savings: ${formatCurrency(taxSavings)} (assuming 45% marginal rate)
+Effective Cost After Tax: ${formatCurrency(annualContribution - taxSavings)}
+
+=====================================================
+RETIREMENT GOALS
+=====================================================
+Desired Monthly Income (Today): ${formatCurrency(retirementGoals.desiredMonthlyIncome)}
+Inflation Rate: ${retirementGoals.inflationRate}%
+Inflation Rate (Decimal): ${inflationRate.toFixed(4)}
+Legacy Amount: ${formatCurrency(retirementGoals.legacyAmount)}
+
+=====================================================
+ACCOUNTS (${accounts.length} total)
+=====================================================
+${accounts.length === 0 ? 'No accounts configured' : accounts.map((acc, idx) => `
+${idx + 1}. ${acc.name} (${acc.type})
+   Provider: ${acc.provider}
+   Balance: ${formatCurrency(acc.currentBalance)}
+   Monthly Contribution: ${formatCurrency(acc.monthlyContribution)}
+   Expected Return: ${acc.expectedReturn}%
+   Annual Fees: ${acc.annualFees}%
+   Contribution Escalation: ${acc.contributionEscalation}%
+`).join('')}
+
+=====================================================
+PORTFOLIO AGGREGATES (CALCULATED)
+=====================================================
+Total Balance: ${formatCurrency(totalBalance)}
+Total Monthly Contribution: ${formatCurrency(totalMonthlyContribution)}
+Total Annual Contribution: ${formatCurrency(totalMonthlyContribution * 12)}
+Weighted Return: ${formatPercent(weightedReturn)}
+Weighted Fees: ${formatPercent(weightedFees)}
+Average Escalation: ${formatPercent(avgEscalation)}
+Net Return (Return - Fees): ${formatPercent(netReturn)}
+Monthly Return Rate: ${formatPercent(monthlyReturn)}
+Monthly Fee Rate: ${formatPercent(monthlyFeeRate)}
+
+=====================================================
+DRAWDOWN CONFIGURATION
+=====================================================
+Strategy: ${drawdownConfig.strategy}
+Initial Withdrawal Rate: ${drawdownConfig.initialWithdrawalRate}%
+Minimum Withdrawal (Monthly): ${formatCurrency(drawdownConfig.minimumWithdrawal)}
+Maximum Withdrawal (Monthly): ${formatCurrency(drawdownConfig.maximumWithdrawal)}
+${drawdownConfig.upperGuardrail ? `Upper Guardrail: ${drawdownConfig.upperGuardrail}%` : ''}
+${drawdownConfig.lowerGuardrail ? `Lower Guardrail: ${drawdownConfig.lowerGuardrail}%` : ''}
+
+${assumptions ? `=====================================================
+MARKET ASSUMPTIONS
+=====================================================
+Equity Return: ${assumptions.equityReturn}%
+Bond Return: ${assumptions.bondReturn}%
+Cash Return: ${assumptions.cashReturn}%
+Equity Volatility: ${assumptions.equityVolatility}%
+Bond Volatility: ${assumptions.bondVolatility}%
+Inflation Rate: ${assumptions.inflationRate}%
+` : ''}
+=====================================================
+MONTE CARLO SIMULATION
+=====================================================
+Number of Runs: 1,000
+Volatility Used: ${volatility}%
+Volatility (Decimal): ${(volatility / 100).toFixed(4)}
+
+=====================================================
+SPENDING PHASE MULTIPLIERS
+=====================================================
+Go-Go Phase (Years 0-15): 100%
+Slow-Go Phase (Years 15-25): 80%
+No-Go Phase (Years 25+): 70% + Medical (cap 120%)
+  Medical premium: +15% per 10 years after year 25
+
+=====================================================
+SA DEFAULT CONSTANTS
+=====================================================
+Default Inflation: ${SA_DEFAULTS.inflation * 100}%
+Medical Inflation: ${SA_DEFAULTS.medicalInflation * 100}%
+Default Equity Return: ${SA_DEFAULTS.equityReturn * 100}%
+Default Bond Return: ${SA_DEFAULTS.bondReturn * 100}%
+Default Cash Return: ${SA_DEFAULTS.cashReturn * 100}%
+Default Equity Volatility: ${SA_DEFAULTS.equityVolatility * 100}%
+Safe Withdrawal Rate: ${SA_DEFAULTS.safeWithdrawalRate * 100}%
+Base Medical Cost (Monthly): ${formatCurrency(SA_DEFAULTS.baseMedicalCostMonthly)}
+
+${projection ? `=====================================================
+PROJECTION RESULTS (DETERMINISTIC)
+=====================================================
+Portfolio at Retirement: ${formatCurrency(projection.portfolioAtRetirement)}
+Monthly Income at Retirement: ${formatCurrency(projection.monthlyIncomeAtRetirement)}
+Portfolio Depletion Age: ${projection.portfolioDepletionAge || 'Never (survives to life expectancy)'}
+Surplus at Life Expectancy: ${formatCurrency(projection.surplusAmount)}
+Shortfall Amount: ${formatCurrency(projection.shortfallAmount)}
+Total Projection Years: ${projection.yearlyProjections.length}
+` : ''}
+${simulationResult ? `=====================================================
+MONTE CARLO SIMULATION RESULTS
+=====================================================
+Success Rate: ${simulationResult.successRate.toFixed(2)}%
+Number of Runs: ${simulationResult.runs.length}
+Median Depletion Age: ${simulationResult.medianDepletionAge || 'N/A (most runs succeed)'}
+Average Final Balance: ${formatCurrency(simulationResult.averageFinalBalance)}
+
+PERCENTILE ANALYSIS (Final Year):
+P10 (10th percentile): ${formatCurrency(simulationResult.percentiles.p10[simulationResult.percentiles.p10.length - 1] || 0)}
+P25 (25th percentile): ${formatCurrency(simulationResult.percentiles.p25[simulationResult.percentiles.p25.length - 1] || 0)}
+P50 (Median): ${formatCurrency(simulationResult.percentiles.p50[simulationResult.percentiles.p50.length - 1] || 0)}
+P75 (75th percentile): ${formatCurrency(simulationResult.percentiles.p75[simulationResult.percentiles.p75.length - 1] || 0)}
+P90 (90th percentile): ${formatCurrency(simulationResult.percentiles.p90[simulationResult.percentiles.p90.length - 1] || 0)}
+` : ''}
+=====================================================
+ACCURACY NOTES
+=====================================================
+This data can be used to verify calculations independently.
+Key formulas used:
+- Monthly Return = (Expected Return - Fees) / 12
+- Weighted metrics use contribution weights when balance = 0
+- Monte Carlo uses log-normal distribution with volatility adjustment
+- Spending phases: Go-Go (100%), Slow-Go (80%), No-Go (70%+medical)
+`.trim()
+
+    try {
+      await navigator.clipboard.writeText(debugText)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }
+
+  return (
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon"
+          className={className}
+          title="Debug: View Calculation Parameters"
+        >
+          <Bug className="h-4 w-4" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent className="w-full sm:max-w-2xl">
+        <SheetHeader>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <SheetTitle>Debug: Calculation Parameters</SheetTitle>
+              <SheetDescription>
+                All parameters used in retirement calculations
+              </SheetDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={copyDebugInfo}
+              className="ml-4"
+              title={copied ? "Copied!" : "Copy all debug parameters"}
+            >
+              {copied ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </SheetHeader>
+
+        <ScrollArea className="h-[calc(100vh-120px)] mt-6 pr-4">
+          <div className="space-y-6">
+            {/* Personal Information */}
+            <Section title="Personal Information">
+              <Param label="Current Age" value={personalInfo.currentAge} />
+              <Param label="Retirement Age" value={personalInfo.retirementAge} />
+              <Param label="Life Expectancy" value={personalInfo.lifeExpectancy} />
+              <Param label="Annual Income" value={formatCurrency(personalInfo.annualIncome)} />
+              <Param label="Years to Retirement" value={yearsToRetirement} highlight />
+              <Param label="Years in Retirement" value={yearsInRetirement} highlight />
+            </Section>
+
+            {/* Retirement Goals */}
+            <Section title="Retirement Goals">
+              <Param
+                label="Desired Monthly Income (Today)"
+                value={formatCurrency(retirementGoals.desiredMonthlyIncome)}
+              />
+              <Param
+                label="Inflation Rate"
+                value={`${retirementGoals.inflationRate}%`}
+              />
+              <Param
+                label="Inflation Rate (Decimal)"
+                value={inflationRate.toFixed(4)}
+                highlight
+              />
+              <Param
+                label="Legacy Amount"
+                value={formatCurrency(retirementGoals.legacyAmount)}
+              />
+            </Section>
+
+            {/* Retirement Eligibility */}
+            <Section title="Retirement Eligibility (SA Tax Rules)">
+              <Param
+                label="Can Access RA"
+                value={canAccessRA ? 'YES (Age 55+)' : 'NO (Must be 55+)'}
+                highlight={canAccessRA}
+              />
+              <Param
+                label="Can Access Preservation Fund"
+                value={canAccessPreservation ? 'YES (1/3 lump sum)' : 'NO'}
+              />
+              <Param
+                label="Retirement Eligible"
+                value={retirementEligible ? 'YES' : 'NO'}
+                highlight={retirementEligible}
+              />
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-xs font-semibold mb-2">TAX DEDUCTIONS (2024/2025):</p>
+                <Param label="Annual Contribution" value={formatCurrency(annualContribution)} />
+                <Param
+                  label="Max RA Deduction"
+                  value={`${formatCurrency(maxRADeduction)} (27.5% of income, max R350k)`}
+                  highlight
+                />
+                <Param
+                  label="Estimated Tax Savings"
+                  value={`${formatCurrency(taxSavings)} (45% marginal rate)`}
+                  highlight
+                />
+                <Param
+                  label="Effective Cost After Tax"
+                  value={formatCurrency(annualContribution - taxSavings)}
+                />
+              </div>
+            </Section>
+
+            {/* Accounts */}
+            <Section title="Accounts ({accounts.length})">
+              {accounts.length === 0 ? (
+                <p className="text-sm text-muted-foreground italic">No accounts configured</p>
+              ) : (
+                accounts.map((account, index) => (
+                  <div key={account.id} className="mb-4 p-3 bg-muted/50 rounded-md">
+                    <h4 className="font-semibold text-sm mb-2">
+                      {index + 1}. {account.name} ({account.type})
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <Param label="Provider" value={account.provider} small />
+                      <Param label="Balance" value={formatCurrency(account.currentBalance)} small />
+                      <Param label="Monthly Contribution" value={formatCurrency(account.monthlyContribution)} small />
+                      <Param label="Expected Return" value={`${account.expectedReturn}%`} small />
+                      <Param label="Annual Fees" value={`${account.annualFees}%`} small />
+                      <Param label="Escalation" value={`${account.contributionEscalation}%`} small />
+                    </div>
+                  </div>
+                ))
+              )}
+            </Section>
+
+            {/* Portfolio Aggregates */}
+            <Section title="Portfolio Aggregates (Calculated)">
+              <Param
+                label="Total Balance"
+                value={formatCurrency(totalBalance)}
+                highlight
+              />
+              <Param
+                label="Total Monthly Contribution"
+                value={formatCurrency(totalMonthlyContribution)}
+                highlight
+              />
+              <Param
+                label="Total Annual Contribution"
+                value={formatCurrency(totalMonthlyContribution * 12)}
+                highlight
+              />
+              <Param
+                label="Weighted Return"
+                value={formatPercent(weightedReturn)}
+                highlight
+              />
+              <Param
+                label="Weighted Fees"
+                value={formatPercent(weightedFees)}
+                highlight
+              />
+              <Param
+                label="Average Escalation"
+                value={formatPercent(avgEscalation)}
+                highlight
+              />
+              <Param
+                label="Net Return (Return - Fees)"
+                value={formatPercent(netReturn)}
+                highlight
+              />
+              <Param
+                label="Monthly Return Rate"
+                value={formatPercent(monthlyReturn)}
+                highlight
+              />
+              <Param
+                label="Monthly Fee Rate"
+                value={formatPercent(monthlyFeeRate)}
+                highlight
+              />
+            </Section>
+
+            {/* Drawdown Configuration */}
+            <Section title="Drawdown Configuration">
+              <Param label="Strategy" value={drawdownConfig.strategy} />
+              <Param
+                label="Initial Withdrawal Rate"
+                value={`${drawdownConfig.initialWithdrawalRate}%`}
+              />
+              <Param
+                label="Minimum Withdrawal (Monthly)"
+                value={formatCurrency(drawdownConfig.minimumWithdrawal)}
+              />
+              <Param
+                label="Maximum Withdrawal (Monthly)"
+                value={formatCurrency(drawdownConfig.maximumWithdrawal)}
+              />
+              {drawdownConfig.upperGuardrail && (
+                <Param
+                  label="Upper Guardrail"
+                  value={`${drawdownConfig.upperGuardrail}%`}
+                />
+              )}
+              {drawdownConfig.lowerGuardrail && (
+                <Param
+                  label="Lower Guardrail"
+                  value={`${drawdownConfig.lowerGuardrail}%`}
+                />
+              )}
+            </Section>
+
+            {/* Market Assumptions */}
+            {assumptions && (
+              <Section title="Market Assumptions">
+                <Param label="Equity Return" value={`${assumptions.equityReturn}%`} />
+                <Param label="Bond Return" value={`${assumptions.bondReturn}%`} />
+                <Param label="Cash Return" value={`${assumptions.cashReturn}%`} />
+                <Param label="Equity Volatility" value={`${assumptions.equityVolatility}%`} />
+                <Param label="Bond Volatility" value={`${assumptions.bondVolatility}%`} />
+                <Param label="Inflation Rate" value={`${assumptions.inflationRate}%`} />
+              </Section>
+            )}
+
+            {/* Monte Carlo Configuration */}
+            <Section title="Monte Carlo Simulation">
+              <Param label="Number of Runs" value="1,000" />
+              <Param label="Volatility Used" value={`${volatility}%`} highlight />
+              <Param
+                label="Volatility (Decimal)"
+                value={(volatility / 100).toFixed(4)}
+                highlight
+              />
+            </Section>
+
+            {/* Spending Phase Multipliers */}
+            <Section title="Spending Phase Multipliers">
+              <Param label="Go-Go Phase (Years 0-15)" value="100%" />
+              <Param label="Slow-Go Phase (Years 15-25)" value="80%" />
+              <Param label="No-Go Phase (Years 25+)" value="70% + Medical (cap 120%)" />
+              <div className="text-xs text-muted-foreground mt-2 italic">
+                Medical premium: +15% per 10 years after year 25
+              </div>
+            </Section>
+
+            {/* Projection Results */}
+            {projection && (
+              <Section title="Projection Results (Deterministic)">
+                <Param
+                  label="Portfolio at Retirement"
+                  value={formatCurrency(projection.portfolioAtRetirement)}
+                  highlight
+                />
+                <Param
+                  label="Monthly Income at Retirement"
+                  value={formatCurrency(projection.monthlyIncomeAtRetirement)}
+                  highlight
+                />
+                <Param
+                  label="Portfolio Depletion Age"
+                  value={projection.portfolioDepletionAge || 'Never (survives to life expectancy)'}
+                  highlight={!projection.portfolioDepletionAge}
+                />
+                <Param
+                  label="Surplus at Life Expectancy"
+                  value={formatCurrency(projection.surplusAmount)}
+                />
+                <Param
+                  label="Shortfall Amount"
+                  value={formatCurrency(projection.shortfallAmount)}
+                />
+                <Param label="Total Projection Years" value={projection.yearlyProjections.length} />
+              </Section>
+            )}
+
+            {/* Monte Carlo Results */}
+            {simulationResult && (
+              <Section title="Monte Carlo Simulation Results">
+                <Param
+                  label="Success Rate"
+                  value={`${simulationResult.successRate.toFixed(2)}%`}
+                  highlight
+                />
+                <Param label="Number of Runs" value={simulationResult.runs.length.toLocaleString()} />
+                <Param
+                  label="Median Depletion Age"
+                  value={simulationResult.medianDepletionAge || 'N/A (most runs succeed)'}
+                />
+                <Param
+                  label="Average Final Balance"
+                  value={formatCurrency(simulationResult.averageFinalBalance)}
+                />
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-xs font-semibold mb-2">PERCENTILE ANALYSIS (Final Year):</p>
+                  <Param
+                    label="P10 (10th percentile)"
+                    value={formatCurrency(simulationResult.percentiles.p10[simulationResult.percentiles.p10.length - 1] || 0)}
+                    small
+                  />
+                  <Param
+                    label="P25 (25th percentile)"
+                    value={formatCurrency(simulationResult.percentiles.p25[simulationResult.percentiles.p25.length - 1] || 0)}
+                    small
+                  />
+                  <Param
+                    label="P50 (Median)"
+                    value={formatCurrency(simulationResult.percentiles.p50[simulationResult.percentiles.p50.length - 1] || 0)}
+                    small
+                  />
+                  <Param
+                    label="P75 (75th percentile)"
+                    value={formatCurrency(simulationResult.percentiles.p75[simulationResult.percentiles.p75.length - 1] || 0)}
+                    small
+                  />
+                  <Param
+                    label="P90 (90th percentile)"
+                    value={formatCurrency(simulationResult.percentiles.p90[simulationResult.percentiles.p90.length - 1] || 0)}
+                    small
+                  />
+                </div>
+              </Section>
+            )}
+
+            {/* SA Defaults */}
+            <Section title="SA Default Constants">
+              <Param label="Default Inflation" value={`${SA_DEFAULTS.inflation * 100}%`} />
+              <Param label="Medical Inflation" value={`${SA_DEFAULTS.medicalInflation * 100}%`} />
+              <Param label="Default Equity Return" value={`${SA_DEFAULTS.equityReturn * 100}%`} />
+              <Param label="Default Bond Return" value={`${SA_DEFAULTS.bondReturn * 100}%`} />
+              <Param label="Default Cash Return" value={`${SA_DEFAULTS.cashReturn * 100}%`} />
+              <Param label="Default Equity Volatility" value={`${SA_DEFAULTS.equityVolatility * 100}%`} />
+              <Param label="Safe Withdrawal Rate" value={`${SA_DEFAULTS.safeWithdrawalRate * 100}%`} />
+              <Param label="Base Medical Cost (Monthly)" value={formatCurrency(SA_DEFAULTS.baseMedicalCostMonthly)} />
+            </Section>
+          </div>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
+  )
+}
+
+interface SectionProps {
+  title: string
+  children: React.ReactNode
+}
+
+function Section({ title, children }: SectionProps) {
+  return (
+    <div>
+      <h3 className="font-semibold text-sm mb-3 text-primary">{title}</h3>
+      <div className="space-y-2">
+        {children}
+      </div>
+      <Separator className="mt-4" />
+    </div>
+  )
+}
+
+interface ParamProps {
+  label: string
+  value: string | number
+  highlight?: boolean
+  small?: boolean
+}
+
+function Param({ label, value, highlight, small }: ParamProps) {
+  return (
+    <div className={`flex justify-between items-center ${small ? 'text-xs' : 'text-sm'} ${highlight ? 'font-semibold text-primary' : ''}`}>
+      <span className="text-muted-foreground">{label}:</span>
+      <span className="font-mono">{value}</span>
+    </div>
+  )
+}

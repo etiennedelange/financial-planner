@@ -29,10 +29,22 @@ function getSpendingPhaseMultiplier(yearsInRetirement: number): number {
 
 /**
  * Calculate weighted average return from accounts
+ * When balance is 0, weight by contributions instead of balance
  */
 function calculateWeightedReturn(accounts: Account[]): number {
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
-  if (totalBalance === 0) return SA_DEFAULTS.equityReturn
+
+  // If balance is 0, weight by monthly contributions
+  if (totalBalance === 0) {
+    const totalContribution = accounts.reduce((sum, acc) => sum + acc.monthlyContribution, 0)
+    if (totalContribution === 0) return SA_DEFAULTS.equityReturn
+    return accounts.reduce(
+      (sum, acc) =>
+        sum + (acc.expectedReturn / 100) * (acc.monthlyContribution / totalContribution),
+      0
+    )
+  }
+
   return accounts.reduce(
     (sum, acc) =>
       sum + (acc.expectedReturn / 100) * (acc.currentBalance / totalBalance),
@@ -42,10 +54,22 @@ function calculateWeightedReturn(accounts: Account[]): number {
 
 /**
  * Calculate weighted average fees from accounts
+ * When balance is 0, weight by contributions instead of balance
  */
 function calculateWeightedFees(accounts: Account[]): number {
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
-  if (totalBalance === 0) return 0.01
+
+  // If balance is 0, weight by monthly contributions
+  if (totalBalance === 0) {
+    const totalContribution = accounts.reduce((sum, acc) => sum + acc.monthlyContribution, 0)
+    if (totalContribution === 0) return 0.01
+    return accounts.reduce(
+      (sum, acc) =>
+        sum + (acc.annualFees / 100) * (acc.monthlyContribution / totalContribution),
+      0
+    )
+  }
+
   return accounts.reduce(
     (sum, acc) =>
       sum + (acc.annualFees / 100) * (acc.currentBalance / totalBalance),
@@ -98,7 +122,7 @@ function calculateSimulationWithdrawal(
 function simulateSingleRun(
   runId: number,
   initialBalance: number,
-  initialContribution: number,
+  monthlyContribution: number,
   expectedReturn: number,
   volatility: number,
   fees: number,
@@ -116,15 +140,27 @@ function simulateSingleRun(
   const returns = generateReturnSequence(expectedReturn - fees, volatility, totalYears)
 
   let balance = initialBalance
-  let contribution = initialContribution
   const yearlyBalances: number[] = []
   let depletionAge: number | null = null
 
-  // Accumulation phase
+  // Accumulation phase with MONTHLY compounding (matches deterministic projection)
   for (let year = 0; year < yearsToRetirement; year++) {
-    balance = balance * (1 + returns[year]) + contribution
+    const annualReturn = returns[year]
+    const monthlyReturn = annualReturn / 12 // Simple division for nominal rate
+
+    // Monthly compounding within each year
+    for (let month = 0; month < 12; month++) {
+      // Calculate contribution for this month (smooth escalation)
+      const currentMonthlyContribution = monthlyContribution * Math.pow(1 + escalation, year + month / 12)
+
+      // Apply growth first (end-of-period contributions, matches Excel FV type=0)
+      balance = balance * (1 + monthlyReturn)
+
+      // Then add contribution
+      balance += currentMonthlyContribution
+    }
+
     yearlyBalances.push(balance)
-    contribution *= 1 + escalation
   }
 
   // Drawdown phase - calculate withdrawal based on strategy
@@ -244,8 +280,8 @@ export function runMonteCarloSimulation(
 
   // Aggregate account data
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
-  const totalContribution = accounts.reduce(
-    (sum, acc) => sum + acc.monthlyContribution * 12,
+  const totalMonthlyContribution = accounts.reduce(
+    (sum, acc) => sum + acc.monthlyContribution,
     0
   )
   const weightedReturn = calculateWeightedReturn(accounts)
@@ -263,7 +299,7 @@ export function runMonteCarloSimulation(
     const run = simulateSingleRun(
       runId,
       totalBalance,
-      totalContribution,
+      totalMonthlyContribution,
       weightedReturn,
       volatility,
       weightedFees,
