@@ -25,6 +25,7 @@ import { ProjectionSummary } from "@/components/results/projection-summary"
 import { InsightsPanel } from "@/components/results/insights-panel"
 import { CalculationsBreakdown } from "@/components/results/calculations-breakdown"
 import { DebugWindow } from "@/components/debug/debug-window"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { calculateProjection } from "@/lib/calculations/projection-engine"
 import { runMonteCarloSimulation } from "@/lib/monte-carlo/simulation-engine"
@@ -200,6 +201,8 @@ export default function CalculatorPage() {
             <RotateCcw className="mr-2 h-4 w-4" />
             Reset
           </Button>
+
+          <ThemeToggle />
         </div>
       </div>
 

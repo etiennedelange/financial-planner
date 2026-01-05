@@ -21,8 +21,11 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 - [x] Compounding method configuration (nominal vs compound)
 - [x] Display mode toggle (today's value vs future value)
 - [x] Debug window with calculation parameters
+- [x] Dark mode support with theme toggle (Light/Dark/System)
 
-**Documentation:** See `history/2026-01-02-calculation-fixes-and-ui-improvements.md`
+**Documentation:**
+- See `history/2026-01-02-calculation-fixes-and-ui-improvements.md`
+- See `history/2026-01-05-insights-tab-fix-and-testing-framework.md`
 
 ---
 
@@ -31,17 +34,20 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 **Goal:** Establish comprehensive testing to maintain calculation accuracy and cross-tab consistency.
 
 **Priority Tasks:**
-- [ ] **P0: Consolidate duplicate `projectFinalSavings` functions** (Critical)
-  - Currently duplicated in: optimal-contribution.ts, cost-of-delay.ts, scenario-comparison.ts
-  - Create single source of truth in `lib/calculations/utils/projection.ts`
+- [x] **P0: Consolidate duplicate `projectFinalSavings` functions** (Critical) ✅
+  - Created single source of truth in `lib/calculations/utils/projection.ts`
+  - Updated 3 files to import from shared utility
+  - Added helper functions: `calculateMonthlyReturn()`, `formatMonthlyReturnFormula()`
   - Prevents drift between calculation engines
-  - **Estimated effort:** 30 minutes
+  - **Status:** Completed 2026-01-05
 
-- [ ] **P0: Add compounding method to Debug Window** (Critical)
-  - Show which formula is being used (nominal vs compound)
-  - Display calculated monthly return for verification
-  - Add calculation checksums
-  - **Estimated effort:** 20 minutes
+- [x] **P0: Add compounding method to Debug Window** (Critical) ✅
+  - Added prominent "Calculation Method" section at top of debug window
+  - Displays compounding method with description
+  - Shows monthly return formula with actual calculation
+  - Added display mode information
+  - Added calculation checksums (accounts, balances, returns, fees)
+  - **Status:** Completed 2026-01-05
 
 - [ ] **P1: Unit tests for core calculations** (High Priority)
   - Test `projectFinalSavings` with known Excel FV results
@@ -211,7 +217,7 @@ From REQUIREMENTS.md:
 | Phase | Status | Progress |
 |-------|--------|----------|
 | Phase 1: Calculation Accuracy | ✅ Complete | 100% |
-| Phase 1.5: Testing & Validation | 🔄 In Progress | 0% |
+| Phase 1.5: Testing & Validation | 🔄 In Progress | 33% (P0 complete) |
 | Phase 2: Supabase Integration | 🔲 Pending | 0% |
 | Phase 3: User Accounts | 🔲 Pending | 0% |
 | Phase 4: Data Persistence | 🔲 Pending | 0% |
