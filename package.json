@@ -10,7 +10,14 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "ui:doc": "playwright test",
+    "ui:doc:desktop": "playwright test --project=desktop-chrome",
+    "ui:doc:tablet": "playwright test --project=tablet",
+    "ui:doc:mobile": "playwright test --project=mobile",
+    "ui:doc:headed": "playwright test --headed",
+    "ui:doc:debug": "playwright test --debug",
+    "ui:doc:report": "playwright show-report"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -40,6 +47,7 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
