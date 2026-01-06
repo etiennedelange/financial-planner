@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ Critical Rule: Test-Driven Development
+
+**ALL calculation code changes MUST include unit tests. No calculation code should be committed without tests.**
+
+See [Testing & Validation](#testing--validation) section below for requirements.
+
 ## Project Overview
 
 South African retirement planning calculator with Monte Carlo simulations, multi-account portfolio management, and SA-specific tax treatment. Built with Next.js, TypeScript, shadcn/ui, and Supabase.
@@ -58,19 +64,34 @@ Supported retirement account types:
 
 ## Testing & Validation
 
-**Critical for Accuracy:** All calculation changes must include tests and validation.
+**MANDATORY:** All calculation changes MUST include unit tests. No exceptions.
+
+### Testing Requirements
+
+**When adding/modifying calculation code:**
+1. ✅ **Write tests FIRST** (or alongside implementation)
+2. ✅ **Add tests to corresponding `.test.ts` file** (create if doesn't exist)
+3. ✅ **Cover edge cases:** zero values, R0 contributions, 0% escalation, negative years
+4. ✅ **Test both compounding methods:** nominal and compound
+5. ✅ **Verify against known values:** use Excel FV or manual calculations
+6. ✅ **Maintain >90% coverage** for calculation files
+
+**Example test file location:**
+- `lib/calculations/utils/projection.ts` → `lib/calculations/utils/projection.test.ts`
+- `lib/monte-carlo/simulation-engine.ts` → `lib/monte-carlo/simulation-engine.test.ts`
 
 ### Testing Strategy
-- **Unit Tests:** Individual calculation functions (Vitest)
-- **Integration Tests:** Cross-tab consistency
-- **Manual Validation:** SA retirement validator agent for complex scenarios
+- **Unit Tests:** Individual calculation functions (Vitest) - **REQUIRED**
+- **Integration Tests:** Cross-tab consistency - **RECOMMENDED**
+- **Manual Validation:** SA retirement validator agent for complex scenarios - **RECOMMENDED**
 
 ### Before Committing Calculation Changes
-1. Add/update unit tests for changed functions
-2. Run `npm run test:coverage` - ensure >90% coverage
-3. Run `npm run build` - verify no TypeScript errors
-4. Use SA retirement validator agent to verify results
-5. Check Debug Window shows correct compounding method and values
+1. ✅ **Write/update unit tests for changed functions** (MANDATORY)
+2. ✅ **Run `npm run test`** - all tests must pass
+3. ✅ **Run `npm run test:coverage`** - ensure >90% coverage on modified files
+4. ✅ **Run `npm run build`** - verify no TypeScript errors
+5. ✅ **Check Debug Window** - verify correct compounding method and values
+6. ⚠️ **Optional but recommended:** Use SA retirement validator agent for complex scenarios
 
 ### Key Calculation Files
 - `lib/calculations/utils/projection.ts` - **Single source of truth** for `projectFinalSavings`
@@ -78,11 +99,42 @@ Supported retirement account types:
 - `lib/monte-carlo/simulation-engine.ts` - Monte Carlo simulations
 - All calculations must respect `assumptions.compoundingMethod` setting
 
+### Test Structure Template
+
+Follow this pattern for calculation tests (see `projection.test.ts` as reference):
+
+```typescript
+describe('functionName', () => {
+  describe('Critical SA scenarios', () => {
+    it('should handle TFSA at R500k limit (R0 contributions)', () => {
+      // Test accounts with existing balance but no new contributions
+    })
+
+    it('should handle old pension fund (R0 contributions, 0% escalation)', () => {
+      // Test accounts no longer receiving contributions
+    })
+  })
+
+  describe('Compounding methods', () => {
+    it('nominal method: should match Excel FV formula', () => {})
+    it('compound method: should use actuarial compounding', () => {})
+  })
+
+  describe('Edge cases', () => {
+    it('should handle zero years', () => {})
+    it('should handle zero balance with contributions', () => {})
+    it('should handle zero balance and zero contributions', () => {})
+  })
+})
+```
+
 ### Common Pitfalls
 - ❌ Don't duplicate `projectFinalSavings` - import from shared utility
 - ❌ Don't hardcode `monthlyReturn = annualReturn / 12` - use compounding method
 - ❌ Don't forget to include `assumptions` in useMemo dependencies
 - ❌ Don't use local formatCurrency - import from `lib/utils/currency`
+- ❌ **Don't modify calculation code without adding tests**
+- ❌ **Don't skip edge case testing** (R0 contributions, 0% escalation, etc.)
 
 ### Debug Window
 The Debug Window (`components/debug/debug-window.tsx`) is the source of truth for verifying:
