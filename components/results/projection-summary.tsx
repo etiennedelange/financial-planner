@@ -85,7 +85,7 @@ export function ProjectionSummary({
         inflationRate / 100
       ),
       icon: TrendingUp,
-      description: `Initial withdrawal${displayMode === 'real' ? " (today's value)" : ''}`,
+      description: `Gross withdrawal (before tax)${displayMode === 'real' ? " (today's value)" : ''}`,
     },
     {
       label: "Portfolio Depletion",
