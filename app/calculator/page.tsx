@@ -20,12 +20,12 @@ import { RetirementGoalsForm } from "@/components/inputs/retirement-goals-form"
 import { AssumptionsForm } from "@/components/inputs/assumptions-form"
 import { PortfolioGrowthChart } from "@/components/charts/portfolio-growth-chart"
 import { MonteCarloChart } from "@/components/charts/monte-carlo-chart"
-import { SuccessGauge } from "@/components/charts/success-gauge"
 import { ProjectionSummary } from "@/components/results/projection-summary"
 import { InsightsPanel } from "@/components/results/insights-panel"
 import { CalculationsBreakdown } from "@/components/results/calculations-breakdown"
 import { DebugWindow } from "@/components/debug/debug-window"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { ColorThemeToggle } from "@/components/color-theme-toggle"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { calculateProjection } from "@/lib/calculations/projection-engine"
 import { runMonteCarloSimulation } from "@/lib/monte-carlo/simulation-engine"
@@ -202,6 +202,7 @@ export default function CalculatorPage() {
             Reset
           </Button>
 
+          <ColorThemeToggle />
           <ThemeToggle />
         </div>
       </div>
@@ -215,6 +216,7 @@ export default function CalculatorPage() {
             currentAge={personalInfo.currentAge}
             lifeExpectancy={personalInfo.lifeExpectancy}
             inflationRate={retirementGoals.inflationRate}
+            simulationResult={simulationResult}
           />
         </div>
       )}
@@ -225,17 +227,12 @@ export default function CalculatorPage() {
           projections={projection?.yearlyProjections || []}
           retirementAge={personalInfo.retirementAge}
         />
-        <div className="space-y-4">
-          <MonteCarloChart
-            simulationResult={simulationResult}
-            currentAge={personalInfo.currentAge}
-            retirementAge={personalInfo.retirementAge}
-            isRunning={isSimulating}
-          />
-          {simulationResult && (
-            <SuccessGauge successRate={simulationResult.successRate} />
-          )}
-        </div>
+        <MonteCarloChart
+          simulationResult={simulationResult}
+          currentAge={personalInfo.currentAge}
+          retirementAge={personalInfo.retirementAge}
+          isRunning={isSimulating}
+        />
       </div>
 
       {/* Input Tabs */}

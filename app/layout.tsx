@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { ColorThemeProvider } from "@/components/color-theme-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -24,9 +25,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <main className="min-h-screen bg-background">
-            {children}
-          </main>
+          <ColorThemeProvider defaultTheme="blue" storageKey="color-theme">
+            <main className="min-h-screen bg-background">
+              {children}
+            </main>
+          </ColorThemeProvider>
         </ThemeProvider>
       </body>
     </html>

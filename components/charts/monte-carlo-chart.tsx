@@ -6,11 +6,15 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
   ReferenceLine,
 } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart"
 import type { SimulationResult } from "@/types"
 import { formatCurrency } from "@/lib/utils/formatters"
 
@@ -51,6 +55,29 @@ export function MonteCarloChart({
 
   const { percentiles } = simulationResult
 
+  const chartConfig = {
+    p50: {
+      label: "Median (50th)",
+      color: "hsl(var(--chart-1))",
+    },
+    p75: {
+      label: "75th Percentile",
+      color: "hsl(var(--chart-2))",
+    },
+    p90: {
+      label: "90th Percentile",
+      color: "hsl(var(--chart-3))",
+    },
+    p25: {
+      label: "25th Percentile",
+      color: "hsl(var(--chart-4))",
+    },
+    p10: {
+      label: "10th Percentile",
+      color: "hsl(var(--chart-5))",
+    },
+  } satisfies ChartConfig
+
   const data = percentiles.p50.map((_, index) => ({
     age: currentAge + index,
     p10: percentiles.p10[index],
@@ -62,57 +89,56 @@ export function MonteCarloChart({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-4">
         <CardTitle>Monte Carlo Projection</CardTitle>
         <CardDescription>
-          Based on {simulationResult.runs.length.toLocaleString()} simulations |{" "}
-          {simulationResult.successRate.toFixed(0)}% success rate
+          Based on {simulationResult.runs.length.toLocaleString()} simulations
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+        <ChartContainer config={chartConfig}>
           <AreaChart
             data={data}
-            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+            margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
           >
             <defs>
               <linearGradient id="colorP90" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2} />
-                <stop offset="95%" stopColor="#22c55e" stopOpacity={0.05} />
+                <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0.05} />
               </linearGradient>
               <linearGradient id="colorP75" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#22c55e" stopOpacity={0.1} />
+                <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0.1} />
               </linearGradient>
               <linearGradient id="colorP50" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#2563eb" stopOpacity={0.6} />
-                <stop offset="95%" stopColor="#2563eb" stopOpacity={0.2} />
+                <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.6} />
+                <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.2} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="age" />
             <YAxis
               tickFormatter={(value) => formatCurrency(value, { compact: true })}
             />
-            <Tooltip
-              formatter={(value, name) => [
-                formatCurrency(Number(value) || 0),
-                name === "p90"
-                  ? "90th Percentile"
-                  : name === "p75"
-                    ? "75th Percentile"
-                    : name === "p50"
-                      ? "Median"
-                      : name === "p25"
-                        ? "25th Percentile"
-                        : "10th Percentile",
-              ]}
-              labelFormatter={(age) => `Age ${age}`}
+            <ChartTooltip
+              content={
+                <ChartTooltipContent
+                  labelFormatter={(age) => `Age ${age}`}
+                  formatter={(value) => formatCurrency(Number(value) || 0)}
+                />
+              }
             />
             <ReferenceLine
               x={retirementAge}
-              stroke="#ef4444"
+              stroke="hsl(var(--destructive))"
               strokeDasharray="5 5"
+              label={{
+                value: `Retirement (${retirementAge})`,
+                position: "insideTopLeft",
+                fill: "hsl(var(--destructive))",
+                fontSize: 12,
+                fontWeight: 600,
+              }}
             />
             {/* Outer band: 10th-90th percentile */}
             <Area
@@ -134,26 +160,12 @@ export function MonteCarloChart({
             <Area
               type="monotone"
               dataKey="p50"
-              stroke="#2563eb"
+              stroke="hsl(var(--chart-1))"
               fill="url(#colorP50)"
               strokeWidth={2}
             />
           </AreaChart>
-        </ResponsiveContainer>
-        <div className="mt-4 flex justify-center gap-6 text-xs">
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded bg-blue-500" />
-            <span>Median (50th)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded bg-green-500/40" />
-            <span>25th-75th</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded bg-green-500/20" />
-            <span>10th-90th</span>
-          </div>
-        </div>
+        </ChartContainer>
       </CardContent>
     </Card>
   )

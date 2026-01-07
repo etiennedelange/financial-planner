@@ -28,7 +28,7 @@ import { SA_DEFAULTS } from "@/lib/constants/defaults"
 const accountSchema = z.object({
   name: z.string().min(1, "Account name is required"),
   provider: z.string().min(1, "Provider is required"),
-  type: z.enum([
+type: z.enum([
     "pension_fund",
     "retirement_annuity",
     "preservation_fund",
