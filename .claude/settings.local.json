@@ -10,7 +10,9 @@
       "Bash(git worktree:*)",
       "mcp__ide__executeCode",
       "Bash(npm run build:*)",
-      "Bash(npx playwright install:*)"
+      "Bash(npx playwright install:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run test:coverage:*)"
     ]
   }
 }
