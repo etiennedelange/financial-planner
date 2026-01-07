@@ -67,11 +67,11 @@ export function PortfolioGrowthChart({
           Projected balance from age {projections[0].age} to {projections[projections.length - 1].age}
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig}>
+      <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
+        <ChartContainer config={chartConfig} className="h-[280px] w-full md:h-auto">
           <AreaChart
             data={data}
-            margin={{ top: 20, right: 30, left: 0, bottom: 10 }}
+            margin={{ top: 20, right: 10, left: 0, bottom: 10 }}
           >
             <defs>
               <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">

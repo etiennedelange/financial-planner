@@ -77,24 +77,24 @@ export function AccountList() {
               <CardTitle className="text-base">Portfolio Summary</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Balance</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-xs text-muted-foreground sm:text-sm">Total Balance</p>
+                  <p className="text-lg font-bold sm:text-2xl">
                     {formatCurrency(totalBalance)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-muted-foreground sm:text-sm">
                     Monthly Contributions
                   </p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-lg font-bold sm:text-2xl">
                     {formatCurrency(totalMonthly)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Accounts</p>
-                  <p className="text-2xl font-bold">{accounts.length}</p>
+                  <p className="text-xs text-muted-foreground sm:text-sm">Accounts</p>
+                  <p className="text-lg font-bold sm:text-2xl">{accounts.length}</p>
                 </div>
               </div>
             </CardContent>

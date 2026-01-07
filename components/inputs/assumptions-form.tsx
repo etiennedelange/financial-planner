@@ -63,7 +63,7 @@ export function AssumptionsForm() {
       <CardContent className="space-y-6">
         <div className="space-y-4">
           <h4 className="text-sm font-medium">Expected Returns (Nominal)</h4>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="equityReturn">Equity (%)</Label>
               <Input
@@ -104,7 +104,7 @@ export function AssumptionsForm() {
 
         <div className="space-y-4">
           <h4 className="text-sm font-medium">Volatility (Std Dev)</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="equityVolatility">Equity (%)</Label>
               <Input

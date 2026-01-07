@@ -104,106 +104,113 @@ export default function CalculatorPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">SA Retirement Calculator</h1>
-          <p className="text-muted-foreground">
-            Plan your retirement with Monte Carlo simulations
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <DebugWindow projection={projection} simulationResult={simulationResult} />
+    <div className="container mx-auto py-4 px-3 md:py-8 md:px-4">
+      <div className="mb-6 space-y-4 md:mb-8 md:space-y-0">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold md:text-3xl">SA Retirement Calculator</h1>
+            <p className="text-sm text-muted-foreground md:text-base">
+              Plan your retirement with Monte Carlo simulations
+            </p>
+          </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <TrendingDown className="mr-2 h-4 w-4" />
-                {displayMode === 'real' ? "Today's Value" : 'Future Value'}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel>Display Values As</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setDisplayMode('nominal')}
-                className="flex flex-col items-start gap-1 cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${displayMode === 'nominal' ? 'bg-primary' : 'bg-muted'}`} />
-                  <span className="font-medium">Future Value (Nominal)</span>
-                </div>
-                <span className="text-xs text-muted-foreground pl-4">
-                  Show values in future Rands. R1M at retirement will actually be R1M then.
-                </span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setDisplayMode('real')}
-                className="flex flex-col items-start gap-1 cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${displayMode === 'real' ? 'bg-primary' : 'bg-muted'}`} />
-                  <span className="font-medium">Today&apos;s Value (Real)</span>
-                </div>
-                <span className="text-xs text-muted-foreground pl-4">
-                  Adjust all values to today&apos;s purchasing power. Easier to understand long-term values.
-                </span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                This affects how monetary values are displayed across all tabs.
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex flex-wrap gap-2 md:flex-nowrap">
+            <DebugWindow projection={projection} simulationResult={simulationResult} />
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <Calculator className="mr-2 h-4 w-4" />
-                {assumptions.compoundingMethod === 'compound' ? 'Compound' : 'Nominal'}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel>Return Calculation Method</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setAssumptions({ compoundingMethod: 'nominal' })}
-                className="flex flex-col items-start gap-1 cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${assumptions.compoundingMethod === 'nominal' ? 'bg-primary' : 'bg-muted'}`} />
-                  <span className="font-medium">Nominal (Excel-compatible)</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="md:w-auto md:px-4">
+                  <TrendingDown className="h-4 w-4" />
+                  <span className="ml-2 hidden md:inline">
+                    {displayMode === 'real' ? "Today's Value" : 'Future Value'}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                <DropdownMenuLabel>Display Values As</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setDisplayMode('nominal')}
+                  className="flex flex-col items-start gap-1 cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${displayMode === 'nominal' ? 'bg-primary' : 'bg-muted'}`} />
+                    <span className="font-medium">Future Value (Nominal)</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground pl-4">
+                    Show values in future Rands. R1M at retirement will actually be R1M then.
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setDisplayMode('real')}
+                  className="flex flex-col items-start gap-1 cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${displayMode === 'real' ? 'bg-primary' : 'bg-muted'}`} />
+                    <span className="font-medium">Today&apos;s Value (Real)</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground pl-4">
+                    Adjust all values to today&apos;s purchasing power. Easier to understand long-term values.
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                  This affects how monetary values are displayed across all tabs.
                 </div>
-                <span className="text-xs text-muted-foreground pl-4">
-                  12% ÷ 12 = 1%/month. Matches Excel FV but overstates returns by ~0.7% annually.
-                </span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setAssumptions({ compoundingMethod: 'compound' })}
-                className="flex flex-col items-start gap-1 cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${assumptions.compoundingMethod === 'compound' ? 'bg-primary' : 'bg-muted'}`} />
-                  <span className="font-medium">Compound (Actuarially correct)</span>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="md:w-auto md:px-4">
+                  <Calculator className="h-4 w-4" />
+                  <span className="ml-2 hidden md:inline">
+                    {assumptions.compoundingMethod === 'compound' ? 'Compound' : 'Nominal'}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                <DropdownMenuLabel>Return Calculation Method</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setAssumptions({ compoundingMethod: 'nominal' })}
+                  className="flex flex-col items-start gap-1 cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${assumptions.compoundingMethod === 'nominal' ? 'bg-primary' : 'bg-muted'}`} />
+                    <span className="font-medium">Nominal (Excel-compatible)</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground pl-4">
+                    12% ÷ 12 = 1%/month. Matches Excel FV but overstates returns by ~0.7% annually.
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setAssumptions({ compoundingMethod: 'compound' })}
+                  className="flex flex-col items-start gap-1 cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${assumptions.compoundingMethod === 'compound' ? 'bg-primary' : 'bg-muted'}`} />
+                    <span className="font-medium">Compound (Actuarially correct)</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground pl-4">
+                    (1.12)^(1/12) - 1 = 0.95%/month. Mathematically precise for long-term projections.
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                  This setting affects all calculations across all tabs.
                 </div>
-                <span className="text-xs text-muted-foreground pl-4">
-                  (1.12)^(1/12) - 1 = 0.95%/month. Mathematically precise for long-term projections.
-                </span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                This setting affects all calculations across all tabs.
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          <Button variant="outline" onClick={handleReset}>
-            <RotateCcw className="mr-2 h-4 w-4" />
-            Reset
-          </Button>
+            <Button variant="outline" size="icon" onClick={handleReset} className="md:w-auto md:px-4">
+              <RotateCcw className="h-4 w-4" />
+              <span className="ml-2 hidden md:inline">Reset</span>
+            </Button>
 
-          <ColorThemeToggle />
-          <ThemeToggle />
+            <ColorThemeToggle />
+            <ThemeToggle />
+          </div>
         </div>
       </div>
 
@@ -237,13 +244,30 @@ export default function CalculatorPage() {
 
       {/* Input Tabs */}
       <Tabs defaultValue="accounts" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="accounts">Accounts</TabsTrigger>
-          <TabsTrigger value="personal">Personal</TabsTrigger>
-          <TabsTrigger value="goals">Goals</TabsTrigger>
-          <TabsTrigger value="assumptions">Assumptions</TabsTrigger>
-          <TabsTrigger value="insights">Insights</TabsTrigger>
-          <TabsTrigger value="calculations">Calculations</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 gap-1 md:flex md:justify-center lg:grid lg:grid-cols-6">
+          <TabsTrigger value="accounts" className="text-xs md:text-sm">
+            <span className="md:hidden">Accts</span>
+            <span className="hidden md:inline">Accounts</span>
+          </TabsTrigger>
+          <TabsTrigger value="personal" className="text-xs md:text-sm">
+            <span className="md:hidden">Info</span>
+            <span className="hidden md:inline">Personal</span>
+          </TabsTrigger>
+          <TabsTrigger value="goals" className="text-xs md:text-sm">
+            Goals
+          </TabsTrigger>
+          <TabsTrigger value="assumptions" className="text-xs md:text-sm">
+            <span className="md:hidden">Calc</span>
+            <span className="hidden md:inline">Assumptions</span>
+          </TabsTrigger>
+          <TabsTrigger value="insights" className="text-xs md:text-sm">
+            <span className="md:hidden">Stats</span>
+            <span className="hidden md:inline">Insights</span>
+          </TabsTrigger>
+          <TabsTrigger value="calculations" className="text-xs md:text-sm">
+            <span className="md:hidden">Math</span>
+            <span className="hidden md:inline">Calculations</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="accounts">

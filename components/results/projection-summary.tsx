@@ -121,7 +121,7 @@ export function ProjectionSummary({
   ]
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-5">
       {metrics.map((metric) => (
         <Card
           key={metric.label}
@@ -133,7 +133,7 @@ export function ProjectionSummary({
                 : ""
           }
         >
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 md:pt-6">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">{metric.label}</p>

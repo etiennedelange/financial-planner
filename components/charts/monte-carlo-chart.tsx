@@ -95,11 +95,11 @@ export function MonteCarloChart({
           Based on {simulationResult.runs.length.toLocaleString()} simulations
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig}>
+      <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
+        <ChartContainer config={chartConfig} className="h-[280px] w-full md:h-auto">
           <AreaChart
             data={data}
-            margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
+            margin={{ top: 20, right: 10, left: 0, bottom: 0 }}
           >
             <defs>
               <linearGradient id="colorP90" x1="0" y1="0" x2="0" y2="1">
