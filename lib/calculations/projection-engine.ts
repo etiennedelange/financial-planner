@@ -1,4 +1,5 @@
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
+import { calculateIncomeTaxWithRebates } from "./retirement-tax"
 import type {
   Account,
   DrawdownConfig,
@@ -177,9 +178,14 @@ export function calculateProjection(
       yearlyProjections: [],
       portfolioAtRetirement: 0,
       monthlyIncomeAtRetirement: 0,
+      monthlyNetIncomeAtRetirement: 0,
       portfolioDepletionAge: personalInfo.retirementAge,
       shortfallAmount: retirementGoals.desiredMonthlyIncome * 12 * yearsInRetirement,
       surplusAmount: 0,
+      totalLifetimeIncomeTax: 0,
+      totalLumpSumTax: 0,
+      totalMedicalAidContributions: 0,
+      averageEffectiveTaxRate: 0,
     }
   }
 
@@ -223,6 +229,10 @@ export function calculateProjection(
       growth: yearlyGrowth,
       fees: yearlyFees,
       withdrawals: 0,
+      incomeTax: 0,
+      lumpSumTax: 0,
+      medicalAidContribution: 0,
+      netIncome: 0,
       endingBalance: totalBalance,
       inflationAdjustedWithdrawal: 0,
     })
@@ -241,6 +251,10 @@ export function calculateProjection(
 
   // Drawdown phase
   let portfolioDepletionAge: number | null = null
+  let totalLifetimeIncomeTax = 0
+  let totalLumpSumTax = 0
+  let totalMedicalAidContributions = 0
+  let totalGrossWithdrawals = 0
 
   for (let year = 0; year < yearsInRetirement; year++) {
     const age = personalInfo.retirementAge + year
@@ -259,6 +273,10 @@ export function calculateProjection(
         growth: 0,
         fees: 0,
         withdrawals: 0,
+        incomeTax: 0,
+        lumpSumTax: 0,
+        medicalAidContribution: 0,
+        netIncome: 0,
         endingBalance: 0,
         inflationAdjustedWithdrawal: 0,
       })
@@ -278,6 +296,18 @@ export function calculateProjection(
     const withdrawal = Math.min(adjustedWithdrawal, balanceAfterGrowth)
     totalBalance = balanceAfterGrowth - withdrawal
 
+    // Calculate taxes on withdrawal
+    const incomeTax = calculateIncomeTaxWithRebates(withdrawal, age)
+    const lumpSumTax = 0 // TODO: Add lump sum modeling at retirement
+    const medicalAidContribution = 0 // TODO: Integrate medical costs
+    const netIncome = withdrawal - incomeTax - lumpSumTax - medicalAidContribution
+
+    // Track totals
+    totalGrossWithdrawals += withdrawal
+    totalLifetimeIncomeTax += incomeTax
+    totalLumpSumTax += lumpSumTax
+    totalMedicalAidContributions += medicalAidContribution
+
     yearlyProjections.push({
       year: yearsToRetirement + year + 1,
       age,
@@ -286,6 +316,10 @@ export function calculateProjection(
       growth,
       fees,
       withdrawals: withdrawal,
+      incomeTax,
+      lumpSumTax,
+      medicalAidContribution,
+      netIncome,
       endingBalance: Math.max(0, totalBalance),
       inflationAdjustedWithdrawal: withdrawal / Math.pow(1 + inflationRate, year),
     })
@@ -303,6 +337,21 @@ export function calculateProjection(
       inflationRate
     ) / 12
 
+  // Calculate monthly net income (after tax)
+  const annualGrossIncomeAtRetirement = monthlyIncomeAtRetirement * 12
+  const firstYearTax = calculateIncomeTaxWithRebates(
+    annualGrossIncomeAtRetirement,
+    personalInfo.retirementAge
+  )
+  const annualNetIncomeAtRetirement = annualGrossIncomeAtRetirement - firstYearTax
+  const monthlyNetIncomeAtRetirement = annualNetIncomeAtRetirement / 12
+
+  // Calculate average effective tax rate
+  const averageEffectiveTaxRate =
+    totalGrossWithdrawals > 0
+      ? (totalLifetimeIncomeTax / totalGrossWithdrawals) * 100
+      : 0
+
   // Calculate shortfall based on inflation-adjusted desired income at retirement
   const desiredMonthlyAtRetirement =
     retirementGoals.desiredMonthlyIncome * Math.pow(1 + inflationRate, yearsToRetirement)
@@ -315,8 +364,13 @@ export function calculateProjection(
     yearlyProjections,
     portfolioAtRetirement,
     monthlyIncomeAtRetirement,
+    monthlyNetIncomeAtRetirement,
     portfolioDepletionAge,
     shortfallAmount,
     surplusAmount: Math.max(0, totalBalance),
+    totalLifetimeIncomeTax,
+    totalLumpSumTax,
+    totalMedicalAidContributions,
+    averageEffectiveTaxRate,
   }
 }

@@ -12,7 +12,11 @@
       "Bash(npm run build:*)",
       "Bash(npx playwright install:*)",
       "Bash(npm run test:*)",
-      "Bash(npm run test:coverage:*)"
+      "Bash(npm run test:coverage:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npx playwright test:*)",
+      "Bash(git add:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }

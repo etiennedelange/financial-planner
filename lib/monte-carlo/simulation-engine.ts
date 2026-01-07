@@ -10,6 +10,7 @@ import type {
 } from "@/types"
 import { generateReturnSequence, getPercentile } from "./random-returns"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
+import { calculateIncomeTaxWithRebates } from "../calculations/retirement-tax"
 
 /**
  * Calculate spending phase multiplier based on years in retirement
@@ -169,6 +170,9 @@ function simulateSingleRun(
   }
 
   // Drawdown phase - calculate withdrawal based on strategy
+  // NOTE: Withdrawals represent gross amounts (before tax). Tax is implicitly
+  // included in the withdrawal amount. For detailed tax analysis, see the
+  // deterministic projection engine which tracks annual tax calculations.
   let withdrawal = calculateSimulationWithdrawal(
     balance,
     desiredMonthlyIncome,
