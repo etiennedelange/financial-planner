@@ -222,6 +222,16 @@ From REQUIREMENTS.md:
 - Legacy goals (leaving inheritance)
 - Monte Carlo optimization for contribution allocation
 
+**Tax Optimization (Phase 6):**
+- **Tax-optimized withdrawal sequencing**: Automatically sequence withdrawals from different account types to minimize lifetime tax burden
+  - Withdraw from TFSA first (tax-free)
+  - Then from discretionary accounts (capital gains tax more favorable)
+  - Preserve tax-deferred accounts (pension, RA) as long as possible
+  - Account for required minimum distributions and annuitization requirements
+- **Medical aid tax credits**: Model medical aid contributions that qualify for tax credits
+- **Lump sum commutation UI**: Allow users to configure what percentage to take as lump sum vs annuity
+- **Account-specific withdrawal tracking**: Track which accounts are drawn from each year
+
 ---
 
 ## Current Status
@@ -229,9 +239,18 @@ From REQUIREMENTS.md:
 | Phase | Status | Progress |
 |-------|--------|----------|
 | Phase 1: Calculation Accuracy | ✅ Complete | 100% |
-| Phase 1.5: Testing & Validation | 🔄 In Progress | 33% (P0 complete) |
+| Phase 1.5: Testing & Validation | ✅ Complete | 100% (216 tests passing, 90%+ coverage) |
 | Phase 2: Supabase Integration | 🔲 Pending | 0% |
 | Phase 3: User Accounts | 🔲 Pending | 0% |
 | Phase 4: Data Persistence | 🔲 Pending | 0% |
 | Phase 5: Export Functionality | 🔲 Pending | 0% |
-| Phase 6: Enhanced Tax | 🔲 Pending | 0% |
+| Phase 6: Enhanced Tax | 🔄 In Progress | 60% (Core calculations complete, UI complete, optimization pending) |
+
+**Latest Update (2026-01-07):**
+- ✅ Comprehensive SA retirement tax calculations implemented
+- ✅ Age-based rebates (Primary, Secondary, Tertiary)
+- ✅ Income tax and lump sum tax modeling
+- ✅ Lifetime tax burden analysis
+- ✅ Retirement payslip UI component
+- ✅ Tax breakdown accordion in calculations
+- 🔲 Tax-optimized withdrawal sequencing (deferred to future enhancement)
