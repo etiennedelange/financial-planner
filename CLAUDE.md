@@ -145,8 +145,58 @@ The Debug Window (`components/debug/debug-window.tsx`) is the source of truth fo
 
 Always check the Debug Window after making calculation changes to ensure all tabs show consistent values.
 
+## Theming Architecture
+
+This application uses a **dual-theming system** with independent color themes and dark mode.
+
+### Quick Reference
+
+**Color Themes:** Blue (default), Green, Rose, Violet, Orange
+**Dark Mode:** Light, Dark, System
+
+### Key Files
+- **CSS Variables:** `app/globals.css` - Design tokens and theme classes
+- **Tailwind Config:** `tailwind.config.ts` - Maps CSS variables to utility classes
+- **Color Theme Provider:** `components/color-theme-provider.tsx` - React context for color themes
+- **Theme Provider:** `components/theme-provider.tsx` - React context for dark mode (next-themes)
+
+### How It Works
+
+1. **CSS Variables** define color tokens: `--primary`, `--background`, etc.
+2. **Theme classes** override tokens: `.theme-green { --primary: 142 76% 36%; }`
+3. **Tailwind** maps tokens to utilities: `bg-primary` → `hsl(var(--primary))`
+4. **Providers** manage state and add classes to `<html>`
+
+**Example:** Green theme in dark mode
+```html
+<html class="dark theme-green">
+```
+Applies CSS:
+```css
+.theme-green.dark {
+  --primary: 142 71% 45%;
+  --chart-1: 142 71% 45%;
+}
+```
+
+### Adding New Themes
+
+1. Add CSS classes in `app/globals.css` for both light and dark variants
+2. Update `ColorTheme` type in `color-theme-provider.tsx`
+3. Add entry to `themes` array in `color-theme-toggle.tsx`
+
+### Important Rules
+
+- ✅ **Use semantic tokens:** `bg-primary`, `text-foreground`
+- ✅ **Test in all themes:** Ensure contrast works in light + dark
+- ❌ **Don't hardcode colors:** Avoid `bg-blue-500` (bypasses theming)
+- ❌ **Don't inline colors:** Avoid `style={{ color: '#3b82f6' }}`
+
+See **[docs/THEMING.md](docs/THEMING.md)** for complete architecture details.
+
 ## Documentation
 
+- **Theming System:** `docs/THEMING.md` - Complete theming architecture guide
 - **Phase Planning:** `history/project-phases.md`
 - **Testing Plan:** `history/testing-and-validation-plan.md`
 - **Calculation Changes:** Document in `history/` with date-prefixed markdown files
