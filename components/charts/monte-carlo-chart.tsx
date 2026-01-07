@@ -130,14 +130,14 @@ export function MonteCarloChart({
             />
             <ReferenceLine
               x={retirementAge}
-              stroke="hsl(var(--destructive))"
+              stroke="hsl(var(--muted-foreground) / 0.5)"
               strokeDasharray="5 5"
               label={{
                 value: `Retirement (${retirementAge})`,
                 position: "insideTopLeft",
-                fill: "hsl(var(--destructive))",
+                fill: "hsl(var(--muted-foreground))",
                 fontSize: 12,
-                fontWeight: 600,
+                fontWeight: 500,
               }}
             />
             {/* Outer band: 10th-90th percentile */}
