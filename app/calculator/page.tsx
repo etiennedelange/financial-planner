@@ -220,9 +220,9 @@ export default function CalculatorPage() {
         </div>
       </div>
 
-      {/* Dashboard Metrics Grid */}
+      {/* Dashboard Metrics Grid - Sticky */}
       {projection && (
-        <div className="dashboard-section">
+        <div className="dashboard-metrics-sticky">
           <DashboardMetricsGrid
             projection={projection}
             simulationResult={simulationResult}

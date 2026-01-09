@@ -200,6 +200,11 @@
     @apply mb-12 md:mb-16;
   }
 
+  .dashboard-metrics-sticky {
+    @apply sticky top-0 z-40 bg-background/95 backdrop-blur-sm mb-8;
+    @apply py-4 px-4 md:py-5 md:px-6 -mx-4 md:-mx-6;
+  }
+
   .dashboard-card {
     @apply rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200;
   }
