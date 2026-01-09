@@ -60,7 +60,7 @@ export function PortfolioGrowthChart({
   }))
 
   return (
-    <Card>
+    <Card className="dashboard-card">
       <CardHeader className="pb-4">
         <CardTitle>Portfolio Growth Over Time</CardTitle>
         <CardDescription>
@@ -68,7 +68,7 @@ export function PortfolioGrowthChart({
         </CardDescription>
       </CardHeader>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
-        <ChartContainer config={chartConfig} className="h-[280px] w-full md:h-auto">
+        <ChartContainer config={chartConfig} className="h-[400px] w-full">
           <AreaChart
             data={data}
             margin={{ top: 20, right: 10, left: 0, bottom: 10 }}
