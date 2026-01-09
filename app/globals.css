@@ -205,23 +205,23 @@
   }
 
   .dashboard-metric-card {
-    @apply dashboard-card p-6 md:p-8 relative overflow-hidden;
+    @apply dashboard-card p-4 md:p-5 relative overflow-hidden;
   }
 
   .dashboard-metric-icon {
-    @apply w-12 h-12 md:w-14 md:h-14 text-white/90;
+    @apply w-10 h-10 md:w-12 md:h-12 text-white/90;
   }
 
   .dashboard-metric-value {
-    @apply text-3xl md:text-4xl lg:text-5xl font-bold text-white;
+    @apply text-2xl md:text-3xl lg:text-4xl font-bold text-white;
   }
 
   .dashboard-metric-label {
-    @apply text-sm md:text-base font-medium text-white/80;
+    @apply text-xs md:text-sm font-medium text-white/80;
   }
 
   .dashboard-grid {
-    @apply grid gap-6 md:gap-8;
+    @apply grid gap-4 md:gap-6;
   }
 
   .dashboard-section-title {
@@ -229,62 +229,83 @@
   }
 }
 
-/* Dashboard Card Gradients - Dynamic with CSS Variables */
-@layer utilities {
-  /* Color 0 gradient */
-  .dashboard-gradient-0 {
-    background: linear-gradient(135deg, hsl(var(--dashboard-card-color-0)) 0%, hsla(var(--dashboard-card-color-0) / 0.85) 100%);
-  }
+/* Dashboard Card Gradients - Theme-scoped with Pastel Colors */
+@layer components {
+  /* Blue Theme Gradients - Pastel */
+  .theme-blue .dashboard-gradient-0 { background: linear-gradient(135deg, hsl(225 70% 70%) 0%, hsl(225 65% 60%) 100%); }
+  .theme-blue .dashboard-gradient-1 { background: linear-gradient(135deg, hsl(262 65% 72%) 0%, hsl(262 60% 62%) 100%); }
+  .theme-blue .dashboard-gradient-2 { background: linear-gradient(135deg, hsl(142 60% 68%) 0%, hsl(142 55% 58%) 100%); }
+  .theme-blue .dashboard-gradient-3 { background: linear-gradient(135deg, hsl(188 70% 72%) 0%, hsl(188 65% 62%) 100%); }
+  .theme-blue .dashboard-gradient-4 { background: linear-gradient(135deg, hsl(25 75% 72%) 0%, hsl(25 70% 62%) 100%); }
+  .theme-blue .dashboard-gradient-5 { background: linear-gradient(135deg, hsl(0 70% 75%) 0%, hsl(0 65% 65%) 100%); }
 
-  /* Color 1 gradient */
-  .dashboard-gradient-1 {
-    background: linear-gradient(135deg, hsl(var(--dashboard-card-color-1)) 0%, hsla(var(--dashboard-card-color-1) / 0.85) 100%);
-  }
+  /* Green Theme Gradients - Pastel */
+  .theme-green .dashboard-gradient-0 { background: linear-gradient(135deg, hsl(142 60% 68%) 0%, hsl(142 55% 58%) 100%); }
+  .theme-green .dashboard-gradient-1 { background: linear-gradient(135deg, hsl(0 70% 75%) 0%, hsl(0 65% 65%) 100%); }
+  .theme-green .dashboard-gradient-2 { background: linear-gradient(135deg, hsl(225 70% 70%) 0%, hsl(225 65% 60%) 100%); }
+  .theme-green .dashboard-gradient-3 { background: linear-gradient(135deg, hsl(262 65% 72%) 0%, hsl(262 60% 62%) 100%); }
+  .theme-green .dashboard-gradient-4 { background: linear-gradient(135deg, hsl(25 75% 72%) 0%, hsl(25 70% 62%) 100%); }
+  .theme-green .dashboard-gradient-5 { background: linear-gradient(135deg, hsl(188 70% 72%) 0%, hsl(188 65% 62%) 100%); }
 
-  /* Color 2 gradient */
-  .dashboard-gradient-2 {
-    background: linear-gradient(135deg, hsl(var(--dashboard-card-color-2)) 0%, hsla(var(--dashboard-card-color-2) / 0.85) 100%);
-  }
+  /* Rose Theme Gradients - Pastel */
+  .theme-rose .dashboard-gradient-0 { background: linear-gradient(135deg, hsl(346 65% 72%) 0%, hsl(346 60% 62%) 100%); }
+  .theme-rose .dashboard-gradient-1 { background: linear-gradient(135deg, hsl(142 60% 68%) 0%, hsl(142 55% 58%) 100%); }
+  .theme-rose .dashboard-gradient-2 { background: linear-gradient(135deg, hsl(188 70% 72%) 0%, hsl(188 65% 62%) 100%); }
+  .theme-rose .dashboard-gradient-3 { background: linear-gradient(135deg, hsl(225 70% 70%) 0%, hsl(225 65% 60%) 100%); }
+  .theme-rose .dashboard-gradient-4 { background: linear-gradient(135deg, hsl(25 75% 72%) 0%, hsl(25 70% 62%) 100%); }
+  .theme-rose .dashboard-gradient-5 { background: linear-gradient(135deg, hsl(45 75% 73%) 0%, hsl(45 70% 63%) 100%); }
 
-  /* Color 3 gradient */
-  .dashboard-gradient-3 {
-    background: linear-gradient(135deg, hsl(var(--dashboard-card-color-3)) 0%, hsla(var(--dashboard-card-color-3) / 0.85) 100%);
-  }
+  /* Violet Theme Gradients - Pastel */
+  .theme-violet .dashboard-gradient-0 { background: linear-gradient(135deg, hsl(262 65% 72%) 0%, hsl(262 60% 62%) 100%); }
+  .theme-violet .dashboard-gradient-1 { background: linear-gradient(135deg, hsl(45 75% 73%) 0%, hsl(45 70% 63%) 100%); }
+  .theme-violet .dashboard-gradient-2 { background: linear-gradient(135deg, hsl(142 60% 68%) 0%, hsl(142 55% 58%) 100%); }
+  .theme-violet .dashboard-gradient-3 { background: linear-gradient(135deg, hsl(25 75% 72%) 0%, hsl(25 70% 62%) 100%); }
+  .theme-violet .dashboard-gradient-4 { background: linear-gradient(135deg, hsl(188 70% 72%) 0%, hsl(188 65% 62%) 100%); }
+  .theme-violet .dashboard-gradient-5 { background: linear-gradient(135deg, hsl(0 70% 75%) 0%, hsl(0 65% 65%) 100%); }
 
-  /* Color 4 gradient */
-  .dashboard-gradient-4 {
-    background: linear-gradient(135deg, hsl(var(--dashboard-card-color-4)) 0%, hsla(var(--dashboard-card-color-4) / 0.85) 100%);
-  }
+  /* Orange Theme Gradients - Pastel */
+  .theme-orange .dashboard-gradient-0 { background: linear-gradient(135deg, hsl(25 75% 72%) 0%, hsl(25 70% 62%) 100%); }
+  .theme-orange .dashboard-gradient-1 { background: linear-gradient(135deg, hsl(225 70% 70%) 0%, hsl(225 65% 60%) 100%); }
+  .theme-orange .dashboard-gradient-2 { background: linear-gradient(135deg, hsl(188 70% 72%) 0%, hsl(188 65% 62%) 100%); }
+  .theme-orange .dashboard-gradient-3 { background: linear-gradient(135deg, hsl(142 60% 68%) 0%, hsl(142 55% 58%) 100%); }
+  .theme-orange .dashboard-gradient-4 { background: linear-gradient(135deg, hsl(262 65% 72%) 0%, hsl(262 60% 62%) 100%); }
+  .theme-orange .dashboard-gradient-5 { background: linear-gradient(135deg, hsl(0 70% 75%) 0%, hsl(0 65% 65%) 100%); }
 
-  /* Color 5 gradient */
-  .dashboard-gradient-5 {
-    background: linear-gradient(135deg, hsl(var(--dashboard-card-color-5)) 0%, hsla(var(--dashboard-card-color-5) / 0.85) 100%);
-  }
+  /* Dark mode variants - darker pastels */
+  .dark.theme-blue .dashboard-gradient-0 { background: linear-gradient(135deg, hsl(225 70% 50%) 0%, hsl(225 65% 40%) 100%); }
+  .dark.theme-blue .dashboard-gradient-1 { background: linear-gradient(135deg, hsl(262 65% 52%) 0%, hsl(262 60% 42%) 100%); }
+  .dark.theme-blue .dashboard-gradient-2 { background: linear-gradient(135deg, hsl(142 60% 48%) 0%, hsl(142 55% 38%) 100%); }
+  .dark.theme-blue .dashboard-gradient-3 { background: linear-gradient(135deg, hsl(188 70% 52%) 0%, hsl(188 65% 42%) 100%); }
+  .dark.theme-blue .dashboard-gradient-4 { background: linear-gradient(135deg, hsl(25 75% 52%) 0%, hsl(25 70% 42%) 100%); }
+  .dark.theme-blue .dashboard-gradient-5 { background: linear-gradient(135deg, hsl(0 70% 55%) 0%, hsl(0 65% 45%) 100%); }
 
-  /* Fallback old gradient classes for backwards compatibility */
-  .gradient-blue {
-    background: linear-gradient(135deg, hsl(var(--dashboard-card-color-0)) 0%, hsla(var(--dashboard-card-color-0) / 0.85) 100%);
-  }
+  .dark.theme-green .dashboard-gradient-0 { background: linear-gradient(135deg, hsl(142 60% 48%) 0%, hsl(142 55% 38%) 100%); }
+  .dark.theme-green .dashboard-gradient-1 { background: linear-gradient(135deg, hsl(0 70% 55%) 0%, hsl(0 65% 45%) 100%); }
+  .dark.theme-green .dashboard-gradient-2 { background: linear-gradient(135deg, hsl(225 70% 50%) 0%, hsl(225 65% 40%) 100%); }
+  .dark.theme-green .dashboard-gradient-3 { background: linear-gradient(135deg, hsl(262 65% 52%) 0%, hsl(262 60% 42%) 100%); }
+  .dark.theme-green .dashboard-gradient-4 { background: linear-gradient(135deg, hsl(25 75% 52%) 0%, hsl(25 70% 42%) 100%); }
+  .dark.theme-green .dashboard-gradient-5 { background: linear-gradient(135deg, hsl(188 70% 52%) 0%, hsl(188 65% 42%) 100%); }
 
-  .gradient-purple {
-    background: linear-gradient(135deg, hsl(var(--dashboard-card-color-1)) 0%, hsla(var(--dashboard-card-color-1) / 0.85) 100%);
-  }
+  .dark.theme-rose .dashboard-gradient-0 { background: linear-gradient(135deg, hsl(346 65% 52%) 0%, hsl(346 60% 42%) 100%); }
+  .dark.theme-rose .dashboard-gradient-1 { background: linear-gradient(135deg, hsl(142 60% 48%) 0%, hsl(142 55% 38%) 100%); }
+  .dark.theme-rose .dashboard-gradient-2 { background: linear-gradient(135deg, hsl(188 70% 52%) 0%, hsl(188 65% 42%) 100%); }
+  .dark.theme-rose .dashboard-gradient-3 { background: linear-gradient(135deg, hsl(225 70% 50%) 0%, hsl(225 65% 40%) 100%); }
+  .dark.theme-rose .dashboard-gradient-4 { background: linear-gradient(135deg, hsl(25 75% 52%) 0%, hsl(25 70% 42%) 100%); }
+  .dark.theme-rose .dashboard-gradient-5 { background: linear-gradient(135deg, hsl(45 75% 53%) 0%, hsl(45 70% 43%) 100%); }
 
-  .gradient-green {
-    background: linear-gradient(135deg, hsl(var(--dashboard-card-color-2)) 0%, hsla(var(--dashboard-card-color-2) / 0.85) 100%);
-  }
+  .dark.theme-violet .dashboard-gradient-0 { background: linear-gradient(135deg, hsl(262 65% 52%) 0%, hsl(262 60% 42%) 100%); }
+  .dark.theme-violet .dashboard-gradient-1 { background: linear-gradient(135deg, hsl(45 75% 53%) 0%, hsl(45 70% 43%) 100%); }
+  .dark.theme-violet .dashboard-gradient-2 { background: linear-gradient(135deg, hsl(142 60% 48%) 0%, hsl(142 55% 38%) 100%); }
+  .dark.theme-violet .dashboard-gradient-3 { background: linear-gradient(135deg, hsl(25 75% 52%) 0%, hsl(25 70% 42%) 100%); }
+  .dark.theme-violet .dashboard-gradient-4 { background: linear-gradient(135deg, hsl(188 70% 52%) 0%, hsl(188 65% 42%) 100%); }
+  .dark.theme-violet .dashboard-gradient-5 { background: linear-gradient(135deg, hsl(0 70% 55%) 0%, hsl(0 65% 45%) 100%); }
 
-  .gradient-cyan {
-    background: linear-gradient(135deg, hsl(var(--dashboard-card-color-3)) 0%, hsla(var(--dashboard-card-color-3) / 0.85) 100%);
-  }
-
-  .gradient-orange {
-    background: linear-gradient(135deg, hsl(var(--dashboard-card-color-4)) 0%, hsla(var(--dashboard-card-color-4) / 0.85) 100%);
-  }
-
-  .gradient-red {
-    background: linear-gradient(135deg, hsl(var(--dashboard-card-color-5)) 0%, hsla(var(--dashboard-card-color-5) / 0.85) 100%);
-  }
+  .dark.theme-orange .dashboard-gradient-0 { background: linear-gradient(135deg, hsl(25 75% 52%) 0%, hsl(25 70% 42%) 100%); }
+  .dark.theme-orange .dashboard-gradient-1 { background: linear-gradient(135deg, hsl(225 70% 50%) 0%, hsl(225 65% 40%) 100%); }
+  .dark.theme-orange .dashboard-gradient-2 { background: linear-gradient(135deg, hsl(188 70% 52%) 0%, hsl(188 65% 42%) 100%); }
+  .dark.theme-orange .dashboard-gradient-3 { background: linear-gradient(135deg, hsl(142 60% 48%) 0%, hsl(142 55% 38%) 100%); }
+  .dark.theme-orange .dashboard-gradient-4 { background: linear-gradient(135deg, hsl(262 65% 52%) 0%, hsl(262 60% 42%) 100%); }
+  .dark.theme-orange .dashboard-gradient-5 { background: linear-gradient(135deg, hsl(0 70% 55%) 0%, hsl(0 65% 45%) 100%); }
 }
 
 @layer base {
