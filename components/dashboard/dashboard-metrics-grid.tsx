@@ -36,18 +36,17 @@ export function DashboardMetricsGrid({
   const yearsToRetirement = retirementAge - currentAge
   const yearsToLifeExpectancy = lifeExpectancy - currentAge
 
-  // Determine success rate color
+  // Determine success rate color index (0-5)
   const successRate = simulationResult?.successRate ?? 0
-  let successColorScheme: "blue" | "purple" | "green" | "cyan" | "orange" | "red" =
-    "green"
+  let successColorIndex: 0 | 1 | 2 | 3 | 4 | 5 = 2 // Default to green (index 2)
   if (successRate >= 90) {
-    successColorScheme = "green"
+    successColorIndex = 2 // Green
   } else if (successRate >= 75) {
-    successColorScheme = "cyan"
+    successColorIndex = 3 // Cyan
   } else if (successRate >= 60) {
-    successColorScheme = "orange"
+    successColorIndex = 4 // Orange
   } else {
-    successColorScheme = "red"
+    successColorIndex = 5 // Red
   }
 
   const metrics: Array<{
@@ -55,14 +54,14 @@ export function DashboardMetricsGrid({
     label: string
     value: string | number
     description: string
-    colorScheme: "blue" | "purple" | "green" | "cyan" | "orange" | "red"
+    colorIndex: 0 | 1 | 2 | 3 | 4 | 5
   }> = [
     {
       icon: Wallet,
       label: "Total Portfolio",
       value: formatCurrency(totalCurrentBalance),
       description: "Current balance",
-      colorScheme: "blue" as const,
+      colorIndex: 0,
     },
     {
       icon: Target,
@@ -74,14 +73,14 @@ export function DashboardMetricsGrid({
         inflationRate / 100
       ),
       description: `At age ${retirementAge}${displayMode === "real" ? " (today's value)" : ""}`,
-      colorScheme: "purple" as const,
+      colorIndex: 1,
     },
     {
       icon: TrendingUp,
       label: "Monthly Contributions",
       value: formatCurrency(totalMonthlyContributions),
       description: "Total across all accounts",
-      colorScheme: "green" as const,
+      colorIndex: 2,
     },
     {
       icon: DollarSign,
@@ -93,14 +92,14 @@ export function DashboardMetricsGrid({
         inflationRate / 100
       ),
       description: `At retirement${displayMode === "real" ? " (today's value)" : ""}`,
-      colorScheme: "cyan" as const,
+      colorIndex: 3,
     },
     {
       icon: Calendar,
       label: "Years to Retirement",
       value: yearsToRetirement,
       description: `Currently age ${currentAge}`,
-      colorScheme: "orange" as const,
+      colorIndex: 4,
     },
   ]
 
@@ -111,7 +110,7 @@ export function DashboardMetricsGrid({
       label: "Plan Success Rate",
       value: `${successRate.toFixed(0)}%`,
       description: successRate >= 90 ? "Excellent" : successRate >= 75 ? "Good" : successRate >= 60 ? "Fair" : "At Risk",
-      colorScheme: successColorScheme as "blue" | "purple" | "green" | "cyan" | "orange" | "red",
+      colorIndex: successColorIndex,
     })
   }
 
@@ -124,7 +123,7 @@ export function DashboardMetricsGrid({
           label={metric.label}
           value={metric.value}
           description={metric.description}
-          colorScheme={metric.colorScheme}
+          colorIndex={metric.colorIndex}
         />
       ))}
     </div>
