@@ -10,18 +10,22 @@ interface KeyInsightsSummaryProps {
   projection: ProjectionResult | null
   currentAge: number
   retirementAge: number
+  lifeExpectancy: number
   currentMonthlyIncome: number
   desiredMonthlyIncome: number
   inflationRate: number
+  monteCarloSuccessRate?: number | null
 }
 
 export function KeyInsightsSummary({
   projection,
   currentAge,
   retirementAge,
+  lifeExpectancy,
   currentMonthlyIncome,
   desiredMonthlyIncome,
   inflationRate,
+  monteCarloSuccessRate,
 }: KeyInsightsSummaryProps) {
   if (!projection) {
     return null
@@ -33,9 +37,41 @@ export function KeyInsightsSummary({
   const maxRaContribution = Math.min(annualIncome * 0.275, 350000)
   const monthlyRaContribution = maxRaContribution / 12
 
-  // Calculation for optimal contribution (simplified)
-  const gap = desiredMonthlyIncome - projection.monthlyIncomeAtRetirement
-  const isOnTrack = gap <= 0
+  // Adjust desired income for inflation to compare in future terms
+  const inflationMultiplier = Math.pow(1 + inflationRate / 100, yearsToRetirement)
+  const desiredIncomeAtRetirement = desiredMonthlyIncome * inflationMultiplier
+
+  // On Track calculation - primary indicator is Monte Carlo success rate
+  // A plan is "on track" if:
+  // 1. Monte Carlo success rate >= 70% (funds last until life expectancy in most scenarios), OR
+  // 2. If no Monte Carlo data, portfolio doesn't deplete before life expectancy
+  const hasSuccessRate = monteCarloSuccessRate !== null && monteCarloSuccessRate !== undefined
+  const portfolioLastsUntilLifeExpectancy =
+    projection.portfolioDepletionAge === null || projection.portfolioDepletionAge >= lifeExpectancy
+
+  const isOnTrack = hasSuccessRate
+    ? monteCarloSuccessRate >= 70
+    : portfolioLastsUntilLifeExpectancy
+
+  // Calculate income replacement ratio using inflation-adjusted values
+  const incomeReplacementRatio = Math.round(
+    (projection.monthlyIncomeAtRetirement / desiredIncomeAtRetirement) * 100
+  )
+
+  // Determine On Track description
+  const getOnTrackDescription = (): string => {
+    if (hasSuccessRate) {
+      if (monteCarloSuccessRate >= 70) {
+        return `${monteCarloSuccessRate.toFixed(0)}% success rate`
+      } else {
+        return `Only ${monteCarloSuccessRate.toFixed(0)}% success rate`
+      }
+    }
+    if (portfolioLastsUntilLifeExpectancy) {
+      return "Portfolio lasts until life expectancy"
+    }
+    return `Portfolio depletes at age ${projection.portfolioDepletionAge}`
+  }
 
   const insights = [
     {
@@ -43,9 +79,7 @@ export function KeyInsightsSummary({
       value: isOnTrack ? "Yes" : "No",
       icon: Target,
       badge: isOnTrack ? "success" : "warning",
-      description: isOnTrack
-        ? "Your plan meets your income goal"
-        : `Gap: ${formatCurrency(Math.abs(gap))}/month`,
+      description: getOnTrackDescription(),
     },
     {
       title: "Contribution Potential",
@@ -56,10 +90,10 @@ export function KeyInsightsSummary({
     },
     {
       title: "Income Replacement",
-      value: `${Math.round((projection.monthlyIncomeAtRetirement / desiredMonthlyIncome) * 100)}%`,
+      value: `${incomeReplacementRatio}%`,
       icon: AlertCircle,
-      badge: Math.round((projection.monthlyIncomeAtRetirement / desiredMonthlyIncome) * 100) >= 100 ? "success" : "warning",
-      description: "Of desired retirement income",
+      badge: isOnTrack && incomeReplacementRatio >= 100 ? "success" : "warning",
+      description: "Inflation-adjusted replacement",
     },
   ]
 

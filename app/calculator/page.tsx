@@ -338,9 +338,11 @@ export default function CalculatorPage() {
             projection={projection}
             currentAge={personalInfo.currentAge}
             retirementAge={personalInfo.retirementAge}
+            lifeExpectancy={personalInfo.lifeExpectancy}
             currentMonthlyIncome={personalInfo.annualIncome / 12}
             desiredMonthlyIncome={retirementGoals.desiredMonthlyIncome}
             inflationRate={retirementGoals.inflationRate}
+            monteCarloSuccessRate={simulationResult?.successRate}
           />
         </div>
       )}

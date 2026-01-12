@@ -3,7 +3,7 @@
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { formatCurrency } from "@/lib/utils/currency"
 import type { ProjectionResult, SimulationResult } from "@/types"
-import { Calendar, DollarSign, Gauge, Target, TrendingUp, Wallet } from "lucide-react"
+import { Calendar, DollarSign, Gauge, Hourglass, Target, TrendingUp, Wallet } from "lucide-react"
 import { DashboardMetricCard } from "./dashboard-metric-card"
 
 interface DashboardMetricsGridProps {
@@ -95,6 +95,21 @@ export function DashboardMetricsGrid({
       value: `${successRate.toFixed(0)}%`,
       description: successRate >= 90 ? "Excellent" : successRate >= 75 ? "Good" : successRate >= 60 ? "Fair" : "At Risk",
       successRate: successRate,
+    })
+
+    // Add portfolio depletion metric
+    const depletionAge = simulationResult.medianDepletionAge
+    const depletionValue = depletionAge ? `Age ${depletionAge}` : "Never"
+    const yearsUntilDepletion = depletionAge ? depletionAge - currentAge : null
+    const depletionDescription = depletionAge
+      ? `${yearsUntilDepletion} years from now`
+      : "Portfolio sustains through life expectancy"
+
+    metrics.push({
+      icon: Hourglass,
+      label: "Portfolio Depletion",
+      value: depletionValue,
+      description: depletionDescription,
     })
   }
 
