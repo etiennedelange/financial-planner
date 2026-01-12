@@ -7,7 +7,7 @@ interface DashboardMetricCardProps {
   label: string
   value: string | number
   description?: string
-  colorIndex: 0 | 1 | 2 | 3 | 4 | 5
+  colorScheme: "blue" | "purple" | "green" | "cyan" | "orange" | "red"
 }
 
 export function DashboardMetricCard({
@@ -15,12 +15,19 @@ export function DashboardMetricCard({
   label,
   value,
   description,
-  colorIndex,
+  colorScheme,
 }: DashboardMetricCardProps) {
-  const gradientClass = `dashboard-gradient-${colorIndex}`
+  const gradientMap: Record<string, string> = {
+    blue: "gradient-blue",
+    purple: "gradient-purple",
+    green: "gradient-green",
+    cyan: "gradient-cyan",
+    orange: "gradient-orange",
+    red: "gradient-red",
+  }
 
   return (
-    <div className={`dashboard-metric-card ${gradientClass}`}>
+    <div className={`dashboard-metric-card ${gradientMap[colorScheme]}`}>
       {/* Background blur effect */}
       <div className="absolute inset-0 opacity-10 bg-white" />
 

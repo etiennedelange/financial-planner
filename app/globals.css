@@ -63,26 +63,12 @@
     --primary: 225 73% 57%;
     --ring: 225 73% 57%;
     --chart-1: 225 73% 57%;
-    /* Dashboard card colors - complementary palette */
-    --dashboard-card-color-0: 225 73% 57%;     /* Blue */
-    --dashboard-card-color-1: 262 83% 58%;     /* Purple */
-    --dashboard-card-color-2: 142 76% 36%;     /* Green */
-    --dashboard-card-color-3: 188 94% 43%;     /* Cyan */
-    --dashboard-card-color-4: 25 95% 53%;      /* Orange */
-    --dashboard-card-color-5: 0 84% 60%;       /* Red */
   }
 
   .theme-blue.dark {
     --primary: 225 73% 65%;
     --ring: 225 73% 65%;
     --chart-1: 225 73% 65%;
-    /* Darker versions for dark mode */
-    --dashboard-card-color-0: 225 73% 45%;
-    --dashboard-card-color-1: 262 83% 48%;
-    --dashboard-card-color-2: 142 76% 26%;
-    --dashboard-card-color-3: 188 94% 33%;
-    --dashboard-card-color-4: 25 95% 43%;
-    --dashboard-card-color-5: 0 84% 50%;
   }
 
   /* Green Theme */
@@ -90,25 +76,12 @@
     --primary: 142 76% 36%;
     --ring: 142 76% 36%;
     --chart-1: 142 76% 36%;
-    /* Dashboard card colors - complementary palette */
-    --dashboard-card-color-0: 142 76% 36%;     /* Green */
-    --dashboard-card-color-1: 0 84% 60%;       /* Red/Magenta */
-    --dashboard-card-color-2: 225 73% 57%;     /* Blue */
-    --dashboard-card-color-3: 262 83% 58%;     /* Purple */
-    --dashboard-card-color-4: 25 95% 53%;      /* Orange */
-    --dashboard-card-color-5: 188 94% 43%;     /* Cyan */
   }
 
   .theme-green.dark {
     --primary: 142 71% 45%;
     --ring: 142 71% 45%;
     --chart-1: 142 71% 45%;
-    --dashboard-card-color-0: 142 76% 26%;
-    --dashboard-card-color-1: 0 84% 50%;
-    --dashboard-card-color-2: 225 73% 45%;
-    --dashboard-card-color-3: 262 83% 48%;
-    --dashboard-card-color-4: 25 95% 43%;
-    --dashboard-card-color-5: 188 94% 33%;
   }
 
   /* Rose Theme */
@@ -116,25 +89,12 @@
     --primary: 346.8 77.2% 49.8%;
     --ring: 346.8 77.2% 49.8%;
     --chart-1: 346.8 77.2% 49.8%;
-    /* Dashboard card colors - complementary palette */
-    --dashboard-card-color-0: 346.8 77.2% 49.8%;  /* Rose */
-    --dashboard-card-color-1: 142 76% 36%;        /* Green */
-    --dashboard-card-color-2: 188 94% 43%;        /* Teal */
-    --dashboard-card-color-3: 225 73% 57%;        /* Blue */
-    --dashboard-card-color-4: 25 95% 53%;         /* Orange */
-    --dashboard-card-color-5: 45 95% 55%;         /* Yellow */
   }
 
   .theme-rose.dark {
     --primary: 346.8 77.2% 59.8%;
     --ring: 346.8 77.2% 59.8%;
     --chart-1: 346.8 77.2% 59.8%;
-    --dashboard-card-color-0: 346.8 77.2% 39.8%;
-    --dashboard-card-color-1: 142 76% 26%;
-    --dashboard-card-color-2: 188 94% 33%;
-    --dashboard-card-color-3: 225 73% 45%;
-    --dashboard-card-color-4: 25 95% 43%;
-    --dashboard-card-color-5: 45 95% 45%;
   }
 
   /* Violet Theme */
@@ -142,25 +102,12 @@
     --primary: 262.1 83.3% 57.8%;
     --ring: 262.1 83.3% 57.8%;
     --chart-1: 262.1 83.3% 57.8%;
-    /* Dashboard card colors - complementary palette */
-    --dashboard-card-color-0: 262.1 83.3% 57.8%;  /* Violet */
-    --dashboard-card-color-1: 45 95% 55%;         /* Yellow/Gold */
-    --dashboard-card-color-2: 142 76% 36%;        /* Green */
-    --dashboard-card-color-3: 25 95% 53%;         /* Orange */
-    --dashboard-card-color-4: 188 94% 43%;        /* Teal */
-    --dashboard-card-color-5: 0 84% 60%;          /* Red/Pink */
   }
 
   .theme-violet.dark {
     --primary: 263.4 70% 66.4%;
     --ring: 263.4 70% 66.4%;
     --chart-1: 263.4 70% 66.4%;
-    --dashboard-card-color-0: 262.1 83.3% 47.8%;
-    --dashboard-card-color-1: 45 95% 45%;
-    --dashboard-card-color-2: 142 76% 26%;
-    --dashboard-card-color-3: 25 95% 43%;
-    --dashboard-card-color-4: 188 94% 33%;
-    --dashboard-card-color-5: 0 84% 50%;
   }
 
   /* Orange Theme */
@@ -168,25 +115,12 @@
     --primary: 24.6 95% 53.1%;
     --ring: 24.6 95% 53.1%;
     --chart-1: 24.6 95% 53.1%;
-    /* Dashboard card colors - complementary palette */
-    --dashboard-card-color-0: 24.6 95% 53.1%;     /* Orange */
-    --dashboard-card-color-1: 225 73% 57%;        /* Blue */
-    --dashboard-card-color-2: 188 94% 43%;        /* Cyan */
-    --dashboard-card-color-3: 142 76% 36%;        /* Green */
-    --dashboard-card-color-4: 262 83% 58%;        /* Purple */
-    --dashboard-card-color-5: 0 84% 60%;          /* Red/Pink */
   }
 
   .theme-orange.dark {
     --primary: 20.5 90.2% 58.2%;
     --ring: 20.5 90.2% 58.2%;
     --chart-1: 20.5 90.2% 58.2%;
-    --dashboard-card-color-0: 24.6 95% 43.1%;
-    --dashboard-card-color-1: 225 73% 45%;
-    --dashboard-card-color-2: 188 94% 33%;
-    --dashboard-card-color-3: 142 76% 26%;
-    --dashboard-card-color-4: 262 83% 48%;
-    --dashboard-card-color-5: 0 84% 50%;
   }
 }
 
@@ -234,83 +168,55 @@
   }
 }
 
-/* Dashboard Card Gradients - Theme-scoped with Pastel Colors */
-@layer components {
-  /* Blue Theme Gradients - Pastel */
-  .theme-blue .dashboard-gradient-0 { background: linear-gradient(135deg, hsl(225 70% 70%) 0%, hsl(225 65% 60%) 100%); }
-  .theme-blue .dashboard-gradient-1 { background: linear-gradient(135deg, hsl(262 65% 72%) 0%, hsl(262 60% 62%) 100%); }
-  .theme-blue .dashboard-gradient-2 { background: linear-gradient(135deg, hsl(142 60% 68%) 0%, hsl(142 55% 58%) 100%); }
-  .theme-blue .dashboard-gradient-3 { background: linear-gradient(135deg, hsl(188 70% 72%) 0%, hsl(188 65% 62%) 100%); }
-  .theme-blue .dashboard-gradient-4 { background: linear-gradient(135deg, hsl(25 75% 72%) 0%, hsl(25 70% 62%) 100%); }
-  .theme-blue .dashboard-gradient-5 { background: linear-gradient(135deg, hsl(0 70% 75%) 0%, hsl(0 65% 65%) 100%); }
+/* Dashboard Card Gradients */
+@layer utilities {
+  .gradient-blue {
+    background: linear-gradient(135deg, hsl(225 73% 57%) 0%, hsl(225 73% 67%) 100%);
+  }
 
-  /* Green Theme Gradients - Pastel */
-  .theme-green .dashboard-gradient-0 { background: linear-gradient(135deg, hsl(142 60% 68%) 0%, hsl(142 55% 58%) 100%); }
-  .theme-green .dashboard-gradient-1 { background: linear-gradient(135deg, hsl(0 70% 75%) 0%, hsl(0 65% 65%) 100%); }
-  .theme-green .dashboard-gradient-2 { background: linear-gradient(135deg, hsl(225 70% 70%) 0%, hsl(225 65% 60%) 100%); }
-  .theme-green .dashboard-gradient-3 { background: linear-gradient(135deg, hsl(262 65% 72%) 0%, hsl(262 60% 62%) 100%); }
-  .theme-green .dashboard-gradient-4 { background: linear-gradient(135deg, hsl(25 75% 72%) 0%, hsl(25 70% 62%) 100%); }
-  .theme-green .dashboard-gradient-5 { background: linear-gradient(135deg, hsl(188 70% 72%) 0%, hsl(188 65% 62%) 100%); }
+  .gradient-purple {
+    background: linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(262 83% 68%) 100%);
+  }
 
-  /* Rose Theme Gradients - Pastel */
-  .theme-rose .dashboard-gradient-0 { background: linear-gradient(135deg, hsl(346 65% 72%) 0%, hsl(346 60% 62%) 100%); }
-  .theme-rose .dashboard-gradient-1 { background: linear-gradient(135deg, hsl(142 60% 68%) 0%, hsl(142 55% 58%) 100%); }
-  .theme-rose .dashboard-gradient-2 { background: linear-gradient(135deg, hsl(188 70% 72%) 0%, hsl(188 65% 62%) 100%); }
-  .theme-rose .dashboard-gradient-3 { background: linear-gradient(135deg, hsl(225 70% 70%) 0%, hsl(225 65% 60%) 100%); }
-  .theme-rose .dashboard-gradient-4 { background: linear-gradient(135deg, hsl(25 75% 72%) 0%, hsl(25 70% 62%) 100%); }
-  .theme-rose .dashboard-gradient-5 { background: linear-gradient(135deg, hsl(45 75% 73%) 0%, hsl(45 70% 63%) 100%); }
+  .gradient-green {
+    background: linear-gradient(135deg, hsl(142 71% 45%) 0%, hsl(142 71% 55%) 100%);
+  }
 
-  /* Violet Theme Gradients - Pastel */
-  .theme-violet .dashboard-gradient-0 { background: linear-gradient(135deg, hsl(262 65% 72%) 0%, hsl(262 60% 62%) 100%); }
-  .theme-violet .dashboard-gradient-1 { background: linear-gradient(135deg, hsl(45 75% 73%) 0%, hsl(45 70% 63%) 100%); }
-  .theme-violet .dashboard-gradient-2 { background: linear-gradient(135deg, hsl(142 60% 68%) 0%, hsl(142 55% 58%) 100%); }
-  .theme-violet .dashboard-gradient-3 { background: linear-gradient(135deg, hsl(25 75% 72%) 0%, hsl(25 70% 62%) 100%); }
-  .theme-violet .dashboard-gradient-4 { background: linear-gradient(135deg, hsl(188 70% 72%) 0%, hsl(188 65% 62%) 100%); }
-  .theme-violet .dashboard-gradient-5 { background: linear-gradient(135deg, hsl(0 70% 75%) 0%, hsl(0 65% 65%) 100%); }
+  .gradient-cyan {
+    background: linear-gradient(135deg, hsl(188 94% 43%) 0%, hsl(188 94% 53%) 100%);
+  }
 
-  /* Orange Theme Gradients - Pastel */
-  .theme-orange .dashboard-gradient-0 { background: linear-gradient(135deg, hsl(25 75% 72%) 0%, hsl(25 70% 62%) 100%); }
-  .theme-orange .dashboard-gradient-1 { background: linear-gradient(135deg, hsl(225 70% 70%) 0%, hsl(225 65% 60%) 100%); }
-  .theme-orange .dashboard-gradient-2 { background: linear-gradient(135deg, hsl(188 70% 72%) 0%, hsl(188 65% 62%) 100%); }
-  .theme-orange .dashboard-gradient-3 { background: linear-gradient(135deg, hsl(142 60% 68%) 0%, hsl(142 55% 58%) 100%); }
-  .theme-orange .dashboard-gradient-4 { background: linear-gradient(135deg, hsl(262 65% 72%) 0%, hsl(262 60% 62%) 100%); }
-  .theme-orange .dashboard-gradient-5 { background: linear-gradient(135deg, hsl(0 70% 75%) 0%, hsl(0 65% 65%) 100%); }
+  .gradient-orange {
+    background: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(25 95% 63%) 100%);
+  }
 
-  /* Dark mode variants - darker pastels */
-  .dark.theme-blue .dashboard-gradient-0 { background: linear-gradient(135deg, hsl(225 70% 50%) 0%, hsl(225 65% 40%) 100%); }
-  .dark.theme-blue .dashboard-gradient-1 { background: linear-gradient(135deg, hsl(262 65% 52%) 0%, hsl(262 60% 42%) 100%); }
-  .dark.theme-blue .dashboard-gradient-2 { background: linear-gradient(135deg, hsl(142 60% 48%) 0%, hsl(142 55% 38%) 100%); }
-  .dark.theme-blue .dashboard-gradient-3 { background: linear-gradient(135deg, hsl(188 70% 52%) 0%, hsl(188 65% 42%) 100%); }
-  .dark.theme-blue .dashboard-gradient-4 { background: linear-gradient(135deg, hsl(25 75% 52%) 0%, hsl(25 70% 42%) 100%); }
-  .dark.theme-blue .dashboard-gradient-5 { background: linear-gradient(135deg, hsl(0 70% 55%) 0%, hsl(0 65% 45%) 100%); }
+  .gradient-red {
+    background: linear-gradient(135deg, hsl(0 84% 60%) 0%, hsl(0 84% 70%) 100%);
+  }
 
-  .dark.theme-green .dashboard-gradient-0 { background: linear-gradient(135deg, hsl(142 60% 48%) 0%, hsl(142 55% 38%) 100%); }
-  .dark.theme-green .dashboard-gradient-1 { background: linear-gradient(135deg, hsl(0 70% 55%) 0%, hsl(0 65% 45%) 100%); }
-  .dark.theme-green .dashboard-gradient-2 { background: linear-gradient(135deg, hsl(225 70% 50%) 0%, hsl(225 65% 40%) 100%); }
-  .dark.theme-green .dashboard-gradient-3 { background: linear-gradient(135deg, hsl(262 65% 52%) 0%, hsl(262 60% 42%) 100%); }
-  .dark.theme-green .dashboard-gradient-4 { background: linear-gradient(135deg, hsl(25 75% 52%) 0%, hsl(25 70% 42%) 100%); }
-  .dark.theme-green .dashboard-gradient-5 { background: linear-gradient(135deg, hsl(188 70% 52%) 0%, hsl(188 65% 42%) 100%); }
+  .dark .gradient-blue {
+    background: linear-gradient(135deg, hsl(225 73% 45%) 0%, hsl(225 73% 55%) 100%);
+  }
 
-  .dark.theme-rose .dashboard-gradient-0 { background: linear-gradient(135deg, hsl(346 65% 52%) 0%, hsl(346 60% 42%) 100%); }
-  .dark.theme-rose .dashboard-gradient-1 { background: linear-gradient(135deg, hsl(142 60% 48%) 0%, hsl(142 55% 38%) 100%); }
-  .dark.theme-rose .dashboard-gradient-2 { background: linear-gradient(135deg, hsl(188 70% 52%) 0%, hsl(188 65% 42%) 100%); }
-  .dark.theme-rose .dashboard-gradient-3 { background: linear-gradient(135deg, hsl(225 70% 50%) 0%, hsl(225 65% 40%) 100%); }
-  .dark.theme-rose .dashboard-gradient-4 { background: linear-gradient(135deg, hsl(25 75% 52%) 0%, hsl(25 70% 42%) 100%); }
-  .dark.theme-rose .dashboard-gradient-5 { background: linear-gradient(135deg, hsl(45 75% 53%) 0%, hsl(45 70% 43%) 100%); }
+  .dark .gradient-purple {
+    background: linear-gradient(135deg, hsl(262 83% 48%) 0%, hsl(262 83% 58%) 100%);
+  }
 
-  .dark.theme-violet .dashboard-gradient-0 { background: linear-gradient(135deg, hsl(262 65% 52%) 0%, hsl(262 60% 42%) 100%); }
-  .dark.theme-violet .dashboard-gradient-1 { background: linear-gradient(135deg, hsl(45 75% 53%) 0%, hsl(45 70% 43%) 100%); }
-  .dark.theme-violet .dashboard-gradient-2 { background: linear-gradient(135deg, hsl(142 60% 48%) 0%, hsl(142 55% 38%) 100%); }
-  .dark.theme-violet .dashboard-gradient-3 { background: linear-gradient(135deg, hsl(25 75% 52%) 0%, hsl(25 70% 42%) 100%); }
-  .dark.theme-violet .dashboard-gradient-4 { background: linear-gradient(135deg, hsl(188 70% 52%) 0%, hsl(188 65% 42%) 100%); }
-  .dark.theme-violet .dashboard-gradient-5 { background: linear-gradient(135deg, hsl(0 70% 55%) 0%, hsl(0 65% 45%) 100%); }
+  .dark .gradient-green {
+    background: linear-gradient(135deg, hsl(142 71% 35%) 0%, hsl(142 71% 45%) 100%);
+  }
 
-  .dark.theme-orange .dashboard-gradient-0 { background: linear-gradient(135deg, hsl(25 75% 52%) 0%, hsl(25 70% 42%) 100%); }
-  .dark.theme-orange .dashboard-gradient-1 { background: linear-gradient(135deg, hsl(225 70% 50%) 0%, hsl(225 65% 40%) 100%); }
-  .dark.theme-orange .dashboard-gradient-2 { background: linear-gradient(135deg, hsl(188 70% 52%) 0%, hsl(188 65% 42%) 100%); }
-  .dark.theme-orange .dashboard-gradient-3 { background: linear-gradient(135deg, hsl(142 60% 48%) 0%, hsl(142 55% 38%) 100%); }
-  .dark.theme-orange .dashboard-gradient-4 { background: linear-gradient(135deg, hsl(262 65% 52%) 0%, hsl(262 60% 42%) 100%); }
-  .dark.theme-orange .dashboard-gradient-5 { background: linear-gradient(135deg, hsl(0 70% 55%) 0%, hsl(0 65% 45%) 100%); }
+  .dark .gradient-cyan {
+    background: linear-gradient(135deg, hsl(188 94% 33%) 0%, hsl(188 94% 43%) 100%);
+  }
+
+  .dark .gradient-orange {
+    background: linear-gradient(135deg, hsl(25 95% 43%) 0%, hsl(25 95% 53%) 100%);
+  }
+
+  .dark .gradient-red {
+    background: linear-gradient(135deg, hsl(0 84% 50%) 0%, hsl(0 84% 60%) 100%);
+  }
 }
 
 @layer base {
