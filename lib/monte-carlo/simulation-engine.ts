@@ -91,6 +91,13 @@ function calculateAverageEscalation(accounts: Account[]): number {
 
 /**
  * Calculate initial withdrawal for simulation based on strategy
+ *
+ * IMPORTANT: The success rate should reflect whether the user can achieve their
+ * desired retirement income goal. For all strategies, we use the desired income
+ * as the baseline withdrawal to test if the plan meets the user's actual needs.
+ *
+ * The strategy affects HOW withdrawals are adjusted over time, but the baseline
+ * must reflect the user's income goal for the success rate to be meaningful.
  */
 function calculateSimulationWithdrawal(
   portfolioAtRetirement: number,
@@ -104,16 +111,24 @@ function calculateSimulationWithdrawal(
   const desiredMonthlyAtRetirement =
     desiredMonthlyIncomeToday * Math.pow(1 + inflationRate, yearsToRetirement)
 
+  // Annual desired income at retirement
+  const desiredAnnualAtRetirement = desiredMonthlyAtRetirement * 12
+
   switch (strategy) {
     case "fixed_percentage":
-      return portfolioAtRetirement * withdrawalRate
+      // Use the GREATER of percentage-based withdrawal or desired income
+      // This ensures success rate reflects whether the user can achieve their goal
+      // If percentage > desired, we test the more conservative scenario
+      // If percentage < desired, we test the actual income need
+      const percentageWithdrawal = portfolioAtRetirement * withdrawalRate
+      return Math.max(percentageWithdrawal, desiredAnnualAtRetirement)
     case "fixed_amount_inflation_adjusted":
-      return desiredMonthlyAtRetirement * 12
+      return desiredAnnualAtRetirement
     case "variable_percentage":
     case "guardrails":
-      return desiredMonthlyAtRetirement * 12
+      return desiredAnnualAtRetirement
     default:
-      return portfolioAtRetirement * withdrawalRate
+      return Math.max(portfolioAtRetirement * withdrawalRate, desiredAnnualAtRetirement)
   }
 }
 
