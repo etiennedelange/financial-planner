@@ -16,6 +16,8 @@ interface CollapsibleSectionProps {
   defaultOpen?: boolean
   badge?: string | number
   children: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 export function CollapsibleSection({
@@ -25,12 +27,24 @@ export function CollapsibleSection({
   defaultOpen = false,
   badge,
   children,
+  open,
+  onOpenChange,
 }: CollapsibleSectionProps) {
+  // Use controlled mode if open/onOpenChange provided, otherwise uncontrolled
+  const accordionProps = open !== undefined && onOpenChange
+    ? {
+        value: open ? id : undefined,
+        onValueChange: (value: string) => onOpenChange(value === id),
+      }
+    : {
+        defaultValue: defaultOpen ? id : undefined,
+      }
+
   return (
     <Accordion
       type="single"
       collapsible
-      defaultValue={defaultOpen ? id : undefined}
+      {...accordionProps}
       className="dashboard-section border-b border-border"
     >
       <AccordionItem value={id} className="border-0">

@@ -51,6 +51,18 @@ export default function CalculatorPage() {
   const [isSimulating, setIsSimulating] = useState(false)
   const simulationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  // State for controlling collapsible sections
+  const [openSections, setOpenSections] = useState({
+    accounts: true,
+    planningInputs: false,
+    detailedInsights: false,
+    calculations: false,
+  })
+
+  // Refs for scrolling to sections
+  const accountsRef = useRef<HTMLDivElement>(null)
+  const detailedInsightsRef = useRef<HTMLDivElement>(null)
+
   // Calculate projection whenever inputs change
   const projection: ProjectionResult | null = useMemo(() => {
     if (accounts.length === 0) return null
@@ -103,6 +115,70 @@ export default function CalculatorPage() {
   const handleReset = () => {
     resetToDefaults()
     setSimulationResult(null)
+  }
+
+  // Quick Actions handlers
+  const handleAddAccount = () => {
+    setOpenSections((prev) => ({ ...prev, accounts: true }))
+    setTimeout(() => {
+      accountsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 100)
+  }
+
+  const handleViewInsights = () => {
+    setOpenSections((prev) => ({ ...prev, detailedInsights: true }))
+    setTimeout(() => {
+      detailedInsightsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 100)
+  }
+
+  const handleExportReport = () => {
+    if (!projection) return
+
+    const exportData = {
+      generatedAt: new Date().toISOString(),
+      personalInfo,
+      retirementGoals,
+      assumptions,
+      accounts: accounts.map(acc => ({
+        name: acc.name,
+        type: acc.type,
+        currentBalance: acc.currentBalance,
+        monthlyContribution: acc.monthlyContribution,
+      })),
+      projection: {
+        portfolioAtRetirement: projection.portfolioAtRetirement,
+        monthlyIncomeAtRetirement: projection.monthlyIncomeAtRetirement,
+        monthlyNetIncomeAtRetirement: projection.monthlyNetIncomeAtRetirement,
+        portfolioDepletionAge: projection.portfolioDepletionAge,
+        shortfallAmount: projection.shortfallAmount,
+        surplusAmount: projection.surplusAmount,
+        totalLifetimeIncomeTax: projection.totalLifetimeIncomeTax,
+        totalLumpSumTax: projection.totalLumpSumTax,
+        averageEffectiveTaxRate: projection.averageEffectiveTaxRate,
+        replacementRatio: projection.replacementRatio,
+      },
+      monteCarloSimulation: simulationResult ? {
+        successRate: simulationResult.successRate,
+        averageFinalBalance: simulationResult.averageFinalBalance,
+        medianDepletionAge: simulationResult.medianDepletionAge,
+        percentiles: {
+          p10: simulationResult.percentiles.p10[simulationResult.percentiles.p10.length - 1],
+          p50: simulationResult.percentiles.p50[simulationResult.percentiles.p50.length - 1],
+          p90: simulationResult.percentiles.p90[simulationResult.percentiles.p90.length - 1],
+        },
+      } : null,
+    }
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `retirement-plan-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 
   // Calculate totals for dashboard metrics
@@ -220,9 +296,9 @@ export default function CalculatorPage() {
         </div>
       </div>
 
-      {/* Dashboard Metrics Grid - Sticky */}
+      {/* Dashboard Metrics Grid */}
       {projection && (
-        <div className="dashboard-metrics-sticky">
+        <div className="dashboard-section">
           <DashboardMetricsGrid
             projection={projection}
             simulationResult={simulationResult}
@@ -253,7 +329,11 @@ export default function CalculatorPage() {
       {/* Secondary Widgets */}
       {projection && (
         <div className="dashboard-section grid gap-8 lg:grid-cols-2">
-          <QuickActionsCard />
+          <QuickActionsCard
+            onAddAccount={handleAddAccount}
+            onViewInsights={handleViewInsights}
+            onExportReport={handleExportReport}
+          />
           <KeyInsightsSummary
             projection={projection}
             currentAge={personalInfo.currentAge}
@@ -267,21 +347,25 @@ export default function CalculatorPage() {
 
       {/* Collapsible Sections */}
       <div className="dashboard-section space-y-0">
-        <CollapsibleSection
-          id="accounts"
-          title="Accounts"
-          icon={TrendingDown}
-          defaultOpen={true}
-          badge={accounts.length > 0 ? accounts.length : undefined}
-        >
-          <AccountList />
-        </CollapsibleSection>
+        <div ref={accountsRef}>
+          <CollapsibleSection
+            id="accounts"
+            title="Accounts"
+            icon={TrendingDown}
+            badge={accounts.length > 0 ? accounts.length : undefined}
+            open={openSections.accounts}
+            onOpenChange={(open) => setOpenSections((prev) => ({ ...prev, accounts: open }))}
+          >
+            <AccountList />
+          </CollapsibleSection>
+        </div>
 
         <CollapsibleSection
           id="planning-inputs"
           title="Planning Inputs"
           icon={Settings}
-          defaultOpen={false}
+          open={openSections.planningInputs}
+          onOpenChange={(open) => setOpenSections((prev) => ({ ...prev, planningInputs: open }))}
         >
           <div className="space-y-8">
             <div>
@@ -299,20 +383,24 @@ export default function CalculatorPage() {
           </div>
         </CollapsibleSection>
 
-        <CollapsibleSection
-          id="detailed-insights"
-          title="Detailed Insights"
-          icon={BarChart3}
-          defaultOpen={false}
-        >
-          <InsightsPanel />
-        </CollapsibleSection>
+        <div ref={detailedInsightsRef}>
+          <CollapsibleSection
+            id="detailed-insights"
+            title="Detailed Insights"
+            icon={BarChart3}
+            open={openSections.detailedInsights}
+            onOpenChange={(open) => setOpenSections((prev) => ({ ...prev, detailedInsights: open }))}
+          >
+            <InsightsPanel />
+          </CollapsibleSection>
+        </div>
 
         <CollapsibleSection
           id="calculations"
           title="Calculations Breakdown"
           icon={BookOpen}
-          defaultOpen={false}
+          open={openSections.calculations}
+          onOpenChange={(open) => setOpenSections((prev) => ({ ...prev, calculations: open }))}
         >
           <CalculationsBreakdown />
         </CollapsibleSection>
