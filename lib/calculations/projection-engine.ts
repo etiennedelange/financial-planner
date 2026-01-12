@@ -190,36 +190,48 @@ export function calculateProjection(
   }
 
   // Accumulation phase with monthly compounding
+  // Project each account separately to handle different return rates correctly
   const compoundingMethod = assumptions?.compoundingMethod || 'nominal'
-  const monthlyReturn = calculateMonthlyReturn(netReturn, compoundingMethod)
-  const monthlyFeeRate = Math.pow(1 + weightedFees, 1 / 12) - 1
-  const baseMonthlyContribution = totalContribution / 12
+
+  // Track each account's balance separately
+  const accountBalances = accounts.map(acc => acc.currentBalance)
+  const accountMonthlyContributions = accounts.map(acc => acc.monthlyContribution)
 
   for (let year = 0; year < yearsToRetirement; year++) {
     const age = personalInfo.currentAge + year
-    const startingBalance = totalBalance
+    const startingBalance = accountBalances.reduce((sum, bal) => sum + bal, 0)
     let yearlyGrowth = 0
     let yearlyFees = 0
     let yearlyContributions = 0
 
-    // Monthly compounding within each year
-    for (let month = 0; month < 12; month++) {
-      // Calculate contribution for this month (smooth escalation)
-      const monthlyContribution =
-        baseMonthlyContribution * Math.pow(1 + avgEscalation, year + month / 12)
-      yearlyContributions += monthlyContribution
+    // Project each account individually
+    for (let accIdx = 0; accIdx < accounts.length; accIdx++) {
+      const acc = accounts[accIdx]
+      const accNetReturn = (acc.expectedReturn - acc.annualFees) / 100
+      const accMonthlyReturn = calculateMonthlyReturn(accNetReturn, compoundingMethod)
+      const accMonthlyFeeRate = Math.pow(1 + acc.annualFees / 100, 1 / 12) - 1
+      const accEscalation = acc.contributionEscalation / 100
 
-      // Apply growth first (end-of-period contributions, matches Excel FV type=0)
-      // Original (beginning-of-period, type=1): contribution added before growth
-      const monthGrowth = totalBalance * monthlyReturn
-      const monthFees = totalBalance * monthlyFeeRate
-      yearlyGrowth += monthGrowth
-      yearlyFees += monthFees
-      totalBalance += monthGrowth
+      // Monthly compounding within each year for this account
+      for (let month = 0; month < 12; month++) {
+        // Calculate contribution for this month (smooth escalation)
+        const monthlyContribution =
+          accountMonthlyContributions[accIdx] * Math.pow(1 + accEscalation, year + month / 12)
+        yearlyContributions += monthlyContribution
 
-      // Then add contribution (doesn't earn interest until next month)
-      totalBalance += monthlyContribution
+        // Apply growth first (end-of-period contributions, matches Excel FV type=0)
+        const monthGrowth = accountBalances[accIdx] * accMonthlyReturn
+        const monthFees = accountBalances[accIdx] * accMonthlyFeeRate
+        yearlyGrowth += monthGrowth
+        yearlyFees += monthFees
+        accountBalances[accIdx] += monthGrowth
+
+        // Then add contribution (doesn't earn interest until next month)
+        accountBalances[accIdx] += monthlyContribution
+      }
     }
+
+    totalBalance = accountBalances.reduce((sum, bal) => sum + bal, 0)
 
     yearlyProjections.push({
       year: year + 1,
