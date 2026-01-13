@@ -10,22 +10,7 @@ import type {
 } from "@/types"
 import { generateReturnSequence, getPercentile } from "./random-returns"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
-
-/**
- * Calculate spending phase multiplier based on years in retirement
- * Models the "Go-Go, Slow-Go, No-Go" retirement phases
- */
-function getSpendingPhaseMultiplier(yearsInRetirement: number): number {
-  if (yearsInRetirement <= 15) {
-    return 1.0 // Go-Go phase
-  } else if (yearsInRetirement <= 25) {
-    return 0.8 // Slow-Go phase
-  } else {
-    const baseRate = 0.7
-    const medicalPremium = 0.15 * (yearsInRetirement - 25) / 10
-    return Math.min(baseRate + medicalPremium, 1.2)
-  }
-}
+import { getSpendingPhaseMultiplier } from "@/lib/calculations/utils/spending-phase"
 
 /**
  * Calculate initial withdrawal for simulation based on strategy

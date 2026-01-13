@@ -1,6 +1,7 @@
 import type { PersonalInfo, RetirementGoals, DrawdownConfig, CompoundingMethod } from "@/types"
 import { runMonteCarloSimulation as runMonteCarlo } from "@/lib/monte-carlo/simulation-engine"
 import { projectFinalSavings } from "./utils/projection"
+import { getSpendingPhaseMultiplier } from "./utils/spending-phase"
 
 // SA-specific investment scenarios (nominal returns)
 export const INVESTMENT_SCENARIOS = {
@@ -59,17 +60,6 @@ interface ScenarioComparisonResult {
   aggressive: ScenarioResult
   recommendedScenario: ScenarioType
   recommendation: string
-}
-
-/**
- * Spending phase multiplier for retirement duration calculation
- */
-function getSpendingPhaseMultiplier(yearsInRetirement: number): number {
-  if (yearsInRetirement <= 15) return 1.0
-  if (yearsInRetirement <= 25) return 0.8
-  const baseRate = 0.7
-  const medicalPremium = (0.15 * (yearsInRetirement - 25)) / 10
-  return Math.min(baseRate + medicalPremium, 1.2)
 }
 
 /**

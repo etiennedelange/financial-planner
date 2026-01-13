@@ -1,5 +1,6 @@
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import { calculateIncomeTaxWithRebates } from "./retirement-tax"
+import { getSpendingPhaseMultiplier } from "./utils/spending-phase"
 import type {
   Account,
   DrawdownConfig,
@@ -9,28 +10,6 @@ import type {
   RetirementGoals,
   YearlyProjection,
 } from "@/types"
-
-/**
- * Calculate spending phase multiplier based on years in retirement
- * Models the "Go-Go, Slow-Go, No-Go" retirement phases:
- * - Years 0-15: Active years with full spending (100%)
- * - Years 15-25: Slower years with reduced spending (80%)
- * - Years 25+: Less active with lower base (70%) but higher medical costs
- */
-function getSpendingPhaseMultiplier(yearsInRetirement: number): number {
-  if (yearsInRetirement <= 15) {
-    // Go-Go phase: full spending
-    return 1.0
-  } else if (yearsInRetirement <= 25) {
-    // Slow-Go phase: reduced activity spending
-    return 0.8
-  } else {
-    // No-Go phase: lower base but add medical premium (SA medical inflation is high)
-    const baseRate = 0.7
-    const medicalPremium = 0.15 * (yearsInRetirement - 25) / 10
-    return Math.min(baseRate + medicalPremium, 1.2) // Cap at 120%
-  }
-}
 
 /**
  * Calculate weighted average return from accounts
