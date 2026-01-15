@@ -1,6 +1,7 @@
 "use client"
 
 import { LucideIcon } from "lucide-react"
+import { InfoTooltip } from "@/components/ui/info-tooltip"
 
 interface DashboardMetricCardProps {
   icon: LucideIcon
@@ -8,6 +9,7 @@ interface DashboardMetricCardProps {
   value: string | number
   description?: string
   successRate?: number
+  tooltip?: string | React.ReactNode
 }
 
 export function DashboardMetricCard({
@@ -16,6 +18,7 @@ export function DashboardMetricCard({
   value,
   description,
   successRate,
+  tooltip,
 }: DashboardMetricCardProps) {
   // Determine styling based on success rate
   const getSuccessRateStyles = () => {
@@ -63,9 +66,14 @@ export function DashboardMetricCard({
       <div className="flex flex-col h-full">
         {/* Header with icon and label */}
         <div className="flex items-start justify-between mb-2">
-          <h3 className="text-xs font-medium text-muted-foreground">
-            {label}
-          </h3>
+          <div className="flex items-center gap-1.5">
+            <h3 className="text-xs font-medium text-muted-foreground">
+              {label}
+            </h3>
+            {tooltip && (
+              <InfoTooltip content={tooltip} side="top" />
+            )}
+          </div>
           <Icon className={`w-5 h-5 md:w-6 md:h-6 flex-shrink-0 ${styles.icon}`} />
         </div>
 

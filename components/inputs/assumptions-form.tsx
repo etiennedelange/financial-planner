@@ -18,6 +18,7 @@ import {
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { DRAWDOWN_STRATEGY_LABELS } from "@/types"
 import type { DrawdownStrategy } from "@/types"
+import { InfoTooltip } from "@/components/ui/info-tooltip"
 
 const schema = z.object({
   equityReturn: z.number().min(0).max(30),
@@ -62,7 +63,13 @@ export function AssumptionsForm() {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
-          <h4 className="text-sm font-medium">Expected Returns (Nominal)</h4>
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-medium">Expected Returns (Nominal)</h4>
+            <InfoTooltip
+              content="These are reference values for different asset classes. Each account uses its own expected return rate. Nominal returns include inflation - a 10% nominal return with 5% inflation gives ~5% real growth."
+              side="right"
+            />
+          </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="equityReturn">Equity (%)</Label>
@@ -103,7 +110,13 @@ export function AssumptionsForm() {
         </div>
 
         <div className="space-y-4">
-          <h4 className="text-sm font-medium">Volatility (Std Dev)</h4>
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-medium">Volatility (Std Dev)</h4>
+            <InfoTooltip
+              content="Volatility measures how much returns vary from year to year. Higher volatility means more uncertainty. In Monte Carlo simulations, higher volatility reduces the probability of success because of sequence-of-returns risk. Typical SA equity volatility: 15-18%."
+              side="right"
+            />
+          </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="equityVolatility">Equity (%)</Label>
@@ -132,7 +145,13 @@ export function AssumptionsForm() {
         </div>
 
         <div className="space-y-4">
-          <h4 className="text-sm font-medium">Drawdown Strategy</h4>
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-medium">Drawdown Strategy</h4>
+            <InfoTooltip
+              content="Determines how you withdraw money during retirement. Fixed Percentage: withdraw a % of remaining balance each year (safer but variable income). Fixed Amount: withdraw a fixed amount adjusted for inflation (predictable income but higher risk). Variable strategies adjust based on portfolio performance."
+              side="right"
+            />
+          </div>
 
           <div className="space-y-2">
             <Label>Strategy</Label>
@@ -159,7 +178,13 @@ export function AssumptionsForm() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Initial Withdrawal Rate</Label>
+              <div className="flex items-center gap-2">
+                <Label>Initial Withdrawal Rate</Label>
+                <InfoTooltip
+                  content="The % of your retirement nest egg you plan to withdraw in the first year. Lower rates (3-4%) require a larger nest egg but are safer. Higher rates (5-6%) allow a smaller nest egg but increase the risk of running out of money. Example: 4% of R10M = R400k/year. To get R500k/year at 4%, you'd need R12.5M (hence why lower rates need bigger nest eggs)."
+                  side="left"
+                />
+              </div>
               <span className="text-sm font-medium">
                 {drawdownConfig.initialWithdrawalRate.toFixed(1)}%
               </span>

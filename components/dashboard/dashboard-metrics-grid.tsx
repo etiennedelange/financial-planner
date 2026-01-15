@@ -44,12 +44,14 @@ export function DashboardMetricsGrid({
     value: string | number
     description: string
     successRate?: number
+    tooltip?: string | React.ReactNode
   }> = [
     {
       icon: Wallet,
       label: "Total Portfolio",
       value: formatCurrency(totalCurrentBalance),
       description: "Current balance",
+      tooltip: "Your total retirement savings across all accounts (RAs, Pension Funds, TFSAs, etc.). This is your starting point.",
     },
     {
       icon: Target,
@@ -61,12 +63,14 @@ export function DashboardMetricsGrid({
         inflationRate / 100
       ),
       description: `At age ${retirementAge}${displayMode === "real" ? " (today's value)" : ""}`,
+      tooltip: "Projected portfolio value when you retire. This is your 'nest egg' - the amount you'll have saved by retirement age. This projection assumes returns match expectations and you maintain your contribution schedule.",
     },
     {
       icon: TrendingUp,
       label: "Monthly Contributions",
       value: formatCurrency(totalMonthlyContributions),
       description: "Total across all accounts",
+      tooltip: "Total monthly contributions across all retirement accounts. Increasing contributions (or adding escalation) significantly improves your retirement outcomes due to compound growth.",
     },
     {
       icon: DollarSign,
@@ -78,6 +82,7 @@ export function DashboardMetricsGrid({
         inflationRate / 100
       ),
       description: `At retirement${displayMode === "real" ? " (today's value)" : ""}`,
+      tooltip: "Monthly income your portfolio can support in retirement based on your withdrawal rate. Compare this to your desired monthly income goal to see if you're on track.",
     },
     {
       icon: Calendar,
@@ -95,6 +100,7 @@ export function DashboardMetricsGrid({
       value: `${successRate.toFixed(0)}%`,
       description: successRate >= 90 ? "Excellent" : successRate >= 75 ? "Good" : successRate >= 60 ? "Fair" : "At Risk",
       successRate: successRate,
+      tooltip: "Probability of successfully meeting your income goal throughout retirement. Based on 1,000 Monte Carlo simulations with random market returns. Higher success rates mean your plan is more resilient to market volatility and poor return sequences.",
     })
 
     // Add portfolio depletion metric
@@ -129,6 +135,9 @@ export function DashboardMetricsGrid({
       label: "Portfolio Depletion",
       value: depletionValue,
       description: depletionDescription,
+      tooltip: successRate >= 50
+        ? "When the majority of simulations succeed, 'Never' represents the expected outcome. The description shows the risk percentage and median depletion age among scenarios that fail."
+        : "When the majority of simulations fail, this shows the median age at which your portfolio runs out across failing scenarios. Increase contributions, reduce withdrawal rate, or adjust retirement age to improve this.",
     })
   }
 
@@ -142,6 +151,7 @@ export function DashboardMetricsGrid({
           value={metric.value}
           description={metric.description}
           successRate={metric.successRate}
+          tooltip={metric.tooltip}
         />
       ))}
     </div>

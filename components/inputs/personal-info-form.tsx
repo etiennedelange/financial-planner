@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { InfoTooltip } from "@/components/ui/info-tooltip"
 
 const schema = z.object({
   currentAge: z.number().min(18).max(100),
@@ -70,7 +71,13 @@ export function PersonalInfoForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="retirementAge">Retirement Age</Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="retirementAge">Retirement Age</Label>
+              <InfoTooltip
+                content="The age at which you plan to stop working and start drawing from your retirement savings. This determines how many years you have to save (accumulation phase) and how many years you'll need income (drawdown phase)."
+                side="right"
+              />
+            </div>
             <Input
               id="retirementAge"
               type="number"
@@ -88,7 +95,13 @@ export function PersonalInfoForm() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="lifeExpectancy">Life Expectancy</Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="lifeExpectancy">Life Expectancy</Label>
+              <InfoTooltip
+                content="How long you expect to live. This determines how many years your retirement savings need to last. SA average is ~75 years, but planning for 90-95 provides a safety buffer. Longer life expectancy requires more savings or lower withdrawal rates."
+                side="right"
+              />
+            </div>
             <Input
               id="lifeExpectancy"
               type="number"
@@ -104,7 +117,13 @@ export function PersonalInfoForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="annualIncome">Annual Income (R)</Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="annualIncome">Annual Income (R)</Label>
+              <InfoTooltip
+                content="Your current annual gross income before tax. Used to calculate tax deductions for retirement contributions (RAs, Pension Funds). SA allows up to 27.5% of income (max R350k/year) as tax-deductible retirement contributions."
+                side="right"
+              />
+            </div>
             <Input
               id="annualIncome"
               type="number"

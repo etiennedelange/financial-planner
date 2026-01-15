@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { formatCurrency } from "@/lib/utils/formatters"
+import { InfoTooltip } from "@/components/ui/info-tooltip"
 
 const schema = z.object({
   desiredMonthlyIncome: z.number().min(0),
@@ -55,9 +56,15 @@ export function RetirementGoalsForm() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="desiredMonthlyIncome">
-            Desired Monthly Income (today&apos;s Rands)
-          </Label>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="desiredMonthlyIncome">
+              Desired Monthly Income (today&apos;s Rands)
+            </Label>
+            <InfoTooltip
+              content="How much monthly income you want in retirement, in today's money. The calculator automatically inflates this to retirement date. This is your target - the success rate shows the probability of achieving this income goal throughout retirement."
+              side="right"
+            />
+          </div>
           <Input
             id="desiredMonthlyIncome"
             type="number"
@@ -78,7 +85,13 @@ export function RetirementGoalsForm() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="inflationRate">Expected Inflation (%)</Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="inflationRate">Expected Inflation (%)</Label>
+              <InfoTooltip
+                content="Expected annual inflation rate. Used to adjust your income needs and savings targets over time. SA historical average: 5-6%. Higher inflation means you need more money in the future to buy the same goods. Your withdrawals are automatically inflated each year to maintain purchasing power."
+                side="right"
+              />
+            </div>
             <Input
               id="inflationRate"
               type="number"
@@ -90,7 +103,13 @@ export function RetirementGoalsForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="legacyAmount">Legacy Goal (R)</Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="legacyAmount">Legacy Goal (R)</Label>
+              <InfoTooltip
+                content="Amount you want to leave behind for heirs or charity. This is in today's money and will be added to your target nest egg. Setting this higher increases the required nest egg and may reduce your success rate if current savings/contributions are insufficient."
+                side="right"
+              />
+            </div>
             <Input
               id="legacyAmount"
               type="number"
