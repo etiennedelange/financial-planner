@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import {
   AreaChart,
   Area,
@@ -23,7 +24,7 @@ interface PortfolioGrowthChartProps {
   retirementAge: number
 }
 
-export function PortfolioGrowthChart({
+export const PortfolioGrowthChart = memo(function PortfolioGrowthChart({
   projections,
   retirementAge,
 }: PortfolioGrowthChartProps) {
@@ -120,4 +121,4 @@ export function PortfolioGrowthChart({
       </CardContent>
     </Card>
   )
-}
+})

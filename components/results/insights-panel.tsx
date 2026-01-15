@@ -118,7 +118,7 @@ export function InsightsPanel() {
       yearsToRetirement,
       inflationRate,
     }
-  }, [accounts, personalInfo, retirementGoals, drawdownConfig, assumptions, displayMode])
+  }, [accounts, personalInfo, retirementGoals, drawdownConfig, assumptions])
 
   if (!insights) {
     return (
