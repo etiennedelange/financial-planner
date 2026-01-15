@@ -59,6 +59,11 @@ export function AccountCard({ account, onEdit, onDelete }: AccountCardProps) {
               {formatCurrency(account.monthlyContribution)}
             </div>
 
+            <div className="text-muted-foreground">Escalation</div>
+            <div className="font-medium">
+              {formatPercentage(account.contributionEscalation)}
+            </div>
+
             <div className="text-muted-foreground">Return</div>
             <div className="font-medium">
               {formatPercentage(account.expectedReturn)}

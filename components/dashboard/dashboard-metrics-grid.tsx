@@ -98,12 +98,31 @@ export function DashboardMetricsGrid({
     })
 
     // Add portfolio depletion metric
+    // Only show depletion age as primary metric when majority of runs fail
+    // When most runs succeed, "Never" is more accurate for expected outcome
     const depletionAge = simulationResult.medianDepletionAge
-    const depletionValue = depletionAge ? `Age ${depletionAge}` : "Never"
-    const yearsUntilDepletion = depletionAge ? depletionAge - currentAge : null
-    const depletionDescription = depletionAge
-      ? `${yearsUntilDepletion} years from now`
-      : "Portfolio sustains through life expectancy"
+    const failureRate = 100 - successRate
+
+    let depletionValue: string
+    let depletionDescription: string
+
+    if (successRate >= 50) {
+      // Majority succeed - show "Never" as the expected outcome
+      depletionValue = "Never"
+      if (depletionAge && failureRate > 10) {
+        // But mention the risk if failure rate is notable
+        depletionDescription = `${failureRate.toFixed(0)}% risk of depletion (median age ${depletionAge})`
+      } else {
+        depletionDescription = "Portfolio sustains through life expectancy"
+      }
+    } else {
+      // Majority fail - show depletion age as primary
+      depletionValue = depletionAge ? `Age ${depletionAge}` : "Never"
+      const yearsUntilDepletion = depletionAge ? depletionAge - currentAge : null
+      depletionDescription = depletionAge
+        ? `${yearsUntilDepletion} years from now (${failureRate.toFixed(0)}% of scenarios)`
+        : "Portfolio sustains through life expectancy"
+    }
 
     metrics.push({
       icon: Hourglass,

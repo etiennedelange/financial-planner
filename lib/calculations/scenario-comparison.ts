@@ -91,12 +91,27 @@ function projectRetirementDuration(
 }
 
 /**
- * Simple Monte Carlo simulation for success probability
+ * Generate a random return using Box-Muller transform (log-normal distribution)
  */
-function runSimpleMonteCarloSimulation(
-  startingBalance: number,
-  annualWithdrawal: number,
-  targetYears: number,
+function generateRandomReturn(expectedReturn: number, volatility: number): number {
+  const u1 = Math.random()
+  const u2 = Math.random()
+  const z = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2)
+  const logMean = Math.log(1 + expectedReturn) - 0.5 * volatility * volatility
+  return Math.exp(logMean + volatility * z) - 1
+}
+
+/**
+ * Full Monte Carlo simulation including both accumulation and drawdown phases
+ * This matches the methodology in simulation-engine.ts for consistency
+ */
+function runFullMonteCarloSimulation(
+  currentBalance: number,
+  monthlyContribution: number,
+  contributionEscalation: number,
+  desiredMonthlyIncome: number,
+  yearsToRetirement: number,
+  yearsInRetirement: number,
   expectedReturn: number,
   volatility: number,
   inflation: number,
@@ -105,22 +120,35 @@ function runSimpleMonteCarloSimulation(
   let successCount = 0
 
   for (let i = 0; i < iterations; i++) {
-    let balance = startingBalance
-    let yearlyWithdrawal = annualWithdrawal
+    let balance = currentBalance
+    let monthlyContrib = monthlyContribution
+
+    // === ACCUMULATION PHASE (with stochastic returns) ===
+    for (let year = 0; year < yearsToRetirement; year++) {
+      const annualReturn = generateRandomReturn(expectedReturn, volatility)
+      const monthlyReturn = Math.pow(1 + annualReturn, 1 / 12) - 1
+
+      // Monthly compounding within each year
+      for (let month = 0; month < 12; month++) {
+        // Smooth escalation within year
+        const currentContrib = monthlyContrib * Math.pow(1 + contributionEscalation, year + month / 12)
+        balance = balance * (1 + monthlyReturn) + currentContrib
+      }
+    }
+
+    // === DRAWDOWN PHASE (with stochastic returns) ===
+    // Calculate initial withdrawal based on desired income inflated to retirement
+    const desiredMonthlyAtRetirement = desiredMonthlyIncome * Math.pow(1 + inflation, yearsToRetirement)
+    let yearlyWithdrawal = desiredMonthlyAtRetirement * 12
     let success = true
 
-    for (let year = 0; year < targetYears; year++) {
-      // Generate random return using Box-Muller transform
-      const u1 = Math.random()
-      const u2 = Math.random()
-      const z = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2)
-      const logMean = Math.log(1 + expectedReturn) - 0.5 * volatility * volatility
-      const randomReturn = Math.exp(logMean + volatility * z) - 1
+    for (let year = 0; year < yearsInRetirement; year++) {
+      const annualReturn = generateRandomReturn(expectedReturn, volatility)
 
       // Apply return first
-      balance *= 1 + randomReturn
+      balance *= 1 + annualReturn
 
-      // Apply spending phase
+      // Apply spending phase multiplier
       const spendingMultiplier = getSpendingPhaseMultiplier(year)
       const adjustedWithdrawal = yearlyWithdrawal * spendingMultiplier
 
@@ -169,10 +197,11 @@ export function compareScenarios(
 
   for (const [key, scenario] of Object.entries(INVESTMENT_SCENARIOS)) {
     const scenarioKey = key as ScenarioType
-    // Nominal return for accumulation phase (consistent with main projection)
+    // Nominal return for all calculations (consistent with main simulation)
+    // This ensures scenarios use the same methodology as the main Monte Carlo
     const nominalReturn = scenario.nominalReturn - fees
-    // Real return for sustainability/drawdown analysis (accounts for inflation)
-    const realReturn = scenario.nominalReturn - inflationRate - fees
+    // Real return is only used for display purposes (informational)
+    const realReturnForDisplay = scenario.nominalReturn - inflationRate - fees
 
     // Project nest egg at retirement using nominal returns
     const projectedNestEgg = projectFinalSavings(
@@ -190,20 +219,24 @@ export function compareScenarios(
       Math.pow(1 + inflationRate, yearsToRetirement)
     const annualWithdrawal = desiredMonthlyAtRetirement * 12
 
-    // How many years the savings will last
+    // How many years the savings will last (using nominal return, withdrawals inflate)
     const yearsLasts = projectRetirementDuration(
       projectedNestEgg,
       annualWithdrawal,
-      realReturn,
+      nominalReturn,
       inflationRate
     )
 
-    // Monte Carlo success probability
-    const successProbability = runSimpleMonteCarloSimulation(
-      projectedNestEgg,
-      annualWithdrawal,
+    // Monte Carlo success probability including both accumulation and drawdown phases
+    // This matches the main simulation methodology in simulation-engine.ts
+    const successProbability = runFullMonteCarloSimulation(
+      currentSavings,
+      monthlyContribution,
+      contributionEscalation,
+      retirementGoals.desiredMonthlyIncome,
+      yearsToRetirement,
       yearsInRetirement,
-      realReturn,
+      nominalReturn,
       scenario.volatility,
       inflationRate
     )
@@ -217,7 +250,7 @@ export function compareScenarios(
       description: scenario.description,
       allocation: scenario.allocation,
       nominalReturn: scenario.nominalReturn * 100,
-      realReturn: realReturn * 100,
+      realReturn: realReturnForDisplay * 100,
       volatility: scenario.volatility * 100,
       projectedNestEgg,
       yearsLasts,
