@@ -26,9 +26,15 @@
       "Bash(git stash:*)",
       "Bash(git rm:*)",
       "Bash(git commit:*)",
-      "Bash(ls /workspaces/retirement-calculator-claude/.env*)"
+      "Bash(ls /workspaces/retirement-calculator-claude/.env*)",
+      "Bash(grep:*)",
+      "Bash(pkill -f \"next-server\")",
+      "Bash(pkill -f \"next start\")"
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": []
+  "enabledMcpjsonServers": [],
+  "enabledPlugins": {
+    "context7@claude-plugins-official": true
+  }
 }

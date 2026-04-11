@@ -197,6 +197,6 @@ See **[docs/THEMING.md](docs/THEMING.md)** for complete architecture details.
 ## Documentation
 
 - **Theming System:** `docs/THEMING.md` - Complete theming architecture guide
-- **Phase Planning:** `history/project-phases.md`
+- **Phase Planning:** `docs/project-phases.md`
 - **Testing Plan:** `history/testing-and-validation-plan.md`
 - **Calculation Changes:** Document in `history/` with date-prefixed markdown files
