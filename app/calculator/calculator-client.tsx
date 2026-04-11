@@ -1,7 +1,20 @@
 "use client"
 
-import { useState, useMemo, useRef, useDeferredValue } from "react"
-import { RotateCcw, Calculator, TrendingDown, Settings, BarChart3, BookOpen } from "lucide-react"
+import { AccountList } from "@/components/accounts/account-list"
+import { MonteCarloChart } from "@/components/charts/monte-carlo-chart"
+import { PortfolioGrowthChart } from "@/components/charts/portfolio-growth-chart"
+import { ColorThemeToggle } from "@/components/color-theme-toggle"
+import { CollapsibleSection } from "@/components/dashboard/collapsible-section"
+import { DashboardMetricsGrid } from "@/components/dashboard/dashboard-metrics-grid"
+import { KeyInsightsSummary } from "@/components/dashboard/key-insights-summary"
+import { QuickActionsCard } from "@/components/dashboard/quick-actions-card"
+import { DebugWindow } from "@/components/debug/debug-window"
+import { AssumptionsForm } from "@/components/inputs/assumptions-form"
+import { PersonalInfoForm } from "@/components/inputs/personal-info-form"
+import { RetirementGoalsForm } from "@/components/inputs/retirement-goals-form"
+import { CalculationsBreakdown } from "@/components/results/calculations-breakdown"
+import { InsightsPanel } from "@/components/results/insights-panel"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -11,28 +24,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { COMPOUNDING_METHOD_LABELS } from "@/types"
-import type { CompoundingMethod } from "@/types"
-import { AccountList } from "@/components/accounts/account-list"
-import { PersonalInfoForm } from "@/components/inputs/personal-info-form"
-import { RetirementGoalsForm } from "@/components/inputs/retirement-goals-form"
-import { AssumptionsForm } from "@/components/inputs/assumptions-form"
-import { PortfolioGrowthChart } from "@/components/charts/portfolio-growth-chart"
-import { MonteCarloChart } from "@/components/charts/monte-carlo-chart"
-import { DashboardMetricsGrid } from "@/components/dashboard/dashboard-metrics-grid"
-import { CollapsibleSection } from "@/components/dashboard/collapsible-section"
-import { QuickActionsCard } from "@/components/dashboard/quick-actions-card"
-import { KeyInsightsSummary } from "@/components/dashboard/key-insights-summary"
-import { InsightsPanel } from "@/components/results/insights-panel"
-import { CalculationsBreakdown } from "@/components/results/calculations-breakdown"
-import { DebugWindow } from "@/components/debug/debug-window"
-import { ThemeToggle } from "@/components/theme-toggle"
-import { ColorThemeToggle } from "@/components/color-theme-toggle"
-import { useCalculatorStore } from "@/lib/store/calculator-store"
-import { useShallow } from "zustand/react/shallow"
 import { calculateProjection } from "@/lib/calculations/projection-engine"
-import { runMonteCarloSimulation } from "@/lib/monte-carlo/simulation-engine"
-import type { ProjectionResult, SimulationResult } from "@/types"
+import { useMonteCarloWorker } from "@/lib/monte-carlo/use-monte-carlo-worker"
+import { useCalculatorStore } from "@/lib/store/calculator-store"
+import type { ProjectionResult } from "@/types"
+import { BarChart3, BookOpen, Calculator, RotateCcw, Settings, TrendingDown } from "lucide-react"
+import { useDeferredValue, useMemo, useRef, useState } from "react"
+import { useShallow } from "zustand/react/shallow"
 
 export function CalculatorClient() {
   const {
@@ -68,21 +66,20 @@ export function CalculatorClient() {
   const deferredAssumptions = useDeferredValue(assumptions)
   const deferredDrawdownConfig = useDeferredValue(drawdownConfig)
 
-  // Monte Carlo runs synchronously but only when deferred inputs stabilise
-  const simulationResult = useMemo<SimulationResult | null>(() => {
-    if (deferredAccounts.length === 0) return null
-    return runMonteCarloSimulation(
-      deferredAccounts,
-      deferredPersonalInfo,
-      deferredRetirementGoals,
-      deferredDrawdownConfig,
-      { numberOfRuns: 1000 },
-      deferredAssumptions
-    )
-  }, [deferredAccounts, deferredPersonalInfo, deferredRetirementGoals, deferredAssumptions, deferredDrawdownConfig])
+  // Monte Carlo runs in a Web Worker — deferred inputs are passed so the worker
+  // only triggers once inputs have "settled", matching the previous useMemo behaviour.
+  const { simulationResult, isRunning: isWorkerRunning } = useMonteCarloWorker(
+    deferredAccounts,
+    deferredPersonalInfo,
+    deferredRetirementGoals,
+    deferredDrawdownConfig,
+    10000,
+    deferredAssumptions
+  )
 
-  // True while the user's latest inputs haven't been reflected in the simulation yet
+  // True while inputs have changed but the worker hasn't returned the result yet
   const isSimulating =
+    isWorkerRunning ||
     deferredAccounts !== accounts ||
     deferredPersonalInfo !== personalInfo ||
     deferredRetirementGoals !== retirementGoals ||

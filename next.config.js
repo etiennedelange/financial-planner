@@ -6,6 +6,9 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 })
 
 const nextConfig = {
+  // React Compiler — automatically memoises components and hooks
+  reactCompiler: true,
+
   // Production optimizations
   compiler: {
     // Remove console.logs in production (keep errors and warnings)

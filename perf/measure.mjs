@@ -48,8 +48,8 @@ const CPU_THROTTLE = Number(args.cpu ?? 4)
 const MODE         = args.mode     ?? 'cold'
 const SCENARIO     = args.scenario ?? 'empty'
 
-if (!['empty', 'interactive'].includes(SCENARIO)) {
-  console.error(`Invalid --scenario: ${SCENARIO} (expected 'empty' or 'interactive')`)
+if (!['empty', 'interactive', 'interaction'].includes(SCENARIO)) {
+  console.error(`Invalid --scenario: ${SCENARIO} (expected 'empty', 'interactive', or 'interaction')`)
   process.exit(1)
 }
 
@@ -179,11 +179,12 @@ async function measureOnce(browser, runIndex) {
         }).observe({ type: 'longtask', buffered: true })
       } catch { /* longtask not supported */ }
 
-      if (scenario === 'interactive') {
+      if (scenario === 'interactive' || scenario === 'interaction') {
         try {
           localStorage.setItem('retirement-calculator-storage', JSON.stringify(seed))
         } catch { /* private mode etc. */ }
       }
+
     },
     { scenario: SCENARIO, seed: SEED_STATE }
   )
@@ -193,8 +194,38 @@ async function measureOnce(browser, runIndex) {
 
   // Give React effects + the 300ms Monte Carlo debounce + the sim itself
   // room to run. Empty scenario has no work to wait for — keep it short.
-  const settleMs = SCENARIO === 'interactive' ? 1500 : 300
+  const settleMs = SCENARIO === 'interaction' ? 1800 : SCENARIO === 'interactive' ? 1500 : 300
   await page.waitForTimeout(settleMs)
+
+  // ---- interaction scenario: measure TBT from a single input change --------
+  // After the page has fully settled, clear all observed long tasks, then call
+  // the Zustand store setter directly via window.__setGoals (injected below)
+  // to re-trigger projection + Monte Carlo.  Measures only the tasks that occur
+  // during that window — the key metric for web worker main-thread impact.
+  if (SCENARIO === 'interaction') {
+    // Open "Planning Inputs" accordion and change a form value to re-trigger
+    // the full projection + Monte Carlo pipeline.  We measure only the long
+    // tasks that happen AFTER the reset, isolating simulation overhead.
+
+    // Open the accordion.
+    await page.getByRole('button', { name: /Planning Inputs/i }).click()
+    // Wait for accordion animation to complete (content becomes visible).
+    await page.waitForSelector('[data-state="open"] input', { timeout: 5000 })
+    await page.waitForTimeout(100) // small settle
+
+    // Reset long-task buffer NOW — after accordion open, before the input change.
+    await page.evaluate(() => { window.__longTasks = [] })
+
+    // Find and change the first visible number input (current age in PersonalInfoForm).
+    const input = page.locator('[data-state="open"] input').first()
+    const val = await input.inputValue()
+    const numVal = parseFloat(val) || 42
+    await input.fill(String(numVal + 1))
+    await input.press('Tab')
+
+    // Wait for useDeferredValue to settle + simulation to complete.
+    await page.waitForTimeout(2000)
+  }
 
   const wallClock = Date.now() - start
 
@@ -259,9 +290,10 @@ async function measureOnce(browser, runIndex) {
   metrics.wallClock = wallClock
   await context.close()
 
+  const tbtLabel = SCENARIO === 'interaction' ? 'interaction-tbt' : 'tbt'
   process.stdout.write(
     `  run ${runIndex + 1}/${RUNS}  fcp=${round(metrics.fcp ?? 0)}ms  ` +
-    `lcp=${round(metrics.lcp ?? 0)}ms  tbt=${round(metrics.tbt)}ms  ` +
+    `lcp=${round(metrics.lcp ?? 0)}ms  ${tbtLabel}=${round(metrics.tbt)}ms  ` +
     `tasks=${metrics.longTaskCount}  ` +
     `js=${round((metrics.jsBytes || 0) / 1024)}KB\n`
   )

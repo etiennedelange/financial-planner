@@ -20,7 +20,7 @@ const after  = JSON.parse(readFileSync(b, 'utf8'))
 const LOWER_IS_BETTER = new Set([
   'ttfb', 'fcp', 'lcp', 'domContentLoaded', 'loadEvent',
   'transferSize', 'encodedSize', 'jsBytes', 'cssBytes', 'resourceCount',
-  'longTaskCount', 'longTaskMs', 'tbt', 'hydrationMeasure', 'renderMeasure',
+  'longTaskCount', 'longTaskMs', 'longestTask', 'tbt', 'hydrationMeasure', 'renderMeasure',
   'wallClock',
 ])
 
