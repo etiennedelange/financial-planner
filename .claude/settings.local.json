@@ -21,7 +21,12 @@
       "Bash(pnpm:*)",
       "Bash(git check-ignore:*)",
       "Bash(npm view:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(git merge:*)",
+      "Bash(git stash:*)",
+      "Bash(git rm:*)",
+      "Bash(git commit:*)",
+      "Bash(ls /workspaces/retirement-calculator-claude/.env*)"
     ]
   },
   "enableAllProjectMcpServers": true,
