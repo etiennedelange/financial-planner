@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { useShallow } from "zustand/react/shallow"
 import { formatCurrency } from "@/lib/utils/formatters"
 import type { Account } from "@/types"
 import { Plus } from "lucide-react"
@@ -12,7 +13,14 @@ import { AccountFormDialog } from "./account-form"
 
 export function AccountList() {
   const { accounts, addAccount, updateAccount, removeAccount } =
-    useCalculatorStore()
+    useCalculatorStore(
+      useShallow(state => ({
+        accounts: state.accounts,
+        addAccount: state.addAccount,
+        updateAccount: state.updateAccount,
+        removeAccount: state.removeAccount,
+      }))
+    )
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
 

@@ -19,6 +19,7 @@ import {
   Target,
 } from "lucide-react"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { useShallow } from "zustand/react/shallow"
 import { calculateOptimalContribution } from "@/lib/calculations/optimal-contribution"
 import { calculateCostOfDelay } from "@/lib/calculations/cost-of-delay"
 import {
@@ -31,7 +32,16 @@ import { InfoTooltip } from "@/components/ui/info-tooltip"
 
 export function InsightsPanel() {
   const { accounts, personalInfo, retirementGoals, drawdownConfig, assumptions, displayMode } =
-    useCalculatorStore()
+    useCalculatorStore(
+      useShallow(state => ({
+        accounts: state.accounts,
+        personalInfo: state.personalInfo,
+        retirementGoals: state.retirementGoals,
+        drawdownConfig: state.drawdownConfig,
+        assumptions: state.assumptions,
+        displayMode: state.displayMode,
+      }))
+    )
 
   const insights = useMemo(() => {
     if (accounts.length === 0) return null

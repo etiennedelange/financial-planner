@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { useShallow } from "zustand/react/shallow"
 import { DRAWDOWN_STRATEGY_LABELS } from "@/types"
 import type { DrawdownStrategy } from "@/types"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
@@ -32,7 +33,14 @@ type FormData = z.infer<typeof schema>
 
 export function AssumptionsForm() {
   const { assumptions, setAssumptions, drawdownConfig, setDrawdownConfig } =
-    useCalculatorStore()
+    useCalculatorStore(
+      useShallow(state => ({
+        assumptions: state.assumptions,
+        setAssumptions: state.setAssumptions,
+        drawdownConfig: state.drawdownConfig,
+        setDrawdownConfig: state.setDrawdownConfig,
+      }))
+    )
 
   const {
     register,

@@ -22,6 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { useShallow } from "zustand/react/shallow"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import { calculateProjection } from "@/lib/calculations/projection-engine"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
@@ -40,7 +41,15 @@ function formatPercent(value: number, decimals: number = 2): string {
 
 export function CalculationsBreakdown() {
   const { accounts, personalInfo, retirementGoals, assumptions, drawdownConfig } =
-    useCalculatorStore()
+    useCalculatorStore(
+      useShallow(state => ({
+        accounts: state.accounts,
+        personalInfo: state.personalInfo,
+        retirementGoals: state.retirementGoals,
+        assumptions: state.assumptions,
+        drawdownConfig: state.drawdownConfig,
+      }))
+    )
 
   const calculations = useMemo(() => {
     if (accounts.length === 0) return null

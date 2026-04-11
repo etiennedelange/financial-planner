@@ -14,6 +14,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { useShallow } from "zustand/react/shallow"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import { calculateMonthlyReturn, formatMonthlyReturnFormula } from "@/lib/calculations/utils/projection"
 import { calculateRetirementTax, calculateReplacementRatio } from "@/lib/calculations/retirement-tax"
@@ -35,7 +36,16 @@ export function DebugWindow({ className, projection, simulationResult }: DebugWi
     assumptions,
     drawdownConfig,
     displayMode,
-  } = useCalculatorStore()
+  } = useCalculatorStore(
+    useShallow(state => ({
+      accounts: state.accounts,
+      personalInfo: state.personalInfo,
+      retirementGoals: state.retirementGoals,
+      assumptions: state.assumptions,
+      drawdownConfig: state.drawdownConfig,
+      displayMode: state.displayMode,
+    }))
+  )
 
   const [isOpen, setIsOpen] = useState(false)
   const [copied, setCopied] = useState(false)

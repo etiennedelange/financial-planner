@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { useShallow } from "zustand/react/shallow"
 import { formatCurrency } from "@/lib/utils/formatters"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 
@@ -21,7 +22,13 @@ type FormData = z.infer<typeof schema>
 
 export function RetirementGoalsForm() {
   const { retirementGoals, setRetirementGoals, personalInfo } =
-    useCalculatorStore()
+    useCalculatorStore(
+      useShallow(state => ({
+        retirementGoals: state.retirementGoals,
+        setRetirementGoals: state.setRetirementGoals,
+        personalInfo: state.personalInfo,
+      }))
+    )
 
   const {
     register,

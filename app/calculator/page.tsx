@@ -29,6 +29,7 @@ import { DebugWindow } from "@/components/debug/debug-window"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { ColorThemeToggle } from "@/components/color-theme-toggle"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { useShallow } from "zustand/react/shallow"
 import { calculateProjection } from "@/lib/calculations/projection-engine"
 import { runMonteCarloSimulation } from "@/lib/monte-carlo/simulation-engine"
 import type { ProjectionResult, SimulationResult } from "@/types"
@@ -44,7 +45,19 @@ export default function CalculatorPage() {
     setAssumptions,
     setDisplayMode,
     resetToDefaults,
-  } = useCalculatorStore()
+  } = useCalculatorStore(
+    useShallow(state => ({
+      accounts: state.accounts,
+      personalInfo: state.personalInfo,
+      retirementGoals: state.retirementGoals,
+      assumptions: state.assumptions,
+      drawdownConfig: state.drawdownConfig,
+      displayMode: state.displayMode,
+      setAssumptions: state.setAssumptions,
+      setDisplayMode: state.setDisplayMode,
+      resetToDefaults: state.resetToDefaults,
+    }))
+  )
 
   // Deferred inputs: React will re-render with the previous values while new
   // values are still processing, so the expensive Monte Carlo useMemo only
