@@ -84,6 +84,7 @@ export default function CalculatorPage() {
 
     // Don't run if no accounts
     if (accounts.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- guard reset, will be replaced with useTransition in Step 5
       setSimulationResult(null)
       return
     }
