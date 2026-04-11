@@ -5,8 +5,10 @@ import {
   ResponsiveContainer,
   Tooltip,
   Legend,
-  type LegendProps,
+  type TooltipProps,
 } from "recharts"
+import type { Payload, ValueType, NameType } from "recharts/types/component/DefaultTooltipContent"
+import type { LegendPayload, VerticalAlignmentType } from "recharts/types/component/DefaultLegendContent"
 
 import { cn } from "@/lib/utils"
 
@@ -107,16 +109,21 @@ ${colorConfig
 
 const ChartTooltip = Tooltip
 
+type ChartTooltipContentProps = TooltipProps<ValueType, NameType> &
+  React.ComponentProps<"div"> & {
+    active?: boolean
+    payload?: Payload<ValueType, NameType>[]
+    label?: string | number
+    hideLabel?: boolean
+    hideIndicator?: boolean
+    indicator?: "line" | "dot" | "dashed"
+    nameKey?: string
+    labelKey?: string
+  }
+
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<typeof Tooltip> &
-    React.ComponentProps<"div"> & {
-      hideLabel?: boolean
-      hideIndicator?: boolean
-      indicator?: "line" | "dot" | "dashed"
-      nameKey?: string
-      labelKey?: string
-    }
+  ChartTooltipContentProps
 >(
   (
     {
@@ -199,7 +206,7 @@ const ChartTooltipContent = React.forwardRef<
 
               return (
                 <div
-                  key={item.dataKey}
+                  key={String(item.dataKey)}
                   className={cn(
                     "flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground",
                     indicator === "dot" && "items-center"
@@ -267,11 +274,12 @@ const ChartLegend = Legend
 
 const ChartLegendContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<"div"> &
-    Pick<LegendProps, "payload" | "verticalAlign"> & {
-      hideIcon?: boolean
-      nameKey?: string
-    }
+  React.ComponentProps<"div"> & {
+    payload?: LegendPayload[]
+    verticalAlign?: VerticalAlignmentType
+    hideIcon?: boolean
+    nameKey?: string
+  }
 >(
   (
     { className, hideIcon = false, payload, verticalAlign = "bottom", nameKey },

@@ -21,19 +21,8 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
 
-  // Webpack optimizations
-  webpack: (config, { isServer }) => {
-    // Resolve fallbacks for client-side bundle
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-      }
-    }
-    return config
-  },
+  // Turbopack configuration (Next.js 16+ default bundler)
+  turbopack: {},
 }
 
 module.exports = withBundleAnalyzer(nextConfig)
