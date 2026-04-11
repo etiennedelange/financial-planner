@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss"
 
 const config: Config = {
-  darkMode: ["class"],
+  darkMode: ["class", ".dark"],
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -70,10 +70,15 @@ const config: Config = {
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out'
+  		},
+  		spacing: {
+  			'18': '4.5rem',
+  			'88': '22rem',
+  			'100': '25rem'
   		}
   	}
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [],
 }
 
 export default config

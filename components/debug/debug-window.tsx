@@ -16,6 +16,8 @@ import { Separator } from "@/components/ui/separator"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import { calculateMonthlyReturn, formatMonthlyReturnFormula } from "@/lib/calculations/utils/projection"
+import { calculateRetirementTax, calculateReplacementRatio } from "@/lib/calculations/retirement-tax"
+import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import { COMPOUNDING_METHOD_LABELS, COMPOUNDING_METHOD_DESCRIPTIONS } from "@/types"
 import type { Account, ProjectionResult, SimulationResult } from "@/types"
 
@@ -96,6 +98,80 @@ export function DebugWindow({ className, projection, simulationResult }: DebugWi
 
   // Display mode labels
   const displayModeLabel = displayMode === 'real' ? "Today's Value (Real)" : "Future Value (Nominal)"
+
+  // ===== PRIORITY 1 CALCULATIONS =====
+
+  // 1. Weighting method indicator
+  const weightingMethod = totalBalance === 0 ? 'CONTRIBUTION weights (balance = R0)' : 'BALANCE weights'
+
+  // 2. Initial withdrawal calculation (at retirement)
+  // Calculate initial withdrawal based on strategy
+  const calculateInitialWithdrawal = (
+    portfolioValue: number,
+    desiredMonthlyIncomeToday: number,
+    yearsToRetirement: number,
+    inflationRate: number
+  ): number => {
+    const desiredMonthlyAtRetirement =
+      desiredMonthlyIncomeToday * Math.pow(1 + inflationRate, yearsToRetirement)
+
+    switch (drawdownConfig.strategy) {
+      case "fixed_percentage":
+        return portfolioValue * (drawdownConfig.initialWithdrawalRate / 100)
+      case "fixed_amount_inflation_adjusted":
+        return desiredMonthlyAtRetirement * 12
+      case "variable_percentage":
+      case "guardrails":
+        const minAtRetirement = drawdownConfig.minimumWithdrawal * Math.pow(1 + inflationRate, yearsToRetirement)
+        const maxAtRetirement = drawdownConfig.maximumWithdrawal * Math.pow(1 + inflationRate, yearsToRetirement)
+        return Math.min(
+          Math.max(desiredMonthlyAtRetirement * 12, minAtRetirement * 12),
+          maxAtRetirement * 12
+        )
+      default:
+        return portfolioValue * SA_DEFAULTS.safeWithdrawalRate
+    }
+  }
+
+  // Use projection result if available, otherwise estimate
+  const portfolioAtRetirementEstimate = projection?.portfolioAtRetirement || totalBalance * Math.pow(1 + netReturn, yearsToRetirement)
+  const initialWithdrawalAnnual = calculateInitialWithdrawal(
+    portfolioAtRetirementEstimate,
+    retirementGoals.desiredMonthlyIncome,
+    yearsToRetirement,
+    inflationRate
+  )
+  const initialWithdrawalMonthly = initialWithdrawalAnnual / 12
+
+  // Desired monthly income inflated to retirement
+  const desiredMonthlyAtRetirement = retirementGoals.desiredMonthlyIncome * Math.pow(1 + inflationRate, yearsToRetirement)
+
+  // 3. Tax calculations at retirement (first year)
+  const retirementAge = personalInfo.retirementAge
+  const taxAtRetirement = calculateRetirementTax(initialWithdrawalAnnual, {
+    age: retirementAge,
+    monthlyMedicalAid: 0, // Could be made configurable
+    preRetirementIncome: personalInfo.annualIncome
+  })
+
+  // Replacement ratio
+  const replacementRatio = calculateReplacementRatio(
+    taxAtRetirement.netIncome,
+    personalInfo.annualIncome
+  )
+
+  // Tax threshold for retirement age
+  let taxThreshold: number = SA_TAX_LIMITS.taxThresholdUnder65
+  if (retirementAge >= 75) {
+    taxThreshold = SA_TAX_LIMITS.taxThreshold75Plus
+  } else if (retirementAge >= 65) {
+    taxThreshold = SA_TAX_LIMITS.taxThreshold65To74
+  }
+  const isBelowThreshold = initialWithdrawalAnnual <= taxThreshold
+
+  // Use projection tax data if available
+  const effectiveTaxRate = projection?.averageEffectiveTaxRate || taxAtRetirement.effectiveTaxRate
+  const lifetimeIncomeTax = projection?.totalLifetimeIncomeTax || 0
 
   const formatPercent = (value: number) => `${(value * 100).toFixed(2)}%`
   const formatCurrency = (value: number) => `R ${value.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -181,6 +257,7 @@ ${idx + 1}. ${acc.name} (${acc.type})
 =====================================================
 PORTFOLIO AGGREGATES (CALCULATED)
 =====================================================
+Weighting Method: ${weightingMethod}
 Total Balance: ${formatCurrency(totalBalance)}
 Total Monthly Contribution: ${formatCurrency(totalMonthlyContribution)}
 Total Annual Contribution: ${formatCurrency(totalMonthlyContribution * 12)}
@@ -190,6 +267,28 @@ Average Escalation: ${formatPercent(avgEscalation)}
 Net Return (Return - Fees): ${formatPercent(netReturn)}
 Monthly Return Rate: ${formatPercent(monthlyReturn)}
 Monthly Fee Rate: ${formatPercent(monthlyFeeRate)}
+
+=====================================================
+WITHDRAWAL DETAILS (AT RETIREMENT)
+=====================================================
+Desired Monthly Income (Today): ${formatCurrency(retirementGoals.desiredMonthlyIncome)}
+Inflated to Retirement: ${formatCurrency(desiredMonthlyAtRetirement)}
+Initial Withdrawal (Annual): ${formatCurrency(initialWithdrawalAnnual)}
+Initial Withdrawal (Monthly): ${formatCurrency(initialWithdrawalMonthly)}
+Withdrawal Strategy: ${drawdownConfig.strategy}
+Replacement Ratio: ${replacementRatio.toFixed(1)}% of pre-retirement income
+
+=====================================================
+TAX CALCULATIONS (RETIREMENT PHASE)
+=====================================================
+Annual Income Tax (Year 1): ${formatCurrency(taxAtRetirement.incomeTax)}
+Effective Tax Rate (Year 1): ${taxAtRetirement.effectiveTaxRate.toFixed(2)}%
+Average Effective Rate (Lifetime): ${effectiveTaxRate.toFixed(2)}%
+Lifetime Income Tax: ${formatCurrency(lifetimeIncomeTax)}
+Age-Based Rebate (at retirement): ${formatCurrency(taxAtRetirement.applicableRebate)}
+Tax-Free Threshold (at retirement): ${formatCurrency(taxThreshold)}
+Below Tax Threshold: ${isBelowThreshold ? 'YES' : 'NO'}
+Net Monthly Income (Year 1): ${formatCurrency(taxAtRetirement.netIncome / 12)}
 
 =====================================================
 DRAWDOWN CONFIGURATION
@@ -471,6 +570,11 @@ Single Source of Truth:
             {/* Portfolio Aggregates */}
             <Section title="Portfolio Aggregates (Calculated)">
               <Param
+                label="Weighting Method"
+                value={weightingMethod}
+                highlight
+              />
+              <Param
                 label="Total Balance"
                 value={formatCurrency(totalBalance)}
                 highlight
@@ -513,6 +617,79 @@ Single Source of Truth:
               <Param
                 label="Monthly Fee Rate"
                 value={formatPercent(monthlyFeeRate)}
+                highlight
+              />
+            </Section>
+
+            {/* Withdrawal Details - Priority 1 */}
+            <Section title="Withdrawal Details (At Retirement)">
+              <Param
+                label="Desired Monthly Income (Today)"
+                value={formatCurrency(retirementGoals.desiredMonthlyIncome)}
+              />
+              <Param
+                label="Inflated to Retirement"
+                value={formatCurrency(desiredMonthlyAtRetirement)}
+                highlight
+              />
+              <Param
+                label="Initial Withdrawal (Annual)"
+                value={formatCurrency(initialWithdrawalAnnual)}
+                highlight
+              />
+              <Param
+                label="Initial Withdrawal (Monthly)"
+                value={formatCurrency(initialWithdrawalMonthly)}
+                highlight
+              />
+              <Param
+                label="Withdrawal Strategy"
+                value={drawdownConfig.strategy}
+              />
+              <Param
+                label="Replacement Ratio"
+                value={`${replacementRatio.toFixed(1)}%`}
+                highlight
+              />
+            </Section>
+
+            {/* Tax Calculations - Priority 1 */}
+            <Section title="Tax Calculations (Retirement Phase)">
+              <Param
+                label="Annual Income Tax (Year 1)"
+                value={formatCurrency(taxAtRetirement.incomeTax)}
+                highlight
+              />
+              <Param
+                label="Effective Tax Rate (Year 1)"
+                value={`${taxAtRetirement.effectiveTaxRate.toFixed(2)}%`}
+                highlight
+              />
+              <Param
+                label="Average Effective Rate (Lifetime)"
+                value={`${effectiveTaxRate.toFixed(2)}%`}
+                highlight
+              />
+              <Param
+                label="Lifetime Income Tax"
+                value={formatCurrency(lifetimeIncomeTax)}
+              />
+              <Param
+                label="Age-Based Rebate"
+                value={formatCurrency(taxAtRetirement.applicableRebate)}
+              />
+              <Param
+                label="Tax-Free Threshold"
+                value={formatCurrency(taxThreshold)}
+              />
+              <Param
+                label="Below Tax Threshold?"
+                value={isBelowThreshold ? 'YES' : 'NO'}
+                highlight={isBelowThreshold}
+              />
+              <Param
+                label="Net Monthly Income (Year 1)"
+                value={formatCurrency(taxAtRetirement.netIncome / 12)}
                 highlight
               />
             </Section>

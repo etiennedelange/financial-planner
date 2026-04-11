@@ -10,87 +10,17 @@ import type {
 } from "@/types"
 import { generateReturnSequence, getPercentile } from "./random-returns"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
-import { calculateIncomeTaxWithRebates } from "../calculations/retirement-tax"
-
-/**
- * Calculate spending phase multiplier based on years in retirement
- * Models the "Go-Go, Slow-Go, No-Go" retirement phases
- */
-function getSpendingPhaseMultiplier(yearsInRetirement: number): number {
-  if (yearsInRetirement <= 15) {
-    return 1.0 // Go-Go phase
-  } else if (yearsInRetirement <= 25) {
-    return 0.8 // Slow-Go phase
-  } else {
-    const baseRate = 0.7
-    const medicalPremium = 0.15 * (yearsInRetirement - 25) / 10
-    return Math.min(baseRate + medicalPremium, 1.2)
-  }
-}
-
-/**
- * Calculate weighted average return from accounts
- * When balance is 0, weight by contributions instead of balance
- */
-function calculateWeightedReturn(accounts: Account[]): number {
-  const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
-
-  // If balance is 0, weight by monthly contributions
-  if (totalBalance === 0) {
-    const totalContribution = accounts.reduce((sum, acc) => sum + acc.monthlyContribution, 0)
-    if (totalContribution === 0) return SA_DEFAULTS.equityReturn
-    return accounts.reduce(
-      (sum, acc) =>
-        sum + (acc.expectedReturn / 100) * (acc.monthlyContribution / totalContribution),
-      0
-    )
-  }
-
-  return accounts.reduce(
-    (sum, acc) =>
-      sum + (acc.expectedReturn / 100) * (acc.currentBalance / totalBalance),
-    0
-  )
-}
-
-/**
- * Calculate weighted average fees from accounts
- * When balance is 0, weight by contributions instead of balance
- */
-function calculateWeightedFees(accounts: Account[]): number {
-  const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
-
-  // If balance is 0, weight by monthly contributions
-  if (totalBalance === 0) {
-    const totalContribution = accounts.reduce((sum, acc) => sum + acc.monthlyContribution, 0)
-    if (totalContribution === 0) return 0.01
-    return accounts.reduce(
-      (sum, acc) =>
-        sum + (acc.annualFees / 100) * (acc.monthlyContribution / totalContribution),
-      0
-    )
-  }
-
-  return accounts.reduce(
-    (sum, acc) =>
-      sum + (acc.annualFees / 100) * (acc.currentBalance / totalBalance),
-    0
-  )
-}
-
-/**
- * Calculate average contribution escalation rate
- */
-function calculateAverageEscalation(accounts: Account[]): number {
-  if (accounts.length === 0) return SA_DEFAULTS.contributionEscalation
-  return (
-    accounts.reduce((sum, acc) => sum + acc.contributionEscalation / 100, 0) /
-    accounts.length
-  )
-}
+import { getSpendingPhaseMultiplier } from "@/lib/calculations/utils/spending-phase"
 
 /**
  * Calculate initial withdrawal for simulation based on strategy
+ *
+ * IMPORTANT: The success rate should reflect whether the user can achieve their
+ * desired retirement income goal. For all strategies, we use the desired income
+ * as the baseline withdrawal to test if the plan meets the user's actual needs.
+ *
+ * The strategy affects HOW withdrawals are adjusted over time, but the baseline
+ * must reflect the user's income goal for the success rate to be meaningful.
  */
 function calculateSimulationWithdrawal(
   portfolioAtRetirement: number,
@@ -104,70 +34,106 @@ function calculateSimulationWithdrawal(
   const desiredMonthlyAtRetirement =
     desiredMonthlyIncomeToday * Math.pow(1 + inflationRate, yearsToRetirement)
 
+  // Annual desired income at retirement
+  const desiredAnnualAtRetirement = desiredMonthlyAtRetirement * 12
+
   switch (strategy) {
     case "fixed_percentage":
-      return portfolioAtRetirement * withdrawalRate
+      // Use the GREATER of percentage-based withdrawal or desired income
+      // This ensures success rate reflects whether the user can achieve their goal
+      // If percentage > desired, we test the more conservative scenario
+      // If percentage < desired, we test the actual income need
+      const percentageWithdrawal = portfolioAtRetirement * withdrawalRate
+      return Math.max(percentageWithdrawal, desiredAnnualAtRetirement)
     case "fixed_amount_inflation_adjusted":
-      return desiredMonthlyAtRetirement * 12
+      return desiredAnnualAtRetirement
     case "variable_percentage":
     case "guardrails":
-      return desiredMonthlyAtRetirement * 12
+      return desiredAnnualAtRetirement
     default:
-      return portfolioAtRetirement * withdrawalRate
+      return Math.max(portfolioAtRetirement * withdrawalRate, desiredAnnualAtRetirement)
   }
 }
 
 /**
  * Simulate a single run with stochastic returns
+ * Now accepts per-account data to project each account separately during accumulation
  */
 function simulateSingleRun(
   runId: number,
-  initialBalance: number,
-  monthlyContribution: number,
-  expectedReturn: number,
+  accounts: Account[],
   volatility: number,
-  fees: number,
-  escalation: number,
   yearsToRetirement: number,
   yearsInRetirement: number,
   inflationRate: number,
   desiredMonthlyIncome: number,
   strategy: string,
   withdrawalRate: number,
-  lifeExpectancy: number,
   currentAge: number,
   compoundingMethod: 'nominal' | 'compound'
 ): SimulationRun {
   const totalYears = yearsToRetirement + yearsInRetirement
-  const returns = generateReturnSequence(expectedReturn - fees, volatility, totalYears)
 
-  let balance = initialBalance
+  // Track each account's balance separately during accumulation
+  const accountBalances = accounts.map(acc => acc.currentBalance)
+  const accountMonthlyContributions = accounts.map(acc => acc.monthlyContribution)
+
+  // Generate return sequences for each account based on their expected return
+  const accountReturns = accounts.map(acc => {
+    const netReturn = (acc.expectedReturn - acc.annualFees) / 100
+    // Use per-account volatility (0 for cash/fixed accounts, or proportional to return)
+    const accVolatility = acc.expectedReturn === 0 ? 0 : volatility
+    return generateReturnSequence(netReturn, accVolatility, totalYears)
+  })
+
   const yearlyBalances: number[] = []
   let depletionAge: number | null = null
 
-  // Accumulation phase with MONTHLY compounding (matches deterministic projection)
+  // Accumulation phase - project each account separately
   for (let year = 0; year < yearsToRetirement; year++) {
-    const annualReturn = returns[year]
+    // Project each account individually
+    for (let accIdx = 0; accIdx < accounts.length; accIdx++) {
+      const acc = accounts[accIdx]
+      const annualReturn = accountReturns[accIdx][year]
+      const accEscalation = acc.contributionEscalation / 100
 
-    // Calculate monthly return based on compounding method
-    const monthlyReturn = compoundingMethod === 'compound'
-      ? Math.pow(1 + annualReturn, 1 / 12) - 1  // Mathematically correct
-      : annualReturn / 12                        // Nominal (Excel-compatible)
+      // Calculate monthly return based on compounding method
+      const monthlyReturn = compoundingMethod === 'compound'
+        ? Math.pow(1 + annualReturn, 1 / 12) - 1  // Mathematically correct
+        : annualReturn / 12                        // Nominal (Excel-compatible)
 
-    // Monthly compounding within each year
-    for (let month = 0; month < 12; month++) {
-      // Calculate contribution for this month (smooth escalation)
-      const currentMonthlyContribution = monthlyContribution * Math.pow(1 + escalation, year + month / 12)
+      // Monthly compounding within each year for this account
+      for (let month = 0; month < 12; month++) {
+        // Calculate contribution for this month (smooth escalation)
+        const currentMonthlyContribution =
+          accountMonthlyContributions[accIdx] * Math.pow(1 + accEscalation, year + month / 12)
 
-      // Apply growth first (end-of-period contributions, matches Excel FV type=0)
-      balance = balance * (1 + monthlyReturn)
+        // Apply growth first (end-of-period contributions, matches Excel FV type=0)
+        accountBalances[accIdx] = accountBalances[accIdx] * (1 + monthlyReturn)
 
-      // Then add contribution
-      balance += currentMonthlyContribution
+        // Then add contribution
+        accountBalances[accIdx] += currentMonthlyContribution
+      }
     }
 
-    yearlyBalances.push(balance)
+    const totalBalance = accountBalances.reduce((sum, bal) => sum + bal, 0)
+    yearlyBalances.push(totalBalance)
   }
+
+  // Combined balance at retirement for drawdown phase
+  let balance = accountBalances.reduce((sum, bal) => sum + bal, 0)
+
+  // Calculate weighted return for drawdown phase based on account balances at retirement
+  const totalRetirementBalance = balance
+  const weightedReturnForDrawdown = totalRetirementBalance > 0
+    ? accounts.reduce((sum, acc, idx) => {
+        const accNetReturn = (acc.expectedReturn - acc.annualFees) / 100
+        return sum + accNetReturn * (accountBalances[idx] / totalRetirementBalance)
+      }, 0)
+    : SA_DEFAULTS.equityReturn - 0.01 // Default if somehow balance is 0
+
+  // Generate return sequence for drawdown phase using weighted return
+  const drawdownReturns = generateReturnSequence(weightedReturnForDrawdown, volatility, yearsInRetirement)
 
   // Drawdown phase - calculate withdrawal based on strategy
   // NOTE: Withdrawals represent gross amounts (before tax). Tax is implicitly
@@ -182,19 +148,18 @@ function simulateSingleRun(
     inflationRate
   )
 
-  for (let year = yearsToRetirement; year < totalYears; year++) {
+  for (let year = 0; year < yearsInRetirement; year++) {
     if (balance <= 0 && !depletionAge) {
-      depletionAge = currentAge + year
+      depletionAge = currentAge + yearsToRetirement + year
     }
 
     // Apply return FIRST (on full balance before withdrawal)
     if (balance > 0) {
-      balance = balance * (1 + returns[year])
+      balance = balance * (1 + drawdownReturns[year])
     }
 
     // Apply spending phase multiplier (Go-Go/Slow-Go/No-Go)
-    const yearsInRetirement = year - yearsToRetirement
-    const spendingMultiplier = getSpendingPhaseMultiplier(yearsInRetirement)
+    const spendingMultiplier = getSpendingPhaseMultiplier(year)
     const adjustedWithdrawal = withdrawal * spendingMultiplier
 
     // THEN withdraw
@@ -287,16 +252,6 @@ export function runMonteCarloSimulation(
   const totalYears = yearsToRetirement + yearsInRetirement
   const inflationRate = retirementGoals.inflationRate / 100
 
-  // Aggregate account data
-  const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
-  const totalMonthlyContribution = accounts.reduce(
-    (sum, acc) => sum + acc.monthlyContribution,
-    0
-  )
-  const weightedReturn = calculateWeightedReturn(accounts)
-  const weightedFees = calculateWeightedFees(accounts)
-  const avgEscalation = calculateAverageEscalation(accounts)
-
   // Use volatility from market assumptions if provided, otherwise use default
   const volatility = marketAssumptions
     ? marketAssumptions.equityVolatility / 100
@@ -310,19 +265,14 @@ export function runMonteCarloSimulation(
   for (let runId = 0; runId < config.numberOfRuns; runId++) {
     const run = simulateSingleRun(
       runId,
-      totalBalance,
-      totalMonthlyContribution,
-      weightedReturn,
+      accounts,
       volatility,
-      weightedFees,
-      avgEscalation,
       yearsToRetirement,
       yearsInRetirement,
       inflationRate,
       retirementGoals.desiredMonthlyIncome,
       drawdownConfig.strategy,
       drawdownConfig.initialWithdrawalRate / 100,
-      personalInfo.lifeExpectancy,
       personalInfo.currentAge,
       compoundingMethod
     )

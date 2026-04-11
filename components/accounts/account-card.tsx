@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Account } from "@/types"
 import { ACCOUNT_TYPE_LABELS } from "@/types"
 import { formatCurrency, formatPercentage } from "@/lib/utils/formatters"
+import { InfoTooltip } from "@/components/ui/info-tooltip"
 
 interface AccountCardProps {
   account: Account
@@ -49,22 +50,42 @@ export function AccountCard({ account, onEdit, onDelete }: AccountCardProps) {
           </div>
 
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-            <div className="text-muted-foreground">Balance</div>
+            <div className="text-muted-foreground flex items-center gap-1.5">
+              Balance
+              <InfoTooltip content="Current account balance. This is your starting amount." side="right" />
+            </div>
             <div className="font-medium">
               {formatCurrency(account.currentBalance)}
             </div>
 
-            <div className="text-muted-foreground">Monthly</div>
+            <div className="text-muted-foreground flex items-center gap-1.5">
+              Monthly
+              <InfoTooltip content="Monthly contribution to this account. Set to R0 if no longer contributing (e.g., old pension funds)." side="right" />
+            </div>
             <div className="font-medium">
               {formatCurrency(account.monthlyContribution)}
             </div>
 
-            <div className="text-muted-foreground">Return</div>
+            <div className="text-muted-foreground flex items-center gap-1.5">
+              Escalation
+              <InfoTooltip content="Annual % increase in contributions. Typically matches salary increases (5-7%). Set to 0% for fixed contributions or accounts no longer receiving contributions." side="right" />
+            </div>
+            <div className="font-medium">
+              {formatPercentage(account.contributionEscalation)}
+            </div>
+
+            <div className="text-muted-foreground flex items-center gap-1.5">
+              Return
+              <InfoTooltip content="Expected annual return for this account (nominal, before fees). Equity funds: 10-14%, balanced: 8-12%, bonds: 7-9%, cash: 6-8%. This is used to project growth." side="right" />
+            </div>
             <div className="font-medium">
               {formatPercentage(account.expectedReturn)}
             </div>
 
-            <div className="text-muted-foreground">Fees</div>
+            <div className="text-muted-foreground flex items-center gap-1.5">
+              Fees
+              <InfoTooltip content="Annual management fees charged by your provider (TER + admin). Typical SA funds: 0.5-1.5% p.a. Fees directly reduce your returns - lower fees mean more growth." side="right" />
+            </div>
             <div className="font-medium">
               {formatPercentage(account.annualFees)}
             </div>

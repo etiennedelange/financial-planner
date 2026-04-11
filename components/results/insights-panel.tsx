@@ -27,6 +27,7 @@ import {
 } from "@/lib/calculations/scenario-comparison"
 import { projectMedicalCosts } from "@/lib/calculations/medical-costs"
 import { formatCurrency } from "@/lib/utils/currency"
+import { InfoTooltip } from "@/components/ui/info-tooltip"
 
 export function InsightsPanel() {
   const { accounts, personalInfo, retirementGoals, drawdownConfig, assumptions, displayMode } =
@@ -117,7 +118,7 @@ export function InsightsPanel() {
       yearsToRetirement,
       inflationRate,
     }
-  }, [accounts, personalInfo, retirementGoals, drawdownConfig, assumptions, displayMode])
+  }, [accounts, personalInfo, retirementGoals, drawdownConfig, assumptions])
 
   if (!insights) {
     return (
@@ -142,6 +143,10 @@ export function InsightsPanel() {
           <div className="flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg">Optimal Contribution</CardTitle>
+            <InfoTooltip
+              content="Calculates the minimum monthly contribution needed to reach your target retirement nest egg. The target is based on your desired monthly income and withdrawal rate. Contributing more than this amount builds a safety buffer and improves your success rate."
+              side="right"
+            />
           </div>
           <CardDescription>
             The <strong>minimum</strong> monthly contribution needed to reach your target nest egg.
@@ -199,6 +204,10 @@ export function InsightsPanel() {
           <div className="flex items-center gap-2">
             <Clock className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg">Cost of Delay</CardTitle>
+            <InfoTooltip
+              content="Shows how much retirement savings you lose by delaying your start. Due to compound growth, starting early has a massive impact - every year you delay costs you years of compound returns. The earlier you start, the less you need to contribute per month."
+              side="right"
+            />
           </div>
           <CardDescription>
             Impact of delaying retirement savings
@@ -249,6 +258,10 @@ export function InsightsPanel() {
           <div className="flex items-center gap-2">
             <PieChart className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg">Investment Scenarios</CardTitle>
+            <InfoTooltip
+              content="Compares how different investment strategies (Conservative, Balanced, Aggressive) affect your retirement outcomes. Each scenario runs a full Monte Carlo simulation (1,000 iterations) including both the accumulation phase (while saving) and drawdown phase (during retirement). Higher returns come with higher volatility."
+              side="right"
+            />
           </div>
         </CardHeader>
         <CardContent>
@@ -324,6 +337,10 @@ export function InsightsPanel() {
           <div className="flex items-center gap-2">
             <Heart className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg">Medical Cost Projection</CardTitle>
+            <InfoTooltip
+              content="Projects medical aid costs in retirement. SA medical inflation averages ~9% p.a. (higher than general inflation at 5.5%). These costs typically increase with age and can be a significant retirement expense. Plan to allocate 10-15% of retirement income for medical costs."
+              side="right"
+            />
           </div>
           <CardDescription>
             SA medical inflation: ~9% p.a. (vs 5.5% general)

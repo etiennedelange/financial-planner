@@ -1,9 +1,8 @@
 "use client"
 
 import { useState, useEffect, useMemo, useRef } from "react"
-import { RotateCcw, Calculator, TrendingDown } from "lucide-react"
+import { RotateCcw, Calculator, TrendingDown, Settings, BarChart3, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +19,10 @@ import { RetirementGoalsForm } from "@/components/inputs/retirement-goals-form"
 import { AssumptionsForm } from "@/components/inputs/assumptions-form"
 import { PortfolioGrowthChart } from "@/components/charts/portfolio-growth-chart"
 import { MonteCarloChart } from "@/components/charts/monte-carlo-chart"
-import { ProjectionSummary } from "@/components/results/projection-summary"
+import { DashboardMetricsGrid } from "@/components/dashboard/dashboard-metrics-grid"
+import { CollapsibleSection } from "@/components/dashboard/collapsible-section"
+import { QuickActionsCard } from "@/components/dashboard/quick-actions-card"
+import { KeyInsightsSummary } from "@/components/dashboard/key-insights-summary"
 import { InsightsPanel } from "@/components/results/insights-panel"
 import { CalculationsBreakdown } from "@/components/results/calculations-breakdown"
 import { DebugWindow } from "@/components/debug/debug-window"
@@ -48,6 +50,18 @@ export default function CalculatorPage() {
     useState<SimulationResult | null>(null)
   const [isSimulating, setIsSimulating] = useState(false)
   const simulationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // State for controlling collapsible sections
+  const [openSections, setOpenSections] = useState({
+    accounts: true,
+    planningInputs: false,
+    detailedInsights: false,
+    calculations: false,
+  })
+
+  // Refs for scrolling to sections
+  const accountsRef = useRef<HTMLDivElement>(null)
+  const detailedInsightsRef = useRef<HTMLDivElement>(null)
 
   // Calculate projection whenever inputs change
   const projection: ProjectionResult | null = useMemo(() => {
@@ -103,8 +117,76 @@ export default function CalculatorPage() {
     setSimulationResult(null)
   }
 
+  // Quick Actions handlers
+  const handleAddAccount = () => {
+    setOpenSections((prev) => ({ ...prev, accounts: true }))
+    setTimeout(() => {
+      accountsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 100)
+  }
+
+  const handleViewInsights = () => {
+    setOpenSections((prev) => ({ ...prev, detailedInsights: true }))
+    setTimeout(() => {
+      detailedInsightsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 100)
+  }
+
+  const handleExportReport = () => {
+    if (!projection) return
+
+    const exportData = {
+      generatedAt: new Date().toISOString(),
+      personalInfo,
+      retirementGoals,
+      assumptions,
+      accounts: accounts.map(acc => ({
+        name: acc.name,
+        type: acc.type,
+        currentBalance: acc.currentBalance,
+        monthlyContribution: acc.monthlyContribution,
+      })),
+      projection: {
+        portfolioAtRetirement: projection.portfolioAtRetirement,
+        monthlyIncomeAtRetirement: projection.monthlyIncomeAtRetirement,
+        monthlyNetIncomeAtRetirement: projection.monthlyNetIncomeAtRetirement,
+        portfolioDepletionAge: projection.portfolioDepletionAge,
+        shortfallAmount: projection.shortfallAmount,
+        surplusAmount: projection.surplusAmount,
+        totalLifetimeIncomeTax: projection.totalLifetimeIncomeTax,
+        totalLumpSumTax: projection.totalLumpSumTax,
+        averageEffectiveTaxRate: projection.averageEffectiveTaxRate,
+        replacementRatio: projection.replacementRatio,
+      },
+      monteCarloSimulation: simulationResult ? {
+        successRate: simulationResult.successRate,
+        averageFinalBalance: simulationResult.averageFinalBalance,
+        medianDepletionAge: simulationResult.medianDepletionAge,
+        percentiles: {
+          p10: simulationResult.percentiles.p10[simulationResult.percentiles.p10.length - 1],
+          p50: simulationResult.percentiles.p50[simulationResult.percentiles.p50.length - 1],
+          p90: simulationResult.percentiles.p90[simulationResult.percentiles.p90.length - 1],
+        },
+      } : null,
+    }
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `retirement-plan-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  // Calculate totals for dashboard metrics
+  const totalCurrentBalance = accounts.reduce((sum, acc) => sum + (acc.currentBalance || 0), 0)
+  const totalMonthlyContributions = accounts.reduce((sum, acc) => sum + (acc.monthlyContribution || 0), 0)
+
   return (
-    <div className="container mx-auto py-4 px-3 md:py-8 md:px-4">
+    <div className="dashboard-container">
       <div className="mb-6 space-y-4 md:mb-8 md:space-y-0">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
@@ -214,22 +296,24 @@ export default function CalculatorPage() {
         </div>
       </div>
 
-      {/* Results Summary */}
+      {/* Dashboard Metrics Grid */}
       {projection && (
-        <div className="mb-8">
-          <ProjectionSummary
+        <div className="dashboard-section">
+          <DashboardMetricsGrid
             projection={projection}
+            simulationResult={simulationResult}
             retirementAge={personalInfo.retirementAge}
             currentAge={personalInfo.currentAge}
             lifeExpectancy={personalInfo.lifeExpectancy}
             inflationRate={retirementGoals.inflationRate}
-            simulationResult={simulationResult}
+            totalCurrentBalance={totalCurrentBalance}
+            totalMonthlyContributions={totalMonthlyContributions}
           />
         </div>
       )}
 
-      {/* Charts */}
-      <div className="mb-8 grid gap-4 lg:grid-cols-2">
+      {/* Primary Charts */}
+      <div className="dashboard-section grid gap-8 lg:grid-cols-2">
         <PortfolioGrowthChart
           projections={projection?.yearlyProjections || []}
           retirementAge={personalInfo.retirementAge}
@@ -242,58 +326,87 @@ export default function CalculatorPage() {
         />
       </div>
 
-      {/* Input Tabs */}
-      <Tabs defaultValue="accounts" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3 gap-1 md:flex md:justify-center lg:grid lg:grid-cols-6">
-          <TabsTrigger value="accounts" className="text-xs md:text-sm">
-            <span className="md:hidden">Accts</span>
-            <span className="hidden md:inline">Accounts</span>
-          </TabsTrigger>
-          <TabsTrigger value="personal" className="text-xs md:text-sm">
-            <span className="md:hidden">Info</span>
-            <span className="hidden md:inline">Personal</span>
-          </TabsTrigger>
-          <TabsTrigger value="goals" className="text-xs md:text-sm">
-            Goals
-          </TabsTrigger>
-          <TabsTrigger value="assumptions" className="text-xs md:text-sm">
-            <span className="md:hidden">Calc</span>
-            <span className="hidden md:inline">Assumptions</span>
-          </TabsTrigger>
-          <TabsTrigger value="insights" className="text-xs md:text-sm">
-            <span className="md:hidden">Stats</span>
-            <span className="hidden md:inline">Insights</span>
-          </TabsTrigger>
-          <TabsTrigger value="calculations" className="text-xs md:text-sm">
-            <span className="md:hidden">Math</span>
-            <span className="hidden md:inline">Calculations</span>
-          </TabsTrigger>
-        </TabsList>
+      {/* Secondary Widgets */}
+      {projection && (
+        <div className="dashboard-section grid gap-8 lg:grid-cols-2">
+          <QuickActionsCard
+            onAddAccount={handleAddAccount}
+            onViewInsights={handleViewInsights}
+            onExportReport={handleExportReport}
+          />
+          <KeyInsightsSummary
+            projection={projection}
+            currentAge={personalInfo.currentAge}
+            retirementAge={personalInfo.retirementAge}
+            lifeExpectancy={personalInfo.lifeExpectancy}
+            currentMonthlyIncome={personalInfo.annualIncome / 12}
+            desiredMonthlyIncome={retirementGoals.desiredMonthlyIncome}
+            inflationRate={retirementGoals.inflationRate}
+            monteCarloSuccessRate={simulationResult?.successRate}
+          />
+        </div>
+      )}
 
-        <TabsContent value="accounts">
-          <AccountList />
-        </TabsContent>
+      {/* Collapsible Sections */}
+      <div className="dashboard-section space-y-0">
+        <div ref={accountsRef}>
+          <CollapsibleSection
+            id="accounts"
+            title="Accounts"
+            icon={TrendingDown}
+            badge={accounts.length > 0 ? accounts.length : undefined}
+            open={openSections.accounts}
+            onOpenChange={(open) => setOpenSections((prev) => ({ ...prev, accounts: open }))}
+          >
+            <AccountList />
+          </CollapsibleSection>
+        </div>
 
-        <TabsContent value="personal">
-          <PersonalInfoForm />
-        </TabsContent>
+        <CollapsibleSection
+          id="planning-inputs"
+          title="Planning Inputs"
+          icon={Settings}
+          open={openSections.planningInputs}
+          onOpenChange={(open) => setOpenSections((prev) => ({ ...prev, planningInputs: open }))}
+        >
+          <div className="space-y-8">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
+              <PersonalInfoForm />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Retirement Goals</h3>
+              <RetirementGoalsForm />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Investment Assumptions</h3>
+              <AssumptionsForm />
+            </div>
+          </div>
+        </CollapsibleSection>
 
-        <TabsContent value="goals">
-          <RetirementGoalsForm />
-        </TabsContent>
+        <div ref={detailedInsightsRef}>
+          <CollapsibleSection
+            id="detailed-insights"
+            title="Detailed Insights"
+            icon={BarChart3}
+            open={openSections.detailedInsights}
+            onOpenChange={(open) => setOpenSections((prev) => ({ ...prev, detailedInsights: open }))}
+          >
+            <InsightsPanel />
+          </CollapsibleSection>
+        </div>
 
-        <TabsContent value="assumptions">
-          <AssumptionsForm />
-        </TabsContent>
-
-        <TabsContent value="insights">
-          <InsightsPanel />
-        </TabsContent>
-
-        <TabsContent value="calculations">
+        <CollapsibleSection
+          id="calculations"
+          title="Calculations Breakdown"
+          icon={BookOpen}
+          open={openSections.calculations}
+          onOpenChange={(open) => setOpenSections((prev) => ({ ...prev, calculations: open }))}
+        >
           <CalculationsBreakdown />
-        </TabsContent>
-      </Tabs>
+        </CollapsibleSection>
+      </div>
     </div>
   )
 }
