@@ -24,21 +24,21 @@ const ColorThemeProviderContext = React.createContext<ColorThemeProviderState>(i
 
 export function ColorThemeProvider({
   children,
-  defaultTheme = "violet",
+  defaultTheme = "blue",
   storageKey = "color-theme",
-  ...props
 }: ColorThemeProviderProps) {
-  const [colorTheme, setColorThemeState] = React.useState<ColorTheme>(
-    () => (typeof window !== "undefined" && (localStorage.getItem(storageKey) as ColorTheme)) || defaultTheme
-  )
+  // Start with defaultTheme so SSR and initial client render agree (no hydration mismatch).
+  // After mount, read localStorage and update if a stored preference exists.
+  const [colorTheme, setColorThemeState] = React.useState<ColorTheme>(defaultTheme)
+
+  React.useEffect(() => {
+    const stored = localStorage.getItem(storageKey) as ColorTheme | null
+    if (stored) setColorThemeState(stored)
+  }, [storageKey])
 
   React.useEffect(() => {
     const root = window.document.documentElement
-
-    // Remove all theme classes
     root.classList.remove("theme-blue", "theme-green", "theme-rose", "theme-violet", "theme-orange")
-
-    // Add current theme class
     root.classList.add(`theme-${colorTheme}`)
   }, [colorTheme])
 
@@ -50,10 +50,11 @@ export function ColorThemeProvider({
     },
   }
 
+  // React 19: <Context> can be used directly as a provider (no .Provider needed)
   return (
-    <ColorThemeProviderContext.Provider {...props} value={value}>
+    <ColorThemeProviderContext value={value}>
       {children}
-    </ColorThemeProviderContext.Provider>
+    </ColorThemeProviderContext>
   )
 }
 
