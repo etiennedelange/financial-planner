@@ -1,0 +1,4 @@
+# Keep only the committed reference baselines. Ad-hoc runs stay local.
+*.json
+!baseline.json
+!baseline-interactive.json

@@ -1,0 +1,214 @@
+{
+  "label": "baseline",
+  "timestamp": "2026-04-11T13:27:33.098Z",
+  "git": {
+    "commit": "ae8f18c",
+    "branch": "main",
+    "dirty": true
+  },
+  "url": "http://localhost:3000/calculator",
+  "runs": 5,
+  "runsRequested": 5,
+  "cpuThrottle": 4,
+  "mode": "cold",
+  "scenario": "empty",
+  "metrics": {
+    "ttfb": {
+      "median": 2.5,
+      "p75": 3,
+      "min": 2.3,
+      "max": 4.3,
+      "samples": [
+        4.3,
+        2.5,
+        3,
+        2.3,
+        2.3
+      ]
+    },
+    "fcp": {
+      "median": 88,
+      "p75": 92,
+      "min": 88,
+      "max": 96,
+      "samples": [
+        96,
+        92,
+        88,
+        88,
+        88
+      ]
+    },
+    "lcp": {
+      "median": 88,
+      "p75": 92,
+      "min": 88,
+      "max": 96,
+      "samples": [
+        96,
+        92,
+        88,
+        88,
+        88
+      ]
+    },
+    "domContentLoaded": {
+      "median": 38.2,
+      "p75": 39.1,
+      "min": 35,
+      "max": 44.2,
+      "samples": [
+        44.2,
+        37.7,
+        38.2,
+        35,
+        39.1
+      ]
+    },
+    "loadEvent": {
+      "median": 353.1,
+      "p75": 374.3,
+      "min": 342.6,
+      "max": 391.9,
+      "samples": [
+        391.9,
+        342.6,
+        374.3,
+        351.3,
+        353.1
+      ]
+    },
+    "transferSize": {
+      "median": 5442,
+      "p75": 5442,
+      "min": 5442,
+      "max": 5442,
+      "samples": [
+        5442,
+        5442,
+        5442,
+        5442,
+        5442
+      ]
+    },
+    "encodedSize": {
+      "median": 5142,
+      "p75": 5142,
+      "min": 5142,
+      "max": 5142,
+      "samples": [
+        5142,
+        5142,
+        5142,
+        5142,
+        5142
+      ]
+    },
+    "jsBytes": {
+      "median": 419133,
+      "p75": 419133,
+      "min": 419133,
+      "max": 419133,
+      "samples": [
+        419133,
+        419133,
+        419133,
+        419133,
+        419133
+      ]
+    },
+    "cssBytes": {
+      "median": 67449,
+      "p75": 67449,
+      "min": 67449,
+      "max": 67449,
+      "samples": [
+        67449,
+        67449,
+        67449,
+        67449,
+        67449
+      ]
+    },
+    "resourceCount": {
+      "median": 11,
+      "p75": 11,
+      "min": 11,
+      "max": 11,
+      "samples": [
+        11,
+        11,
+        11,
+        11,
+        11
+      ]
+    },
+    "longTaskCount": {
+      "median": 2,
+      "p75": 2,
+      "min": 2,
+      "max": 2,
+      "samples": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    "longTaskMs": {
+      "median": 266,
+      "p75": 280,
+      "min": 255,
+      "max": 289,
+      "samples": [
+        289,
+        255,
+        280,
+        265,
+        266
+      ]
+    },
+    "longestTask": {
+      "median": 185,
+      "p75": 195,
+      "min": 168,
+      "max": 206,
+      "samples": [
+        206,
+        168,
+        195,
+        170,
+        185
+      ]
+    },
+    "tbt": {
+      "median": 166,
+      "p75": 180,
+      "min": 155,
+      "max": 189,
+      "samples": [
+        189,
+        155,
+        180,
+        165,
+        166
+      ]
+    },
+    "hydrationMeasure": null,
+    "renderMeasure": null,
+    "wallClock": {
+      "median": 676,
+      "p75": 695,
+      "min": 644,
+      "max": 3278,
+      "samples": [
+        695,
+        644,
+        676,
+        653,
+        3278
+      ]
+    }
+  }
+}

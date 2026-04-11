@@ -19,7 +19,13 @@
     "ui:doc:mobile": "playwright test --project=mobile",
     "ui:doc:headed": "playwright test --headed",
     "ui:doc:debug": "playwright test --debug",
-    "ui:doc:report": "playwright show-report"
+    "ui:doc:report": "playwright show-report",
+    "perf:baseline": "node perf/measure.mjs --label baseline --scenario empty --out perf/baseline.json",
+    "perf:baseline:interactive": "node perf/measure.mjs --label baseline-interactive --scenario interactive --out perf/baseline-interactive.json",
+    "perf:after": "node perf/measure.mjs --label after --scenario empty --out perf/after.json",
+    "perf:after:interactive": "node perf/measure.mjs --label after-interactive --scenario interactive --out perf/after-interactive.json",
+    "perf:compare": "node perf/compare.mjs perf/baseline.json perf/after.json",
+    "perf:compare:interactive": "node perf/compare.mjs perf/baseline-interactive.json perf/after-interactive.json"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
