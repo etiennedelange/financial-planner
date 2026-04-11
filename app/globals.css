@@ -1,7 +1,61 @@
 @import "tailwindcss";
-@config "../tailwind.config.ts";
-@plugin "tailwindcss-animate";
+@import "tw-animate-css";
 
+/* Class-based dark mode — next-themes adds .dark to <html> */
+@custom-variant dark (&:is(.dark, .dark *));
+
+/* ─── Design tokens (replaces tailwind.config.ts theme.extend) ─────────────
+   @theme inline: values are computed at use-time so CSS var references like
+   hsl(var(--primary)) resolve to the current :root or .dark override.       */
+@theme inline {
+  /* Colors */
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  /* Border radius */
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  /* Custom spacing */
+  --spacing-18: 4.5rem;
+  --spacing-88: 22rem;
+  --spacing-100: 25rem;
+
+  /* Animations */
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+}
+
+/* Radix accordion height animations */
+@keyframes accordion-down {
+  from { height: 0; }
+  to   { height: var(--radix-accordion-content-height); }
+}
+
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to   { height: 0; }
+}
+
+/* ─── Base CSS variables ────────────────────────────────────────────────── */
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -58,7 +112,7 @@
     --chart-5: 27 87% 67%;
   }
 
-  /* Blue Theme (Default) - Updated to bright royal blue */
+  /* Blue Theme (Default) */
   .theme-blue {
     --primary: 225 73% 57%;
     --ring: 225 73% 57%;
@@ -164,7 +218,7 @@
   }
 }
 
-/* Dashboard Utilities */
+/* ─── Dashboard utility classes ─────────────────────────────────────────── */
 @layer components {
   .dashboard-container {
     @apply container mx-auto py-6 px-4 md:py-10 md:px-6 lg:px-8;
