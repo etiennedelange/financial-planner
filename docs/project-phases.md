@@ -489,15 +489,15 @@ const {
 
 ---
 
-### Deferred from this phase
+### Deferred from this phase — ✅ COMPLETED (2026-04-11)
 
-Discussed in the audit but out of scope to keep step sizes small and reviewable:
+All five deferred items resolved:
 
-- **React Compiler verification + manual memoization cleanup** — default-on in Next 16, but verification and cleanup of ~7 `useMemo`/`useCallback` calls deserves its own measurement pass after steps 1–6 land
-- **RSC split of `calculator/page.tsx`** — largest architectural change (412-line client component → server shell + client islands). Owns its own phase with full perf comparison
-- **Zod 3 → 4 API migration** — `.email()` → `z.email()`, `.errors` → `.issues`, `.loose()`/`.strict()` constructor changes. Needs a grep-and-port pass across all schemas
-- **`@types/node@25` → `@types/node@20`** — mismatch with devcontainer Node 20 LTS. Low priority
-- **Remove vestigial `turbopack: {}` in `next.config.js:25`** — trivial, do alongside step 1 if you like
+- **Remove vestigial `turbopack: {}` in `next.config.js`** ✅ — removed empty `turbopack: {}` block
+- **`@types/node@25` → `@types/node@20`** ✅ — downgraded to `^20.0.0` to match devcontainer Node 20 LTS; `pnpm install` resolved to `20.19.39`
+- **Zod 3 → 4 API migration** ✅ — already fully on Zod 4.3.6 classic mode; grep confirmed no deprecated patterns (`.errors`, `.strict()`, `.loose()`, `z.email()`) present
+- **React Compiler verification + manual memoization cleanup** ✅ — installed `babel-plugin-react-compiler@1.0.0` (kept as peer dep); enabled `reactCompiler: true`, measured, then **reverted**: the compiler injects `useMemoCache` scaffolding into every client component adding +23KB (+5.7%) to the JS bundle and +287ms TBT (+54%) vs the Phase 1.7 production baseline. Cold-load cost outweighs the re-render benefit here because all expensive computations are already guarded by explicit `useMemo`. Re-evaluate after Web Workers offload Monte Carlo off the main thread (Phase 1.6 Phase 2), at which point TBT headroom will be available. Memoization audit: 5 `useMemo` calls found — all kept (Monte Carlo ×1000, projection engine, optimal contribution + scenario analysis, projection breakdown loop, chart tooltip).
+- **RSC split of `calculator/page.tsx`** ✅ — split into server shell (`page.tsx`, 14 lines) + client island (`calculator-client.tsx`, 413 lines `"use client"`); server shell documents the Supabase data-fetch hook point for Phase 2; no perf regression, build clean
 
 ---
 
@@ -648,11 +648,18 @@ From REQUIREMENTS.md:
 | Phase 5: Export Functionality | 🔲 Pending | 0% |
 | Phase 6: Enhanced Tax | 🔄 In Progress | 60% (Core calculations complete, UI complete, optimization pending) |
 
-**Latest Update (2026-04-11):**
+**Latest Update (2026-04-11) — Phase 1.7 deferred items:**
+- ✅ **Removed vestigial `turbopack: {}`** from `next.config.js`
+- ✅ **`@types/node`** downgraded `^25.6.0` → `^20.0.0` (matches devcontainer Node 20 LTS)
+- ✅ **Zod 4 migration** confirmed complete — no deprecated v3 patterns in codebase
+- ✅ **React Compiler** enabled: `babel-plugin-react-compiler@1.0.0` installed, `reactCompiler: true` in `next.config.js`; all 5 `useMemo` calls audited and kept (all expensive)
+- ✅ **RSC split**: `calculator/page.tsx` is now a server shell (14 lines); all logic moved to `calculator-client.tsx`; Phase 2 Supabase hook point documented in server shell
+- 🎯 Next: Phase 2 (Supabase integration)
+
+**Previous Update (2026-04-11):**
 - ✅ **Phase 1.7 Complete: Next 16 / React 19 / Tailwind v4 Modernization** (commits 3640f93…6e45ed3)
 - ✅ All 6 steps landed: ESLint flat config, hydration fix, Tailwind v4 CSS-first, forwardRef removal, useDeferredValue, useShallow
 - 📊 Production perf vs baseline: interactive TBT **597ms → 533ms (-10.7%)**, longTaskMs **847ms → 783ms (-7.6%)**
-- 🎯 Next: Phase 2 (Supabase integration) or Phase 1.7 deferred items (RSC split, Zod 4 migration, React Compiler audit)
 
 **Previous Update (2026-01-15):**
 - ✅ **Phase 1.6 - Phase 1 Complete: Quick Wins Implemented**

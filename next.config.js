@@ -21,8 +21,6 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
 
-  // Turbopack configuration (Next.js 16+ default bundler)
-  turbopack: {},
 }
 
 module.exports = withBundleAnalyzer(nextConfig)
