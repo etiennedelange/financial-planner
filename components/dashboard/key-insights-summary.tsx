@@ -28,25 +28,7 @@ export function KeyInsightsSummary({
   monteCarloSuccessRate,
 }: KeyInsightsSummaryProps) {
   if (!projection) {
-    return (
-      <Card className="dashboard-card">
-        <CardHeader>
-          <CardTitle className="text-lg">Key Insights</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 animate-pulse">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex items-start gap-3 pb-3 border-b border-border last:pb-0 last:border-0">
-              <div className="h-5 w-5 rounded bg-muted flex-shrink-0 mt-1" />
-              <div className="flex-1 space-y-2">
-                <div className="h-3 w-28 rounded bg-muted" />
-                <div className="h-6 w-20 rounded bg-muted" />
-                <div className="h-3 w-36 rounded bg-muted" />
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-    )
+    return null
   }
 
   const yearsToRetirement = retirementAge - currentAge
