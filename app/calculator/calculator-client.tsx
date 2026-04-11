@@ -295,20 +295,18 @@ export function CalculatorClient() {
       </div>
 
       {/* Dashboard Metrics Grid */}
-      {projection && (
-        <div className="dashboard-section">
-          <DashboardMetricsGrid
-            projection={projection}
-            simulationResult={simulationResult}
-            retirementAge={personalInfo.retirementAge}
-            currentAge={personalInfo.currentAge}
-            lifeExpectancy={personalInfo.lifeExpectancy}
-            inflationRate={retirementGoals.inflationRate}
-            totalCurrentBalance={totalCurrentBalance}
-            totalMonthlyContributions={totalMonthlyContributions}
-          />
-        </div>
-      )}
+      <div className="dashboard-section">
+        <DashboardMetricsGrid
+          projection={projection}
+          simulationResult={simulationResult}
+          retirementAge={personalInfo.retirementAge}
+          currentAge={personalInfo.currentAge}
+          lifeExpectancy={personalInfo.lifeExpectancy}
+          inflationRate={retirementGoals.inflationRate}
+          totalCurrentBalance={totalCurrentBalance}
+          totalMonthlyContributions={totalMonthlyContributions}
+        />
+      </div>
 
       {/* Primary Charts */}
       <div className="dashboard-section grid gap-8 lg:grid-cols-2">
@@ -325,25 +323,23 @@ export function CalculatorClient() {
       </div>
 
       {/* Secondary Widgets */}
-      {projection && (
-        <div className="dashboard-section grid gap-8 lg:grid-cols-2">
-          <QuickActionsCard
-            onAddAccount={handleAddAccount}
-            onViewInsights={handleViewInsights}
-            onExportReport={handleExportReport}
-          />
-          <KeyInsightsSummary
-            projection={projection}
-            currentAge={personalInfo.currentAge}
-            retirementAge={personalInfo.retirementAge}
-            lifeExpectancy={personalInfo.lifeExpectancy}
-            currentMonthlyIncome={personalInfo.annualIncome / 12}
-            desiredMonthlyIncome={retirementGoals.desiredMonthlyIncome}
-            inflationRate={retirementGoals.inflationRate}
-            monteCarloSuccessRate={simulationResult?.successRate}
-          />
-        </div>
-      )}
+      <div className="dashboard-section grid gap-8 lg:grid-cols-2">
+        <QuickActionsCard
+          onAddAccount={handleAddAccount}
+          onViewInsights={handleViewInsights}
+          onExportReport={handleExportReport}
+        />
+        <KeyInsightsSummary
+          projection={projection}
+          currentAge={personalInfo.currentAge}
+          retirementAge={personalInfo.retirementAge}
+          lifeExpectancy={personalInfo.lifeExpectancy}
+          currentMonthlyIncome={personalInfo.annualIncome / 12}
+          desiredMonthlyIncome={retirementGoals.desiredMonthlyIncome}
+          inflationRate={retirementGoals.inflationRate}
+          monteCarloSuccessRate={simulationResult?.successRate}
+        />
+      </div>
 
       {/* Collapsible Sections */}
       <div className="dashboard-section space-y-0">

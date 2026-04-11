@@ -31,7 +31,22 @@ export const DashboardMetricsGrid = memo(function DashboardMetricsGrid({
   const { displayMode } = useCalculatorStore()
 
   if (!projection) {
-    return null
+    return (
+      <div className="dashboard-grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-6">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="dashboard-metric-card bg-card border border-border animate-pulse">
+            <div className="flex flex-col h-full gap-2">
+              <div className="flex items-start justify-between">
+                <div className="h-3 w-20 rounded bg-muted" />
+                <div className="h-5 w-5 rounded bg-muted" />
+              </div>
+              <div className="h-6 w-24 rounded bg-muted" />
+              <div className="h-3 w-16 rounded bg-muted mt-auto" />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
   }
 
   const yearsToRetirement = retirementAge - currentAge
