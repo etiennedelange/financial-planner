@@ -227,7 +227,7 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ---
 
-## Phase 1.7: Next 16 / React 19 / Tailwind v4 Modernization 🔲 PLANNED
+## Phase 1.7: Next 16 / React 19 / Tailwind v4 Modernization ✅ COMPLETE
 
 **Goal:** Fully adopt the features shipped by the recent stack upgrade (Next 14 → 16, React 18 → 19.2, Tailwind 3 → 4, Zustand 4 → 5, Zod 3 → 4). Reduce boilerplate, fix real correctness issues uncovered during audit, and produce measurable deltas against the committed perf baselines.
 
@@ -269,7 +269,7 @@ Full technical design review with rationale per item is in the conversation reco
 
 ---
 
-### Step 1: Metadata/viewport split + ESLint flat config ⚪ NOT STARTED
+### Step 1: Metadata/viewport split + ESLint flat config ✅ DONE (commit 3640f93)
 
 **Why now:** Unblocks tooling for later steps and clears standing build warnings.
 - Next 15+ requires `viewport` as a separate export (currently warns on `next build`)
@@ -301,7 +301,7 @@ export default [...next()]
 
 ---
 
-### Step 2: ColorThemeProvider hydration fix ⚪ NOT STARTED
+### Step 2: ColorThemeProvider hydration fix ✅ DONE (commit a3e860a)
 
 **Why now:** Real correctness bug — `components/color-theme-provider.tsx:31-33` reads `localStorage` in `useState` initializer, causing a server→client mismatch that `suppressHydrationWarning` on `<html>` is currently masking. Also `defaultTheme="violet"` in the provider destructure (line 27) disagrees with `defaultTheme="blue"` passed by `app/layout.tsx:29` — dead fallback or actual bug depending on which one you trust.
 
@@ -322,7 +322,7 @@ export default [...next()]
 
 ---
 
-### Step 3: Tailwind v4 full port ⚪ NOT STARTED
+### Step 3: Tailwind v4 full port ✅ DONE (commit d0aedc9)
 
 **Why now:** Project is on `tailwindcss@4.2.2` but running through the v3-compat bridge via `@config "../tailwind.config.ts"` at `app/globals.css:2`. The bridge keeps the JS config alive and blocks v4's build-speed wins. `autoprefixer` and raw `postcss` devDeps are no longer needed — v4 uses Lightning CSS internally. `tailwindcss-animate` (v3-era JS plugin) has a CSS-first replacement, `tw-animate-css`.
 
@@ -374,7 +374,7 @@ The `.theme-blue` / `.theme-green` etc. overrides in `globals.css:62-164` stay e
 
 ---
 
-### Step 4: forwardRef → ref-as-prop across components/ui/ ⚪ NOT STARTED
+### Step 4: forwardRef → ref-as-prop across components/ui/ ✅ DONE (commit cf55c5d)
 
 **Why now:** React 19 allows `ref` as a regular prop on function components, and `forwardRef` is documented as "will be deprecated in a future version." All 15 files in `components/ui/` use the old pattern (except `chart.tsx`, already ported in commit `ae8f18c`).
 
@@ -411,7 +411,7 @@ Drop `displayName` (React 19 synthesizes it from the function name). Can be done
 
 ---
 
-### Step 5: useDeferredValue replacing Monte Carlo debounce ⚪ NOT STARTED
+### Step 5: useDeferredValue replacing Monte Carlo debounce ✅ DONE (commit 2a602ec)
 
 **Why now:** `app/calculator/page.tsx:49-113` debounces Monte Carlo via `setTimeout` + `useRef<NodeJS.Timeout>` + manual cleanup. React 19's `useDeferredValue` does this natively, prioritizes user input over background work, and keeps showing stale results during recompute instead of blanking the chart. This is a user-visible UX win *and* the step most likely to move the `longestTask` baseline.
 
@@ -450,7 +450,7 @@ Delete `simulationTimeoutRef`, delete `isSimulating` state (replace with `isPend
 
 ---
 
-### Step 6: Zustand useShallow for the big destructure ⚪ NOT STARTED
+### Step 6: Zustand useShallow for the big destructure ✅ DONE (commit 6e45ed3)
 
 **Why now:** `app/calculator/page.tsx:37-47` destructures 9 values from `useCalculatorStore()`. Without shallow comparison, *any* store change re-runs the subscriber — which is the top-level calculator component and its entire subtree. Zustand 5 ships `useShallow` for exactly this case.
 
@@ -503,7 +503,7 @@ Discussed in the audit but out of scope to keep step sizes small and reviewable:
 
 **Documentation:** To be created as `history/2026-04-11-technical-design-review.md` when the work starts — include the audit findings, step ordering rationale, and the final before/after perf comparison tables.
 
-**Status:** Planned — awaiting start. Next action: Step 1.
+**Status:** ✅ Complete (2026-04-11). All 6 steps landed. Production perf result vs baseline: interactive TBT -64ms (-10.7%), longTaskMs -64ms (-7.6%), loadEvent -22ms (-5.8%). No regression on empty-scenario metrics. See `perf/after-prod-interactive.json` for full numbers.
 
 ---
 
@@ -641,7 +641,7 @@ From REQUIREMENTS.md:
 | Phase 1: Calculation Accuracy | ✅ Complete | 100% |
 | Phase 1.5: Testing & Validation | ✅ Complete | 100% (216 tests passing, 90%+ coverage) |
 | Phase 1.6: Performance Optimization | 🔄 In Progress | 33% (Phase 1 complete, Phase 2-3 pending) |
-| Phase 1.7: Next 16 / React 19 / Tailwind v4 Modernization | 🔲 Planned | 0% (baselines committed, steps 1-6 documented) |
+| Phase 1.7: Next 16 / React 19 / Tailwind v4 Modernization | ✅ Complete | 100% (all 6 steps, 2026-04-11) |
 | Phase 2: Supabase Integration | 🔲 Pending | 0% |
 | Phase 3: User Accounts | 🔲 Pending | 0% |
 | Phase 4: Data Persistence | 🔲 Pending | 0% |
@@ -649,12 +649,10 @@ From REQUIREMENTS.md:
 | Phase 6: Enhanced Tax | 🔄 In Progress | 60% (Core calculations complete, UI complete, optimization pending) |
 
 **Latest Update (2026-04-11):**
-- 🔲 **Phase 1.7 Planned: Next 16 / React 19 / Tailwind v4 Modernization**
-- ✅ Perf measurement harness committed (`perf/measure.mjs`, `perf/compare.mjs`)
-- ✅ Baselines at commit `ae8f18c`: `perf/baseline.json` + `perf/baseline-interactive.json`
-- ✅ `chrome-devtools-mcp` registered for interactive profiling sessions
-- 📊 Interactive baseline: TBT 597ms, longestTask 314ms, 5 long tasks on 4× CPU
-- 🎯 Next: Step 1 (metadata/viewport split + ESLint flat config)
+- ✅ **Phase 1.7 Complete: Next 16 / React 19 / Tailwind v4 Modernization** (commits 3640f93…6e45ed3)
+- ✅ All 6 steps landed: ESLint flat config, hydration fix, Tailwind v4 CSS-first, forwardRef removal, useDeferredValue, useShallow
+- 📊 Production perf vs baseline: interactive TBT **597ms → 533ms (-10.7%)**, longTaskMs **847ms → 783ms (-7.6%)**
+- 🎯 Next: Phase 2 (Supabase integration) or Phase 1.7 deferred items (RSC split, Zod 4 migration, React Compiler audit)
 
 **Previous Update (2026-01-15):**
 - ✅ **Phase 1.6 - Phase 1 Complete: Quick Wins Implemented**
