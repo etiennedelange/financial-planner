@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo, useRef } from "react"
+import { useState, useMemo, useRef, useDeferredValue } from "react"
 import { RotateCcw, Calculator, TrendingDown, Settings, BarChart3, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -46,10 +46,35 @@ export default function CalculatorPage() {
     resetToDefaults,
   } = useCalculatorStore()
 
-  const [simulationResult, setSimulationResult] =
-    useState<SimulationResult | null>(null)
-  const [isSimulating, setIsSimulating] = useState(false)
-  const simulationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  // Deferred inputs: React will re-render with the previous values while new
+  // values are still processing, so the expensive Monte Carlo useMemo only
+  // runs once inputs have "settled" — no setTimeout debounce needed.
+  const deferredAccounts = useDeferredValue(accounts)
+  const deferredPersonalInfo = useDeferredValue(personalInfo)
+  const deferredRetirementGoals = useDeferredValue(retirementGoals)
+  const deferredAssumptions = useDeferredValue(assumptions)
+  const deferredDrawdownConfig = useDeferredValue(drawdownConfig)
+
+  // Monte Carlo runs synchronously but only when deferred inputs stabilise
+  const simulationResult = useMemo<SimulationResult | null>(() => {
+    if (deferredAccounts.length === 0) return null
+    return runMonteCarloSimulation(
+      deferredAccounts,
+      deferredPersonalInfo,
+      deferredRetirementGoals,
+      deferredDrawdownConfig,
+      { numberOfRuns: 1000 },
+      deferredAssumptions
+    )
+  }, [deferredAccounts, deferredPersonalInfo, deferredRetirementGoals, deferredAssumptions, deferredDrawdownConfig])
+
+  // True while the user's latest inputs haven't been reflected in the simulation yet
+  const isSimulating =
+    deferredAccounts !== accounts ||
+    deferredPersonalInfo !== personalInfo ||
+    deferredRetirementGoals !== retirementGoals ||
+    deferredAssumptions !== assumptions ||
+    deferredDrawdownConfig !== drawdownConfig
 
   // State for controlling collapsible sections
   const [openSections, setOpenSections] = useState({
@@ -75,47 +100,9 @@ export default function CalculatorPage() {
     )
   }, [accounts, personalInfo, retirementGoals, drawdownConfig, assumptions])
 
-  // Auto-run Monte Carlo simulation when inputs change (debounced)
-  useEffect(() => {
-    // Clear any pending simulation
-    if (simulationTimeoutRef.current) {
-      clearTimeout(simulationTimeoutRef.current)
-    }
-
-    // Don't run if no accounts
-    if (accounts.length === 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- guard reset, will be replaced with useTransition in Step 5
-      setSimulationResult(null)
-      return
-    }
-
-    setIsSimulating(true)
-
-    // Debounce simulation by 300ms to avoid running while user is typing
-    simulationTimeoutRef.current = setTimeout(() => {
-      const result = runMonteCarloSimulation(
-        accounts,
-        personalInfo,
-        retirementGoals,
-        drawdownConfig,
-        { numberOfRuns: 1000 },
-        assumptions
-      )
-      setSimulationResult(result)
-      setIsSimulating(false)
-    }, 300)
-
-    // Cleanup on unmount or before next effect
-    return () => {
-      if (simulationTimeoutRef.current) {
-        clearTimeout(simulationTimeoutRef.current)
-      }
-    }
-  }, [accounts, personalInfo, retirementGoals, assumptions, drawdownConfig])
-
   const handleReset = () => {
     resetToDefaults()
-    setSimulationResult(null)
+    // simulationResult recomputes automatically via useMemo + useDeferredValue
   }
 
   // Quick Actions handlers
