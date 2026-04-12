@@ -55,36 +55,38 @@
 **Status:** Completed 2026-01-15
 **Build Status:** ✅ All optimizations verified with successful production build
 
-## Phase 2: Medium Effort (60-70% improvement) 🔲 PLANNED
+## Phase 2: Medium Effort (60-70% improvement) ✅ COMPLETED
 
 **Tasks:**
-- [ ] **Implement Web Workers for Monte Carlo** (Highest Impact)
-  - Offload 1,000 simulation runs to background thread
-  - Non-blocking UI during calculations
-  - File: `lib/monte-carlo/simulation-engine.ts:265-280`
-  - **Impact:** 80-90% reduction in perceived lag
+- [x] **Implement Web Workers for Monte Carlo** (Highest Impact) ✅
+  - Web Worker in `lib/monte-carlo/simulation.worker.ts`
+  - `useMonteCarloWorker` hook in `lib/monte-carlo/use-monte-carlo-worker.ts`
+  - Stale-result handling via monotonic ID; superseded runs silently dropped
+  - **Impact:** Monte Carlo off main thread entirely; no more main-thread blocking
+  - **Completed:** 2026-04-11 (Phase 1.6 Phase 2 / Phase 1.7 combined work)
 
-- [ ] **Delete duplicate calculation in CalculationsBreakdown** (High Priority)
-  - Remove manual projection loop (lines 88-206)
-  - Use only `fullProjection` from projection engine
-  - File: `components/results/calculations-breakdown.tsx`
-  - **Impact:** 50% faster calculations, consistent formulas
+- [x] **Delete duplicate calculation in CalculationsBreakdown** (High Priority) ✅
+  - Removed two manual projection loops (~100 lines)
+  - Removed internal `calculateProjection()` call (was third computation)
+  - Component now accepts `projection: ProjectionResult` prop from parent
+  - Uses `projection.yearlyProjections` filtered by age for accumulation/drawdown tables
+  - Spending phase labels derived from `age - retirementAge` using shared `getSpendingPhaseMultiplier`
+  - **Impact:** Eliminated duplicate computation; breakdown now matches projection engine exactly
+  - **Completed:** 2026-04-12
 
-- [ ] **Add form debouncing** (High Priority)
-  - Debounce store updates by 500ms during typing
-  - Files: All form components (personal-info-form, retirement-goals-form, etc.)
-  - **Impact:** 70% fewer store updates
+- [x] **Optimize Zustand store selectors** (Medium Priority) ✅
+  - `useShallow` applied to all store destructures across all components
+  - **Completed:** 2026-04-11 (Phase 1.7)
 
-- [ ] **Optimize Zustand store selectors** (Medium Priority)
-  - Use granular selectors instead of destructuring entire store
-  - File: `app/calculator/page.tsx:37-47`
-  - **Impact:** 30-40% fewer re-renders
+**Deferred:**
+- [ ] **Add form debouncing** (Low Priority — superseded)
+  - With `useDeferredValue` + Web Workers in place, store updates are cheap (cheap re-renders only; no main-thread computation per-keystroke)
+  - **Status:** Deferred — diminishing returns given existing optimizations
 
 - [ ] **Split InsightsPanel calculations** (Medium Priority)
-  - Separate useMemo hooks for each calculation type
-  - Remove displayMode from dependencies
-  - File: `components/results/insights-panel.tsx:36-121`
-  - **Impact:** 3-4x faster insights rendering
+  - `compareScenarios` runs 3×1000 Monte Carlo on main thread when panel is open
+  - Only affects users who expand the Detailed Insights panel
+  - **Status:** Deferred — consider moving to Web Worker in a future pass
 
 ## Phase 3: Deep Optimization (80-90% improvement) 🔲 PLANNED
 

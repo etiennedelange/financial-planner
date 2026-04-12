@@ -23,8 +23,10 @@ import {
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useShallow } from "zustand/react/shallow"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
-import { calculateProjection } from "@/lib/calculations/projection-engine"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
+import { getSpendingPhaseMultiplier } from "@/lib/calculations/utils/spending-phase"
+import { calculateMonthlyReturn, formatMonthlyReturnFormula } from "@/lib/calculations/utils/projection"
+import type { ProjectionResult } from "@/types"
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat("en-ZA", {
@@ -38,7 +40,17 @@ function formatPercent(value: number, decimals: number = 2): string {
   return `${value.toFixed(decimals)}%`
 }
 
-export function CalculationsBreakdown() {
+function getSpendingPhaseName(yearsInRetirement: number): string {
+  if (yearsInRetirement <= 15) return "Go-Go"
+  if (yearsInRetirement <= 25) return "Slow-Go"
+  return "No-Go"
+}
+
+interface CalculationsBreakdownProps {
+  projection: ProjectionResult | null
+}
+
+export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps) {
   const { accounts, personalInfo, retirementGoals, assumptions, drawdownConfig } =
     useCalculatorStore(
       useShallow(state => ({
@@ -51,9 +63,9 @@ export function CalculationsBreakdown() {
     )
 
   const calculations = (() => {
-    if (accounts.length === 0) return null
+    if (!projection || accounts.length === 0) return null
 
-    // Aggregate account data
+    // Aggregate account data (for Input Summary display)
     const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
     const totalMonthlyContribution = accounts.reduce(
       (sum, acc) => sum + acc.monthlyContribution,
@@ -85,153 +97,14 @@ export function CalculationsBreakdown() {
 
     const netReturn = weightedReturn - weightedFees
     const inflationRate = retirementGoals.inflationRate / 100
-
-    // Time periods
     const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
     const yearsInRetirement = personalInfo.lifeExpectancy - personalInfo.retirementAge
-
-    // Monthly compounding rates
-    // Using simple division to match Excel FV and industry convention (nominal annual rate)
-    // Original: const monthlyReturn = Math.pow(1 + netReturn, 1 / 12) - 1
-    const monthlyReturn = netReturn / 12
-
-    // Project accumulation phase with monthly compounding
-    let projectedBalance = totalBalance
-    const yearlyProjections: Array<{
-      year: number
-      age: number
-      startBalance: number
-      contributions: number
-      growth: number
-      endBalance: number
-    }> = []
-
-    for (let year = 0; year < yearsToRetirement; year++) {
-      const startBalance = projectedBalance
-      let yearContributions = 0
-      let yearGrowth = 0
-
-      for (let month = 0; month < 12; month++) {
-        // Apply growth first (end-of-period contributions, matches Excel FV type=0)
-        const monthGrowth = projectedBalance * monthlyReturn
-        yearGrowth += monthGrowth
-        projectedBalance += monthGrowth
-        // Then add contribution
-        const monthlyContribution =
-          (totalAnnualContribution / 12) *
-          Math.pow(1 + avgEscalation, year + month / 12)
-        yearContributions += monthlyContribution
-        projectedBalance += monthlyContribution
-      }
-
-      yearlyProjections.push({
-        year: year + 1,
-        age: personalInfo.currentAge + year,
-        startBalance,
-        contributions: yearContributions,
-        growth: yearGrowth,
-        endBalance: projectedBalance,
-      })
-    }
-
-    const portfolioAtRetirement = projectedBalance
-
-    // Calculate withdrawal
+    const monthlyReturn = calculateMonthlyReturn(netReturn, assumptions.compoundingMethod)
     const desiredMonthlyAtRetirement =
       retirementGoals.desiredMonthlyIncome *
       Math.pow(1 + inflationRate, yearsToRetirement)
 
-    let initialAnnualWithdrawal: number
-    switch (drawdownConfig.strategy) {
-      case "fixed_percentage":
-        initialAnnualWithdrawal =
-          portfolioAtRetirement * (drawdownConfig.initialWithdrawalRate / 100)
-        break
-      case "fixed_amount_inflation_adjusted":
-        initialAnnualWithdrawal = desiredMonthlyAtRetirement * 12
-        break
-      default:
-        initialAnnualWithdrawal =
-          portfolioAtRetirement * (drawdownConfig.initialWithdrawalRate / 100)
-    }
-
-    // Project drawdown phase
-    let drawdownBalance = portfolioAtRetirement
-    let annualWithdrawal = initialAnnualWithdrawal
-    const drawdownProjections: Array<{
-      year: number
-      age: number
-      startBalance: number
-      growth: number
-      spendingPhase: string
-      spendingMultiplier: number
-      withdrawal: number
-      endBalance: number
-    }> = []
-
-    for (let year = 0; year < Math.min(yearsInRetirement, 40); year++) {
-      const startBalance = drawdownBalance
-
-      // Spending phase
-      let spendingPhase: string
-      let spendingMultiplier: number
-      if (year <= 15) {
-        spendingPhase = "Go-Go"
-        spendingMultiplier = 1.0
-      } else if (year <= 25) {
-        spendingPhase = "Slow-Go"
-        spendingMultiplier = 0.8
-      } else {
-        spendingPhase = "No-Go"
-        const baseRate = 0.7
-        const medicalPremium = (0.15 * (year - 25)) / 10
-        spendingMultiplier = Math.min(baseRate + medicalPremium, 1.2)
-      }
-
-      // Apply return first
-      const growth = drawdownBalance * netReturn
-      drawdownBalance += growth
-
-      // Then withdraw
-      const adjustedWithdrawal = annualWithdrawal * spendingMultiplier
-      const actualWithdrawal = Math.min(adjustedWithdrawal, drawdownBalance)
-      drawdownBalance = Math.max(0, drawdownBalance - actualWithdrawal)
-
-      drawdownProjections.push({
-        year: year + 1,
-        age: personalInfo.retirementAge + year,
-        startBalance,
-        growth,
-        spendingPhase,
-        spendingMultiplier,
-        withdrawal: actualWithdrawal,
-        endBalance: drawdownBalance,
-      })
-
-      if (drawdownBalance <= 0) break
-
-      annualWithdrawal *= 1 + inflationRate
-    }
-
-    // Find depletion age
-    const depletionYear = drawdownProjections.find((p) => p.endBalance <= 0)
-    const depletionAge = depletionYear?.age || null
-
-    // Calculate full projection with tax data
-    const fullProjection = calculateProjection(
-      accounts,
-      personalInfo,
-      retirementGoals,
-      drawdownConfig,
-      assumptions
-    )
-
-    // Get tax data from the first retirement year for the payslip
-    const firstRetirementYear = fullProjection.yearlyProjections.find(
-      (p) => p.age === personalInfo.retirementAge
-    )
-
-    // Determine applicable tax rebate based on age
+    // Tax rebates based on retirement age
     let applicableRebate: number = SA_TAX_LIMITS.primaryRebate
     let taxThreshold: number = SA_TAX_LIMITS.taxThresholdUnder65
     if (personalInfo.retirementAge >= 75) {
@@ -245,8 +118,13 @@ export function CalculationsBreakdown() {
       taxThreshold = SA_TAX_LIMITS.taxThreshold65To74
     }
 
+    const firstRetirementYear =
+      projection.yearlyProjections.find(
+        (p) => p.age === personalInfo.retirementAge
+      ) ?? null
+
     return {
-      // Inputs
+      // Aggregate inputs
       totalBalance,
       totalMonthlyContribution,
       totalAnnualContribution,
@@ -259,39 +137,23 @@ export function CalculationsBreakdown() {
       yearsToRetirement,
       yearsInRetirement,
       volatility: assumptions.equityVolatility,
-
-      // Accumulation
-      portfolioAtRetirement,
-      yearlyProjections,
-
-      // Drawdown
       desiredMonthlyAtRetirement,
-      initialAnnualWithdrawal,
-      initialMonthlyWithdrawal: initialAnnualWithdrawal / 12,
-      drawdownProjections,
-      depletionAge,
 
-      // Tax Data
-      fullProjection,
+      // Tax info
       firstRetirementYear,
-      monthlyNetIncomeAtRetirement: fullProjection.monthlyNetIncomeAtRetirement,
-      totalLifetimeIncomeTax: fullProjection.totalLifetimeIncomeTax,
-      totalLumpSumTax: fullProjection.totalLumpSumTax,
-      totalMedicalAidContributions: fullProjection.totalMedicalAidContributions,
-      averageEffectiveTaxRate: fullProjection.averageEffectiveTaxRate,
       applicableRebate,
       taxThreshold,
 
-      // Formulas
+      // Formula strings
       formulas: {
-        monthlyReturn: `(1 + ${formatPercent(netReturn * 100)})^(1/12) - 1 = ${formatPercent(monthlyReturn * 100, 4)}`,
+        monthlyReturn: formatMonthlyReturnFormula(netReturn, assumptions.compoundingMethod),
         futureExpenses: `${formatCurrency(retirementGoals.desiredMonthlyIncome)} × (1 + ${formatPercent(inflationRate * 100)})^${yearsToRetirement} = ${formatCurrency(desiredMonthlyAtRetirement)}`,
         targetNestEgg: `${formatCurrency(desiredMonthlyAtRetirement * 12)} ÷ ${formatPercent(drawdownConfig.initialWithdrawalRate)} = ${formatCurrency((desiredMonthlyAtRetirement * 12) / (drawdownConfig.initialWithdrawalRate / 100))}`,
       },
     }
   })()
 
-  if (!calculations) {
+  if (!calculations || !projection) {
     return (
       <Card>
         <CardHeader>
@@ -545,7 +407,7 @@ export function CalculationsBreakdown() {
               <div className="rounded-lg bg-green-50 dark:bg-green-950 p-4">
                 <p className="text-lg font-semibold text-green-700 dark:text-green-300">
                   Portfolio at Retirement:{" "}
-                  {formatCurrency(calculations.portfolioAtRetirement)}
+                  {formatCurrency(projection.portfolioAtRetirement)}
                 </p>
               </div>
 
@@ -562,24 +424,26 @@ export function CalculationsBreakdown() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {calculations.yearlyProjections.map((proj) => (
-                      <TableRow key={proj.year}>
-                        <TableCell>{proj.year}</TableCell>
-                        <TableCell>{proj.age}</TableCell>
-                        <TableCell className="text-right font-mono text-sm">
-                          {formatCurrency(proj.startBalance)}
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-sm text-blue-600 dark:text-blue-400">
-                          +{formatCurrency(proj.contributions)}
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-sm text-green-600 dark:text-green-400">
-                          +{formatCurrency(proj.growth)}
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-sm font-medium">
-                          {formatCurrency(proj.endBalance)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {projection.yearlyProjections
+                      .filter((p) => p.age < personalInfo.retirementAge)
+                      .map((proj) => (
+                        <TableRow key={proj.year}>
+                          <TableCell>{proj.year}</TableCell>
+                          <TableCell>{proj.age}</TableCell>
+                          <TableCell className="text-right font-mono text-sm">
+                            {formatCurrency(proj.startingBalance)}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-sm text-blue-600 dark:text-blue-400">
+                            +{formatCurrency(proj.contributions)}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-sm text-green-600 dark:text-green-400">
+                            +{formatCurrency(proj.growth)}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-sm font-medium">
+                            {formatCurrency(proj.endingBalance)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 </Table>
               </div>
@@ -600,7 +464,7 @@ export function CalculationsBreakdown() {
                     Initial Monthly Withdrawal
                   </p>
                   <p className="text-lg font-semibold text-blue-700 dark:text-blue-300">
-                    {formatCurrency(calculations.initialMonthlyWithdrawal)}/month
+                    {formatCurrency(projection.monthlyIncomeAtRetirement)}/month
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     (Inflated from {formatCurrency(retirementGoals.desiredMonthlyIncome)})
@@ -608,7 +472,7 @@ export function CalculationsBreakdown() {
                 </div>
                 <div
                   className={`rounded-lg p-4 ${
-                    calculations.depletionAge
+                    projection.portfolioDepletionAge
                       ? "bg-red-50 dark:bg-red-950"
                       : "bg-green-50 dark:bg-green-950"
                   }`}
@@ -616,13 +480,13 @@ export function CalculationsBreakdown() {
                   <p className="text-sm text-muted-foreground">Portfolio Depletion</p>
                   <p
                     className={`text-lg font-semibold ${
-                      calculations.depletionAge
+                      projection.portfolioDepletionAge
                         ? "text-red-700 dark:text-red-300"
                         : "text-green-700 dark:text-green-300"
                     }`}
                   >
-                    {calculations.depletionAge
-                      ? `Age ${calculations.depletionAge}`
+                    {projection.portfolioDepletionAge
+                      ? `Age ${projection.portfolioDepletionAge}`
                       : `Lasts beyond age ${personalInfo.lifeExpectancy}`}
                   </p>
                 </div>
@@ -642,32 +506,39 @@ export function CalculationsBreakdown() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {calculations.drawdownProjections.map((proj) => (
-                      <TableRow
-                        key={proj.year}
-                        className={proj.endBalance <= 0 ? "bg-red-50 dark:bg-red-950" : ""}
-                      >
-                        <TableCell>{proj.year}</TableCell>
-                        <TableCell>{proj.age}</TableCell>
-                        <TableCell className="text-right font-mono text-sm">
-                          {formatCurrency(proj.startBalance)}
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-sm text-green-600 dark:text-green-400">
-                          +{formatCurrency(proj.growth)}
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-xs">
-                            {proj.spendingPhase} ({formatPercent(proj.spendingMultiplier * 100, 0)})
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-sm text-red-600 dark:text-red-400">
-                          -{formatCurrency(proj.withdrawal)}
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-sm font-medium">
-                          {formatCurrency(proj.endBalance)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {projection.yearlyProjections
+                      .filter((p) => p.age >= personalInfo.retirementAge)
+                      .map((proj, idx) => {
+                        const yearsIn = proj.age - personalInfo.retirementAge
+                        const phaseName = getSpendingPhaseName(yearsIn)
+                        const phaseMultiplier = getSpendingPhaseMultiplier(yearsIn)
+                        return (
+                          <TableRow
+                            key={proj.year}
+                            className={proj.endingBalance <= 0 ? "bg-red-50 dark:bg-red-950" : ""}
+                          >
+                            <TableCell>{idx + 1}</TableCell>
+                            <TableCell>{proj.age}</TableCell>
+                            <TableCell className="text-right font-mono text-sm">
+                              {formatCurrency(proj.startingBalance)}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-sm text-green-600 dark:text-green-400">
+                              +{formatCurrency(proj.growth)}
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-xs">
+                                {phaseName} ({formatPercent(phaseMultiplier * 100, 0)})
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-sm text-red-600 dark:text-red-400">
+                              -{formatCurrency(proj.withdrawals)}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-sm font-medium">
+                              {formatCurrency(proj.endingBalance)}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
                   </TableBody>
                 </Table>
               </div>
@@ -747,25 +618,25 @@ export function CalculationsBreakdown() {
                     <TableRow>
                       <TableCell className="font-medium">Total Income Tax (All Years)</TableCell>
                       <TableCell className="text-right font-mono text-red-600 dark:text-red-400">
-                        {formatCurrency(calculations.totalLifetimeIncomeTax)}
+                        {formatCurrency(projection.totalLifetimeIncomeTax)}
                       </TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">Average Effective Tax Rate</TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatPercent(calculations.averageEffectiveTaxRate)}
+                        {formatPercent(projection.averageEffectiveTaxRate)}
                       </TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">Lump Sum Tax (At Retirement)</TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatCurrency(calculations.totalLumpSumTax)}
+                        {formatCurrency(projection.totalLumpSumTax)}
                       </TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">Medical Aid (Total)</TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatCurrency(calculations.totalMedicalAidContributions)}
+                        {formatCurrency(projection.totalMedicalAidContributions)}
                       </TableCell>
                     </TableRow>
                   </TableBody>
@@ -805,7 +676,7 @@ export function CalculationsBreakdown() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {calculations.fullProjection.yearlyProjections
+                      {projection.yearlyProjections
                         .filter((p) => p.age >= personalInfo.retirementAge)
                         .slice(0, 10)
                         .map((proj) => (
@@ -855,7 +726,7 @@ export function CalculationsBreakdown() {
                   <div className="flex justify-between items-center pb-2 border-b">
                     <span className="font-medium">Gross Monthly Withdrawal:</span>
                     <span className="font-mono text-lg">
-                      {formatCurrency(calculations.fullProjection.monthlyIncomeAtRetirement)}
+                      {formatCurrency(projection.monthlyIncomeAtRetirement)}
                     </span>
                   </div>
 
@@ -891,7 +762,7 @@ export function CalculationsBreakdown() {
                   <div className="flex justify-between items-center pt-3 border-t-2 border-primary">
                     <span className="text-lg font-bold">Net Monthly Income:</span>
                     <span className="font-mono text-2xl font-bold text-green-600 dark:text-green-400">
-                      {formatCurrency(calculations.monthlyNetIncomeAtRetirement)}
+                      {formatCurrency(projection.monthlyNetIncomeAtRetirement)}
                     </span>
                   </div>
 
@@ -899,13 +770,13 @@ export function CalculationsBreakdown() {
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Annual Gross Income:</span>
                       <span className="font-mono">
-                        {formatCurrency(calculations.fullProjection.monthlyIncomeAtRetirement * 12)}
+                        {formatCurrency(projection.monthlyIncomeAtRetirement * 12)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Annual Net Income:</span>
                       <span className="font-mono text-green-600 dark:text-green-400">
-                        {formatCurrency(calculations.monthlyNetIncomeAtRetirement * 12)}
+                        {formatCurrency(projection.monthlyNetIncomeAtRetirement * 12)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-sm">

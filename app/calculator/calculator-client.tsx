@@ -400,7 +400,7 @@ export function CalculatorClient() {
           open={openSections.calculations}
           onOpenChange={(open) => setOpenSections((prev) => ({ ...prev, calculations: open }))}
         >
-          <CalculationsBreakdown />
+          <CalculationsBreakdown projection={projection} />
         </CollapsibleSection>
       </div>
     </div>

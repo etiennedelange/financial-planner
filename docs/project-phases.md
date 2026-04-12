@@ -10,7 +10,7 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 |-------|--------|---------------|
 | **Phase 1** | ✅ Complete | [Calculation Accuracy](project-phases/phase-1-calculation-accuracy.md) |
 | **Phase 1.5** | ✅ Complete | [Testing & Validation](project-phases/phase-1-5-testing-validation.md) |
-| **Phase 1.6** | 🔄 In Progress | [Performance Optimization](project-phases/phase-1-6-performance-optimization.md) |
+| **Phase 1.6** | ✅ Complete | [Performance Optimization](project-phases/phase-1-6-performance-optimization.md) |
 | **Phase 1.7** | ✅ Complete | [Next 16 / React 19 / Tailwind v4 Modernization](project-phases/phase-1-7-modernization.md) |
 | **Phase 2** | 🔲 Pending | [Supabase Integration](project-phases/phase-2-supabase.md) |
 | **Phase 3** | 🔲 Pending | [User Accounts](project-phases/phase-3-user-accounts.md) |
@@ -21,7 +21,12 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-04-11):**
+**Latest Update (2026-04-12) — Phase 1.6 complete:**
+- ✅ **Removed duplicate calculation in CalculationsBreakdown** — component now accepts `projection` prop from parent, eliminating two manual projection loops and a second `calculateProjection()` call. Breakdown figures now match the projection engine exactly.
+- ✅ **Phase 1.6 marked complete** — Web Workers (2026-04-11), Zustand useShallow (Phase 1.7), and duplicate calculation fix (2026-04-12) cover all high-impact items. Remaining deferred items (form debouncing, InsightsPanel worker) have diminishing returns.
+- 🎯 **Next:** Phase 2 (Supabase integration)
+
+**Previous Update (2026-04-11):**
 - ✅ **Phase 1.7 Complete:** Next 16 / React 19 / Tailwind v4 Modernization (all 6 steps, commits 3640f93…6e45ed3)
 - ✅ **All deferred items resolved** including React Compiler audit, RSC split, and Node.js/Zod migrations
 - 📊 **Production perf vs baseline:** interactive TBT **597ms → 533ms (-10.7%)**, longTaskMs **847ms → 783ms (-7.6%)**
