@@ -73,7 +73,7 @@ export function CalculatorClient() {
     deferredPersonalInfo,
     deferredRetirementGoals,
     deferredDrawdownConfig,
-    10000,
+    1000,
     deferredAssumptions
   )
 
