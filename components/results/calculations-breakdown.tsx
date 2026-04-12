@@ -1,6 +1,5 @@
 "use client"
 
-import { useMemo } from "react"
 import {
   Card,
   CardDescription,
@@ -51,7 +50,7 @@ export function CalculationsBreakdown() {
       }))
     )
 
-  const calculations = useMemo(() => {
+  const calculations = (() => {
     if (accounts.length === 0) return null
 
     // Aggregate account data
@@ -290,7 +289,7 @@ export function CalculationsBreakdown() {
         targetNestEgg: `${formatCurrency(desiredMonthlyAtRetirement * 12)} ÷ ${formatPercent(drawdownConfig.initialWithdrawalRate)} = ${formatCurrency((desiredMonthlyAtRetirement * 12) / (drawdownConfig.initialWithdrawalRate / 100))}`,
       },
     }
-  }, [accounts, personalInfo, retirementGoals, assumptions, drawdownConfig])
+  })()
 
   if (!calculations) {
     return (

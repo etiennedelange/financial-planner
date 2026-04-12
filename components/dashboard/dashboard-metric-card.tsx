@@ -1,6 +1,5 @@
 "use client"
 
-import { memo } from "react"
 import { LucideIcon } from "lucide-react"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 
@@ -13,7 +12,7 @@ interface DashboardMetricCardProps {
   tooltip?: string | React.ReactNode
 }
 
-export const DashboardMetricCard = memo(function DashboardMetricCard({
+export function DashboardMetricCard({
   icon: Icon,
   label,
   value,
@@ -94,4 +93,4 @@ export const DashboardMetricCard = memo(function DashboardMetricCard({
       </div>
     </div>
   )
-})
+}

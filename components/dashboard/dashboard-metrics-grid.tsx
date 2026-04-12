@@ -1,6 +1,5 @@
 "use client"
 
-import { memo } from "react"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { formatCurrency } from "@/lib/utils/currency"
 import type { ProjectionResult, SimulationResult } from "@/types"
@@ -18,7 +17,7 @@ interface DashboardMetricsGridProps {
   totalMonthlyContributions: number
 }
 
-export const DashboardMetricsGrid = memo(function DashboardMetricsGrid({
+export function DashboardMetricsGrid({
   projection,
   simulationResult,
   retirementAge,
@@ -157,4 +156,4 @@ export const DashboardMetricsGrid = memo(function DashboardMetricsGrid({
       ))}
     </div>
   )
-})
+}

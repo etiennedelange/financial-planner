@@ -57,7 +57,7 @@ function ChartContainer({
   const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`
 
   return (
-    <ChartContext.Provider value={{ config }}>
+    <ChartContext value={{ config }}>
       <div
         data-chart={chartId}
         ref={ref}
@@ -72,7 +72,7 @@ function ChartContainer({
           {children}
         </ResponsiveContainer>
       </div>
-    </ChartContext.Provider>
+    </ChartContext>
   )
 }
 
@@ -141,7 +141,7 @@ function ChartTooltipContent({
 }: ChartTooltipContentProps & { ref?: React.Ref<HTMLDivElement> }) {
     const { config } = useChart()
 
-    const tooltipLabel = React.useMemo(() => {
+    const tooltipLabel = (() => {
       if (hideLabel || !payload?.length) {
         return null
       }
@@ -167,15 +167,7 @@ function ChartTooltipContent({
       }
 
       return <div className={cn("font-medium", labelClassName)}>{value}</div>
-    }, [
-      label,
-      labelFormatter,
-      payload,
-      hideLabel,
-      labelClassName,
-      config,
-      labelKey,
-    ])
+    })()
 
     if (!active || !payload?.length) {
       return null

@@ -29,7 +29,7 @@ import { useMonteCarloWorker } from "@/lib/monte-carlo/use-monte-carlo-worker"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import type { ProjectionResult } from "@/types"
 import { BarChart3, BookOpen, Calculator, RotateCcw, Settings, TrendingDown } from "lucide-react"
-import { useDeferredValue, useMemo, useRef, useState } from "react"
+import { useDeferredValue, useRef, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
 
 export function CalculatorClient() {
@@ -99,20 +99,18 @@ export function CalculatorClient() {
   const detailedInsightsRef = useRef<HTMLDivElement>(null)
 
   // Calculate projection whenever inputs change
-  const projection: ProjectionResult | null = useMemo(() => {
-    if (accounts.length === 0) return null
-    return calculateProjection(
-      accounts,
-      personalInfo,
-      retirementGoals,
-      drawdownConfig,
-      assumptions
-    )
-  }, [accounts, personalInfo, retirementGoals, drawdownConfig, assumptions])
+  const projection: ProjectionResult | null = accounts.length === 0
+    ? null
+    : calculateProjection(
+        accounts,
+        personalInfo,
+        retirementGoals,
+        drawdownConfig,
+        assumptions
+      )
 
   const handleReset = () => {
     resetToDefaults()
-    // simulationResult recomputes automatically via useMemo + useDeferredValue
   }
 
   // Quick Actions handlers

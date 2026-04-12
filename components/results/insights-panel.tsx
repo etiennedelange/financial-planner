@@ -1,6 +1,5 @@
 "use client"
 
-import { useMemo } from "react"
 import {
   Card,
   CardContent,
@@ -43,7 +42,7 @@ export function InsightsPanel() {
       }))
     )
 
-  const insights = useMemo(() => {
+  const insights = (() => {
     if (accounts.length === 0) return null
 
     const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
@@ -128,7 +127,7 @@ export function InsightsPanel() {
       yearsToRetirement,
       inflationRate,
     }
-  }, [accounts, personalInfo, retirementGoals, drawdownConfig, assumptions])
+  })()
 
   if (!insights) {
     return (

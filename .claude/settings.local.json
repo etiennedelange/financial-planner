@@ -69,7 +69,8 @@
       "Bash(pkill -f \"next build\")",
       "Bash(rm -rf .next/cache/next-server*.json)",
       "Read(//tmp/**)",
-      "Bash(kill %1)"
+      "Bash(kill %1)",
+      "Bash(git revert:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

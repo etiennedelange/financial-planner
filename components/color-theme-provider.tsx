@@ -22,23 +22,24 @@ const initialState: ColorThemeProviderState = {
 
 const ColorThemeProviderContext = React.createContext<ColorThemeProviderState>(initialState)
 
+const THEME_CLASSES = ["theme-blue", "theme-green", "theme-rose", "theme-violet", "theme-orange"] as const
+
 export function ColorThemeProvider({
   children,
   defaultTheme = "blue",
   storageKey = "color-theme",
 }: ColorThemeProviderProps) {
-  // Start with defaultTheme so SSR and initial client render agree (no hydration mismatch).
-  // After mount, read localStorage and update if a stored preference exists.
-  const [colorTheme, setColorThemeState] = React.useState<ColorTheme>(defaultTheme)
+  // The pre-hydration script in app/layout.tsx already applies the stored
+  // theme class to <html> before React hydrates, so there's no flash.
+  // We read localStorage on mount to sync React state with what's on the DOM.
+  const [colorTheme, setColorThemeState] = React.useState<ColorTheme>(() => {
+    if (typeof window === "undefined") return defaultTheme
+    return (localStorage.getItem(storageKey) as ColorTheme) ?? defaultTheme
+  })
 
   React.useEffect(() => {
-    const stored = localStorage.getItem(storageKey) as ColorTheme | null
-    if (stored) setColorThemeState(stored)
-  }, [storageKey])
-
-  React.useEffect(() => {
-    const root = window.document.documentElement
-    root.classList.remove("theme-blue", "theme-green", "theme-rose", "theme-violet", "theme-orange")
+    const root = document.documentElement
+    root.classList.remove(...THEME_CLASSES)
     root.classList.add(`theme-${colorTheme}`)
   }, [colorTheme])
 
