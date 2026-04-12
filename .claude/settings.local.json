@@ -70,7 +70,8 @@
       "Bash(rm -rf .next/cache/next-server*.json)",
       "Read(//tmp/**)",
       "Bash(kill %1)",
-      "Bash(git revert:*)"
+      "Bash(git revert:*)",
+      "mcp__filesystem__create_directory"
     ]
   },
   "enableAllProjectMcpServers": true,
