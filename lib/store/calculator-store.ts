@@ -10,6 +10,7 @@ import type {
   DrawdownConfig,
 } from "@/types"
 import { SA_DEFAULTS, SA_DEFAULTS_DISPLAY } from "@/lib/constants/defaults"
+import { upsertAccount, deleteAccount, fetchAccounts } from "@/lib/supabase/accounts"
 
 interface CalculatorState {
   // Data
@@ -19,10 +20,15 @@ interface CalculatorState {
   assumptions: MarketAssumptions
   drawdownConfig: DrawdownConfig
 
+  // Session
+  sessionId: string | null
+
   // UI Preferences
-  displayMode: 'nominal' | 'real' // Show values in nominal or real (today's) terms
+  displayMode: 'nominal' | 'real'
 
   // Actions
+  setSessionId: (id: string) => void
+  syncAccountsFromDb: () => Promise<void>
   addAccount: (account: Account) => void
   updateAccount: (id: string, account: Partial<Account>) => void
   removeAccount: (id: string) => void
@@ -36,6 +42,7 @@ interface CalculatorState {
 
 const initialState = {
   accounts: [] as Account[],
+  sessionId: null as string | null,
   personalInfo: {
     currentAge: SA_DEFAULTS.defaultCurrentAge,
     retirementAge: SA_DEFAULTS.defaultRetirementAge,
@@ -70,20 +77,40 @@ export const useCalculatorStore = create<CalculatorState>()(
     (set) => ({
       ...initialState,
 
-      addAccount: (account) =>
-        set((state) => ({ accounts: [...state.accounts, account] })),
+      setSessionId: (id) => set({ sessionId: id }),
 
-      updateAccount: (id, updates) =>
+      syncAccountsFromDb: async () => {
+        const { sessionId } = useCalculatorStore.getState()
+        if (!sessionId) return
+        const accounts = await fetchAccounts(sessionId)
+        set({ accounts })
+      },
+
+      addAccount: (account) => {
+        set((state) => ({ accounts: [...state.accounts, account] }))
+        const { sessionId } = useCalculatorStore.getState()
+        if (sessionId) upsertAccount(account, sessionId).catch(console.error)
+      },
+
+      updateAccount: (id, updates) => {
         set((state) => ({
           accounts: state.accounts.map((acc) =>
             acc.id === id ? { ...acc, ...updates } : acc
           ),
-        })),
+        }))
+        const { sessionId, accounts } = useCalculatorStore.getState()
+        if (sessionId) {
+          const updated = accounts.find((a) => a.id === id)
+          if (updated) upsertAccount(updated, sessionId).catch(console.error)
+        }
+      },
 
-      removeAccount: (id) =>
+      removeAccount: (id) => {
         set((state) => ({
           accounts: state.accounts.filter((acc) => acc.id !== id),
-        })),
+        }))
+        deleteAccount(id).catch(console.error)
+      },
 
       setPersonalInfo: (info) =>
         set((state) => ({

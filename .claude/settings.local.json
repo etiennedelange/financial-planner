@@ -71,7 +71,9 @@
       "Read(//tmp/**)",
       "Bash(kill %1)",
       "Bash(git revert:*)",
-      "mcp__filesystem__create_directory"
+      "mcp__filesystem__create_directory",
+      "Bash(npm list:*)",
+      "Bash(npx supabase *)"
     ]
   },
   "enableAllProjectMcpServers": true,

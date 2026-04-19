@@ -1,4 +1,5 @@
 import { ColorThemeProvider } from "@/components/color-theme-provider"
+import { SupabaseProvider } from "@/components/supabase-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Analytics } from "@vercel/analytics/next"
 import type { Metadata, Viewport } from "next"
@@ -39,9 +40,11 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ColorThemeProvider defaultTheme="blue" storageKey="color-theme">
-            <main className="min-h-screen bg-background">
-              {children}
-            </main>
+            <SupabaseProvider>
+              <main className="min-h-screen bg-background">
+                {children}
+              </main>
+            </SupabaseProvider>
           </ColorThemeProvider>
         </ThemeProvider>
         <Analytics />
