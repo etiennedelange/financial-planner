@@ -1,20 +1,26 @@
-// South African tax limits (2024/2025 Tax Year)
+import {
+  TAX_REBATES_CONFIG,
+  TAX_THRESHOLDS_CONFIG,
+  RETIREMENT_CONTRIBUTION_LIMITS_CONFIG,
+  TFSA_LIMITS_CONFIG,
+} from './tax-year.config'
+
 export const SA_TAX_LIMITS = {
   // Pension/RA contribution limits
-  pensionRaDeductionRate: 0.275, // 27.5% of income
-  pensionRaMaxDeduction: 350000, // R350,000 p.a.
+  pensionRaDeductionRate: RETIREMENT_CONTRIBUTION_LIMITS_CONFIG.pensionRaDeductionRate,
+  pensionRaMaxDeduction:  RETIREMENT_CONTRIBUTION_LIMITS_CONFIG.pensionRaMaxDeduction,
 
   // TFSA limits
-  tfsaAnnualLimit: 36000, // R36,000 p.a.
-  tfsaLifetimeLimit: 500000, // R500,000 lifetime
+  tfsaAnnualLimit:   TFSA_LIMITS_CONFIG.annualLimit,
+  tfsaLifetimeLimit: TFSA_LIMITS_CONFIG.lifetimeLimit,
 
-  // Tax thresholds
-  primaryRebate: 17235, // Primary rebate for under 65
-  secondaryRebate: 9444, // Secondary rebate for 65-74
-  tertiaryRebate: 3145, // Tertiary rebate for 75+
+  // Tax rebates
+  primaryRebate:   TAX_REBATES_CONFIG.primary,
+  secondaryRebate: TAX_REBATES_CONFIG.secondary,
+  tertiaryRebate:  TAX_REBATES_CONFIG.tertiary,
 
-  // Tax-free threshold
-  taxThresholdUnder65: 95750,
-  taxThreshold65To74: 148217,
-  taxThreshold75Plus: 165689,
+  // Tax-free thresholds
+  taxThresholdUnder65:  TAX_THRESHOLDS_CONFIG.under65,
+  taxThreshold65To74:   TAX_THRESHOLDS_CONFIG.age65to74,
+  taxThreshold75Plus:   TAX_THRESHOLDS_CONFIG.age75plus,
 } as const

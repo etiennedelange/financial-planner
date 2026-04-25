@@ -8,7 +8,7 @@ import {
 
 describe('tax-tables', () => {
   describe('INCOME_TAX_BRACKETS', () => {
-    it('should have 7 tax brackets for 2024/2025', () => {
+    it('should have 7 tax brackets for 2026/2027', () => {
       expect(INCOME_TAX_BRACKETS).toHaveLength(7)
     })
 
@@ -32,7 +32,7 @@ describe('tax-tables', () => {
   })
 
   describe('RETIREMENT_LUMP_SUM_TAX_TABLE', () => {
-    it('should have 4 tax tiers for 2024/2025', () => {
+    it('should have 4 tax tiers for 2026/2027', () => {
       expect(RETIREMENT_LUMP_SUM_TAX_TABLE).toHaveLength(4)
     })
 
@@ -51,9 +51,9 @@ describe('tax-tables', () => {
         previousTax: 0,
       })
 
-      // Third tier
+      // Third tier (2026/2027: raised to R1,155,000)
       expect(RETIREMENT_LUMP_SUM_TAX_TABLE[2]).toEqual({
-        threshold: 1100000,
+        threshold: 1155000,
         rate: 0.27,
         previousTax: 39600,
       })
@@ -62,7 +62,7 @@ describe('tax-tables', () => {
       expect(RETIREMENT_LUMP_SUM_TAX_TABLE[3]).toEqual({
         threshold: Infinity,
         rate: 0.36,
-        previousTax: 128700,
+        previousTax: 143550,
       })
     })
   })
@@ -314,7 +314,7 @@ describe('tax-tables', () => {
       })
     })
 
-    describe('Third tier (R770,001 - R1,100,000 @ 27%)', () => {
+    describe('Third tier (R770,001 - R1,155,000 @ 27%)', () => {
       it('should calculate tax at bottom of tier', () => {
         // Previous: R39,600
         // Additional: (R770,001 - R770,000) * 27% = R1 * 27% = R0.27
@@ -336,41 +336,41 @@ describe('tax-tables', () => {
         expect(calculateLumpSumTax(1000000)).toBe(101700)
       })
 
-      it('should calculate tax at top of tier (R1,100,000)', () => {
+      it('should calculate tax at top of tier (R1,155,000)', () => {
         // Previous: R39,600
-        // Additional: (R1,100,000 - R770,000) * 27% = R330,000 * 27% = R89,100
-        // Total: R39,600 + R89,100 = R128,700
-        expect(calculateLumpSumTax(1100000)).toBe(128700)
+        // Additional: (R1,155,000 - R770,000) * 27% = R385,000 * 27% = R103,950
+        // Total: R39,600 + R103,950 = R143,550
+        expect(calculateLumpSumTax(1155000)).toBe(143550)
       })
     })
 
-    describe('Fourth tier (R1,100,001+ @ 36%)', () => {
+    describe('Fourth tier (R1,155,001+ @ 36%)', () => {
       it('should calculate tax at bottom of tier', () => {
-        // Previous: R128,700
-        // Additional: (R1,100,001 - R1,100,000) * 36% = R1 * 36% = R0.36
-        // Total: R128,700.36
-        expect(calculateLumpSumTax(1100001)).toBe(128700.36)
+        // Previous: R143,550
+        // Additional: (R1,155,001 - R1,155,000) * 36% = R1 * 36% = R0.36
+        // Total: R143,550.36
+        expect(calculateLumpSumTax(1155001)).toBe(143550.36)
       })
 
       it('should calculate tax at R1,500,000', () => {
-        // Previous: R128,700
-        // Additional: (R1,500,000 - R1,100,000) * 36% = R400,000 * 36% = R144,000
-        // Total: R128,700 + R144,000 = R272,700
-        expect(calculateLumpSumTax(1500000)).toBe(272700)
+        // Previous: R143,550
+        // Additional: (R1,500,000 - R1,155,000) * 36% = R345,000 * 36% = R124,200
+        // Total: R143,550 + R124,200 = R267,750
+        expect(calculateLumpSumTax(1500000)).toBe(267750)
       })
 
       it('should calculate tax at R2,000,000', () => {
-        // Previous: R128,700
-        // Additional: (R2,000,000 - R1,100,000) * 36% = R900,000 * 36% = R324,000
-        // Total: R128,700 + R324,000 = R452,700
-        expect(calculateLumpSumTax(2000000)).toBe(452700)
+        // Previous: R143,550
+        // Additional: (R2,000,000 - R1,155,000) * 36% = R845,000 * 36% = R304,200
+        // Total: R143,550 + R304,200 = R447,750
+        expect(calculateLumpSumTax(2000000)).toBe(447750)
       })
 
       it('should calculate tax at R5,000,000', () => {
-        // Previous: R128,700
-        // Additional: (R5,000,000 - R1,100,000) * 36% = R3,900,000 * 36% = R1,404,000
-        // Total: R128,700 + R1,404,000 = R1,532,700
-        expect(calculateLumpSumTax(5000000)).toBe(1532700)
+        // Previous: R143,550
+        // Additional: (R5,000,000 - R1,155,000) * 36% = R3,845,000 * 36% = R1,384,200
+        // Total: R143,550 + R1,384,200 = R1,527,750
+        expect(calculateLumpSumTax(5000000)).toBe(1527750)
       })
     })
 
@@ -389,11 +389,11 @@ describe('tax-tables', () => {
       })
 
       it('should calculate tax for R1.2M lump sum', () => {
-        // Falls in fourth tier
-        // Previous: R128,700
-        // Additional: (R1,200,000 - R1,100,000) * 36% = R100,000 * 36% = R36,000
-        // Total: R128,700 + R36,000 = R164,700
-        expect(calculateLumpSumTax(1200000)).toBe(164700)
+        // Falls in fourth tier (2026/2027: above R1,155,000)
+        // Previous: R143,550
+        // Additional: (R1,200,000 - R1,155,000) * 36% = R45,000 * 36% = R16,200
+        // Total: R143,550 + R16,200 = R159,750
+        expect(calculateLumpSumTax(1200000)).toBe(159750)
       })
     })
 
@@ -404,16 +404,16 @@ describe('tax-tables', () => {
         expect(effectiveRate).toBeCloseTo(0.059625, 4) // 5.96%
       })
 
-      it('should result in ~13.7% effective rate for R1.2M lump sum', () => {
+      it('should result in ~13.3% effective rate for R1.2M lump sum', () => {
         const tax = calculateLumpSumTax(1200000)
         const effectiveRate = tax / 1200000
-        expect(effectiveRate).toBeCloseTo(0.137250, 4) // 13.73%
+        expect(effectiveRate).toBeCloseTo(0.133125, 4) // 13.31%
       })
 
-      it('should result in ~18.1% effective rate for R2M lump sum', () => {
+      it('should result in ~22.4% effective rate for R2M lump sum', () => {
         const tax = calculateLumpSumTax(2000000)
         const effectiveRate = tax / 2000000
-        expect(effectiveRate).toBeCloseTo(0.226350, 4) // 22.64%
+        expect(effectiveRate).toBeCloseTo(0.223875, 4) // 22.39%
       })
     })
   })

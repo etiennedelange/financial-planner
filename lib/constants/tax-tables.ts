@@ -1,22 +1,10 @@
-// Retirement lump sum tax table (2024/2025)
-export const RETIREMENT_LUMP_SUM_TAX_TABLE = [
-  { threshold: 550000, rate: 0, previousTax: 0 },
-  { threshold: 770000, rate: 0.18, previousTax: 0 },
-  { threshold: 1100000, rate: 0.27, previousTax: 39600 },
-  { threshold: Infinity, rate: 0.36, previousTax: 128700 },
-] as const
+import {
+  INCOME_TAX_BRACKETS_CONFIG,
+  RETIREMENT_LUMP_SUM_CONFIG,
+} from './tax-year.config'
 
-// Income tax brackets (2024/2025)
-// min represents the threshold where this rate starts (end of previous bracket)
-export const INCOME_TAX_BRACKETS = [
-  { min: 0, max: 237100, rate: 0.18, baseTax: 0 },
-  { min: 237100, max: 370500, rate: 0.26, baseTax: 42678 },
-  { min: 370500, max: 512800, rate: 0.31, baseTax: 77362 },
-  { min: 512800, max: 673000, rate: 0.36, baseTax: 121475 },
-  { min: 673000, max: 857900, rate: 0.39, baseTax: 179147 },
-  { min: 857900, max: 1817000, rate: 0.41, baseTax: 251258 },
-  { min: 1817000, max: Infinity, rate: 0.45, baseTax: 644489 },
-] as const
+export const INCOME_TAX_BRACKETS = INCOME_TAX_BRACKETS_CONFIG
+export const RETIREMENT_LUMP_SUM_TAX_TABLE = RETIREMENT_LUMP_SUM_CONFIG
 
 /**
  * Calculate income tax based on taxable income
@@ -30,7 +18,6 @@ export function calculateIncomeTax(taxableIncome: number): number {
     }
   }
 
-  // Shouldn't reach here, but handle edge case
   const lastBracket = INCOME_TAX_BRACKETS[INCOME_TAX_BRACKETS.length - 1]
   return (
     lastBracket.baseTax + (taxableIncome - lastBracket.min) * lastBracket.rate
@@ -54,7 +41,6 @@ export function calculateLumpSumTax(lumpSum: number): number {
     }
   }
 
-  // Handle amounts above highest threshold
   const lastBracket =
     RETIREMENT_LUMP_SUM_TAX_TABLE[RETIREMENT_LUMP_SUM_TAX_TABLE.length - 1]
   const secondLastBracket =

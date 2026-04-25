@@ -73,7 +73,8 @@
       "Bash(git revert:*)",
       "mcp__filesystem__create_directory",
       "Bash(npm list:*)",
-      "Bash(npx supabase *)"
+      "Bash(npx supabase *)",
+      "WebSearch"
     ]
   },
   "enableAllProjectMcpServers": true,
