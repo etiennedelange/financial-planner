@@ -1,46 +1,38 @@
-# Phase 2: Supabase Integration 🔲 PENDING
+# Phase 2: Supabase Integration 🔄 In Progress
 
 **Goal:** Set up database infrastructure for persistent data storage.
 
 **Tasks:**
-- [ ] Initialize Supabase project
-- [ ] Design database schema:
-  - `users` table (handled by Supabase Auth)
-  - `accounts` table (retirement accounts per user)
-  - `scenarios` table (saved calculation scenarios)
-  - `calculation_history` table (historical results)
-- [ ] Implement Row Level Security (RLS) policies
-- [ ] Set up database migrations
-- [ ] Create TypeScript types from database schema
+- [x] Initialize Supabase project (local, docker-in-docker in devcontainer)
+- [x] Design and migrate `accounts` table with RLS
+- [x] Anonymous auth — users get a session without signing up
+- [x] Implement Row Level Security (RLS) on `accounts` (keyed on `auth.uid()`)
+- [x] Wire store account actions to fire-and-forget DB sync
+- [ ] `scenarios` table (save/load full calculator state)
+- [ ] TypeScript type generation from DB schema (`supabase gen types`)
 
-**Schema Design:**
-```sql
--- accounts table
-CREATE TABLE accounts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  provider TEXT,
-  type TEXT NOT NULL, -- pension_fund, retirement_annuity, preservation_fund, tfsa, discretionary
-  current_balance DECIMAL(15,2) NOT NULL,
-  monthly_contribution DECIMAL(15,2) NOT NULL,
-  expected_return DECIMAL(5,2) NOT NULL,
-  annual_fees DECIMAL(5,2) NOT NULL,
-  contribution_escalation DECIMAL(5,2) NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+## Completed (2026-04-19)
 
--- scenarios table
-CREATE TABLE scenarios (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  personal_info JSONB NOT NULL,
-  retirement_goals JSONB NOT NULL,
-  assumptions JSONB NOT NULL,
-  drawdown_config JSONB NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
+### Infrastructure
+- Added `docker-in-docker` feature to `.devcontainer/devcontainer.json`
+- Local Supabase stack running on default ports (API: 54321, Studio: 54323)
+- Anonymous sign-ins enabled in `supabase/config.toml`
+
+### Database
+- Migration: `supabase/migrations/20260419212359_create_accounts_table.sql`
+- `accounts` table uses `session_id` (= `auth.uid()`) instead of `user_id` — compatible with both anonymous and future authenticated users
+- RLS policy: users can only read/write their own accounts
+- `updated_at` trigger auto-maintained
+
+### Application layer
+- `lib/supabase/client.ts` — browser Supabase client via `@supabase/ssr`
+- `lib/supabase/accounts.ts` — `fetchAccounts`, `upsertAccount`, `deleteAccount` with camelCase↔snake_case mapping
+- `components/supabase-provider.tsx` — signs in anonymously on mount, hydrates accounts from DB into store
+- `lib/store/calculator-store.ts` — added `sessionId`, `setSessionId`, `syncAccountsFromDb`; account mutations fire-and-forget to DB
+- `.env.local` — `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+
+## Pending
+
+- **Scenarios table** — persist `personalInfo`, `retirementGoals`, `assumptions`, `drawdownConfig` as a named scenario
+- **TypeScript types** — run `npx supabase gen types typescript` to generate `types/supabase.ts`
+- **Phase 3 upgrade path** — when a user signs up, link their anonymous session to a real account so data is not lost

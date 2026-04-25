@@ -12,7 +12,7 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 | **Phase 1.5** | ✅ Complete | [Testing & Validation](project-phases/phase-1-5-testing-validation.md) |
 | **Phase 1.6** | ✅ Complete | [Performance Optimization](project-phases/phase-1-6-performance-optimization.md) |
 | **Phase 1.7** | ✅ Complete | [Next 16 / React 19 / Tailwind v4 Modernization](project-phases/phase-1-7-modernization.md) |
-| **Phase 2** | 🔲 Pending | [Supabase Integration](project-phases/phase-2-supabase.md) |
+| **Phase 2** | 🔄 In Progress | [Supabase Integration](project-phases/phase-2-supabase.md) |
 | **Phase 3** | 🔲 Pending | [User Accounts](project-phases/phase-3-user-accounts.md) |
 | **Phase 4** | 🔲 Pending | [Data Persistence](project-phases/phase-4-data-persistence.md) |
 | **Phase 5** | 🔲 Pending | [Export Functionality](project-phases/phase-5-export-functionality.md) |
@@ -21,10 +21,14 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-04-12) — Phase 1.6 complete:**
+**Latest Update (2026-04-19) — Phase 2 started:**
+- ✅ **Accounts persist to Supabase** — anonymous auth, RLS, fire-and-forget store sync all working
+- ✅ **Local Supabase stack** — docker-in-docker added to devcontainer; `npx supabase start` to run
+- 🎯 **Next:** scenarios table, TypeScript type generation, then Phase 3 (real auth)
+
+**Previous Update (2026-04-12) — Phase 1.6 complete:**
 - ✅ **Removed duplicate calculation in CalculationsBreakdown** — component now accepts `projection` prop from parent, eliminating two manual projection loops and a second `calculateProjection()` call. Breakdown figures now match the projection engine exactly.
 - ✅ **Phase 1.6 marked complete** — Web Workers (2026-04-11), Zustand useShallow (Phase 1.7), and duplicate calculation fix (2026-04-12) cover all high-impact items. Remaining deferred items (form debouncing, InsightsPanel worker) have diminishing returns.
-- 🎯 **Next:** Phase 2 (Supabase integration)
 
 **Previous Update (2026-04-11):**
 - ✅ **Phase 1.7 Complete:** Next 16 / React 19 / Tailwind v4 Modernization (all 6 steps, commits 3640f93…6e45ed3)
