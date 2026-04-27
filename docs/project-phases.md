@@ -21,12 +21,16 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-04-27) — Phase 6 bug fixes and display mode:**
+**Latest Update (2026-04-27) — Sticky results bar + collapsible spacing fix:**
+- ✅ **StickyResultsBar** — new fixed-bottom bar showing Portfolio at Retirement, Monthly Income, Success Rate; appears via IntersectionObserver once the metrics grid scrolls out of view; pulses a spinner when recalculating
+- ✅ **Collapsible section spacing** — removed `dashboard-section` class (mb-12/mb-16) from `CollapsibleSection` accordion; sections now use border dividers only with no excessive gap
+- 🔄 **Phase 6 (Tax):** ~93% complete; pending — account-specific depletion timeline, medical aid credits, TFSA lifetime limit tracking
+- 🎯 **Next:** medical aid credits or TFSA lifetime limit tracking
+
+**Previous Update (2026-04-27) — Phase 6 bug fixes and display mode:**
 - ✅ **Display mode** — nominal/real toggle now applies to all currency values in the calculations breakdown; per-row `yearsFromNow` deflation in yearly tables
 - ✅ **Payslip fix** — `monthlyIncomeAtRetirement` now correctly uses the post-lump-sum portfolio
 - ✅ **Monte Carlo fix** — success rate now reflects the reduced drawdown portfolio when a lump sum is configured; was previously too optimistic
-- 🔄 **Phase 6 (Tax):** ~93% complete; pending — account-specific depletion timeline, medical aid credits, TFSA lifetime limit tracking
-- 🎯 **Next:** medical aid credits or TFSA lifetime limit tracking
 
 **Previous Update (2026-04-19) — Phase 2 started:**
 - ✅ **Accounts persist to Supabase** — anonymous auth, RLS, fire-and-forget store sync all working
