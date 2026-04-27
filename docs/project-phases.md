@@ -21,12 +21,12 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-04-27) — Tax-optimized withdrawal sequencing:**
-- ✅ **Withdrawal sequencing** — TFSA → Discretionary (40% CGT inclusion on gains) → Pension/RA/Preservation (full income tax); per-account balances and discretionary cost basis tracked through entire drawdown phase
-- ✅ **Drawdown table** — now shows TFSA / Discretionary / Pension columns per year so the sequencing is visible
-- ✅ **5 new tests** covering TFSA zero-tax, pension full-tax, sequencing tax savings, TFSA exhaustion, discretionary CGT; fixed pre-existing flaky Monte Carlo test threshold
-- 🔄 **Phase 6 (Tax):** 90% complete; pending — account-specific depletion timeline, medical aid credits, TFSA lifetime limit tracking
-- 🎯 **Next:** account-specific depletion tracking or medical aid credits
+**Latest Update (2026-04-27) — Phase 6 bug fixes and display mode:**
+- ✅ **Display mode** — nominal/real toggle now applies to all currency values in the calculations breakdown; per-row `yearsFromNow` deflation in yearly tables
+- ✅ **Payslip fix** — `monthlyIncomeAtRetirement` now correctly uses the post-lump-sum portfolio
+- ✅ **Monte Carlo fix** — success rate now reflects the reduced drawdown portfolio when a lump sum is configured; was previously too optimistic
+- 🔄 **Phase 6 (Tax):** ~93% complete; pending — account-specific depletion timeline, medical aid credits, TFSA lifetime limit tracking
+- 🎯 **Next:** medical aid credits or TFSA lifetime limit tracking
 
 **Previous Update (2026-04-19) — Phase 2 started:**
 - ✅ **Accounts persist to Supabase** — anonymous auth, RLS, fire-and-forget store sync all working

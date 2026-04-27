@@ -18,9 +18,12 @@
 - [x] Tax analysis accordion shows amber panel with gross amount, tax, net received, remaining portfolio, effective rate, and tier thresholds
 - [x] Slider performance fix — local state + `onValueCommit` so store only updates on release (no CPU spike during drag)
 - [x] `calculateProjection` moved into `useMemo` with deferred inputs in `calculator-client.tsx`
+- [x] Tax-optimized withdrawal sequencing — TFSA → Discretionary (CGT 40% inclusion) → Pension/RA/Preservation (full income tax); per-account balances tracked through drawdown; cost basis tracked for CGT on discretionary gains; drawdown table shows per-source breakdown
+- [x] Display mode (nominal/real) applied to all currency values in calculations breakdown — per-row `yearsFromNow` deflation in yearly tables
+- [x] Bug fix: payslip `monthlyIncomeAtRetirement` now uses `remainingPortfolio` (post-lump-sum) not `portfolioAtRetirement`
+- [x] Bug fix: Monte Carlo `simulateSingleRun` now deducts lump sum before calculating initial withdrawal — success rate was previously too optimistic when lump sum > 0
 
 **Pending Tasks:**
-- [x] Tax-optimized withdrawal sequencing — TFSA → Discretionary (CGT 40% inclusion) → Pension/RA/Preservation (full income tax); per-account balances tracked through drawdown; cost basis tracked for CGT on discretionary gains; drawdown table shows per-source breakdown
 - [ ] Account-specific withdrawal tracking (Medium Priority)
   - Track which accounts are drawn from each year
   - Display projected depletion timeline per account
