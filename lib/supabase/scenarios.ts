@@ -12,6 +12,7 @@ export interface ScenarioData {
 
 export async function fetchScenario(sessionId: string): Promise<ScenarioData | null> {
   const supabase = createClient()
+  if (!supabase) return null
   const { data, error } = await supabase
     .from("scenarios")
     .select("*")
@@ -34,6 +35,7 @@ export async function fetchScenario(sessionId: string): Promise<ScenarioData | n
 
 export async function upsertScenario(sessionId: string, scenario: ScenarioData): Promise<void> {
   const supabase = createClient()
+  if (!supabase) return
   const { error } = await supabase
     .from("scenarios")
     .upsert(

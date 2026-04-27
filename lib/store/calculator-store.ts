@@ -172,6 +172,8 @@ export const useCalculatorStore = create<CalculatorState>()(
         retirementGoals: state.retirementGoals,
         drawdownConfig: state.drawdownConfig,
         displayMode: state.displayMode,
+        // persisted locally when Supabase is not configured
+        accounts: state.accounts,
       }),
     }
   )

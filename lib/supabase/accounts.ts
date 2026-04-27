@@ -45,6 +45,7 @@ function fromRow(row: AccountRow): Account {
 
 export async function fetchAccounts(sessionId: string): Promise<Account[]> {
   const supabase = createClient()
+  if (!supabase) return []
   const { data, error } = await supabase
     .from("accounts")
     .select("*")
@@ -57,6 +58,7 @@ export async function fetchAccounts(sessionId: string): Promise<Account[]> {
 
 export async function upsertAccount(account: Account, sessionId: string): Promise<void> {
   const supabase = createClient()
+  if (!supabase) return
   const { error } = await supabase
     .from("accounts")
     .upsert(toRow(account, sessionId), { onConflict: "id" })
@@ -66,6 +68,7 @@ export async function upsertAccount(account: Account, sessionId: string): Promis
 
 export async function deleteAccount(id: string): Promise<void> {
   const supabase = createClient()
+  if (!supabase) return
   const { error } = await supabase.from("accounts").delete().eq("id", id)
   if (error) throw error
 }

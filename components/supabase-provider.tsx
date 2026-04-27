@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { createClient, SUPABASE_ENABLED } from "@/lib/supabase/client"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
@@ -11,7 +11,9 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const sessionId = useCalculatorStore((s) => s.sessionId)
 
   useEffect(() => {
-    const supabase = createClient()
+    if (!SUPABASE_ENABLED) return
+
+    const supabase = createClient()!
 
     async function init() {
       const { data: { session } } = await supabase.auth.getSession()
