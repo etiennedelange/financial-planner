@@ -8,6 +8,7 @@ import { CollapsibleSection } from "@/components/dashboard/collapsible-section"
 import { DashboardMetricsGrid } from "@/components/dashboard/dashboard-metrics-grid"
 import { KeyInsightsSummary } from "@/components/dashboard/key-insights-summary"
 import { QuickActionsCard } from "@/components/dashboard/quick-actions-card"
+import { StickyResultsBar } from "@/components/dashboard/sticky-results-bar"
 import { DebugWindow } from "@/components/debug/debug-window"
 import { AssumptionsForm } from "@/components/inputs/assumptions-form"
 import { PersonalInfoForm } from "@/components/inputs/personal-info-form"
@@ -29,7 +30,7 @@ import { useMonteCarloWorker } from "@/lib/monte-carlo/use-monte-carlo-worker"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import type { ProjectionResult } from "@/types"
 import { BarChart3, BookOpen, Calculator, RotateCcw, Settings, TrendingDown } from "lucide-react"
-import { useDeferredValue, useMemo, useRef, useState } from "react"
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
 
 export function CalculatorClient() {
@@ -97,6 +98,19 @@ export function CalculatorClient() {
   // Refs for scrolling to sections
   const accountsRef = useRef<HTMLDivElement>(null)
   const detailedInsightsRef = useRef<HTMLDivElement>(null)
+  const metricsRef = useRef<HTMLDivElement>(null)
+  const [metricsOutOfView, setMetricsOutOfView] = useState(false)
+
+  useEffect(() => {
+    const el = metricsRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setMetricsOutOfView(!entry.isIntersecting),
+      { threshold: 0 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   // Calculate projection with deferred inputs so slider drags don't block the UI
   const projection: ProjectionResult | null = useMemo(
@@ -298,7 +312,7 @@ export function CalculatorClient() {
 
       {/* Dashboard Metrics Grid */}
       {projection && (
-        <div className="dashboard-section">
+        <div className="dashboard-section" ref={metricsRef}>
           <DashboardMetricsGrid
             projection={projection}
             simulationResult={simulationResult}
@@ -407,6 +421,17 @@ export function CalculatorClient() {
           <CalculationsBreakdown projection={projection} />
         </CollapsibleSection>
       </div>
+
+      <StickyResultsBar
+        projection={projection}
+        simulationResult={simulationResult}
+        isSimulating={isSimulating}
+        isVisible={metricsOutOfView}
+        retirementAge={personalInfo.retirementAge}
+        currentAge={personalInfo.currentAge}
+        inflationRate={retirementGoals.inflationRate}
+        displayMode={displayMode}
+      />
     </div>
   )
 }

@@ -45,7 +45,7 @@ export function CollapsibleSection({
       type="single"
       collapsible
       {...accordionProps}
-      className="dashboard-section border-b border-border"
+      className="border-b border-border"
     >
       <AccordionItem value={id} className="border-0">
         <AccordionTrigger className="hover:bg-muted/50 px-4 py-4 rounded-lg transition-colors">
