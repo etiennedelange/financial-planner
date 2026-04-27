@@ -26,15 +26,8 @@ import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import { getSpendingPhaseMultiplier } from "@/lib/calculations/utils/spending-phase"
 import { calculateMonthlyReturn, formatMonthlyReturnFormula } from "@/lib/calculations/utils/projection"
+import { formatCurrency } from "@/lib/utils/currency"
 import type { ProjectionResult } from "@/types"
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("en-ZA", {
-    style: "currency",
-    currency: "ZAR",
-    maximumFractionDigits: 0,
-  }).format(value)
-}
 
 function formatPercent(value: number, decimals: number = 2): string {
   return `${value.toFixed(decimals)}%`
@@ -51,7 +44,7 @@ interface CalculationsBreakdownProps {
 }
 
 export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps) {
-  const { accounts, personalInfo, retirementGoals, assumptions, drawdownConfig } =
+  const { accounts, personalInfo, retirementGoals, assumptions, drawdownConfig, displayMode } =
     useCalculatorStore(
       useShallow(state => ({
         accounts: state.accounts,
@@ -59,8 +52,15 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
         retirementGoals: state.retirementGoals,
         assumptions: state.assumptions,
         drawdownConfig: state.drawdownConfig,
+        displayMode: state.displayMode,
       }))
     )
+
+  const inflationRate = retirementGoals.inflationRate / 100
+  const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
+  // Display-mode-aware currency formatter: yearsFromNow=0 for today's values, yearsToRetirement for retirement values
+  const fmt = (value: number, yearsFromNow: number = 0) =>
+    formatCurrency(value, displayMode, yearsFromNow, inflationRate)
 
   const calculations = (() => {
     if (!projection || accounts.length === 0) return null
@@ -96,8 +96,6 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
       accounts.length
 
     const netReturn = weightedReturn - weightedFees
-    const inflationRate = retirementGoals.inflationRate / 100
-    const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
     const yearsInRetirement = personalInfo.lifeExpectancy - personalInfo.retirementAge
     const monthlyReturn = calculateMonthlyReturn(netReturn, assumptions.compoundingMethod)
     const desiredMonthlyAtRetirement =
@@ -147,8 +145,8 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
       // Formula strings
       formulas: {
         monthlyReturn: formatMonthlyReturnFormula(netReturn, assumptions.compoundingMethod),
-        futureExpenses: `${formatCurrency(retirementGoals.desiredMonthlyIncome)} × (1 + ${formatPercent(inflationRate * 100)})^${yearsToRetirement} = ${formatCurrency(desiredMonthlyAtRetirement)}`,
-        targetNestEgg: `${formatCurrency(desiredMonthlyAtRetirement * 12)} ÷ ${formatPercent(drawdownConfig.initialWithdrawalRate)} = ${formatCurrency((desiredMonthlyAtRetirement * 12) / (drawdownConfig.initialWithdrawalRate / 100))}`,
+        futureExpenses: `${fmt(retirementGoals.desiredMonthlyIncome)} × (1 + ${formatPercent(inflationRate * 100)})^${yearsToRetirement} = ${fmt(desiredMonthlyAtRetirement, yearsToRetirement)}`,
+        targetNestEgg: `${fmt(desiredMonthlyAtRetirement * 12, yearsToRetirement)} ÷ ${formatPercent(drawdownConfig.initialWithdrawalRate)} = ${fmt((desiredMonthlyAtRetirement * 12) / (drawdownConfig.initialWithdrawalRate / 100), yearsToRetirement)}`,
       },
     }
   })()
@@ -192,19 +190,19 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                     <TableRow>
                       <TableCell>Current Balance</TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatCurrency(calculations.totalBalance)}
+                        {fmt(calculations.totalBalance)}
                       </TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Monthly Contributions</TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatCurrency(calculations.totalMonthlyContribution)}
+                        {fmt(calculations.totalMonthlyContribution)}
                       </TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Annual Contributions</TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatCurrency(calculations.totalAnnualContribution)}
+                        {fmt(calculations.totalAnnualContribution)}
                       </TableCell>
                     </TableRow>
                     <TableRow>
@@ -280,7 +278,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                     <TableRow>
                       <TableCell>Desired Income (today)</TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatCurrency(retirementGoals.desiredMonthlyIncome)}/mo
+                        {fmt(retirementGoals.desiredMonthlyIncome)}/mo
                       </TableCell>
                     </TableRow>
                     <TableRow>
@@ -407,7 +405,8 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
               <div className="rounded-lg bg-green-50 dark:bg-green-950 p-4">
                 <p className="text-lg font-semibold text-green-700 dark:text-green-300">
                   Portfolio at Retirement:{" "}
-                  {formatCurrency(projection.portfolioAtRetirement)}
+                  {fmt(projection.portfolioAtRetirement, yearsToRetirement)}
+                  {displayMode === 'real' && <span className="text-sm font-normal ml-1">(today&apos;s value)</span>}
                 </p>
               </div>
 
@@ -431,16 +430,16 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                           <TableCell>{proj.year}</TableCell>
                           <TableCell>{proj.age}</TableCell>
                           <TableCell className="text-right font-mono text-sm">
-                            {formatCurrency(proj.startingBalance)}
+                            {fmt(proj.startingBalance, proj.age - personalInfo.currentAge)}
                           </TableCell>
                           <TableCell className="text-right font-mono text-sm text-blue-600 dark:text-blue-400">
-                            +{formatCurrency(proj.contributions)}
+                            +{fmt(proj.contributions, proj.age - personalInfo.currentAge)}
                           </TableCell>
                           <TableCell className="text-right font-mono text-sm text-green-600 dark:text-green-400">
-                            +{formatCurrency(proj.growth)}
+                            +{fmt(proj.growth, proj.age - personalInfo.currentAge)}
                           </TableCell>
                           <TableCell className="text-right font-mono text-sm font-medium">
-                            {formatCurrency(proj.endingBalance)}
+                            {fmt(proj.endingBalance, proj.age - personalInfo.currentAge)}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -464,10 +463,10 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                     Initial Monthly Withdrawal
                   </p>
                   <p className="text-lg font-semibold text-blue-700 dark:text-blue-300">
-                    {formatCurrency(projection.monthlyIncomeAtRetirement)}/month
+                    {fmt(projection.monthlyIncomeAtRetirement, yearsToRetirement)}/month
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    (Inflated from {formatCurrency(retirementGoals.desiredMonthlyIncome)})
+                    (Inflated from {fmt(retirementGoals.desiredMonthlyIncome)})
                   </p>
                 </div>
                 <div
@@ -523,10 +522,10 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                             <TableCell>{idx + 1}</TableCell>
                             <TableCell>{proj.age}</TableCell>
                             <TableCell className="text-right font-mono text-sm">
-                              {formatCurrency(proj.startingBalance)}
+                              {fmt(proj.startingBalance, proj.age - personalInfo.currentAge)}
                             </TableCell>
                             <TableCell className="text-right font-mono text-sm text-green-600 dark:text-green-400">
-                              +{formatCurrency(proj.growth)}
+                              +{fmt(proj.growth, proj.age - personalInfo.currentAge)}
                             </TableCell>
                             <TableCell>
                               <span className="text-xs">
@@ -534,19 +533,19 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                               </span>
                             </TableCell>
                             <TableCell className="text-right font-mono text-sm text-green-700 dark:text-green-400">
-                              {proj.tfsaWithdrawal ? formatCurrency(proj.tfsaWithdrawal) : "—"}
+                              {proj.tfsaWithdrawal ? fmt(proj.tfsaWithdrawal, proj.age - personalInfo.currentAge) : "—"}
                             </TableCell>
                             <TableCell className="text-right font-mono text-sm text-blue-700 dark:text-blue-400">
-                              {proj.discretionaryWithdrawal ? formatCurrency(proj.discretionaryWithdrawal) : "—"}
+                              {proj.discretionaryWithdrawal ? fmt(proj.discretionaryWithdrawal, proj.age - personalInfo.currentAge) : "—"}
                             </TableCell>
                             <TableCell className="text-right font-mono text-sm text-orange-700 dark:text-orange-400">
-                              {proj.pensionWithdrawal ? formatCurrency(proj.pensionWithdrawal) : "—"}
+                              {proj.pensionWithdrawal ? fmt(proj.pensionWithdrawal, proj.age - personalInfo.currentAge) : "—"}
                             </TableCell>
                             <TableCell className="text-right font-mono text-sm text-red-600 dark:text-red-400">
-                              {proj.incomeTax > 0 ? `-${formatCurrency(proj.incomeTax)}` : "—"}
+                              {proj.incomeTax > 0 ? `-${fmt(proj.incomeTax, proj.age - personalInfo.currentAge)}` : "—"}
                             </TableCell>
                             <TableCell className="text-right font-mono text-sm font-medium">
-                              {formatCurrency(proj.endingBalance)}
+                              {fmt(proj.endingBalance, proj.age - personalInfo.currentAge)}
                             </TableCell>
                           </TableRow>
                         )
@@ -635,25 +634,25 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                       <TableRow>
                         <TableCell>Gross Lump Sum</TableCell>
                         <TableCell className="text-right font-mono">
-                          {formatCurrency(projection.lumpSumCommutation.lumpSumAmount)}
+                          {fmt(projection.lumpSumCommutation.lumpSumAmount, yearsToRetirement)}
                         </TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell>Lump Sum Tax</TableCell>
                         <TableCell className="text-right font-mono text-red-600 dark:text-red-400">
-                          -{formatCurrency(projection.lumpSumCommutation.lumpSumTax)}
+                          -{fmt(projection.lumpSumCommutation.lumpSumTax, yearsToRetirement)}
                         </TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell className="font-medium">Net Lump Sum Received</TableCell>
                         <TableCell className="text-right font-mono font-medium text-green-600 dark:text-green-400">
-                          {formatCurrency(projection.lumpSumCommutation.netLumpSum)}
+                          {fmt(projection.lumpSumCommutation.netLumpSum, yearsToRetirement)}
                         </TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell>Remaining Portfolio (for annuity)</TableCell>
                         <TableCell className="text-right font-mono">
-                          {formatCurrency(projection.lumpSumCommutation.remainingPortfolio)}
+                          {fmt(projection.lumpSumCommutation.remainingPortfolio, yearsToRetirement)}
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -685,7 +684,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                     <TableRow>
                       <TableCell className="font-medium">Total Income Tax (All Years)</TableCell>
                       <TableCell className="text-right font-mono text-red-600 dark:text-red-400">
-                        {formatCurrency(projection.totalLifetimeIncomeTax)}
+                        {fmt(projection.totalLifetimeIncomeTax, yearsToRetirement)}
                       </TableCell>
                     </TableRow>
                     <TableRow>
@@ -697,13 +696,13 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                     <TableRow>
                       <TableCell className="font-medium">Lump Sum Tax (At Retirement)</TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatCurrency(projection.totalLumpSumTax)}
+                        {fmt(projection.totalLumpSumTax, yearsToRetirement)}
                       </TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">Medical Aid (Total)</TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatCurrency(projection.totalMedicalAidContributions)}
+                        {fmt(projection.totalMedicalAidContributions, yearsToRetirement)}
                       </TableCell>
                     </TableRow>
                   </TableBody>
@@ -717,13 +716,13 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                     <strong>Your Age at Retirement:</strong> {personalInfo.retirementAge} years
                   </p>
                   <p className="text-muted-foreground">
-                    <strong>Applicable Tax Rebate:</strong> {formatCurrency(calculations.applicableRebate)}
+                    <strong>Applicable Tax Rebate:</strong> {fmt(calculations.applicableRebate)}
                     {personalInfo.retirementAge >= 75 && " (Primary + Secondary + Tertiary)"}
                     {personalInfo.retirementAge >= 65 && personalInfo.retirementAge < 75 && " (Primary + Secondary)"}
                     {personalInfo.retirementAge < 65 && " (Primary only)"}
                   </p>
                   <p className="text-muted-foreground">
-                    <strong>Tax-Free Threshold:</strong> {formatCurrency(calculations.taxThreshold)}
+                    <strong>Tax-Free Threshold:</strong> {fmt(calculations.taxThreshold)}
                   </p>
                 </div>
               </div>
@@ -751,13 +750,13 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                             <TableCell>{proj.year}</TableCell>
                             <TableCell>{proj.age}</TableCell>
                             <TableCell className="text-right font-mono text-sm">
-                              {formatCurrency(proj.withdrawals)}
+                              {fmt(proj.withdrawals, proj.age - personalInfo.currentAge)}
                             </TableCell>
                             <TableCell className="text-right font-mono text-sm text-red-600 dark:text-red-400">
-                              -{formatCurrency(proj.incomeTax)}
+                              -{fmt(proj.incomeTax, proj.age - personalInfo.currentAge)}
                             </TableCell>
                             <TableCell className="text-right font-mono text-sm text-green-600 dark:text-green-400">
-                              {formatCurrency(proj.netIncome)}
+                              {fmt(proj.netIncome, proj.age - personalInfo.currentAge)}
                             </TableCell>
                             <TableCell className="text-right font-mono text-sm">
                               {proj.withdrawals > 0
@@ -793,7 +792,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                   <div className="flex justify-between items-center pb-2 border-b">
                     <span className="font-medium">Gross Monthly Withdrawal:</span>
                     <span className="font-mono text-lg">
-                      {formatCurrency(projection.monthlyIncomeAtRetirement)}
+                      {fmt(projection.monthlyIncomeAtRetirement, yearsToRetirement)}
                     </span>
                   </div>
 
@@ -801,10 +800,11 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Less: Income Tax</span>
                       <span className="font-mono text-red-600 dark:text-red-400">
-                        -{formatCurrency(
+                        -{fmt(
                           calculations.firstRetirementYear
                             ? calculations.firstRetirementYear.incomeTax / 12
-                            : 0
+                            : 0,
+                          yearsToRetirement
                         )}
                       </span>
                     </div>
@@ -812,7 +812,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-muted-foreground">Less: Lump Sum Tax (One-time)</span>
                         <span className="font-mono text-red-600 dark:text-red-400">
-                          -{formatCurrency(calculations.firstRetirementYear.lumpSumTax / 12)}
+                          -{fmt(calculations.firstRetirementYear.lumpSumTax / 12, yearsToRetirement)}
                         </span>
                       </div>
                     )}
@@ -820,7 +820,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-muted-foreground">Less: Medical Aid</span>
                         <span className="font-mono text-red-600 dark:text-red-400">
-                          -{formatCurrency(calculations.firstRetirementYear.medicalAidContribution / 12)}
+                          -{fmt(calculations.firstRetirementYear.medicalAidContribution / 12, yearsToRetirement)}
                         </span>
                       </div>
                     )}
@@ -829,7 +829,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                   <div className="flex justify-between items-center pt-3 border-t-2 border-primary">
                     <span className="text-lg font-bold">Net Monthly Income:</span>
                     <span className="font-mono text-2xl font-bold text-green-600 dark:text-green-400">
-                      {formatCurrency(projection.monthlyNetIncomeAtRetirement)}
+                      {fmt(projection.monthlyNetIncomeAtRetirement, yearsToRetirement)}
                     </span>
                   </div>
 
@@ -837,13 +837,13 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Annual Gross Income:</span>
                       <span className="font-mono">
-                        {formatCurrency(projection.monthlyIncomeAtRetirement * 12)}
+                        {fmt(projection.monthlyIncomeAtRetirement * 12, yearsToRetirement)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Annual Net Income:</span>
                       <span className="font-mono text-green-600 dark:text-green-400">
-                        {formatCurrency(projection.monthlyNetIncomeAtRetirement * 12)}
+                        {fmt(projection.monthlyNetIncomeAtRetirement * 12, yearsToRetirement)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
