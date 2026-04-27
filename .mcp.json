@@ -36,9 +36,9 @@
         "/workspaces/retirement-calculator-claude"
       ]
     },
-    "sequential-thinking": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    "supabase-local": {
+      "type": "http",
+      "url": "http://127.0.0.1:54321/mcp"
     }
   }
 }

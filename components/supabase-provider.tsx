@@ -7,6 +7,7 @@ import { useCalculatorStore } from "@/lib/store/calculator-store"
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const setSessionId = useCalculatorStore((s) => s.setSessionId)
   const syncAccountsFromDb = useCalculatorStore((s) => s.syncAccountsFromDb)
+  const syncScenarioFromDb = useCalculatorStore((s) => s.syncScenarioFromDb)
   const sessionId = useCalculatorStore((s) => s.sessionId)
 
   useEffect(() => {
@@ -18,7 +19,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       if (session) {
         if (session.user.id !== sessionId) {
           setSessionId(session.user.id)
-          await syncAccountsFromDb()
+          await Promise.all([syncAccountsFromDb(), syncScenarioFromDb()])
         }
         return
       }
@@ -30,7 +31,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       }
       if (data.user) {
         setSessionId(data.user.id)
-        await syncAccountsFromDb()
+        await Promise.all([syncAccountsFromDb(), syncScenarioFromDb()])
       }
     }
 

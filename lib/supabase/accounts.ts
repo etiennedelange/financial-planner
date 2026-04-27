@@ -1,7 +1,20 @@
 import type { Account } from "@/types"
 import { createClient } from "./client"
 
-function toRow(account: Account, sessionId: string) {
+type AccountRow = {
+  id: string
+  session_id: string
+  name: string
+  provider: string
+  type: Account["type"]
+  current_balance: number
+  monthly_contribution: number
+  expected_return: number
+  annual_fees: number
+  contribution_escalation: number
+}
+
+function toRow(account: Account, sessionId: string): AccountRow {
   return {
     id: account.id,
     session_id: sessionId,
@@ -16,17 +29,17 @@ function toRow(account: Account, sessionId: string) {
   }
 }
 
-function fromRow(row: Record<string, unknown>): Account {
+function fromRow(row: AccountRow): Account {
   return {
-    id: row.id as string,
-    name: row.name as string,
-    provider: row.provider as string,
-    type: row.type as Account["type"],
-    currentBalance: Number(row.current_balance),
-    monthlyContribution: Number(row.monthly_contribution),
-    expectedReturn: Number(row.expected_return),
-    annualFees: Number(row.annual_fees),
-    contributionEscalation: Number(row.contribution_escalation),
+    id: row.id,
+    name: row.name,
+    provider: row.provider,
+    type: row.type,
+    currentBalance: row.current_balance,
+    monthlyContribution: row.monthly_contribution,
+    expectedReturn: row.expected_return,
+    annualFees: row.annual_fees,
+    contributionEscalation: row.contribution_escalation,
   }
 }
 
@@ -39,7 +52,7 @@ export async function fetchAccounts(sessionId: string): Promise<Account[]> {
     .order("created_at")
 
   if (error) throw error
-  return (data ?? []).map(fromRow)
+  return (data ?? []).map((row) => fromRow(row as AccountRow))
 }
 
 export async function upsertAccount(account: Account, sessionId: string): Promise<void> {

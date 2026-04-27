@@ -74,7 +74,8 @@
       "mcp__filesystem__create_directory",
       "Bash(npm list:*)",
       "Bash(npx supabase *)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(netstat -tlnp)"
     ]
   },
   "enableAllProjectMcpServers": true,

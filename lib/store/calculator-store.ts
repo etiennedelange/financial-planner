@@ -2,6 +2,7 @@
 
 import { SA_DEFAULTS, SA_DEFAULTS_DISPLAY } from "@/lib/constants/defaults"
 import { deleteAccount, fetchAccounts, upsertAccount } from "@/lib/supabase/accounts"
+import { fetchScenario, upsertScenario } from "@/lib/supabase/scenarios"
 import type {
   Account,
   DrawdownConfig,
@@ -11,6 +12,20 @@ import type {
 } from "@/types"
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
+
+let scenarioSyncTimer: ReturnType<typeof setTimeout> | null = null
+
+function scheduleScenarioSync() {
+  if (scenarioSyncTimer) clearTimeout(scenarioSyncTimer)
+  scenarioSyncTimer = setTimeout(() => {
+    const { sessionId, personalInfo, retirementGoals, assumptions, drawdownConfig, displayMode } =
+      useCalculatorStore.getState()
+    if (!sessionId) return
+    upsertScenario(sessionId, { personalInfo, retirementGoals, assumptions, drawdownConfig, displayMode }).catch(
+      console.error
+    )
+  }, 800)
+}
 
 interface CalculatorState {
   // Data
@@ -29,6 +44,7 @@ interface CalculatorState {
   // Actions
   setSessionId: (id: string) => void
   syncAccountsFromDb: () => Promise<void>
+  syncScenarioFromDb: () => Promise<void>
   addAccount: (account: Account) => void
   updateAccount: (id: string, account: Partial<Account>) => void
   removeAccount: (id: string) => void
@@ -86,6 +102,13 @@ export const useCalculatorStore = create<CalculatorState>()(
         set({ accounts })
       },
 
+      syncScenarioFromDb: async () => {
+        const { sessionId } = useCalculatorStore.getState()
+        if (!sessionId) return
+        const scenario = await fetchScenario(sessionId)
+        if (scenario) set(scenario)
+      },
+
       addAccount: (account) => {
         set((state) => ({ accounts: [...state.accounts, account] }))
         const { sessionId } = useCalculatorStore.getState()
@@ -112,27 +135,30 @@ export const useCalculatorStore = create<CalculatorState>()(
         deleteAccount(id).catch(console.error)
       },
 
-      setPersonalInfo: (info) =>
-        set((state) => ({
-          personalInfo: { ...state.personalInfo, ...info },
-        })),
+      setPersonalInfo: (info) => {
+        set((state) => ({ personalInfo: { ...state.personalInfo, ...info } }))
+        scheduleScenarioSync()
+      },
 
-      setRetirementGoals: (goals) =>
-        set((state) => ({
-          retirementGoals: { ...state.retirementGoals, ...goals },
-        })),
+      setRetirementGoals: (goals) => {
+        set((state) => ({ retirementGoals: { ...state.retirementGoals, ...goals } }))
+        scheduleScenarioSync()
+      },
 
-      setAssumptions: (assumptions) =>
-        set((state) => ({
-          assumptions: { ...state.assumptions, ...assumptions },
-        })),
+      setAssumptions: (assumptions) => {
+        set((state) => ({ assumptions: { ...state.assumptions, ...assumptions } }))
+        scheduleScenarioSync()
+      },
 
-      setDrawdownConfig: (config) =>
-        set((state) => ({
-          drawdownConfig: { ...state.drawdownConfig, ...config },
-        })),
+      setDrawdownConfig: (config) => {
+        set((state) => ({ drawdownConfig: { ...state.drawdownConfig, ...config } }))
+        scheduleScenarioSync()
+      },
 
-      setDisplayMode: (mode) => set({ displayMode: mode }),
+      setDisplayMode: (mode) => {
+        set({ displayMode: mode })
+        scheduleScenarioSync()
+      },
 
       resetToDefaults: () => set(initialState),
     }),
