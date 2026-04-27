@@ -21,7 +21,13 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-04-27) — Sticky results bar + collapsible spacing fix:**
+**Latest Update (2026-04-27) — Supabase / localStorage fallback:**
+- ✅ **Env-var gate** — `SUPABASE_ENABLED` flag in `lib/supabase/client.ts`; when `NEXT_PUBLIC_SUPABASE_URL` is absent all Supabase calls no-op and data lives entirely in `localStorage`
+- ✅ **Accounts persisted locally** — added `accounts` to Zustand `partialize` so they survive page refreshes without a DB
+- ✅ **SupabaseProvider** — skips anonymous auth and DB sync when Supabase is not configured
+- 🎯 **Effect:** local dev uses Supabase; Vercel without env vars works fully via localStorage
+
+**Previous Update (2026-04-27) — Sticky results bar + collapsible spacing fix:**
 - ✅ **StickyResultsBar** — new fixed-bottom bar showing Portfolio at Retirement, Monthly Income, Success Rate; appears via IntersectionObserver once the metrics grid scrolls out of view; pulses a spinner when recalculating
 - ✅ **Collapsible section spacing** — removed `dashboard-section` class (mb-12/mb-16) from `CollapsibleSection` accordion; sections now use border dividers only with no excessive gap
 - 🔄 **Phase 6 (Tax):** ~93% complete; pending — account-specific depletion timeline, medical aid credits, TFSA lifetime limit tracking

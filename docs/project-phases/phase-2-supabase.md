@@ -47,6 +47,14 @@
 ### TypeScript types
 - `types/supabase.ts` — generated via `npx supabase gen types typescript --local`
 
+## Completed (2026-04-27) — localStorage fallback
+
+- `SUPABASE_ENABLED` flag exported from `lib/supabase/client.ts` — true only when `NEXT_PUBLIC_SUPABASE_URL` is set
+- `createClient()` returns `null` when Supabase is not configured; all functions in `accounts.ts` and `scenarios.ts` early-return on null client
+- `SupabaseProvider` skips auth/sync entirely when `SUPABASE_ENABLED` is false
+- `accounts` added to Zustand `partialize` so they survive in `localStorage` when Supabase is off
+- Effect: local dev uses Supabase; Vercel deployments without the env var fall back to localStorage automatically — no toggle needed
+
 ## Pending
 
 - **Phase 3 upgrade path** — when a user signs up, link their anonymous session to a real account so data is not lost
