@@ -33,6 +33,7 @@ describe('calculateOptimalContribution', () => {
     initialWithdrawalRate: 4,
     minimumWithdrawal: 15000,
     maximumWithdrawal: 60000,
+    lumpSumPercentage: 0,
   }
 
   describe('Basic functionality', () => {

@@ -22,6 +22,14 @@ export interface YearlyProjection {
   accountSources?: AccountSourceBreakdown[] // Optional: which accounts contributed to withdrawal
 }
 
+export interface LumpSumCommutationResult {
+  lumpSumPercentage: number
+  lumpSumAmount: number // Gross amount taken as lump sum
+  lumpSumTax: number // Tax payable on lump sum
+  netLumpSum: number // Net amount received after tax
+  remainingPortfolio: number // Portfolio available for ongoing drawdown
+}
+
 export interface ProjectionResult {
   yearlyProjections: YearlyProjection[]
   portfolioAtRetirement: number
@@ -34,5 +42,6 @@ export interface ProjectionResult {
   totalLumpSumTax: number // One-time lump sum tax at retirement
   totalMedicalAidContributions: number // Total medical aid over retirement
   averageEffectiveTaxRate: number // Average tax rate on withdrawals
+  lumpSumCommutation: LumpSumCommutationResult // Lump sum details at retirement
   replacementRatio?: number // Optional: retirement income vs pre-retirement income
 }

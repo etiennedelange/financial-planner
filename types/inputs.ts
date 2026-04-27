@@ -51,6 +51,7 @@ export interface DrawdownConfig {
   initialWithdrawalRate: number // % of portfolio
   minimumWithdrawal: number // monthly floor
   maximumWithdrawal: number // monthly ceiling
+  lumpSumPercentage: number // % of portfolio taken as lump sum at retirement (0-100)
   // Guardrails specific
   upperGuardrail?: number // % above which to increase withdrawal
   lowerGuardrail?: number // % below which to decrease withdrawal

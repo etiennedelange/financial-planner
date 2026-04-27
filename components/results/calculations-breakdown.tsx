@@ -609,6 +609,58 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
           </AccordionTrigger>
           <AccordionContent>
             <div className="space-y-4">
+              {/* Lump Sum Commutation */}
+              {projection.lumpSumCommutation.lumpSumPercentage > 0 ? (
+                <div className="rounded-lg bg-amber-50 dark:bg-amber-950 p-4">
+                  <h4 className="font-medium text-amber-700 dark:text-amber-300 mb-3">
+                    Lump Sum Commutation at Retirement ({projection.lumpSumCommutation.lumpSumPercentage}%)
+                  </h4>
+                  <Table>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>Gross Lump Sum</TableCell>
+                        <TableCell className="text-right font-mono">
+                          {formatCurrency(projection.lumpSumCommutation.lumpSumAmount)}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Lump Sum Tax</TableCell>
+                        <TableCell className="text-right font-mono text-red-600 dark:text-red-400">
+                          -{formatCurrency(projection.lumpSumCommutation.lumpSumTax)}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">Net Lump Sum Received</TableCell>
+                        <TableCell className="text-right font-mono font-medium text-green-600 dark:text-green-400">
+                          {formatCurrency(projection.lumpSumCommutation.netLumpSum)}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Remaining Portfolio (for annuity)</TableCell>
+                        <TableCell className="text-right font-mono">
+                          {formatCurrency(projection.lumpSumCommutation.remainingPortfolio)}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="text-sm text-muted-foreground">Effective Lump Sum Tax Rate</TableCell>
+                        <TableCell className="text-right font-mono text-sm text-muted-foreground">
+                          {projection.lumpSumCommutation.lumpSumAmount > 0
+                            ? formatPercent((projection.lumpSumCommutation.lumpSumTax / projection.lumpSumCommutation.lumpSumAmount) * 100)
+                            : "0.00%"}
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    First R550,000 is tax-free; R550k–R770k @ 18%; R770k–R1.155M @ 27%; above R1.155M @ 36%
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
+                  No lump sum configured. Adjust &quot;Lump Sum at Retirement&quot; in Market Assumptions to model a cash payment at retirement.
+                </div>
+              )}
+
               <div className="rounded-lg bg-blue-50 dark:bg-blue-950 p-4">
                 <h4 className="font-medium text-blue-700 dark:text-blue-300 mb-3">
                   Lifetime Tax Summary
@@ -644,7 +696,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
               </div>
 
               <div className="rounded-lg border p-4 space-y-3">
-                <h4 className="font-medium">SA Tax Structure (2024/2025)</h4>
+                <h4 className="font-medium">SA Tax Structure (2026/2027)</h4>
                 <div className="space-y-2 text-sm">
                   <p className="text-muted-foreground">
                     <strong>Your Age at Retirement:</strong> {personalInfo.retirementAge} years

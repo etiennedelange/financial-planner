@@ -1,5 +1,5 @@
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
-import { calculateIncomeTaxWithRebates } from "./retirement-tax"
+import { calculateIncomeTaxWithRebates, calculateLumpSumCommutation } from "./retirement-tax"
 import { getSpendingPhaseMultiplier } from "./utils/spending-phase"
 import type {
   Account,
@@ -165,6 +165,13 @@ export function calculateProjection(
       totalLumpSumTax: 0,
       totalMedicalAidContributions: 0,
       averageEffectiveTaxRate: 0,
+      lumpSumCommutation: {
+        lumpSumPercentage: 0,
+        lumpSumAmount: 0,
+        lumpSumTax: 0,
+        netLumpSum: 0,
+        remainingPortfolio: 0,
+      },
     }
   }
 
@@ -231,9 +238,16 @@ export function calculateProjection(
 
   const portfolioAtRetirement = totalBalance
 
-  // Calculate initial withdrawal based on strategy
-  let annualWithdrawal = calculateInitialWithdrawal(
+  // Apply lump sum commutation at retirement
+  const lumpSumCommutation = calculateLumpSumCommutation(
     portfolioAtRetirement,
+    drawdownConfig.lumpSumPercentage ?? 0
+  )
+  totalBalance = lumpSumCommutation.remainingPortfolio
+
+  // Calculate initial withdrawal based on remaining portfolio after lump sum
+  let annualWithdrawal = calculateInitialWithdrawal(
+    lumpSumCommutation.remainingPortfolio,
     retirementGoals.desiredMonthlyIncome,
     drawdownConfig,
     yearsToRetirement,
@@ -243,7 +257,7 @@ export function calculateProjection(
   // Drawdown phase
   let portfolioDepletionAge: number | null = null
   let totalLifetimeIncomeTax = 0
-  let totalLumpSumTax = 0
+  let totalLumpSumTax = lumpSumCommutation.lumpSumTax
   let totalMedicalAidContributions = 0
   let totalGrossWithdrawals = 0
 
@@ -289,7 +303,7 @@ export function calculateProjection(
 
     // Calculate taxes on withdrawal
     const incomeTax = calculateIncomeTaxWithRebates(withdrawal, age)
-    const lumpSumTax = 0 // TODO: Add lump sum modeling at retirement
+    const lumpSumTax = 0 // Lump sum tax is a one-time event applied before this loop
     const medicalAidContribution = 0 // TODO: Integrate medical costs
     const netIncome = withdrawal - incomeTax - lumpSumTax - medicalAidContribution
 
@@ -363,5 +377,12 @@ export function calculateProjection(
     totalLumpSumTax,
     totalMedicalAidContributions,
     averageEffectiveTaxRate,
+    lumpSumCommutation: {
+      lumpSumPercentage: drawdownConfig.lumpSumPercentage ?? 0,
+      lumpSumAmount: lumpSumCommutation.lumpSumAmount,
+      lumpSumTax: lumpSumCommutation.lumpSumTax,
+      netLumpSum: lumpSumCommutation.netLumpSum,
+      remainingPortfolio: lumpSumCommutation.remainingPortfolio,
+    },
   }
 }

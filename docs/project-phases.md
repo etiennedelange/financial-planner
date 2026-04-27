@@ -21,11 +21,12 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-04-27) — Tax config updated to 2026/2027:**
-- ✅ **2026/2027 tax limits** — RA deduction (27.5% / R430k), TFSA (R36k annual / R500k lifetime) applied across all calculation configs
-- 🔄 **Phase 2 (Supabase):** accounts persisted; pending — scenarios table, TypeScript type generation
-- 🔄 **Phase 6 (Tax):** core calculations done; pending — lump sum commutation UI, withdrawal sequencing, tax bracket modeling
-- 🎯 **Next:** scenarios table (Phase 2) or lump sum tax tables (Phase 6)
+**Latest Update (2026-04-27) — Lump sum commutation UI + slider performance fix:**
+- ✅ **Lump sum commutation UI** — 0–33% slider (SA one-third cap) in Drawdown Strategy; projection engine deducts lump sum at retirement, records tax, exposes `LumpSumCommutationResult` on `ProjectionResult`
+- ✅ **Tax analysis panel** — amber breakdown showing gross lump sum, tax, net received, remaining portfolio, effective rate, tier thresholds
+- ✅ **Slider performance** — local state + `onValueCommit` eliminates CPU spikes during drag; `calculateProjection` moved to `useMemo` with deferred inputs
+- 🔄 **Phase 6 (Tax):** 75% complete; pending — withdrawal sequencing, account-specific tracking, medical aid credits, TFSA lifetime tracking
+- 🎯 **Next:** tax-optimized withdrawal sequencing (TFSA-first)
 
 **Previous Update (2026-04-19) — Phase 2 started:**
 - ✅ **Accounts persist to Supabase** — anonymous auth, RLS, fire-and-forget store sync all working

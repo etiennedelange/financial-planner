@@ -84,6 +84,7 @@ const initialState = {
     initialWithdrawalRate: SA_DEFAULTS_DISPLAY.safeWithdrawalRate,
     minimumWithdrawal: 15000,
     maximumWithdrawal: 60000,
+    lumpSumPercentage: 0,
   },
   displayMode: 'nominal' as const, // Default to showing nominal (future) values
 }

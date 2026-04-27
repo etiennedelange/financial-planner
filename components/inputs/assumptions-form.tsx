@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -59,6 +59,14 @@ export function AssumptionsForm() {
     })
     return () => subscription.unsubscribe()
   }, [watch, setAssumptions])
+
+  // Local slider state — updates instantly during drag, commits to store on release
+  const [localWithdrawalRate, setLocalWithdrawalRate] = useState(drawdownConfig.initialWithdrawalRate)
+  const [localLumpSum, setLocalLumpSum] = useState(drawdownConfig.lumpSumPercentage ?? 0)
+
+  // Sync from store when changed externally (e.g. reset to defaults)
+  useEffect(() => { setLocalWithdrawalRate(drawdownConfig.initialWithdrawalRate) }, [drawdownConfig.initialWithdrawalRate])
+  useEffect(() => { setLocalLumpSum(drawdownConfig.lumpSumPercentage ?? 0) }, [drawdownConfig.lumpSumPercentage])
 
   return (
     <Card>
@@ -194,14 +202,13 @@ export function AssumptionsForm() {
                 />
               </div>
               <span className="text-sm font-medium">
-                {drawdownConfig.initialWithdrawalRate.toFixed(1)}%
+                {localWithdrawalRate.toFixed(1)}%
               </span>
             </div>
             <Slider
-              value={[drawdownConfig.initialWithdrawalRate]}
-              onValueChange={([value]) =>
-                setDrawdownConfig({ initialWithdrawalRate: value })
-              }
+              value={[localWithdrawalRate]}
+              onValueChange={([value]) => setLocalWithdrawalRate(value)}
+              onValueCommit={([value]) => setDrawdownConfig({ initialWithdrawalRate: value })}
               min={2}
               max={8}
               step={0.5}
@@ -209,6 +216,32 @@ export function AssumptionsForm() {
             <p className="text-xs text-muted-foreground">
               Traditional &quot;safe&quot; rate is 4%. SA research suggests 3-5%
               may be appropriate.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Label>Lump Sum at Retirement</Label>
+                <InfoTooltip
+                  content="SA pension/RA rules allow you to take up to one-third of your fund as a lump sum at retirement. The first R550,000 is tax-free (lifetime); amounts above are taxed at 18–36%. The remaining two-thirds must be used to purchase an annuity."
+                  side="left"
+                />
+              </div>
+              <span className="text-sm font-medium">
+                {localLumpSum.toFixed(0)}%
+              </span>
+            </div>
+            <Slider
+              value={[localLumpSum]}
+              onValueChange={([value]) => setLocalLumpSum(value)}
+              onValueCommit={([value]) => setDrawdownConfig({ lumpSumPercentage: value })}
+              min={0}
+              max={33}
+              step={1}
+            />
+            <p className="text-xs text-muted-foreground">
+              SA regulations cap the lump sum at one-third (33%) of pension/RA funds. TFSA and discretionary funds have no restriction.
             </p>
           </div>
         </div>
