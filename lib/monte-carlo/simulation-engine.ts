@@ -70,7 +70,8 @@ function simulateSingleRun(
   strategy: string,
   withdrawalRate: number,
   currentAge: number,
-  compoundingMethod: 'nominal' | 'compound'
+  compoundingMethod: 'nominal' | 'compound',
+  lumpSumPercentage: number = 0
 ): SimulationRun {
   const totalYears = yearsToRetirement + yearsInRetirement
 
@@ -120,15 +121,15 @@ function simulateSingleRun(
     yearlyBalances.push(totalBalance)
   }
 
-  // Combined balance at retirement for drawdown phase
-  let balance = accountBalances.reduce((sum, bal) => sum + bal, 0)
+  // Combined balance at retirement; deduct lump sum before drawdown
+  const portfolioAtRetirement = accountBalances.reduce((sum, bal) => sum + bal, 0)
+  let balance = portfolioAtRetirement * (1 - Math.max(0, Math.min(100, lumpSumPercentage)) / 100)
 
-  // Calculate weighted return for drawdown phase based on account balances at retirement
-  const totalRetirementBalance = balance
-  const weightedReturnForDrawdown = totalRetirementBalance > 0
+  // Calculate weighted return for drawdown phase based on pre-lump-sum account proportions
+  const weightedReturnForDrawdown = portfolioAtRetirement > 0
     ? accounts.reduce((sum, acc, idx) => {
         const accNetReturn = (acc.expectedReturn - acc.annualFees) / 100
-        return sum + accNetReturn * (accountBalances[idx] / totalRetirementBalance)
+        return sum + accNetReturn * (accountBalances[idx] / portfolioAtRetirement)
       }, 0)
     : SA_DEFAULTS.equityReturn - 0.01 // Default if somehow balance is 0
 
@@ -274,7 +275,8 @@ export function runMonteCarloSimulation(
       drawdownConfig.strategy,
       drawdownConfig.initialWithdrawalRate / 100,
       personalInfo.currentAge,
-      compoundingMethod
+      compoundingMethod,
+      drawdownConfig.lumpSumPercentage ?? 0
     )
     runs.push(run)
   }

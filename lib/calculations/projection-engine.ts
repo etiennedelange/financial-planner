@@ -415,7 +415,7 @@ export function calculateProjection(
 
   const monthlyIncomeAtRetirement =
     calculateInitialWithdrawal(
-      portfolioAtRetirement,
+      remainingPortfolio,
       retirementGoals.desiredMonthlyIncome,
       drawdownConfig,
       yearsToRetirement,
