@@ -2,7 +2,7 @@
 
 **Goal:** Complete SA tax treatment implementation.
 
-**Completed (75%):**
+**Completed (90%):**
 - ✅ Comprehensive SA retirement tax calculations implemented
 - ✅ Age-based rebates (Primary, Secondary, Tertiary)
 - ✅ Income tax and lump sum tax modeling
@@ -20,11 +20,7 @@
 - [x] `calculateProjection` moved into `useMemo` with deferred inputs in `calculator-client.tsx`
 
 **Pending Tasks:**
-- [ ] Tax-optimized withdrawal sequencing (High Priority)
-  - Withdraw from TFSA first (tax-free)
-  - Then from discretionary accounts (capital gains tax more favorable)
-  - Preserve tax-deferred accounts (pension, RA) as long as possible
-  - Account for required minimum distributions and annuitization requirements
+- [x] Tax-optimized withdrawal sequencing — TFSA → Discretionary (CGT 40% inclusion) → Pension/RA/Preservation (full income tax); per-account balances tracked through drawdown; cost basis tracked for CGT on discretionary gains; drawdown table shows per-source breakdown
 - [ ] Account-specific withdrawal tracking (Medium Priority)
   - Track which accounts are drawn from each year
   - Display projected depletion timeline per account

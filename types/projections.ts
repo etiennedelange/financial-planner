@@ -19,6 +19,12 @@ export interface YearlyProjection {
   netIncome: number // After-tax income (withdrawals - incomeTax - lumpSumTax - medicalAid)
   endingBalance: number
   inflationAdjustedWithdrawal: number
+  // Tax-optimized withdrawal sequencing breakdown (drawdown years only)
+  tfsaWithdrawal?: number // Portion drawn from TFSA (tax-free)
+  discretionaryWithdrawal?: number // Portion drawn from discretionary (CGT only)
+  pensionWithdrawal?: number // Portion drawn from pension/RA/preservation (full income tax)
+  cgtTaxableAmount?: number // CGT inclusion amount (discretionary gains × 40%)
+  taxableIncome?: number // Total taxable income (pensionWithdrawal + cgtTaxableAmount)
   accountSources?: AccountSourceBreakdown[] // Optional: which accounts contributed to withdrawal
 }
 

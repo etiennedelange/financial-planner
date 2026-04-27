@@ -75,7 +75,8 @@
       "Bash(npm list:*)",
       "Bash(npx supabase *)",
       "WebSearch",
-      "Bash(netstat -tlnp)"
+      "Bash(netstat -tlnp)",
+      "Bash(git -C /workspaces/retirement-calculator-claude log --oneline --all -- \"*tax*\")"
     ]
   },
   "enableAllProjectMcpServers": true,

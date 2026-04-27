@@ -496,12 +496,15 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Year</TableHead>
+                      <TableHead>Yr</TableHead>
                       <TableHead>Age</TableHead>
                       <TableHead className="text-right">Start</TableHead>
                       <TableHead className="text-right">Growth</TableHead>
                       <TableHead>Phase</TableHead>
-                      <TableHead className="text-right">Withdrawal</TableHead>
+                      <TableHead className="text-right text-green-700 dark:text-green-400">TFSA</TableHead>
+                      <TableHead className="text-right text-blue-700 dark:text-blue-400">Discret.</TableHead>
+                      <TableHead className="text-right text-orange-700 dark:text-orange-400">Pension</TableHead>
+                      <TableHead className="text-right">Tax</TableHead>
                       <TableHead className="text-right">End</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -530,8 +533,17 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                                 {phaseName} ({formatPercent(phaseMultiplier * 100, 0)})
                               </span>
                             </TableCell>
+                            <TableCell className="text-right font-mono text-sm text-green-700 dark:text-green-400">
+                              {proj.tfsaWithdrawal ? formatCurrency(proj.tfsaWithdrawal) : "—"}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-sm text-blue-700 dark:text-blue-400">
+                              {proj.discretionaryWithdrawal ? formatCurrency(proj.discretionaryWithdrawal) : "—"}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-sm text-orange-700 dark:text-orange-400">
+                              {proj.pensionWithdrawal ? formatCurrency(proj.pensionWithdrawal) : "—"}
+                            </TableCell>
                             <TableCell className="text-right font-mono text-sm text-red-600 dark:text-red-400">
-                              -{formatCurrency(proj.withdrawals)}
+                              {proj.incomeTax > 0 ? `-${formatCurrency(proj.incomeTax)}` : "—"}
                             </TableCell>
                             <TableCell className="text-right font-mono text-sm font-medium">
                               {formatCurrency(proj.endingBalance)}
@@ -542,6 +554,9 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                   </TableBody>
                 </Table>
               </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                TFSA (tax-free) → Discretionary (CGT only) → Pension/RA (full income tax)
+              </p>
             </div>
           </AccordionContent>
         </AccordionItem>

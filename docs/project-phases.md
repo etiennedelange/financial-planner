@@ -21,12 +21,12 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-04-27) — Lump sum commutation UI + slider performance fix:**
-- ✅ **Lump sum commutation UI** — 0–33% slider (SA one-third cap) in Drawdown Strategy; projection engine deducts lump sum at retirement, records tax, exposes `LumpSumCommutationResult` on `ProjectionResult`
-- ✅ **Tax analysis panel** — amber breakdown showing gross lump sum, tax, net received, remaining portfolio, effective rate, tier thresholds
-- ✅ **Slider performance** — local state + `onValueCommit` eliminates CPU spikes during drag; `calculateProjection` moved to `useMemo` with deferred inputs
-- 🔄 **Phase 6 (Tax):** 75% complete; pending — withdrawal sequencing, account-specific tracking, medical aid credits, TFSA lifetime tracking
-- 🎯 **Next:** tax-optimized withdrawal sequencing (TFSA-first)
+**Latest Update (2026-04-27) — Tax-optimized withdrawal sequencing:**
+- ✅ **Withdrawal sequencing** — TFSA → Discretionary (40% CGT inclusion on gains) → Pension/RA/Preservation (full income tax); per-account balances and discretionary cost basis tracked through entire drawdown phase
+- ✅ **Drawdown table** — now shows TFSA / Discretionary / Pension columns per year so the sequencing is visible
+- ✅ **5 new tests** covering TFSA zero-tax, pension full-tax, sequencing tax savings, TFSA exhaustion, discretionary CGT; fixed pre-existing flaky Monte Carlo test threshold
+- 🔄 **Phase 6 (Tax):** 90% complete; pending — account-specific depletion timeline, medical aid credits, TFSA lifetime limit tracking
+- 🎯 **Next:** account-specific depletion tracking or medical aid credits
 
 **Previous Update (2026-04-19) — Phase 2 started:**
 - ✅ **Accounts persist to Supabase** — anonymous auth, RLS, fire-and-forget store sync all working

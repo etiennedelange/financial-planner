@@ -33,6 +33,7 @@ describe('calculateProjection', () => {
     initialWithdrawalRate: 4,
     minimumWithdrawal: 15000,
     maximumWithdrawal: 60000,
+    lumpSumPercentage: 0,
   }
 
   describe('Basic accumulation phase', () => {
@@ -289,7 +290,7 @@ describe('calculateProjection', () => {
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        { strategy: 'fixed_percentage', initialWithdrawalRate: 4, minimumWithdrawal: 10000, maximumWithdrawal: 50000 }
+        { strategy: 'fixed_percentage', initialWithdrawalRate: 4, minimumWithdrawal: 10000, maximumWithdrawal: 50000, lumpSumPercentage: 0 }
       )
 
       expect(result.monthlyIncomeAtRetirement).toBeGreaterThan(0)
@@ -300,7 +301,7 @@ describe('calculateProjection', () => {
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        { strategy: 'fixed_amount_inflation_adjusted', initialWithdrawalRate: 4, minimumWithdrawal: 10000, maximumWithdrawal: 50000 }
+        { strategy: 'fixed_amount_inflation_adjusted', initialWithdrawalRate: 4, minimumWithdrawal: 10000, maximumWithdrawal: 50000, lumpSumPercentage: 0 }
       )
 
       // Should try to maintain desired monthly income inflated to retirement
@@ -486,6 +487,145 @@ describe('calculateProjection', () => {
 
       expect(result.surplusAmount).toBeGreaterThan(0)
       expect(result.shortfallAmount).toBe(0)
+    })
+  })
+
+  describe('Tax-optimized withdrawal sequencing', () => {
+    const shortHorizonInfo: PersonalInfo = {
+      currentAge: 63,
+      retirementAge: 65,
+      lifeExpectancy: 75,
+      annualIncome: 600000,
+    }
+
+    it('TFSA withdrawal should produce zero taxable income', () => {
+      const tfsaAccount: Account = {
+        id: '1',
+        name: 'TFSA',
+        type: 'tfsa',
+        provider: 'Test',
+        currentBalance: 1000000,
+        monthlyContribution: 0,
+        expectedReturn: 8,
+        annualFees: 0.5,
+        contributionEscalation: 0,
+      }
+      const result = calculateProjection([tfsaAccount], shortHorizonInfo, baseRetirementGoals, baseDrawdownConfig)
+      const firstRetirementYear = result.yearlyProjections.find(p => p.age === 65)!
+      expect(firstRetirementYear.tfsaWithdrawal).toBeGreaterThan(0)
+      expect(firstRetirementYear.pensionWithdrawal).toBe(0)
+      expect(firstRetirementYear.taxableIncome).toBe(0)
+      expect(firstRetirementYear.incomeTax).toBe(0)
+    })
+
+    it('pension-only withdrawal should be fully taxable', () => {
+      const raAccount: Account = {
+        id: '1',
+        name: 'RA',
+        type: 'retirement_annuity',
+        provider: 'Test',
+        currentBalance: 1000000,
+        monthlyContribution: 0,
+        expectedReturn: 8,
+        annualFees: 0.5,
+        contributionEscalation: 0,
+      }
+      const result = calculateProjection([raAccount], shortHorizonInfo, baseRetirementGoals, baseDrawdownConfig)
+      const firstRetirementYear = result.yearlyProjections.find(p => p.age === 65)!
+      expect(firstRetirementYear.pensionWithdrawal).toBeGreaterThan(0)
+      expect(firstRetirementYear.tfsaWithdrawal).toBe(0)
+      expect(firstRetirementYear.taxableIncome).toBeCloseTo(firstRetirementYear.pensionWithdrawal!, 0)
+    })
+
+    it('TFSA-first sequencing reduces lifetime income tax vs pension-only portfolio of same size', () => {
+      // Use a large portfolio so pension withdrawals clearly exceed the R153k age-65 tax threshold
+      const tfsaAccount: Account = {
+        id: '1',
+        name: 'TFSA',
+        type: 'tfsa',
+        provider: 'Test',
+        currentBalance: 3000000,
+        monthlyContribution: 0,
+        expectedReturn: 8,
+        annualFees: 0.5,
+        contributionEscalation: 0,
+      }
+      const raAccount: Account = {
+        id: '2',
+        name: 'RA',
+        type: 'retirement_annuity',
+        provider: 'Test',
+        currentBalance: 3000000,
+        monthlyContribution: 0,
+        expectedReturn: 8,
+        annualFees: 0.5,
+        contributionEscalation: 0,
+      }
+      const raOnlyAccount: Account = {
+        ...raAccount,
+        id: '1',
+        currentBalance: 6000000,
+      }
+
+      const mixedResult = calculateProjection([tfsaAccount, raAccount], shortHorizonInfo, baseRetirementGoals, baseDrawdownConfig)
+      const raOnlyResult = calculateProjection([raOnlyAccount], shortHorizonInfo, baseRetirementGoals, baseDrawdownConfig)
+
+      // Mixed portfolio draws from TFSA first (tax-free), so total income tax must be lower
+      expect(mixedResult.totalLifetimeIncomeTax).toBeLessThan(raOnlyResult.totalLifetimeIncomeTax)
+    })
+
+    it('TFSA exhausted before switching to pension', () => {
+      const smallTfsa: Account = {
+        id: '1',
+        name: 'Small TFSA',
+        type: 'tfsa',
+        provider: 'Test',
+        currentBalance: 50000, // Will be exhausted quickly
+        monthlyContribution: 0,
+        expectedReturn: 8,
+        annualFees: 0.5,
+        contributionEscalation: 0,
+      }
+      const raAccount: Account = {
+        id: '2',
+        name: 'RA',
+        type: 'retirement_annuity',
+        provider: 'Test',
+        currentBalance: 2000000,
+        monthlyContribution: 0,
+        expectedReturn: 8,
+        annualFees: 0.5,
+        contributionEscalation: 0,
+      }
+      const result = calculateProjection([smallTfsa, raAccount], shortHorizonInfo, baseRetirementGoals, baseDrawdownConfig)
+      const retirementYears = result.yearlyProjections.filter(p => p.age >= 65)
+
+      // First year should have some TFSA withdrawal
+      expect(retirementYears[0].tfsaWithdrawal).toBeGreaterThan(0)
+      // Later years should be pension-only once TFSA is gone
+      const laterYear = retirementYears[retirementYears.length - 1]
+      expect(laterYear.tfsaWithdrawal).toBe(0)
+      expect(laterYear.pensionWithdrawal).toBeGreaterThan(0)
+    })
+
+    it('discretionary withdrawal applies CGT inclusion but not full income tax', () => {
+      const discretionaryAccount: Account = {
+        id: '1',
+        name: 'Discretionary',
+        type: 'discretionary',
+        provider: 'Test',
+        currentBalance: 1000000,
+        monthlyContribution: 0,
+        expectedReturn: 8,
+        annualFees: 0.5,
+        contributionEscalation: 0,
+      }
+      const result = calculateProjection([discretionaryAccount], shortHorizonInfo, baseRetirementGoals, baseDrawdownConfig)
+      const firstYear = result.yearlyProjections.find(p => p.age === 65)!
+
+      expect(firstYear.discretionaryWithdrawal).toBeGreaterThan(0)
+      // Taxable income should be less than gross withdrawal (only gain × 40% is included)
+      expect(firstYear.taxableIncome!).toBeLessThan(firstYear.withdrawals)
     })
   })
 

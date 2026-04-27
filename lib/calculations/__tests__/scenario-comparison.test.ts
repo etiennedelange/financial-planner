@@ -79,6 +79,7 @@ describe("compareScenarios", () => {
     initialWithdrawalRate: 4,
     minimumWithdrawal: 30000,
     maximumWithdrawal: 60000,
+    lumpSumPercentage: 0,
     flexibilityPercentage: 10,
   }
 
