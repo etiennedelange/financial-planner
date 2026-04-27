@@ -76,7 +76,21 @@
       "Bash(npx supabase *)",
       "WebSearch",
       "Bash(netstat -tlnp)",
-      "Bash(git -C /workspaces/retirement-calculator-claude log --oneline --all -- \"*tax*\")"
+      "Bash(git -C /workspaces/retirement-calculator-claude log --oneline --all -- \"*tax*\")",
+      "Bash(npx playwright *)",
+      "Read(//home/node/.cache/ms-playwright/**)",
+      "Bash(/home/node/.cache/ms-playwright/mcp-chrome-c9ba8fc/chrome-linux/chrome --version)",
+      "Bash(/home/node/.cache/ms-playwright/mcp-chrome-c9ba8fc/chrome-linux/chrome --no-sandbox --headless --dump-dom about:blank)",
+      "Bash(npx @playwright/mcp@latest --help)",
+      "Read(//proc/sys/kernel/yama/**)",
+      "Read(//sys/devices/system/cpu/cpu0/**)",
+      "Read(//run/**)",
+      "Bash(/opt/google/chrome/chrome --version)",
+      "Bash(/opt/google/chrome/chrome --headless --no-sandbox --dump-dom about:blank)",
+      "Bash(/home/node/.cache/ms-playwright/chromium-1217/chrome-linux/chrome --version)",
+      "Bash(/home/node/.cache/ms-playwright/chromium-1217/chrome-linux/chrome --headless --no-sandbox --dump-dom about:blank)",
+      "Bash(xargs ls *)",
+      "WebFetch(domain:playwright.dev)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -60,7 +60,9 @@
     }
   },
 
-  "postCreateCommand": "sudo bash .devcontainer/install-chrome.sh && curl -fsSL https://claude.ai/install.sh | bash && echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> ~/.bashrc",
+  "runArgs": ["--ipc=host"],
+
+  "postCreateCommand": "sudo bash .devcontainer/install-chrome.sh && npx playwright install --with-deps chromium && curl -fsSL https://claude.ai/install.sh | bash && echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> ~/.bashrc",
 
   "remoteUser": "node",
 

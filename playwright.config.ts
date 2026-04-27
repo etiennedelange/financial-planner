@@ -27,17 +27,13 @@ export default defineConfig({
   outputDir: './e2e/output/test-results',
 
   use: {
-    // Base URL for navigation
     baseURL: 'http://localhost:3000',
-
-    // Screenshot on every action for comprehensive documentation
     screenshot: 'on',
-
-    // Trace for debugging
     trace: 'on',
-
-    // Video for complex interactions
     video: 'on',
+    launchOptions: {
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    },
   },
 
   // Multiple viewport configurations for responsive documentation
