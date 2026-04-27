@@ -41,8 +41,8 @@ These are critical domain values for calculations:
 - Safe withdrawal rate: 3-5%
 - Life expectancy: 90 years
 
-### Tax Limits (2024/2025)
-- Pension/RA deduction: 27.5% of income, max R350,000 p.a.
+### Tax Limits (2026/2027)
+- Pension/RA deduction: 27.5% of income, max R430,000 p.a.
 - TFSA: R36,000 annual, R500,000 lifetime
 
 ## Account Types
@@ -200,3 +200,13 @@ See **[docs/THEMING.md](docs/THEMING.md)** for complete architecture details.
 - **Phase Planning:** `docs/project-phases.md`
 - **Testing Plan:** `history/testing-and-validation-plan.md`
 - **Calculation Changes:** Document in `history/` with date-prefixed markdown files
+
+## ⚠️ Critical Rule: Keep Phase Docs Current
+
+**After every meaningful change, update phase documentation without being asked.**
+
+1. **Update the relevant phase file** in `docs/project-phases/` — mark tasks complete, add completed items, update pending list
+2. **Update `docs/project-phases.md`** — add a dated entry to "Current Status Summary" and update the status emoji in the phase table
+3. **Update `history/`** — for significant calculation or architecture changes, add a date-prefixed markdown file
+
+This applies after: feature implementation, bug fixes, refactors, config updates, or any commit that advances a phase.

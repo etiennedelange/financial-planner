@@ -21,7 +21,13 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-04-19) — Phase 2 started:**
+**Latest Update (2026-04-27) — Tax config updated to 2026/2027:**
+- ✅ **2026/2027 tax limits** — RA deduction (27.5% / R430k), TFSA (R36k annual / R500k lifetime) applied across all calculation configs
+- 🔄 **Phase 2 (Supabase):** accounts persisted; pending — scenarios table, TypeScript type generation
+- 🔄 **Phase 6 (Tax):** core calculations done; pending — lump sum commutation UI, withdrawal sequencing, tax bracket modeling
+- 🎯 **Next:** scenarios table (Phase 2) or lump sum tax tables (Phase 6)
+
+**Previous Update (2026-04-19) — Phase 2 started:**
 - ✅ **Accounts persist to Supabase** — anonymous auth, RLS, fire-and-forget store sync all working
 - ✅ **Local Supabase stack** — docker-in-docker added to devcontainer; `npx supabase start` to run
 - 🎯 **Next:** scenarios table, TypeScript type generation, then Phase 3 (real auth)

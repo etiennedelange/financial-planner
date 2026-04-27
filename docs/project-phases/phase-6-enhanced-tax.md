@@ -25,7 +25,8 @@
   - Display projected depletion timeline per account
 - [ ] Medical aid tax credits (Medium Priority)
   - Model medical aid contributions that qualify for tax credits
-- [ ] Retirement lump sum tax tables (2024/2025) (High Priority)
+- [x] Tax configurations updated to 2026/2027 (RA deduction 27.5%/R430k, TFSA R36k/R500k)
+- [ ] Retirement lump sum tax tables (2026/2027) (High Priority)
 - [ ] Monthly annuity income tax calculations (High Priority)
 - [ ] Tax bracket modeling (High Priority)
 - [ ] TFSA contribution tracking (lifetime limit) (Medium Priority)
