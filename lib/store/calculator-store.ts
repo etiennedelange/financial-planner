@@ -1,16 +1,16 @@
 "use client"
 
-import { create } from "zustand"
-import { persist } from "zustand/middleware"
+import { SA_DEFAULTS, SA_DEFAULTS_DISPLAY } from "@/lib/constants/defaults"
+import { deleteAccount, fetchAccounts, upsertAccount } from "@/lib/supabase/accounts"
 import type {
   Account,
+  DrawdownConfig,
+  MarketAssumptions,
   PersonalInfo,
   RetirementGoals,
-  MarketAssumptions,
-  DrawdownConfig,
 } from "@/types"
-import { SA_DEFAULTS, SA_DEFAULTS_DISPLAY } from "@/lib/constants/defaults"
-import { upsertAccount, deleteAccount, fetchAccounts } from "@/lib/supabase/accounts"
+import { create } from "zustand"
+import { persist } from "zustand/middleware"
 
 interface CalculatorState {
   // Data
@@ -138,6 +138,14 @@ export const useCalculatorStore = create<CalculatorState>()(
     }),
     {
       name: "retirement-calculator-storage",
+      partialize: (state) => ({
+        sessionId: state.sessionId,
+        personalInfo: state.personalInfo,
+        assumptions: state.assumptions,
+        retirementGoals: state.retirementGoals,
+        drawdownConfig: state.drawdownConfig,
+        displayMode: state.displayMode,
+      }),
     }
   )
 )
