@@ -52,6 +52,9 @@ export interface DrawdownConfig {
   minimumWithdrawal: number // monthly floor
   maximumWithdrawal: number // monthly ceiling
   lumpSumPercentage: number // % of portfolio taken as lump sum at retirement (0-100)
+  // Medical aid (retirement phase)
+  monthlyMedicalAid?: number    // Monthly contribution paid from retirement income
+  medicalAidDependants?: number // Number of additional beneficiaries (0 = member only)
   // Guardrails specific
   upperGuardrail?: number // % above which to increase withdrawal
   lowerGuardrail?: number // % below which to decrease withdrawal

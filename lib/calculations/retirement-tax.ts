@@ -1,5 +1,6 @@
 import { calculateIncomeTax, calculateLumpSumTax } from '../constants/tax-tables'
 import { SA_TAX_LIMITS } from '../constants/limits'
+import { MEDICAL_AID_CREDITS_CONFIG } from '../constants/tax-year.config'
 
 /**
  * Configuration for retirement tax calculations
@@ -7,8 +8,23 @@ import { SA_TAX_LIMITS } from '../constants/limits'
 export interface RetirementTaxConfig {
   age: number // Current age for determining applicable rebates
   lumpSumPercentage?: number // Percentage of portfolio to take as lump sum (0-100)
-  monthlyMedicalAid?: number // Monthly medical aid contribution
+  monthlyMedicalAid?: number // Monthly medical aid contribution paid from income
+  medicalAidDependants?: number // Additional beneficiaries (0 = member only)
   preRetirementIncome?: number // Annual pre-retirement income for replacement ratio
+}
+
+/**
+ * Calculate the annual s6A medical aid tax credit.
+ * Credits reduce tax payable directly (not a deduction from income).
+ * @param dependants Number of additional beneficiaries (0 = member only)
+ */
+export function calculateMedicalAidTaxCredit(dependants: number = 0): number {
+  const { primaryMemberMonthly, firstDependantMonthly, additionalDependantMonthly } =
+    MEDICAL_AID_CREDITS_CONFIG
+  let monthlyCredit = primaryMemberMonthly
+  if (dependants >= 1) monthlyCredit += firstDependantMonthly
+  if (dependants >= 2) monthlyCredit += additionalDependantMonthly * (dependants - 1)
+  return monthlyCredit * 12
 }
 
 /**
@@ -16,47 +32,47 @@ export interface RetirementTaxConfig {
  */
 export interface RetirementTaxResult {
   grossIncome: number // Annual withdrawal before tax
-  incomeTax: number // Annual income tax (after rebates)
+  incomeTax: number // Annual income tax (after rebates and medical aid credit)
   lumpSumTax: number // One-time lump sum tax
-  medicalAidContribution: number // Annual medical aid contribution
+  medicalAidContribution: number // Annual medical aid contribution (cost paid from income)
+  medicalAidTaxCredit: number // Annual s6A tax credit applied against income tax
   netIncome: number // After all taxes and deductions
   effectiveTaxRate: number // Effective tax rate (%)
   applicableRebate: number // Tax rebate applied based on age
 }
 
 /**
- * Calculate income tax with age-based rebates applied
+ * Calculate income tax with age-based rebates and optional medical aid tax credit applied.
  * @param annualIncome Gross annual income
  * @param age Current age
- * @returns Net tax after rebates
+ * @param medicalAidDependants Additional beneficiaries; omit or undefined to skip credit
+ * @returns Net tax after rebates and credit
  */
 export function calculateIncomeTaxWithRebates(
   annualIncome: number,
-  age: number
+  age: number,
+  medicalAidDependants?: number
 ): number {
   if (annualIncome <= 0) return 0
 
-  // Calculate gross tax
   const grossTax = calculateIncomeTax(annualIncome)
 
-  // Determine applicable rebate based on age
   let rebate = SA_TAX_LIMITS.primaryRebate
-
   if (age >= 75) {
-    // All three rebates apply
     rebate =
       SA_TAX_LIMITS.primaryRebate +
       SA_TAX_LIMITS.secondaryRebate +
       SA_TAX_LIMITS.tertiaryRebate
   } else if (age >= 65) {
-    // Primary and secondary rebates apply
     rebate = SA_TAX_LIMITS.primaryRebate + SA_TAX_LIMITS.secondaryRebate
   }
 
-  // Net tax after rebate (can't go negative)
-  const netTax = Math.max(0, grossTax - rebate)
+  const medicalCredit =
+    medicalAidDependants !== undefined
+      ? calculateMedicalAidTaxCredit(medicalAidDependants)
+      : 0
 
-  return netTax
+  return Math.max(0, grossTax - rebate - medicalCredit)
 }
 
 /**
@@ -85,24 +101,10 @@ export function calculateRetirementTax(
   grossWithdrawal: number,
   config: RetirementTaxConfig
 ): RetirementTaxResult {
-  // Calculate income tax with rebates
-  const incomeTax = calculateIncomeTaxWithRebates(grossWithdrawal, config.age)
+  // Gross tax before any credits
+  const grossTax = grossWithdrawal > 0 ? calculateIncomeTax(grossWithdrawal) : 0
 
-  // Calculate annual medical aid contribution
-  const medicalAidContribution = (config.monthlyMedicalAid || 0) * 12
-
-  // Lump sum tax (typically only applicable at retirement)
-  const lumpSumTax = 0 // Will be calculated separately for retirement year
-
-  // Net income after all deductions
-  const netIncome =
-    grossWithdrawal - incomeTax - lumpSumTax - medicalAidContribution
-
-  // Effective tax rate
-  const effectiveTaxRate =
-    grossWithdrawal > 0 ? (incomeTax / grossWithdrawal) * 100 : 0
-
-  // Get applicable rebate
+  // Age-based rebate
   let applicableRebate = SA_TAX_LIMITS.primaryRebate
   if (config.age >= 75) {
     applicableRebate =
@@ -110,15 +112,34 @@ export function calculateRetirementTax(
       SA_TAX_LIMITS.secondaryRebate +
       SA_TAX_LIMITS.tertiaryRebate
   } else if (config.age >= 65) {
-    applicableRebate =
-      SA_TAX_LIMITS.primaryRebate + SA_TAX_LIMITS.secondaryRebate
+    applicableRebate = SA_TAX_LIMITS.primaryRebate + SA_TAX_LIMITS.secondaryRebate
   }
+
+  // s6A medical aid tax credit (reduces tax payable, not taxable income)
+  const medicalAidTaxCredit = config.monthlyMedicalAid
+    ? calculateMedicalAidTaxCredit(config.medicalAidDependants ?? 0)
+    : 0
+
+  // Net income tax after rebate and medical aid credit (cannot go negative)
+  const incomeTax = Math.max(0, grossTax - applicableRebate - medicalAidTaxCredit)
+
+  // Annual medical aid contribution paid from retirement income (a cost, not a tax deduction)
+  const medicalAidContribution = (config.monthlyMedicalAid || 0) * 12
+
+  // Lump sum tax (typically only applicable at retirement)
+  const lumpSumTax = 0 // Will be calculated separately for retirement year
+
+  // Net income after all taxes and costs
+  const netIncome = grossWithdrawal - incomeTax - lumpSumTax - medicalAidContribution
+
+  const effectiveTaxRate = grossWithdrawal > 0 ? (incomeTax / grossWithdrawal) * 100 : 0
 
   return {
     grossIncome: grossWithdrawal,
     incomeTax,
     lumpSumTax,
     medicalAidContribution,
+    medicalAidTaxCredit,
     netIncome,
     effectiveTaxRate,
     applicableRebate,

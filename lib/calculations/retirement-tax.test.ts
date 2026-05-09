@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   calculateIncomeTaxWithRebates,
+  calculateMedicalAidTaxCredit,
   isBelowTaxThreshold,
   calculateRetirementTax,
   calculateLumpSumCommutation,
@@ -177,6 +178,32 @@ describe('retirement-tax', () => {
     })
   })
 
+  describe('calculateMedicalAidTaxCredit', () => {
+    it('should return R4368 for member only (0 dependants)', () => {
+      // R364/month × 12
+      expect(calculateMedicalAidTaxCredit(0)).toBe(4368)
+    })
+
+    it('should return R8736 for member + 1 dependant', () => {
+      // (R364 + R364) × 12
+      expect(calculateMedicalAidTaxCredit(1)).toBe(8736)
+    })
+
+    it('should return R11688 for member + 2 dependants', () => {
+      // (R364 + R364 + R246) × 12
+      expect(calculateMedicalAidTaxCredit(2)).toBe(11688)
+    })
+
+    it('should return R14640 for member + 3 dependants', () => {
+      // (R364 + R364 + R246 + R246) × 12
+      expect(calculateMedicalAidTaxCredit(3)).toBe(14640)
+    })
+
+    it('should default to 0 dependants when not supplied', () => {
+      expect(calculateMedicalAidTaxCredit()).toBe(4368)
+    })
+  })
+
   describe('calculateRetirementTax', () => {
     it('should calculate complete tax breakdown for R240k income at age 67', () => {
       const result = calculateRetirementTax(240000, {
@@ -184,11 +211,14 @@ describe('retirement-tax', () => {
         monthlyMedicalAid: 3500,
       })
 
+      // grossTax = 43432, rebate = 27585, s6A credit (member only) = 4368
+      // incomeTax = 43432 - 27585 - 4368 = 11479
       expect(result.grossIncome).toBe(240000)
-      expect(result.incomeTax).toBe(15847)
-      expect(result.medicalAidContribution).toBe(42000) // R3,500 × 12
-      expect(result.netIncome).toBe(240000 - 15847 - 42000)
-      expect(result.effectiveTaxRate).toBeCloseTo(6.60, 2)
+      expect(result.incomeTax).toBe(11479)
+      expect(result.medicalAidTaxCredit).toBe(4368) // R364 × 12
+      expect(result.medicalAidContribution).toBe(42000) // R3,500 × 12 (cost paid from income)
+      expect(result.netIncome).toBe(240000 - 11479 - 42000)
+      expect(result.effectiveTaxRate).toBeCloseTo(4.78, 2)
       expect(result.applicableRebate).toBe(27585)
     })
 
@@ -214,18 +244,47 @@ describe('retirement-tax', () => {
         monthlyMedicalAid: 5000,
       })
 
-      // Gross tax: R152,867
-      // All rebates: R30,834
-      // Net tax: R122,033
-      expect(result.incomeTax).toBeCloseTo(122033, 0)
+      // grossTax = 152867, all rebates = 30834, s6A credit (member only) = 4368
+      // incomeTax = 152867 - 30834 - 4368 = 117665
+      expect(result.incomeTax).toBeCloseTo(117665, 0)
+      expect(result.medicalAidTaxCredit).toBe(4368)
       expect(result.medicalAidContribution).toBe(60000)
       expect(result.netIncome).toBe(600000 - result.incomeTax - 60000)
-      expect(result.effectiveTaxRate).toBeCloseTo(20.34, 2)
+      expect(result.effectiveTaxRate).toBeCloseTo(19.61, 2)
     })
 
     it('should return lumpSumTax as 0 for regular withdrawals', () => {
       const result = calculateRetirementTax(240000, { age: 67 })
       expect(result.lumpSumTax).toBe(0)
+    })
+
+    it('should apply larger credit for member + 2 dependants', () => {
+      // R240k, age 67, 2 dependants: credit = R11,688
+      // incomeTax = max(0, 43432 - 27585 - 11688) = 4159
+      const result = calculateRetirementTax(240000, {
+        age: 67,
+        monthlyMedicalAid: 3500,
+        medicalAidDependants: 2,
+      })
+      expect(result.medicalAidTaxCredit).toBe(11688)
+      expect(result.incomeTax).toBe(4159)
+    })
+
+    it('should produce zero incomeTax when credit exceeds liability', () => {
+      // Low income just above threshold; credit wipes out all tax
+      const result = calculateRetirementTax(110000, {
+        age: 67,
+        monthlyMedicalAid: 2000,
+        medicalAidDependants: 3,
+      })
+      expect(result.incomeTax).toBe(0)
+    })
+
+    it('should not apply credit when monthlyMedicalAid is not set', () => {
+      const withCredit = calculateRetirementTax(240000, { age: 67, monthlyMedicalAid: 1 })
+      const without = calculateRetirementTax(240000, { age: 67 })
+      expect(without.medicalAidTaxCredit).toBe(0)
+      expect(withCredit.incomeTax).toBeLessThan(without.incomeTax)
     })
   })
 
@@ -349,13 +408,14 @@ describe('retirement-tax', () => {
 
   describe('calculateLifetimeTaxBurden', () => {
     it('should calculate total tax for constant withdrawals', () => {
-      // 30 years of R240k withdrawals
+      // 30 years of R240k withdrawals, medical aid R3500/month, 0 dependants
       const yearlyWithdrawals = Array(30).fill(240000)
       const result = calculateLifetimeTaxBurden(yearlyWithdrawals, 65, 3500)
 
-      // Ages 65-74: 10 years with primary+secondary rebate (R15,847 tax each)
-      // Ages 75-94: 20 years with all rebates (R12,598 tax each)
-      const expectedTax = 10 * 15847 + 20 * 12598
+      // s6A credit (member only) = R364 × 12 = R4,368/year
+      // Ages 65-74 (primary+secondary rebate R27585): grossTax 43432 - 27585 - 4368 = R11,479/year
+      // Ages 75-94 (all rebates R30834): grossTax 43432 - 30834 - 4368 = R8,230/year
+      const expectedTax = 10 * 11479 + 20 * 8230
       expect(result.totalIncomeTax).toBe(expectedTax)
 
       expect(result.totalMedicalAid).toBe(30 * 42000) // 30 years × R42k

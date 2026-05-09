@@ -69,3 +69,14 @@ export const TFSA_LIMITS_CONFIG = {
   annualLimit:   36000,  // R36,000 p.a.
   lifetimeLimit: 500000, // R500,000 lifetime
 } as const
+
+// ---------------------------------------------------------------------------
+// Medical aid tax credits (s6A of the Income Tax Act)
+// These are direct reductions of tax payable, not deductions from income.
+// Source: SARS Budget Tax Guide 2026/2027
+// ---------------------------------------------------------------------------
+export const MEDICAL_AID_CREDITS_CONFIG = {
+  primaryMemberMonthly:      364, // Principal member
+  firstDependantMonthly:     364, // First additional beneficiary
+  additionalDependantMonthly: 246, // Each further beneficiary
+} as const

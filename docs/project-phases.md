@@ -21,7 +21,13 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-04-27) — Supabase / localStorage fallback:**
+**Latest Update (2026-05-09) — Medical aid tax credits + TFSA lifetime tracking:**
+- ✅ **Medical aid s6A credits** — `calculateMedicalAidTaxCredit()` reduces income tax directly; `monthlyMedicalAid` + `medicalAidDependants` in `DrawdownConfig`; wired into projection engine; UI fields in Assumptions form; 2026/2027 rates (R364 member/first dependant, R246 additional)
+- ✅ **TFSA lifetime limit** — `tfsaContributionsToDate` on Account; projection engine caps at R36k/year + R500k lifetime; account card shows remaining room + warnings; Supabase migration applied
+- 🔄 **Phase 6 (Tax):** ~97% complete; only remaining item — account-specific depletion timeline
+- 🎯 **Next:** account-specific withdrawal tracking
+
+**Previous Update (2026-04-27) — Supabase / localStorage fallback:**
 - ✅ **Env-var gate** — `SUPABASE_ENABLED` flag in `lib/supabase/client.ts`; when `NEXT_PUBLIC_SUPABASE_URL` is absent all Supabase calls no-op and data lives entirely in `localStorage`
 - ✅ **Accounts persisted locally** — added `accounts` to Zustand `partialize` so they survive page refreshes without a DB
 - ✅ **SupabaseProvider** — skips anonymous auth and DB sync when Supabase is not configured

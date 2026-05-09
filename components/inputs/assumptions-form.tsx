@@ -244,6 +244,58 @@ export function AssumptionsForm() {
               SA regulations cap the lump sum at one-third (33%) of pension/RA funds. TFSA and discretionary funds have no restriction.
             </p>
           </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="monthlyMedicalAid">Medical Aid (R/month)</Label>
+                <InfoTooltip
+                  content="Monthly medical aid contribution paid from retirement income. This reduces net income but also generates an s6A tax credit (R364/month for principal member + first dependant, R246/month per additional dependant) that directly reduces income tax."
+                  side="left"
+                />
+              </div>
+              <Input
+                id="monthlyMedicalAid"
+                type="number"
+                min="0"
+                step="100"
+                placeholder="0"
+                value={drawdownConfig.monthlyMedicalAid ?? ""}
+                onChange={(e) =>
+                  setDrawdownConfig({
+                    monthlyMedicalAid: e.target.value === "" ? undefined : Number(e.target.value),
+                  })
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="medicalAidDependants">Dependants</Label>
+                <InfoTooltip
+                  content="Number of additional beneficiaries on your medical aid (excluding yourself). Each additional dependant adds a s6A credit of R364/month (first) or R246/month (subsequent) to reduce your tax."
+                  side="left"
+                />
+              </div>
+              <Input
+                id="medicalAidDependants"
+                type="number"
+                min="0"
+                max="10"
+                step="1"
+                placeholder="0"
+                value={drawdownConfig.medicalAidDependants ?? ""}
+                onChange={(e) =>
+                  setDrawdownConfig({
+                    medicalAidDependants: e.target.value === "" ? undefined : Number(e.target.value),
+                  })
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                Tax credits: R364/month (member), R364 (1st dependant), R246 each thereafter.
+              </p>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

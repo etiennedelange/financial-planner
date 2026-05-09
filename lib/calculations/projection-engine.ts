@@ -395,8 +395,12 @@ export function calculateProjection(
     const totalWithdrawal = tfsaWithdrawal + discretionaryWithdrawal + pensionWithdrawal
     // Only pension withdrawals and CGT inclusion amount are taxable income
     const taxableIncome = pensionWithdrawal + cgtTaxableAmount
-    const incomeTax = calculateIncomeTaxWithRebates(taxableIncome, age)
-    const medicalAidContribution = 0 // TODO: Integrate medical costs
+    const incomeTax = calculateIncomeTaxWithRebates(
+      taxableIncome,
+      age,
+      drawdownConfig.monthlyMedicalAid ? drawdownConfig.medicalAidDependants ?? 0 : undefined
+    )
+    const medicalAidContribution = (drawdownConfig.monthlyMedicalAid ?? 0) * 12
     const netIncome = totalWithdrawal - incomeTax - medicalAidContribution
 
     currentTotal = drawdownAccounts.reduce((s, a) => s + a.balance, 0)

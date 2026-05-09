@@ -23,15 +23,16 @@
 - [x] Bug fix: payslip `monthlyIncomeAtRetirement` now uses `remainingPortfolio` (post-lump-sum) not `portfolioAtRetirement`
 - [x] Bug fix: Monte Carlo `simulateSingleRun` now deducts lump sum before calculating initial withdrawal — success rate was previously too optimistic when lump sum > 0
 
+**Completed (2026-05-09):**
+- [x] TFSA lifetime limit tracking — `tfsaContributionsToDate` field on Account; projection engine caps contributions at R36k/year and R500k lifetime; account card shows remaining room and warnings; Supabase migration + type regen
+- [x] Medical aid tax credits (s6A) — `calculateMedicalAidTaxCredit()` reduces income tax directly (not taxable income); `monthlyMedicalAid` and `medicalAidDependants` added to DrawdownConfig; wired into projection engine drawdown phase; UI fields in Assumptions form; 2026/2027 rates: R364/month (member + first dependant), R246/month per additional
+
 **Pending Tasks:**
 - [ ] Account-specific withdrawal tracking (Medium Priority)
   - Track which accounts are drawn from each year
   - Display projected depletion timeline per account
-- [ ] Medical aid tax credits (Medium Priority)
-  - Model medical aid contributions that qualify for tax credits
 - [x] Tax configurations updated to 2026/2027 (RA deduction 27.5%/R430k, TFSA R36k/R500k)
 - [x] Retirement lump sum tax tables (2026/2027)
 - [x] Monthly annuity income tax calculations
 - [x] Tax bracket modeling
-- [ ] TFSA contribution tracking (lifetime limit) (Medium Priority)
 - [ ] RA/Pension contribution optimization suggestions (Medium Priority)
