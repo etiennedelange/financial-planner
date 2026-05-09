@@ -14,14 +14,22 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 | **Phase 1.7** | ✅ Complete | [Next 16 / React 19 / Tailwind v4 Modernization](project-phases/phase-1-7-modernization.md) |
 | **Phase 2** | 🔄 In Progress | [Supabase Integration](project-phases/phase-2-supabase.md) |
 | **Phase 3** | ✅ Complete | [User Accounts](project-phases/phase-3-user-accounts.md) |
-| **Phase 4** | 🔲 Pending | [Data Persistence](project-phases/phase-4-data-persistence.md) |
+| **Phase 4** | ✅ Complete | [Data Persistence](project-phases/phase-4-data-persistence.md) |
 | **Phase 5** | 🔲 Pending | [Export Functionality](project-phases/phase-5-export-functionality.md) |
 | **Phase 6** | ✅ Complete | [Enhanced Tax Calculations](project-phases/phase-6-enhanced-tax.md) |
 | **Future** | 📋 Planned | [Future Enhancements](project-phases/future-enhancements.md) |
 
 ## Current Status Summary
 
-**Latest Update (2026-05-09) — Phase 3 complete: profile management:**
+**Latest Update (2026-05-09) — Phase 4 complete: named scenarios, import/export, per-scenario accounts:**
+- ✅ **Named scenarios** — `ScenarioSwitcher` in header; inline rename/delete/create; each scenario is an independent copy with its own accounts
+- ✅ **Per-scenario accounts** — accounts linked via `scenario_id` FK (not user-level); new scenario clones current accounts; delete cascades
+- ✅ **Import/export plan** — full JSON round-trip via Plan dropdown; validates on import; 9 tests
+- ✅ **39 new tests** — `plan-io.test.ts` (9), `scenarios.test.ts` (17), `accounts.test.ts` (13)
+- ✅ **Phase 4 complete**
+- 🎯 **Next:** Phase 5 (export functionality — PDF/CSV report)
+
+**Previous Update (2026-05-09) — Phase 3 complete: profile management:**
 - ✅ **Profile modal** — `ProfileModal` with change-email + change-password forms; "Manage Account" in user dropdown; compact `h-8` inputs; same visual style as auth modal
 - ✅ **Phase 3 complete** — all auth flows done (sign up, sign in, sign out, password reset, profile management)
 - 🎯 **Next:** Phase 4 (data persistence / named scenarios)
