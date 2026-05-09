@@ -16,16 +16,21 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 | **Phase 3** | 🔲 Pending | [User Accounts](project-phases/phase-3-user-accounts.md) |
 | **Phase 4** | 🔲 Pending | [Data Persistence](project-phases/phase-4-data-persistence.md) |
 | **Phase 5** | 🔲 Pending | [Export Functionality](project-phases/phase-5-export-functionality.md) |
-| **Phase 6** | 🔄 In Progress | [Enhanced Tax Calculations](project-phases/phase-6-enhanced-tax.md) |
+| **Phase 6** | ✅ Complete | [Enhanced Tax Calculations](project-phases/phase-6-enhanced-tax.md) |
 | **Future** | 📋 Planned | [Future Enhancements](project-phases/future-enhancements.md) |
 
 ## Current Status Summary
 
-**Latest Update (2026-05-09) — Medical aid tax credits + TFSA lifetime tracking:**
+**Latest Update (2026-05-09) — Phase 6 complete: account depletion tracking, RA optimisation, tax constant fixes:**
+- ✅ **Account Depletion Timeline** — `accountBalances` per-year snapshots in `YearlyProjection`; `accountBalancesAtRetirement` in `ProjectionResult`; drawdown accordion shows per-account depletion age + progress bar
+- ✅ **RA Optimisation (section 8)** — `calculateRAOptimization()` utility; deduction limit, utilisation bar, annual tax saving, optimal contribution; 16 tests
+- ✅ **Stale tax constants fixed** — R350k cap replaced with `SA_TAX_LIMITS.pensionRaMaxDeduction` in 4 components; TFSA R500k hardcode replaced with `SA_TAX_LIMITS.tfsaLifetimeLimit`
+- ✅ **Phase 6 complete** — 377 tests passing
+- 🎯 **Next:** Phase 3 (user accounts / auth) or Phase 4 (data persistence)
+
+**Previous Update (2026-05-09) — Medical aid tax credits + TFSA lifetime tracking:**
 - ✅ **Medical aid s6A credits** — `calculateMedicalAidTaxCredit()` reduces income tax directly; `monthlyMedicalAid` + `medicalAidDependants` in `DrawdownConfig`; wired into projection engine; UI fields in Assumptions form; 2026/2027 rates (R364 member/first dependant, R246 additional)
 - ✅ **TFSA lifetime limit** — `tfsaContributionsToDate` on Account; projection engine caps at R36k/year + R500k lifetime; account card shows remaining room + warnings; Supabase migration applied
-- 🔄 **Phase 6 (Tax):** ~97% complete; only remaining item — account-specific depletion timeline
-- 🎯 **Next:** account-specific withdrawal tracking
 
 **Previous Update (2026-04-27) — Supabase / localStorage fallback:**
 - ✅ **Env-var gate** — `SUPABASE_ENABLED` flag in `lib/supabase/client.ts`; when `NEXT_PUBLIC_SUPABASE_URL` is absent all Supabase calls no-op and data lives entirely in `localStorage`

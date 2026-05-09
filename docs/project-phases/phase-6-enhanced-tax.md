@@ -26,14 +26,9 @@
 **Completed (2026-05-09):**
 - [x] TFSA lifetime limit tracking — `tfsaContributionsToDate` field on Account; projection engine caps contributions at R36k/year and R500k lifetime; account card shows remaining room and warnings; Supabase migration + type regen
 - [x] Medical aid tax credits (s6A) — `calculateMedicalAidTaxCredit()` reduces income tax directly (not taxable income); `monthlyMedicalAid` and `medicalAidDependants` added to DrawdownConfig; wired into projection engine drawdown phase; UI fields in Assumptions form; 2026/2027 rates: R364/month (member + first dependant), R246/month per additional
-
-**Completed (2026-05-09):**
-- [x] Account-specific withdrawal tracking — `accountBalancesAtRetirement` added to `ProjectionResult`; `accountBalances` (per-account year-end snapshots) added to `YearlyProjection`; "Account Depletion Timeline" section in drawdown accordion shows per-account depletion age, starting balance, progress bar, and survivor status; 6 new tests added
-
-- [x] RA/Pension contribution optimization suggestions — `calculateRAOptimization()` in `lib/calculations/utils/ra-optimization.ts`; section 8 accordion in calculations breakdown shows deduction limit, utilisation bar, tax saving callout, and optimal contribution; 16 tests
-
-**Remaining (deferred):**
-- none
+- [x] Account-specific withdrawal tracking — `accountBalancesAtRetirement` added to `ProjectionResult`; `accountBalances` (per-account year-end snapshots) added to `YearlyProjection`; "Account Depletion Timeline" section in drawdown accordion shows per-account depletion age, starting balance, progress bar, and survivor status; 6 new tests
+- [x] RA/Pension contribution optimisation — `calculateRAOptimization()` in `lib/calculations/utils/ra-optimization.ts`; section 8 accordion shows deduction limit, utilisation bar, tax saving callout, and optimal contribution; income source labelled; 16 tests
+- [x] Stale R350k cap fixed in `key-insights-summary`, `debug-window`, `personal-info-form`; TFSA R500k hardcode fixed in `account-form` — all now reference `SA_TAX_LIMITS`
 - [x] Tax configurations updated to 2026/2027 (RA deduction 27.5%/R430k, TFSA R36k/R500k)
 - [x] Retirement lump sum tax tables (2026/2027)
 - [x] Monthly annuity income tax calculations
