@@ -17,6 +17,7 @@ import { CalculationsBreakdown } from "@/components/results/calculations-breakdo
 import { InsightsPanel } from "@/components/results/insights-panel"
 import { UserMenu } from "@/components/auth/user-menu"
 import { StaticFinanceChart } from "@/components/auth/static-finance-chart"
+import { ScenarioSwitcher } from "@/components/scenarios/scenario-switcher"
 import { useAuth } from "@/components/supabase-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
@@ -31,8 +32,9 @@ import {
 import { calculateProjection } from "@/lib/calculations/projection-engine"
 import { useMonteCarloWorker } from "@/lib/monte-carlo/use-monte-carlo-worker"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { exportPlan, parsePlanFile } from "@/lib/utils/plan-io"
 import type { ProjectionResult } from "@/types"
-import { BarChart3, BookOpen, Calculator, RotateCcw, Settings, TrendingDown } from "lucide-react"
+import { BarChart3, BookOpen, Calculator, Download, RotateCcw, Settings, TrendingDown, Upload } from "lucide-react"
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
 
@@ -48,6 +50,7 @@ export function CalculatorClient() {
     setAssumptions,
     setDisplayMode,
     resetToDefaults,
+    loadPlan,
   } = useCalculatorStore(
     useShallow(state => ({
       accounts: state.accounts,
@@ -59,6 +62,7 @@ export function CalculatorClient() {
       setAssumptions: state.setAssumptions,
       setDisplayMode: state.setDisplayMode,
       resetToDefaults: state.resetToDefaults,
+      loadPlan: state.loadPlan,
     }))
   )
 
@@ -99,6 +103,8 @@ export function CalculatorClient() {
     calculations: false,
   })
 
+  const importInputRef = useRef<HTMLInputElement>(null)
+
   // Refs for scrolling to sections
   const accountsRef = useRef<HTMLDivElement>(null)
   const detailedInsightsRef = useRef<HTMLDivElement>(null)
@@ -131,8 +137,27 @@ export function CalculatorClient() {
     return () => observer.disconnect()
   }, [projection])
 
+  const [importError, setImportError] = useState<string | null>(null)
+
   const handleReset = () => {
     resetToDefaults()
+  }
+
+  const handleExportPlan = () => {
+    exportPlan(personalInfo, retirementGoals, assumptions, drawdownConfig, displayMode, accounts)
+  }
+
+  const handleImportPlan = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (!file) return
+    setImportError(null)
+    try {
+      const { plan } = await parsePlanFile(file)
+      loadPlan(plan)
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : "Import failed.")
+    }
   }
 
   // Quick Actions handlers
@@ -205,13 +230,21 @@ export function CalculatorClient() {
 
   return (
     <div className="dashboard-container">
+      {/* Hidden file input for plan import */}
+      <input ref={importInputRef} type="file" accept=".json" className="sr-only" onChange={handleImportPlan} />
+      {importError && (
+        <div className="mb-4 rounded-md bg-destructive/10 px-4 py-2 text-sm text-destructive">
+          {importError}
+        </div>
+      )}
       <div className="mb-6 space-y-4 md:mb-8 md:space-y-0">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
+          <div className="flex flex-col gap-2">
             <h1 className="text-2xl font-bold md:text-3xl">SA Retirement Calculator</h1>
             <p className="text-sm text-muted-foreground md:text-base">
               Plan your retirement with Monte Carlo simulations
             </p>
+            {user && !user.is_anonymous && <ScenarioSwitcher />}
           </div>
 
           <div className="flex flex-wrap gap-2 md:flex-nowrap">
@@ -303,11 +336,31 @@ export function CalculatorClient() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button variant="outline" size="icon" onClick={handleReset} className="md:w-auto md:px-4">
-              <RotateCcw className="h-4 w-4" />
-              <span className="ml-2 hidden md:inline">Reset</span>
-            </Button>
-
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="md:w-auto md:px-4">
+                  <Settings className="h-4 w-4" />
+                  <span className="ml-2 hidden md:inline">Plan</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>Plan Data</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleExportPlan} className="cursor-pointer">
+                  <Download className="mr-2 h-4 w-4" />
+                  Export Plan
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => importInputRef.current?.click()} className="cursor-pointer">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Import Plan
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleReset} className="cursor-pointer text-destructive focus:text-destructive">
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Reset to Defaults
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <ColorThemeToggle />
             <ThemeToggle />
             <UserMenu user={user} />

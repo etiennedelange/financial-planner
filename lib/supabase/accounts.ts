@@ -3,7 +3,8 @@ import { createClient } from "./client"
 
 type AccountRow = {
   id: string
-  session_id: string
+  scenario_id: string
+  session_id?: string | null
   name: string
   provider: string
   type: Account["type"]
@@ -15,10 +16,10 @@ type AccountRow = {
   tfsa_contributions_to_date?: number | null
 }
 
-function toRow(account: Account, sessionId: string): AccountRow {
+function toRow(account: Account, scenarioId: string): Omit<AccountRow, "session_id"> {
   return {
     id: account.id,
-    session_id: sessionId,
+    scenario_id: scenarioId,
     name: account.name,
     provider: account.provider,
     type: account.type,
@@ -46,27 +47,38 @@ function fromRow(row: AccountRow): Account {
   }
 }
 
-export async function fetchAccounts(sessionId: string): Promise<Account[]> {
+export async function fetchAccounts(scenarioId: string): Promise<Account[]> {
   const supabase = createClient()
   if (!supabase) return []
   const { data, error } = await supabase
     .from("accounts")
     .select("*")
-    .eq("session_id", sessionId)
+    .eq("scenario_id", scenarioId)
     .order("created_at")
-
   if (error) throw error
   return (data ?? []).map((row) => fromRow(row as AccountRow))
 }
 
-export async function upsertAccount(account: Account, sessionId: string): Promise<void> {
+export async function upsertAccount(account: Account, scenarioId: string): Promise<void> {
   const supabase = createClient()
   if (!supabase) return
   const { error } = await supabase
     .from("accounts")
-    .upsert(toRow(account, sessionId), { onConflict: "id" })
-
+    .upsert(toRow(account, scenarioId), { onConflict: "id" })
   if (error) throw error
+}
+
+export async function cloneAccounts(accounts: Account[], newScenarioId: string): Promise<Account[]> {
+  const supabase = createClient()
+  if (!supabase) return []
+  const cloned = accounts.map((acc) => ({
+    ...acc,
+    id: crypto.randomUUID(),
+  }))
+  const rows = cloned.map((acc) => toRow(acc, newScenarioId))
+  const { error } = await supabase.from("accounts").insert(rows)
+  if (error) throw error
+  return cloned
 }
 
 export async function deleteAccount(id: string): Promise<void> {

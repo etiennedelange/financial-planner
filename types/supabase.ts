@@ -32,6 +32,29 @@ export type Database = {
       [_ in never]: never
     }
   }
+  pgbouncer: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      get_auth: {
+        Args: { p_usename: string }
+        Returns: {
+          password: string
+          username: string
+        }[]
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       accounts: {
@@ -45,7 +68,8 @@ export type Database = {
           monthly_contribution: number
           name: string
           provider: string
-          session_id: string
+          scenario_id: string
+          session_id: string | null
           tfsa_contributions_to_date: number | null
           type: string
           updated_at: string
@@ -60,7 +84,8 @@ export type Database = {
           monthly_contribution?: number
           name: string
           provider?: string
-          session_id: string
+          scenario_id: string
+          session_id?: string | null
           tfsa_contributions_to_date?: number | null
           type: string
           updated_at?: string
@@ -75,12 +100,20 @@ export type Database = {
           monthly_contribution?: number
           name?: string
           provider?: string
-          session_id?: string
+          scenario_id?: string
+          session_id?: string | null
           tfsa_contributions_to_date?: number | null
           type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "accounts_scenario_id_fkey"
+            columns: ["scenario_id"]
+            referencedRelation: "scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scenarios: {
         Row: {
@@ -89,6 +122,7 @@ export type Database = {
           display_mode: string
           drawdown_config: Json
           id: string
+          name: string
           personal_info: Json
           retirement_goals: Json
           session_id: string
@@ -100,6 +134,7 @@ export type Database = {
           display_mode?: string
           drawdown_config?: Json
           id?: string
+          name?: string
           personal_info?: Json
           retirement_goals?: Json
           session_id: string
@@ -111,6 +146,7 @@ export type Database = {
           display_mode?: string
           drawdown_config?: Json
           id?: string
+          name?: string
           personal_info?: Json
           retirement_goals?: Json
           session_id?: string
@@ -127,6 +163,64 @@ export type Database = {
     }
     Enums: {
       [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+  storage: {
+    Tables: {
+      buckets: {
+        Row: {
+          allowed_mime_types: string[] | null
+          avif_autodetection: boolean | null
+          created_at: string | null
+          file_size_limit: number | null
+          id: string
+          name: string
+          owner: string | null
+          owner_id: string | null
+          public: boolean | null
+          type: Database["storage"]["Enums"]["buckettype"]
+          updated_at: string | null
+        }
+        Insert: {
+          allowed_mime_types?: string[] | null
+          avif_autodetection?: boolean | null
+          created_at?: string | null
+          file_size_limit?: number | null
+          id: string
+          name: string
+          owner?: string | null
+          owner_id?: string | null
+          public?: boolean | null
+          type?: Database["storage"]["Enums"]["buckettype"]
+          updated_at?: string | null
+        }
+        Update: {
+          allowed_mime_types?: string[] | null
+          avif_autodetection?: boolean | null
+          created_at?: string | null
+          file_size_limit?: number | null
+          id?: string
+          name?: string
+          owner?: string | null
+          owner_id?: string | null
+          public?: boolean | null
+          type?: Database["storage"]["Enums"]["buckettype"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      buckettype: "STANDARD" | "ANALYTICS" | "VECTOR"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -252,11 +346,12 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
-  public: {
-    Enums: {},
+  graphql_public: { Enums: {} },
+  pgbouncer: { Enums: {} },
+  public: { Enums: {} },
+  storage: {
+    Enums: {
+      buckettype: ["STANDARD", "ANALYTICS", "VECTOR"],
+    },
   },
 } as const
-

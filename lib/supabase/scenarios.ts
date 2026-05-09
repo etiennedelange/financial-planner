@@ -7,48 +7,101 @@ export interface ScenarioData {
   retirementGoals: RetirementGoals
   assumptions: MarketAssumptions
   drawdownConfig: DrawdownConfig
-  displayMode: 'nominal' | 'real'
+  displayMode: "nominal" | "real"
 }
 
-export async function fetchScenario(sessionId: string): Promise<ScenarioData | null> {
+export interface ScenarioMeta {
+  id: string
+  name: string
+  updatedAt: string
+}
+
+export async function listScenarios(userId: string): Promise<ScenarioMeta[]> {
+  const supabase = createClient()
+  if (!supabase) return []
+  const { data, error } = await supabase
+    .from("scenarios")
+    .select("id, name, updated_at")
+    .eq("session_id", userId)
+    .order("updated_at", { ascending: false })
+  if (error) throw error
+  return (data ?? []).map((r) => ({ id: r.id, name: r.name, updatedAt: r.updated_at }))
+}
+
+export async function fetchScenario(scenarioId: string): Promise<ScenarioData | null> {
   const supabase = createClient()
   if (!supabase) return null
   const { data, error } = await supabase
     .from("scenarios")
     .select("*")
-    .eq("session_id", sessionId)
+    .eq("id", scenarioId)
     .single()
-
   if (error) {
-    if (error.code === "PGRST116") return null // no rows
+    if (error.code === "PGRST116") return null
     throw error
   }
-
   return {
     personalInfo: data.personal_info as unknown as PersonalInfo,
     retirementGoals: data.retirement_goals as unknown as RetirementGoals,
     assumptions: data.assumptions as unknown as MarketAssumptions,
     drawdownConfig: data.drawdown_config as unknown as DrawdownConfig,
-    displayMode: data.display_mode as 'nominal' | 'real',
+    displayMode: data.display_mode as "nominal" | "real",
   }
 }
 
-export async function upsertScenario(sessionId: string, scenario: ScenarioData): Promise<void> {
+export async function createScenario(
+  userId: string,
+  name: string,
+  data: ScenarioData
+): Promise<string> {
+  const supabase = createClient()
+  if (!supabase) throw new Error("Supabase not available")
+  const { data: row, error } = await supabase
+    .from("scenarios")
+    .insert({
+      session_id: userId,
+      name,
+      personal_info: data.personalInfo as unknown as Json,
+      retirement_goals: data.retirementGoals as unknown as Json,
+      assumptions: data.assumptions as unknown as Json,
+      drawdown_config: data.drawdownConfig as unknown as Json,
+      display_mode: data.displayMode,
+    })
+    .select("id")
+    .single()
+  if (error) throw error
+  return row.id
+}
+
+export async function updateScenario(scenarioId: string, data: ScenarioData): Promise<void> {
   const supabase = createClient()
   if (!supabase) return
   const { error } = await supabase
     .from("scenarios")
-    .upsert(
-      {
-        session_id: sessionId,
-        personal_info: scenario.personalInfo as unknown as Json,
-        retirement_goals: scenario.retirementGoals as unknown as Json,
-        assumptions: scenario.assumptions as unknown as Json,
-        drawdown_config: scenario.drawdownConfig as unknown as Json,
-        display_mode: scenario.displayMode,
-      },
-      { onConflict: "session_id" }
-    )
+    .update({
+      personal_info: data.personalInfo as unknown as Json,
+      retirement_goals: data.retirementGoals as unknown as Json,
+      assumptions: data.assumptions as unknown as Json,
+      drawdown_config: data.drawdownConfig as unknown as Json,
+      display_mode: data.displayMode,
+    })
+    .eq("id", scenarioId)
+  if (error) throw error
+}
 
+export async function renameScenario(scenarioId: string, name: string): Promise<void> {
+  const supabase = createClient()
+  if (!supabase) return
+  const { error } = await supabase
+    .from("scenarios")
+    .update({ name })
+    .eq("id", scenarioId)
+  if (error) throw error
+}
+
+export async function deleteScenario(scenarioId: string): Promise<void> {
+  const supabase = createClient()
+  if (!supabase) return
+  const { error } = await supabase.from("scenarios").delete().eq("id", scenarioId)
   if (error) throw error
 }

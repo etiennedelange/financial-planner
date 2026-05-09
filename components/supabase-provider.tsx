@@ -17,8 +17,7 @@ export function useAuth() {
 
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const setSessionId = useCalculatorStore((s) => s.setSessionId)
-  const syncAccountsFromDb = useCalculatorStore((s) => s.syncAccountsFromDb)
-  const syncScenarioFromDb = useCalculatorStore((s) => s.syncScenarioFromDb)
+  const syncFromDb = useCalculatorStore((s) => s.syncFromDb)
   const sessionId = useCalculatorStore((s) => s.sessionId)
 
   const [user, setUser] = useState<User | null>(null)
@@ -35,7 +34,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         setUser(session.user)
         if (session.user.id !== sessionId) {
           setSessionId(session.user.id)
-          await Promise.all([syncAccountsFromDb(), syncScenarioFromDb()])
+          await syncFromDb()
         }
         return
       }
@@ -48,7 +47,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       if (data.user) {
         setUser(data.user)
         setSessionId(data.user.id)
-        await Promise.all([syncAccountsFromDb(), syncScenarioFromDb()])
+        await syncFromDb()
       }
     }
 
@@ -60,7 +59,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
       if (newUser && newUser.id !== useCalculatorStore.getState().sessionId) {
         setSessionId(newUser.id)
-        await Promise.all([syncAccountsFromDb(), syncScenarioFromDb()])
+        await syncFromDb()
       }
       // On SIGNED_OUT: user becomes null, UserMenu shows "Sign In".
       // A new anon session is created on the next page load via init().
