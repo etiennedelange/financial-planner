@@ -15,6 +15,9 @@ import { PersonalInfoForm } from "@/components/inputs/personal-info-form"
 import { RetirementGoalsForm } from "@/components/inputs/retirement-goals-form"
 import { CalculationsBreakdown } from "@/components/results/calculations-breakdown"
 import { InsightsPanel } from "@/components/results/insights-panel"
+import { UserMenu } from "@/components/auth/user-menu"
+import { StaticFinanceChart } from "@/components/auth/static-finance-chart"
+import { useAuth } from "@/components/supabase-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import {
@@ -34,6 +37,7 @@ import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
 
 export function CalculatorClient() {
+  const { user } = useAuth()
   const {
     accounts,
     personalInfo,
@@ -306,9 +310,23 @@ export function CalculatorClient() {
 
             <ColorThemeToggle />
             <ThemeToggle />
+            <UserMenu user={user} />
           </div>
         </div>
       </div>
+
+      {/* Signed-in welcome banner */}
+      {user && !user.is_anonymous && (
+        <div className="mb-6 flex items-center gap-5 rounded-xl border bg-card px-6 py-4">
+          <StaticFinanceChart width={72} height={58} className="shrink-0" />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">Welcome back, {user.email?.split("@")[0]}</p>
+            <p className="text-sm text-muted-foreground truncate mt-0.5">
+              Your plan is synced across devices — {user.email}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Dashboard Metrics Grid */}
       {projection && (
