@@ -1,162 +1,82 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## ⚠️ Critical Rules
 
-## ⚠️ Critical Rule: Test-Driven Development
+1. **ALL calculation code changes MUST include unit tests. No exceptions.**
+2. **After every meaningful change, update phase docs without being asked.**
 
-**ALL calculation code changes MUST include unit tests. No calculation code should be committed without tests.**
+---
 
-See [Testing & Validation](#testing--validation) section below for requirements.
+## Project
 
-## Project Overview
+SA retirement planning calculator — Monte Carlo simulations, multi-account portfolio, SA tax treatment. Stack: Next.js, TypeScript, shadcn/ui, Supabase.
 
-South African retirement planning calculator with Monte Carlo simulations, multi-account portfolio management, and SA-specific tax treatment. Built with Next.js, TypeScript, shadcn/ui, and Supabase.
-
-## Development Commands
+## Dev Commands
 
 ```bash
-npm run dev              # Start Next.js dev server (port 3000)
-npm run build            # Production build
-npm run lint             # Run ESLint
-npm run test             # Run tests (Vitest)
-npm run test:ui          # Open Vitest UI in browser
-npm run test:coverage    # Generate coverage report
-npm run test:watch       # Run tests in watch mode
+npm run dev              # port 3000
+npm run build            # production build + type check
+npm run lint
+npm run test             # Vitest
+npm run test:coverage    # must stay >90% on calculation files
+npm run test:watch
 ```
 
-## Development Environment
+## SA Financial Defaults
 
-Devcontainer-based setup with Node 20 LTS. Ports:
-- 3000: Next.js application
-- 54321: Supabase API
-- 54323: Supabase Studio
-
-## South African Financial Defaults
-
-These are critical domain values for calculations:
-- Inflation: 5.5% p.a.
-- Equity return: 10-12% p.a. (nominal)
-- Bond return: 7-9% p.a. (nominal)
-- Equity volatility: 15-18% std dev
-- Safe withdrawal rate: 3-5%
-- Life expectancy: 90 years
-
-### Tax Limits
-See `lib/constants/tax-year.config.ts` — single source of truth for all tax brackets, rebates, TFSA limits, and contribution caps.
+- Inflation: 5.5% p.a. | Equity: 10-12% | Bonds: 7-9% | Equity vol: 15-18%
+- Safe withdrawal: 3-5% | Life expectancy: 90 years
+- Tax limits: `lib/constants/tax-year.config.ts` (single source of truth)
 
 ## Account Types
 
-Supported retirement account types:
-- Pension Funds
-- Retirement Annuities (RAs)
-- Preservation Funds
-- Tax-Free Savings Accounts (TFSA)
-- Discretionary Investment Accounts
+Pension Funds, Retirement Annuities (RAs), Preservation Funds, TFSA, Discretionary
 
-## Testing & Validation
-
-**MANDATORY:** All calculation changes MUST include unit tests. No exceptions.
-
-### Testing Requirements
+## Testing Requirements
 
 **When adding/modifying calculation code:**
-1. ✅ **Write tests FIRST** (or alongside implementation)
-2. ✅ **Add tests to corresponding `.test.ts` file** (create if doesn't exist)
-3. ✅ **Cover edge cases:** zero values, R0 contributions, 0% escalation, negative years
-4. ✅ **Test both compounding methods:** nominal and compound
-5. ✅ **Verify against known values:** use Excel FV or manual calculations
-6. ✅ **Maintain >90% coverage** for calculation files
+1. Write tests first (or alongside)
+2. Add to corresponding `.test.ts` (create if missing) — e.g. `projection.ts` → `projection.test.ts`
+3. Cover edge cases: R0 contributions, 0% escalation, zero balance, negative years
+4. Test both compounding methods: nominal and compound
+5. Verify against Excel FV or manual calculations
 
-**Example test file location:**
-- `lib/calculations/utils/projection.ts` → `lib/calculations/utils/projection.test.ts`
-- `lib/monte-carlo/simulation-engine.ts` → `lib/monte-carlo/simulation-engine.test.ts`
+**Before committing:**
+- `npm run test` — all pass
+- `npm run test:coverage` — >90% on modified files
+- `npm run build` — no TS errors
+- Check Debug Window (`components/debug/debug-window.tsx`) — correct compounding method + consistent values across tabs
 
-### Testing Strategy
-- **Unit Tests:** Individual calculation functions (Vitest) - **REQUIRED**
-- **Integration Tests:** Cross-tab consistency - **RECOMMENDED**
-- **Manual Validation:** SA retirement validator agent for complex scenarios - **RECOMMENDED**
-
-### Before Committing Calculation Changes
-1. ✅ **Write/update unit tests for changed functions** (MANDATORY)
-2. ✅ **Run `npm run test`** - all tests must pass
-3. ✅ **Run `npm run test:coverage`** - ensure >90% coverage on modified files
-4. ✅ **Run `npm run build`** - verify no TypeScript errors
-5. ✅ **Check Debug Window** - verify correct compounding method and values
-6. ⚠️ **Optional but recommended:** Use SA retirement validator agent for complex scenarios
-
-### Key Calculation Files
-- `lib/calculations/utils/projection.ts` - **Single source of truth** for `projectFinalSavings`
-- `lib/calculations/projection-engine.ts` - Main deterministic projection
-- `lib/monte-carlo/simulation-engine.ts` - Monte Carlo simulations
-- All calculations must respect `assumptions.compoundingMethod` setting
-
-### Test Structure Template
-
-Follow this pattern for calculation tests (see `projection.test.ts` as reference):
-
+**Test structure** (see `projection.test.ts` as reference):
 ```typescript
 describe('functionName', () => {
-  describe('Critical SA scenarios', () => {
-    it('should handle TFSA at R500k limit (R0 contributions)', () => {
-      // Test accounts with existing balance but no new contributions
-    })
-
-    it('should handle old pension fund (R0 contributions, 0% escalation)', () => {
-      // Test accounts no longer receiving contributions
-    })
-  })
-
-  describe('Compounding methods', () => {
-    it('nominal method: should match Excel FV formula', () => {})
-    it('compound method: should use actuarial compounding', () => {})
-  })
-
-  describe('Edge cases', () => {
-    it('should handle zero years', () => {})
-    it('should handle zero balance with contributions', () => {})
-    it('should handle zero balance and zero contributions', () => {})
-  })
+  describe('Critical SA scenarios', () => { /* TFSA at limit, old pension fund */ })
+  describe('Compounding methods', () => { /* nominal vs compound */ })
+  describe('Edge cases', () => { /* zero years, zero balance, zero contributions */ })
 })
 ```
 
-### Common Pitfalls
-- ❌ Don't duplicate `projectFinalSavings` - import from shared utility
-- ❌ Don't hardcode `monthlyReturn = annualReturn / 12` - use compounding method
-- ❌ Don't forget to include `assumptions` in useMemo dependencies
-- ❌ Don't use local formatCurrency - import from `lib/utils/currency`
-- ❌ **Don't modify calculation code without adding tests**
-- ❌ **Don't skip edge case testing** (R0 contributions, 0% escalation, etc.)
+## Key Calculation Files
 
-### Debug Window
-The Debug Window (`components/debug/debug-window.tsx`) is the source of truth for verifying:
-- Which compounding method is active
-- Actual monthly return being used in calculations
-- Weighted portfolio metrics
-- Display mode (real vs nominal)
+- `lib/calculations/utils/projection.ts` — **single source of truth** for `projectFinalSavings`
+- `lib/calculations/projection-engine.ts` — deterministic projection
+- `lib/monte-carlo/simulation-engine.ts` — Monte Carlo
+- All calculations must respect `assumptions.compoundingMethod`
 
-Always check the Debug Window after making calculation changes to ensure all tabs show consistent values.
+## Common Pitfalls
 
-## Theming Architecture
+- ❌ Don't duplicate `projectFinalSavings` — import from shared utility
+- ❌ Don't hardcode `monthlyReturn = annualReturn / 12` — use compounding method
+- ❌ Don't omit `assumptions` from useMemo deps
+- ❌ Don't use local formatCurrency — import from `lib/utils/currency`
+- ❌ Don't hardcode colors (`bg-blue-500`) — use semantic tokens (`bg-primary`, `text-foreground`)
 
-Dual-theming system (color themes + dark mode). See **[docs/THEMING.md](docs/THEMING.md)** for full details.
+## Theming
 
-### Rules
-- ✅ Use semantic tokens: `bg-primary`, `text-foreground`
-- ❌ Don't hardcode colors: `bg-blue-500`, `style={{ color: '#...' }}`
+Dual-theming (color themes + dark mode). Full details: `docs/THEMING.md`.
 
-## Documentation
+## Phase Docs (update after every meaningful change)
 
-- **Theming System:** `docs/THEMING.md` - Complete theming architecture guide
-- **Phase Planning:** `docs/project-phases.md`
-- **Testing Plan:** `history/testing-and-validation-plan.md`
-- **Calculation Changes:** Document in `history/` with date-prefixed markdown files
-
-## ⚠️ Critical Rule: Keep Phase Docs Current
-
-**After every meaningful change, update phase documentation without being asked.**
-
-1. **Update the relevant phase file** in `docs/project-phases/` — mark tasks complete, add completed items, update pending list
-2. **Update `docs/project-phases.md`** — add a dated entry to "Current Status Summary" and update the status emoji in the phase table
-3. **Update `history/`** — for significant calculation or architecture changes, add a date-prefixed markdown file
-
-This applies after: feature implementation, bug fixes, refactors, config updates, or any commit that advances a phase.
+1. `docs/project-phases/` — mark tasks complete, update pending list
+2. `docs/project-phases.md` — add dated entry to "Current Status Summary", update status emoji
+3. `history/` — date-prefixed markdown for significant calculation/architecture changes
