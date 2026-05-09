@@ -1,10 +1,11 @@
 "use client"
 
-import { Pencil, Trash2 } from "lucide-react"
+import { AlertTriangle, Pencil, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Account } from "@/types"
 import { ACCOUNT_TYPE_LABELS } from "@/types"
+import { TFSA_LIMITS_CONFIG } from "@/lib/constants/tax-year.config"
 import { formatCurrency, formatPercentage } from "@/lib/utils/formatters"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 
@@ -12,6 +13,43 @@ interface AccountCardProps {
   account: Account
   onEdit: (account: Account) => void
   onDelete: (id: string) => void
+}
+
+function TfsaLimitBadge({ account }: { account: Account }) {
+  const contributed = account.tfsaContributionsToDate ?? 0
+  const remaining = Math.max(0, TFSA_LIMITS_CONFIG.lifetimeLimit - contributed)
+  const annualUsed = (account.monthlyContribution * 12)
+  const overAnnual = annualUsed > TFSA_LIMITS_CONFIG.annualLimit
+  const lifetimeFull = remaining === 0
+
+  return (
+    <div className="mt-2 rounded-md border border-border bg-muted/40 p-2 text-xs space-y-1">
+      <div className="flex justify-between">
+        <span className="text-muted-foreground">Lifetime used</span>
+        <span className="font-medium">
+          {formatCurrency(contributed)} / {formatCurrency(TFSA_LIMITS_CONFIG.lifetimeLimit)}
+        </span>
+      </div>
+      <div className="flex justify-between">
+        <span className="text-muted-foreground">Lifetime remaining</span>
+        <span className={`font-medium ${lifetimeFull ? "text-destructive" : ""}`}>
+          {formatCurrency(remaining)}
+        </span>
+      </div>
+      {lifetimeFull && (
+        <div className="flex items-center gap-1 text-destructive font-medium">
+          <AlertTriangle className="h-3 w-3" />
+          Lifetime limit reached — contributions capped in projections
+        </div>
+      )}
+      {!lifetimeFull && overAnnual && (
+        <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium">
+          <AlertTriangle className="h-3 w-3" />
+          Annual contributions ({formatCurrency(annualUsed)}) exceed R36 000 limit — capped in projections
+        </div>
+      )}
+    </div>
+  )
 }
 
 export function AccountCard({ account, onEdit, onDelete }: AccountCardProps) {
@@ -90,6 +128,8 @@ export function AccountCard({ account, onEdit, onDelete }: AccountCardProps) {
               {formatPercentage(account.annualFees)}
             </div>
           </div>
+
+          {account.type === "tfsa" && <TfsaLimitBadge account={account} />}
         </div>
       </CardContent>
     </Card>

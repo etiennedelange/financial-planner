@@ -696,4 +696,105 @@ describe('calculateProjection', () => {
       expect(result.portfolioAtRetirement).toBeGreaterThan(1000000)
     })
   })
+
+  describe('TFSA contribution limits', () => {
+    const tfsaAccount: Account = {
+      id: 'tfsa-1',
+      name: 'My TFSA',
+      type: 'tfsa',
+      provider: 'Allan Gray',
+      currentBalance: 200000,
+      monthlyContribution: 3000, // R36k/year — at annual limit
+      expectedReturn: 10,
+      annualFees: 0.5,
+      contributionEscalation: 0,
+      tfsaContributionsToDate: 200000,
+    }
+
+    const shortPersonalInfo: PersonalInfo = {
+      currentAge: 55,
+      retirementAge: 65,
+      lifeExpectancy: 80,
+      annualIncome: 400000,
+    }
+
+    it('should stop contributions once lifetime limit (R500k) is reached', () => {
+      // R200k to date + R36k/year × 10 years = R560k > R500k
+      // So contributions should stop after ~8.3 years (R300k remaining / R36k p.a.)
+      const result = calculateProjection(
+        [tfsaAccount],
+        shortPersonalInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig
+      )
+
+      // Total contributions across accumulation years must not exceed R300k remaining room
+      const totalContributions = result.yearlyProjections
+        .slice(0, 10)
+        .reduce((sum, y) => sum + y.contributions, 0)
+
+      expect(totalContributions).toBeLessThanOrEqual(300000 + 1) // R500k - R200k, tiny rounding buffer
+    })
+
+    it('should allow zero further contributions when lifetime limit already reached', () => {
+      const fullAccount: Account = {
+        ...tfsaAccount,
+        tfsaContributionsToDate: 500000, // lifetime maxed out
+        currentBalance: 650000,          // balance can exceed limit (it's growth)
+        monthlyContribution: 3000,
+      }
+
+      const result = calculateProjection(
+        [fullAccount],
+        shortPersonalInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig
+      )
+
+      const totalContributions = result.yearlyProjections
+        .slice(0, 10)
+        .reduce((sum, y) => sum + y.contributions, 0)
+
+      expect(totalContributions).toBe(0)
+    })
+
+    it('should cap annual contributions at R36k even with higher monthly amounts', () => {
+      const overContributingAccount: Account = {
+        ...tfsaAccount,
+        monthlyContribution: 5000, // R60k/year — over annual limit
+        tfsaContributionsToDate: 0,
+        contributionEscalation: 0,
+      }
+
+      const result = calculateProjection(
+        [overContributingAccount],
+        shortPersonalInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig
+      )
+
+      // Year 1 contributions must not exceed R36k annual limit
+      expect(result.yearlyProjections[0].contributions).toBeLessThanOrEqual(36000 + 1)
+    })
+
+    it('should not apply TFSA limits to non-TFSA accounts', () => {
+      const raAccount: Account = {
+        ...tfsaAccount,
+        id: 'ra-1',
+        type: 'retirement_annuity',
+        monthlyContribution: 5000, // R60k/year — fine for RA
+        tfsaContributionsToDate: undefined,
+      }
+
+      const result = calculateProjection(
+        [raAccount],
+        shortPersonalInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig
+      )
+
+      // Year 1 contributions should reflect full R60k (no cap for RA)
+      expect(result.yearlyProjections[0].contributions).toBeGreaterThan(36000)
+    })
+  })
 })

@@ -1,4 +1,5 @@
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
+import { TFSA_LIMITS_CONFIG } from "@/lib/constants/tax-year.config"
 import { calculateIncomeTaxWithRebates, calculateLumpSumCommutation } from "./retirement-tax"
 import { getSpendingPhaseMultiplier } from "./utils/spending-phase"
 import type {
@@ -197,12 +198,20 @@ export function calculateProjection(
   // Cost basis tracks original value + contributions for CGT calculation on discretionary accounts
   const accountCostBases = accounts.map(acc => acc.currentBalance)
 
+  // TFSA contribution tracking: lifetime cap starts from user-supplied contributions-to-date
+  const tfsaLifetimeUsed = accounts.map(acc =>
+    acc.type === 'tfsa' ? (acc.tfsaContributionsToDate ?? 0) : 0
+  )
+
   for (let year = 0; year < yearsToRetirement; year++) {
     const age = personalInfo.currentAge + year
     const startingBalance = accountBalances.reduce((sum, bal) => sum + bal, 0)
     let yearlyGrowth = 0
     let yearlyFees = 0
     let yearlyContributions = 0
+
+    // Reset annual TFSA contribution tracker each year
+    const tfsaYearlyUsed = accounts.map(() => 0)
 
     // Project each account individually
     for (let accIdx = 0; accIdx < accounts.length; accIdx++) {
@@ -215,8 +224,18 @@ export function calculateProjection(
       // Monthly compounding within each year for this account
       for (let month = 0; month < 12; month++) {
         // Calculate contribution for this month (smooth escalation)
-        const monthlyContribution =
+        let monthlyContribution =
           accountMonthlyContributions[accIdx] * Math.pow(1 + accEscalation, year + month / 12)
+
+        // Enforce TFSA annual (R36k) and lifetime (R500k) contribution limits
+        if (acc.type === 'tfsa') {
+          const remainingLifetime = Math.max(0, TFSA_LIMITS_CONFIG.lifetimeLimit - tfsaLifetimeUsed[accIdx])
+          const remainingAnnual = Math.max(0, TFSA_LIMITS_CONFIG.annualLimit - tfsaYearlyUsed[accIdx])
+          monthlyContribution = Math.min(monthlyContribution, remainingLifetime, remainingAnnual)
+          tfsaLifetimeUsed[accIdx] += monthlyContribution
+          tfsaYearlyUsed[accIdx] += monthlyContribution
+        }
+
         yearlyContributions += monthlyContribution
 
         // Apply growth first (end-of-period contributions, matches Excel FV type=0)

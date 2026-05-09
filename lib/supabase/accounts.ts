@@ -12,6 +12,7 @@ type AccountRow = {
   expected_return: number
   annual_fees: number
   contribution_escalation: number
+  tfsa_contributions_to_date?: number | null
 }
 
 function toRow(account: Account, sessionId: string): AccountRow {
@@ -26,6 +27,7 @@ function toRow(account: Account, sessionId: string): AccountRow {
     expected_return: account.expectedReturn,
     annual_fees: account.annualFees,
     contribution_escalation: account.contributionEscalation,
+    tfsa_contributions_to_date: account.tfsaContributionsToDate ?? null,
   }
 }
 
@@ -40,6 +42,7 @@ function fromRow(row: AccountRow): Account {
     expectedReturn: row.expected_return,
     annualFees: row.annual_fees,
     contributionEscalation: row.contribution_escalation,
+    tfsaContributionsToDate: row.tfsa_contributions_to_date ?? undefined,
   }
 }
 

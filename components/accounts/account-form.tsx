@@ -28,7 +28,7 @@ import { SA_DEFAULTS } from "@/lib/constants/defaults"
 const accountSchema = z.object({
   name: z.string().min(1, "Account name is required"),
   provider: z.string().min(1, "Provider is required"),
-type: z.enum([
+  type: z.enum([
     "pension_fund",
     "retirement_annuity",
     "preservation_fund",
@@ -40,6 +40,7 @@ type: z.enum([
   expectedReturn: z.number().min(0).max(30),
   annualFees: z.number().min(0).max(5),
   contributionEscalation: z.number().min(0).max(20),
+  tfsaContributionsToDate: z.number().min(0).max(500000).optional(),
 })
 
 type AccountFormData = z.infer<typeof accountSchema>
@@ -61,6 +62,7 @@ const getDefaultValues = (account?: Account | null): AccountFormData => ({
   annualFees: account?.annualFees ?? SA_DEFAULTS.defaultAnnualFees,
   contributionEscalation:
     account?.contributionEscalation ?? SA_DEFAULTS.defaultContributionEscalation,
+  tfsaContributionsToDate: account?.tfsaContributionsToDate,
 })
 
 export function AccountFormDialog({
@@ -187,6 +189,31 @@ export function AccountFormDialog({
               />
             </div>
           </div>
+
+          {selectedType === "tfsa" && (
+            <div className="space-y-2 rounded-md border border-border bg-muted/40 p-3">
+              <Label htmlFor="tfsaContributionsToDate">
+                Total contributions to date (R)
+              </Label>
+              <Input
+                id="tfsaContributionsToDate"
+                type="number"
+                min="0"
+                max="500000"
+                step="1000"
+                placeholder="e.g. 180000"
+                {...register("tfsaContributionsToDate", { valueAsNumber: true })}
+              />
+              <p className="text-xs text-muted-foreground">
+                Cumulative amount <em>contributed</em> to all TFSAs since 2015 (not current balance — growth doesn&apos;t count). Used to enforce the R500 000 lifetime limit.
+              </p>
+              {errors.tfsaContributionsToDate && (
+                <p className="text-sm text-destructive">
+                  {errors.tfsaContributionsToDate.message}
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="space-y-2">

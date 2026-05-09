@@ -23,6 +23,8 @@ export interface Account {
   expectedReturn: number // annual % (e.g., 10 for 10%)
   annualFees: number // % p.a.
   contributionEscalation: number // annual % increase
+  // TFSA only: cumulative past contributions (not balance — growth doesn't count)
+  tfsaContributionsToDate?: number
 }
 
 export interface AccountSummary {

@@ -46,6 +46,7 @@ export type Database = {
           name: string
           provider: string
           session_id: string
+          tfsa_contributions_to_date: number | null
           type: string
           updated_at: string
         }
@@ -60,6 +61,7 @@ export type Database = {
           name: string
           provider?: string
           session_id: string
+          tfsa_contributions_to_date?: number | null
           type: string
           updated_at?: string
         }
@@ -74,6 +76,7 @@ export type Database = {
           name?: string
           provider?: string
           session_id?: string
+          tfsa_contributions_to_date?: number | null
           type?: string
           updated_at?: string
         }
