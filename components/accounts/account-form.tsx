@@ -24,6 +24,7 @@ import {
 import type { Account, AccountType } from "@/types"
 import { ACCOUNT_TYPE_LABELS } from "@/types"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
+import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 
 const accountSchema = z.object({
   name: z.string().min(1, "Account name is required"),
@@ -40,7 +41,7 @@ const accountSchema = z.object({
   expectedReturn: z.number().min(0).max(30),
   annualFees: z.number().min(0).max(5),
   contributionEscalation: z.number().min(0).max(20),
-  tfsaContributionsToDate: z.number().min(0).max(500000).optional(),
+  tfsaContributionsToDate: z.number().min(0).max(SA_TAX_LIMITS.tfsaLifetimeLimit).optional(),
 })
 
 type AccountFormData = z.infer<typeof accountSchema>
@@ -199,7 +200,7 @@ export function AccountFormDialog({
                 id="tfsaContributionsToDate"
                 type="number"
                 min="0"
-                max="500000"
+                max={SA_TAX_LIMITS.tfsaLifetimeLimit}
                 step="1000"
                 placeholder="e.g. 180000"
                 {...register("tfsaContributionsToDate", { valueAsNumber: true })}

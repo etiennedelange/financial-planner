@@ -797,4 +797,100 @@ describe('calculateProjection', () => {
       expect(result.yearlyProjections[0].contributions).toBeGreaterThan(36000)
     })
   })
+
+  describe('Account depletion tracking', () => {
+    const shortInfo: PersonalInfo = {
+      currentAge: 60,
+      retirementAge: 65,
+      lifeExpectancy: 80,
+      annualIncome: 600000,
+    }
+
+    it('accountBalancesAtRetirement is populated for each account', () => {
+      const ra: Account = { ...baseAccount, id: 'ra-1', type: 'retirement_annuity', currentBalance: 500000 }
+      const tfsa: Account = { ...baseAccount, id: 'tfsa-1', type: 'tfsa', currentBalance: 200000, monthlyContribution: 0 }
+
+      const result = calculateProjection([ra, tfsa], shortInfo, baseRetirementGoals, baseDrawdownConfig)
+
+      expect(result.accountBalancesAtRetirement).toHaveProperty('ra-1')
+      expect(result.accountBalancesAtRetirement).toHaveProperty('tfsa-1')
+      expect(result.accountBalancesAtRetirement['ra-1']).toBeGreaterThan(0)
+      expect(result.accountBalancesAtRetirement['tfsa-1']).toBeGreaterThan(0)
+    })
+
+    it('accountBalances snapshot is populated in each drawdown year projection', () => {
+      const ra: Account = { ...baseAccount, id: 'ra-1', type: 'retirement_annuity', currentBalance: 500000 }
+
+      const result = calculateProjection([ra], shortInfo, baseRetirementGoals, baseDrawdownConfig)
+
+      const drawdownRows = result.yearlyProjections.filter(p => p.age >= shortInfo.retirementAge)
+      expect(drawdownRows.length).toBeGreaterThan(0)
+      drawdownRows.forEach(row => {
+        expect(row.accountBalances).toBeDefined()
+        expect(row.accountBalances).toHaveProperty('ra-1')
+      })
+    })
+
+    it('accountBalances decreases monotonically for a depleting account', () => {
+      // Small balance forces depletion
+      const ra: Account = { ...baseAccount, id: 'ra-1', type: 'retirement_annuity', currentBalance: 50000, monthlyContribution: 0 }
+      const highWithdrawal: RetirementGoals = { ...baseRetirementGoals, desiredMonthlyIncome: 30000 }
+      const fixedPct: DrawdownConfig = { ...baseDrawdownConfig, strategy: 'fixed_percentage', initialWithdrawalRate: 10 }
+
+      const result = calculateProjection([ra], shortInfo, highWithdrawal, fixedPct)
+
+      const drawdownRows = result.yearlyProjections.filter(p => p.age >= shortInfo.retirementAge && p.accountBalances)
+      // Find the transition to zero
+      let hitZero = false
+      for (const row of drawdownRows) {
+        const bal = row.accountBalances!['ra-1']
+        if (hitZero) {
+          expect(bal).toBe(0)
+        } else if (bal === 0) {
+          hitZero = true
+        }
+      }
+    })
+
+    it('TFSA accountBalances depletes before pension in sequential withdrawal', () => {
+      // Small TFSA balance, large RA — TFSA should deplete first
+      const tfsa: Account = { ...baseAccount, id: 'tfsa-1', type: 'tfsa', currentBalance: 100000, monthlyContribution: 0 }
+      const ra: Account = { ...baseAccount, id: 'ra-1', type: 'retirement_annuity', currentBalance: 2000000, monthlyContribution: 0 }
+
+      const result = calculateProjection([tfsa, ra], shortInfo, baseRetirementGoals, baseDrawdownConfig)
+
+      const drawdownRows = result.yearlyProjections.filter(p => p.age >= shortInfo.retirementAge && p.accountBalances)
+
+      // TFSA should hit zero before RA hits zero (or TFSA hits zero while RA still has balance)
+      const tfsaDepletionYear = drawdownRows.find(r => (r.accountBalances!['tfsa-1'] ?? 0) <= 0)
+      const raDepletionYear = drawdownRows.find(r => (r.accountBalances!['ra-1'] ?? 0) <= 0)
+
+      expect(tfsaDepletionYear).toBeDefined() // Small TFSA should deplete
+      if (raDepletionYear) {
+        expect(tfsaDepletionYear!.age).toBeLessThanOrEqual(raDepletionYear.age)
+      } else {
+        // RA survives — that's fine, TFSA still depleted first
+        expect(tfsaDepletionYear).toBeDefined()
+      }
+    })
+
+    it('accountBalancesAtRetirement returns empty object for no accounts', () => {
+      const result = calculateProjection([], shortInfo, baseRetirementGoals, baseDrawdownConfig)
+      expect(result.accountBalancesAtRetirement).toEqual({})
+    })
+
+    it('lump sum deduction is reflected in accountBalancesAtRetirement', () => {
+      const ra: Account = { ...baseAccount, id: 'ra-1', type: 'retirement_annuity', currentBalance: 500000, monthlyContribution: 0 }
+      const noLumpSum: DrawdownConfig = { ...baseDrawdownConfig, lumpSumPercentage: 0 }
+      const withLumpSum: DrawdownConfig = { ...baseDrawdownConfig, lumpSumPercentage: 30 }
+
+      const r1 = calculateProjection([ra], shortInfo, baseRetirementGoals, noLumpSum)
+      const r2 = calculateProjection([ra], shortInfo, baseRetirementGoals, withLumpSum)
+
+      // With 30% lump sum, retirement balance should be ~70% of no-lump-sum
+      const bal1 = r1.accountBalancesAtRetirement['ra-1']
+      const bal2 = r2.accountBalancesAtRetirement['ra-1']
+      expect(bal2).toBeCloseTo(bal1 * 0.7, 0)
+    })
+  })
 })

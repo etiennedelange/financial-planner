@@ -26,6 +26,7 @@ import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import { getSpendingPhaseMultiplier } from "@/lib/calculations/utils/spending-phase"
 import { calculateMonthlyReturn, formatMonthlyReturnFormula } from "@/lib/calculations/utils/projection"
+import { calculateRAOptimization } from "@/lib/calculations/utils/ra-optimization"
 import { formatCurrency } from "@/lib/utils/currency"
 import type { ProjectionResult } from "@/types"
 
@@ -556,6 +557,125 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
               <p className="text-xs text-muted-foreground mt-1">
                 TFSA (tax-free) → Discretionary (CGT only) → Pension/RA (full income tax)
               </p>
+
+              {/* Account Depletion Timeline */}
+              {(() => {
+                const drawdownRows = projection.yearlyProjections.filter(
+                  p => p.age >= personalInfo.retirementAge && p.accountBalances
+                )
+                if (drawdownRows.length === 0 || accounts.length === 0) return null
+
+                const accountInfos = accounts.map(acc => {
+                  const startBal = projection.accountBalancesAtRetirement[acc.id] ?? 0
+                  if (startBal <= 0) return null
+
+                  // Find first year balance hits zero
+                  const depletionRow = drawdownRows.find(
+                    p => (p.accountBalances?.[acc.id] ?? 0) <= 0
+                  )
+                  const depletionAge = depletionRow?.age ?? null
+
+                  // Balance at life expectancy (last row)
+                  const lastRow = drawdownRows[drawdownRows.length - 1]
+                  const finalBal = lastRow?.accountBalances?.[acc.id] ?? 0
+
+                  return { acc, startBal, depletionAge, finalBal }
+                }).filter(Boolean) as {
+                  acc: typeof accounts[0]
+                  startBal: number
+                  depletionAge: number | null
+                  finalBal: number
+                }[]
+
+                if (accountInfos.length === 0) return null
+
+                const typeColor: Record<string, string> = {
+                  tfsa: "text-green-700 dark:text-green-400",
+                  discretionary: "text-blue-700 dark:text-blue-400",
+                  pension_fund: "text-orange-700 dark:text-orange-400",
+                  retirement_annuity: "text-orange-700 dark:text-orange-400",
+                  preservation_fund: "text-orange-700 dark:text-orange-400",
+                }
+                const typeBg: Record<string, string> = {
+                  tfsa: "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800",
+                  discretionary: "bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800",
+                  pension_fund: "bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800",
+                  retirement_annuity: "bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800",
+                  preservation_fund: "bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800",
+                }
+                const typeLabel: Record<string, string> = {
+                  tfsa: "TFSA",
+                  discretionary: "Discretionary",
+                  pension_fund: "Pension Fund",
+                  retirement_annuity: "Retirement Annuity",
+                  preservation_fund: "Preservation Fund",
+                }
+
+                const totalYears = personalInfo.lifeExpectancy - personalInfo.retirementAge
+
+                return (
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm">Account Depletion Timeline</h4>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {accountInfos.map(({ acc, startBal, depletionAge, finalBal }) => {
+                        const depletes = depletionAge !== null
+                        const yearsActive = depletes
+                          ? depletionAge - personalInfo.retirementAge
+                          : totalYears
+                        const pct = Math.min(100, Math.round((yearsActive / totalYears) * 100))
+
+                        return (
+                          <div
+                            key={acc.id}
+                            className={`rounded-lg border p-3 space-y-2 ${typeBg[acc.type] ?? "bg-muted border-border"}`}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <p className="text-sm font-medium leading-tight">{acc.name}</p>
+                                <p className={`text-xs ${typeColor[acc.type] ?? "text-muted-foreground"}`}>
+                                  {typeLabel[acc.type] ?? acc.type}
+                                </p>
+                              </div>
+                              <div className="text-right shrink-0">
+                                {depletes ? (
+                                  <p className="text-xs font-semibold text-red-600 dark:text-red-400">
+                                    Depletes age {depletionAge}
+                                  </p>
+                                ) : (
+                                  <p className="text-xs font-semibold text-green-700 dark:text-green-400">
+                                    Lasts to age {personalInfo.lifeExpectancy}+
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-xs text-muted-foreground">
+                                <span>Start: {fmt(startBal, yearsToRetirement)}</span>
+                                <span>End: {depletes ? "—" : fmt(finalBal, personalInfo.lifeExpectancy - personalInfo.currentAge)}</span>
+                              </div>
+                              <div className="h-1.5 rounded-full bg-background/60 overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all ${
+                                    depletes
+                                      ? "bg-red-400 dark:bg-red-600"
+                                      : "bg-green-500 dark:bg-green-600"
+                                  }`}
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {depletes
+                                  ? `${yearsActive} of ${totalYears} retirement years`
+                                  : `Full ${totalYears} retirement years`}
+                              </p>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
           </AccordionContent>
         </AccordionItem>
@@ -875,6 +995,161 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
             </div>
           </AccordionContent>
         </AccordionItem>
+
+        {/* RA Contribution Optimization */}
+        {(() => {
+          if (personalInfo.annualIncome <= 0) return (
+            <AccordionItem value="ra-optimization" className="border rounded-lg px-4">
+              <AccordionTrigger className="text-lg font-semibold">
+                8. RA/Pension Contribution Optimisation
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="rounded-lg border border-muted bg-muted/40 p-4 text-sm text-muted-foreground space-y-1">
+                  <p>Enter your <strong>Annual Income</strong> under <strong>Planning Inputs</strong> to see personalised RA deduction optimisation.</p>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )
+          return (() => {
+          const opt = calculateRAOptimization(personalInfo.annualIncome, accounts)
+          const hasRAAccounts = opt.currentMonthlyContributions > 0 || accounts.some(
+            a => ['pension_fund', 'retirement_annuity', 'preservation_fund'].includes(a.type)
+          )
+
+          return (
+            <AccordionItem value="ra-optimization" className="border rounded-lg px-4">
+              <AccordionTrigger className="text-lg font-semibold">
+                8. RA/Pension Contribution Optimisation
+                {!opt.isFullyUtilized && opt.annualTaxSaving > 0 && (
+                  <span className="ml-2 text-sm font-normal text-amber-600 dark:text-amber-400">
+                    Save {formatCurrency(opt.annualTaxSaving)} in tax/year
+                  </span>
+                )}
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  {/* Summary cards */}
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-lg bg-muted p-3 space-y-1">
+                      <p className="text-xs text-muted-foreground">Annual Deduction Limit</p>
+                      <p className="font-semibold">{formatCurrency(opt.annualDeductionLimit)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        min(27.5% × {formatCurrency(personalInfo.annualIncome)}, R430k)
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Income from Planning Inputs
+                      </p>
+                    </div>
+                    <div className="rounded-lg bg-muted p-3 space-y-1">
+                      <p className="text-xs text-muted-foreground">Current Annual Contributions</p>
+                      <p className="font-semibold">{formatCurrency(opt.currentAnnualContributions)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatCurrency(opt.currentMonthlyContributions)}/month across RA/pension accounts
+                      </p>
+                    </div>
+                    <div className={`rounded-lg p-3 space-y-1 ${
+                      opt.isFullyUtilized
+                        ? "bg-green-50 dark:bg-green-950"
+                        : "bg-amber-50 dark:bg-amber-950"
+                    }`}>
+                      <p className="text-xs text-muted-foreground">Unused Deduction Room</p>
+                      <p className={`font-semibold ${
+                        opt.isFullyUtilized
+                          ? "text-green-700 dark:text-green-400"
+                          : "text-amber-700 dark:text-amber-400"
+                      }`}>
+                        {opt.isFullyUtilized ? "Fully utilised" : formatCurrency(opt.remainingRoom)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {opt.utilizationPct.toFixed(0)}% of limit used
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Utilisation bar */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Deduction utilisation</span>
+                      <span>{opt.utilizationPct.toFixed(1)}%</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          opt.utilizationPct >= 100
+                            ? "bg-green-500"
+                            : opt.utilizationPct >= 60
+                            ? "bg-amber-400"
+                            : "bg-red-400"
+                        }`}
+                        style={{ width: `${Math.min(100, opt.utilizationPct)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Tax saving callout */}
+                  {!opt.isFullyUtilized && opt.annualTaxSaving > 0 && (
+                    <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 p-4 space-y-2">
+                      <p className="font-medium text-amber-800 dark:text-amber-200">
+                        You could save {formatCurrency(opt.annualTaxSaving)}/year in income tax
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Increase your combined RA/pension contributions from{" "}
+                        <span className="font-medium">{formatCurrency(opt.currentMonthlyContributions)}/month</span> to{" "}
+                        <span className="font-medium">{fmt(opt.optimalMonthlyContribution)}/month</span>{" "}
+                        ({fmt(opt.remainingRoom)}/year additional) to fully utilise your deduction limit.
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Additional monthly contribution needed: {fmt(opt.optimalMonthlyContribution - opt.currentMonthlyContributions)}/month
+                      </p>
+                    </div>
+                  )}
+
+                  {opt.isFullyUtilized && (
+                    <div className="rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950 p-4">
+                      <p className="font-medium text-green-800 dark:text-green-200">
+                        Your RA/pension deduction limit is fully utilised.
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        You are contributing the maximum deductible amount. Consider a TFSA for additional tax-free savings (R36k/year, R500k lifetime).
+                      </p>
+                    </div>
+                  )}
+
+                  {opt.isOverLimit && (
+                    <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 p-4">
+                      <p className="font-medium text-red-800 dark:text-red-200">
+                        Contributions exceed the deduction limit
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {formatCurrency(opt.currentAnnualContributions - opt.annualDeductionLimit)}/year of your contributions are not tax-deductible.
+                        The excess is not immediately penalised but check with your fund — it may be deductible in future years.
+                      </p>
+                    </div>
+                  )}
+
+                  {!hasRAAccounts && (
+                    <p className="text-sm text-muted-foreground">
+                      Add a Pension Fund, Retirement Annuity, or Preservation Fund account to see personalised optimisation suggestions.
+                    </p>
+                  )}
+
+                  {/* How it works */}
+                  <div className="rounded-lg bg-muted p-4 space-y-2 text-sm">
+                    <p className="font-medium">How the deduction works</p>
+                    <ul className="text-muted-foreground space-y-1 list-disc list-inside">
+                      <li>Contributions to pension funds, RAs, and preservation funds reduce your taxable income</li>
+                      <li>Limit: the lesser of 27.5% of your income or R430,000 per year</li>
+                      <li>Tax saved = marginal tax rate × amount deducted (varies by bracket)</li>
+                      <li>Excess contributions are carried forward and deductible in future years</li>
+                      <li>Source: s11(k) of the Income Tax Act, 2026/2027 limits</li>
+                    </ul>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )
+        })()
+        })()}
       </Accordion>
     </div>
   )

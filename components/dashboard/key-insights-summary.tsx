@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { TrendingUp, AlertCircle, Target } from "lucide-react"
 import { formatCurrency } from "@/lib/utils/currency"
+import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import type { ProjectionResult } from "@/types"
 
 interface KeyInsightsSummaryProps {
@@ -34,7 +35,7 @@ export function KeyInsightsSummary({
   const yearsToRetirement = retirementAge - currentAge
   const monthlyIncome = currentMonthlyIncome || 1 // Avoid division by zero
   const annualIncome = monthlyIncome * 12
-  const maxRaContribution = Math.min(annualIncome * 0.275, 350000)
+  const maxRaContribution = Math.min(annualIncome * SA_TAX_LIMITS.pensionRaDeductionRate, SA_TAX_LIMITS.pensionRaMaxDeduction)
   const monthlyRaContribution = maxRaContribution / 12
 
   // Adjust desired income for inflation to compare in future terms

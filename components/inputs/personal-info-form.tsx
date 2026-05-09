@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useShallow } from "zustand/react/shallow"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
+import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 
 const schema = z.object({
   currentAge: z.number().min(18).max(100),
@@ -126,7 +127,7 @@ export function PersonalInfoForm() {
             <div className="flex items-center gap-2">
               <Label htmlFor="annualIncome">Annual Income (R)</Label>
               <InfoTooltip
-                content="Your current annual gross income before tax. Used to calculate tax deductions for retirement contributions (RAs, Pension Funds). SA allows up to 27.5% of income (max R350k/year) as tax-deductible retirement contributions."
+                content={`Your current annual gross income before tax. Used to calculate tax deductions for retirement contributions (RAs, Pension Funds). SA allows up to ${(SA_TAX_LIMITS.pensionRaDeductionRate * 100).toFixed(1)}% of income (max R${(SA_TAX_LIMITS.pensionRaMaxDeduction / 1000).toFixed(0)}k/year) as tax-deductible retirement contributions.`}
                 side="right"
               />
             </div>

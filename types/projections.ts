@@ -26,6 +26,8 @@ export interface YearlyProjection {
   cgtTaxableAmount?: number // CGT inclusion amount (discretionary gains × 40%)
   taxableIncome?: number // Total taxable income (pensionWithdrawal + cgtTaxableAmount)
   accountSources?: AccountSourceBreakdown[] // Optional: which accounts contributed to withdrawal
+  // Per-account balance snapshot at year-end (drawdown years only), keyed by account id
+  accountBalances?: Record<string, number>
 }
 
 export interface LumpSumCommutationResult {
@@ -50,4 +52,6 @@ export interface ProjectionResult {
   averageEffectiveTaxRate: number // Average tax rate on withdrawals
   lumpSumCommutation: LumpSumCommutationResult // Lump sum details at retirement
   replacementRatio?: number // Optional: retirement income vs pre-retirement income
+  // Per-account balance at start of drawdown (after lump sum deduction), keyed by account id
+  accountBalancesAtRetirement: Record<string, number>
 }

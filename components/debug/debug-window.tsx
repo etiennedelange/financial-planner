@@ -189,7 +189,7 @@ export function DebugWindow({ className, projection, simulationResult }: DebugWi
   // Calculate retirement eligibility and tax deductions
   const taxableIncome = personalInfo.annualIncome
   const annualContribution = totalMonthlyContribution * 12
-  const maxRADeduction = Math.min(annualContribution, taxableIncome * 0.275, 350000)
+  const maxRADeduction = Math.min(annualContribution, taxableIncome * SA_TAX_LIMITS.pensionRaDeductionRate, SA_TAX_LIMITS.pensionRaMaxDeduction)
   const taxSavings = maxRADeduction * 0.45 // Assume max marginal rate of 45%
   const retirementEligible = personalInfo.currentAge >= 55 && totalBalance > 0
   const canAccessRA = personalInfo.currentAge >= 55
@@ -237,9 +237,9 @@ Can Access RA: ${canAccessRA ? 'YES (Age 55+)' : 'NO (Must be 55+)'}
 Can Access Preservation Fund: ${canAccessPreservation ? 'YES (1/3 lump sum available)' : 'NO'}
 Retirement Eligible: ${retirementEligible ? 'YES' : 'NO'}
 
-TAX DEDUCTIONS (2024/2025):
+TAX DEDUCTIONS (2026/2027):
 Annual Contribution: ${formatCurrency(annualContribution)}
-Max RA Deduction: ${formatCurrency(maxRADeduction)} (27.5% of income, max R350k)
+Max RA Deduction: ${formatCurrency(maxRADeduction)} (27.5% of income, max R430k)
 Estimated Tax Savings: ${formatCurrency(taxSavings)} (assuming 45% marginal rate)
 Effective Cost After Tax: ${formatCurrency(annualContribution - taxSavings)}
 
@@ -535,11 +535,11 @@ Single Source of Truth:
                 highlight={retirementEligible}
               />
               <div className="mt-4 pt-4 border-t">
-                <p className="text-xs font-semibold mb-2">TAX DEDUCTIONS (2024/2025):</p>
+                <p className="text-xs font-semibold mb-2">TAX DEDUCTIONS (2026/2027):</p>
                 <Param label="Annual Contribution" value={formatCurrency(annualContribution)} />
                 <Param
                   label="Max RA Deduction"
-                  value={`${formatCurrency(maxRADeduction)} (27.5% of income, max R350k)`}
+                  value={`${formatCurrency(maxRADeduction)} (27.5% of income, max R430k)`}
                   highlight
                 />
                 <Param

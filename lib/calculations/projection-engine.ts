@@ -17,6 +17,8 @@ import type {
 const PENSION_TYPES: AccountType[] = ['pension_fund', 'retirement_annuity', 'preservation_fund']
 
 interface DrawdownAccount {
+  id: string
+  name: string
   type: AccountType
   balance: number
   costBasis: number // For discretionary: tracks original value (contributions + initial balance); used for CGT gain calculation
@@ -185,6 +187,7 @@ export function calculateProjection(
         netLumpSum: 0,
         remainingPortfolio: 0,
       },
+      accountBalancesAtRetirement: {},
     }
   }
 
@@ -283,6 +286,8 @@ export function calculateProjection(
 
   // Build per-account drawdown state with post-lump-sum balances
   const drawdownAccounts: DrawdownAccount[] = accounts.map((acc, i) => ({
+    id: acc.id,
+    name: acc.name,
     type: acc.type,
     balance: accountBalances[i] * (1 - lumpSumFraction),
     costBasis: accountCostBases[i] * (1 - lumpSumFraction),
@@ -291,6 +296,11 @@ export function calculateProjection(
   }))
 
   const remainingPortfolio = drawdownAccounts.reduce((s, a) => s + a.balance, 0)
+
+  // Snapshot per-account balances at start of drawdown (before loop mutates them)
+  const accountBalancesAtRetirement = Object.fromEntries(
+    drawdownAccounts.map(a => [a.id, a.balance])
+  )
 
   // Calculate initial withdrawal based on remaining portfolio after lump sum
   let annualWithdrawal = calculateInitialWithdrawal(
@@ -334,6 +344,7 @@ export function calculateProjection(
         pensionWithdrawal: 0,
         cgtTaxableAmount: 0,
         taxableIncome: 0,
+        accountBalances: Object.fromEntries(drawdownAccounts.map(a => [a.id, 0])),
       })
       continue
     }
@@ -428,6 +439,7 @@ export function calculateProjection(
       pensionWithdrawal,
       cgtTaxableAmount,
       taxableIncome,
+      accountBalances: Object.fromEntries(drawdownAccounts.map(a => [a.id, Math.max(0, a.balance)])),
     })
 
     annualWithdrawal *= 1 + inflationRate
@@ -487,5 +499,6 @@ export function calculateProjection(
       netLumpSum: lumpSumCommutation.netLumpSum,
       remainingPortfolio,
     },
+    accountBalancesAtRetirement,
   }
 }
