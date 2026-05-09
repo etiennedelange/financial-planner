@@ -101,17 +101,6 @@ export function CalculatorClient() {
   const metricsRef = useRef<HTMLDivElement>(null)
   const [metricsOutOfView, setMetricsOutOfView] = useState(false)
 
-  useEffect(() => {
-    const el = metricsRef.current
-    if (!el) return
-    const observer = new IntersectionObserver(
-      ([entry]) => setMetricsOutOfView(!entry.isIntersecting),
-      { threshold: 0 }
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
-
   // Calculate projection with deferred inputs so slider drags don't block the UI
   const projection: ProjectionResult | null = useMemo(
     () =>
@@ -126,6 +115,17 @@ export function CalculatorClient() {
           ),
     [deferredAccounts, deferredPersonalInfo, deferredRetirementGoals, deferredDrawdownConfig, deferredAssumptions]
   )
+
+  useEffect(() => {
+    const el = metricsRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setMetricsOutOfView(!entry.isIntersecting),
+      { threshold: 0 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [projection])
 
   const handleReset = () => {
     resetToDefaults()
@@ -429,6 +429,7 @@ export function CalculatorClient() {
         isVisible={metricsOutOfView}
         retirementAge={personalInfo.retirementAge}
         currentAge={personalInfo.currentAge}
+        lifeExpectancy={personalInfo.lifeExpectancy}
         inflationRate={retirementGoals.inflationRate}
         displayMode={displayMode}
       />

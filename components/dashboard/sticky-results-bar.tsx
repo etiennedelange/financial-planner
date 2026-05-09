@@ -2,7 +2,7 @@
 
 import { formatCurrency } from "@/lib/utils/currency"
 import type { ProjectionResult, SimulationResult } from "@/types"
-import { DollarSign, Gauge, Loader2, Target } from "lucide-react"
+import { AlertTriangle, DollarSign, Gauge, Loader2, Target, TrendingDown, TrendingUp, Wallet } from "lucide-react"
 
 interface StickyResultsBarProps {
   projection: ProjectionResult | null
@@ -11,6 +11,7 @@ interface StickyResultsBarProps {
   isVisible: boolean
   retirementAge: number
   currentAge: number
+  lifeExpectancy: number
   inflationRate: number
   displayMode: "real" | "nominal"
 }
@@ -22,6 +23,12 @@ function successRateColor(rate: number) {
   return "text-red-500"
 }
 
+function depletionColor(depletionAge: number | null, lifeExpectancy: number) {
+  if (depletionAge === null) return "text-green-500"
+  if (depletionAge >= lifeExpectancy - 5) return "text-orange-500"
+  return "text-red-500"
+}
+
 export function StickyResultsBar({
   projection,
   simulationResult,
@@ -29,6 +36,7 @@ export function StickyResultsBar({
   isVisible,
   retirementAge,
   currentAge,
+  lifeExpectancy,
   inflationRate,
   displayMode,
 }: StickyResultsBarProps) {
@@ -36,6 +44,8 @@ export function StickyResultsBar({
 
   const yearsToRetirement = retirementAge - currentAge
   const successRate = simulationResult?.successRate
+  const depletionAge = simulationResult?.medianDepletionAge ?? projection.portfolioDepletionAge
+  const hasSurplus = projection.surplusAmount > 0
 
   const metrics = [
     {
@@ -51,14 +61,42 @@ export function StickyResultsBar({
     },
     {
       icon: DollarSign,
-      label: "Monthly Income",
+      label: "Net Monthly",
+      value: formatCurrency(
+        projection.monthlyNetIncomeAtRetirement,
+        displayMode,
+        yearsToRetirement,
+        inflationRate / 100
+      ),
+      colorClass: "",
+    },
+    {
+      icon: Wallet,
+      label: "Gross Monthly",
       value: formatCurrency(
         projection.monthlyIncomeAtRetirement,
         displayMode,
         yearsToRetirement,
         inflationRate / 100
       ),
-      colorClass: "",
+      colorClass: "text-muted-foreground",
+    },
+    {
+      icon: hasSurplus ? TrendingUp : TrendingDown,
+      label: hasSurplus ? "Surplus" : "Shortfall",
+      value: formatCurrency(
+        hasSurplus ? projection.surplusAmount : projection.shortfallAmount,
+        displayMode,
+        yearsToRetirement,
+        inflationRate / 100
+      ),
+      colorClass: hasSurplus ? "text-green-500" : "text-red-500",
+    },
+    {
+      icon: AlertTriangle,
+      label: "Funds to",
+      value: depletionAge === null ? `Age ${lifeExpectancy}+` : `Age ${depletionAge}`,
+      colorClass: depletionColor(depletionAge, lifeExpectancy),
     },
     ...(successRate !== undefined
       ? [
