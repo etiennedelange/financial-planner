@@ -122,14 +122,14 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                 {...signinForm.register("email")} />
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="si-pw" className="text-sm">Password</Label>
+                  <Label htmlFor="si-pw" className="text-xs font-medium">Password</Label>
                   <button type="button" onClick={() => switchMode("reset")}
                     className="text-xs text-muted-foreground hover:text-foreground transition-colors">
                     Forgot password?
                   </button>
                 </div>
                 <Input id="si-pw" type="password" autoComplete="current-password"
-                  className={signinForm.formState.errors.password ? "border-destructive" : ""}
+                  className={`h-8 text-sm ${signinForm.formState.errors.password ? "border-destructive" : ""}`}
                   {...signinForm.register("password")} />
                 {signinForm.formState.errors.password && (
                   <p className="text-xs text-destructive">{signinForm.formState.errors.password.message}</p>
@@ -196,8 +196,8 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 function Field({ label, id, error, ...props }: { label: string; id: string; error?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <div className="space-y-1">
-      <Label htmlFor={id} className="text-sm">{label}</Label>
-      <Input id={id} className={error ? "border-destructive" : ""} {...props} />
+      <Label htmlFor={id} className="text-xs font-medium">{label}</Label>
+      <Input id={id} className={`h-8 text-sm ${error ? "border-destructive" : ""}`} {...props} />
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   )

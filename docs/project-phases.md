@@ -13,7 +13,7 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 | **Phase 1.6** | ✅ Complete | [Performance Optimization](project-phases/phase-1-6-performance-optimization.md) |
 | **Phase 1.7** | ✅ Complete | [Next 16 / React 19 / Tailwind v4 Modernization](project-phases/phase-1-7-modernization.md) |
 | **Phase 2** | 🔄 In Progress | [Supabase Integration](project-phases/phase-2-supabase.md) |
-| **Phase 3** | 🔄 In Progress | [User Accounts](project-phases/phase-3-user-accounts.md) |
+| **Phase 3** | ✅ Complete | [User Accounts](project-phases/phase-3-user-accounts.md) |
 | **Phase 4** | 🔲 Pending | [Data Persistence](project-phases/phase-4-data-persistence.md) |
 | **Phase 5** | 🔲 Pending | [Export Functionality](project-phases/phase-5-export-functionality.md) |
 | **Phase 6** | ✅ Complete | [Enhanced Tax Calculations](project-phases/phase-6-enhanced-tax.md) |
@@ -21,7 +21,12 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-05-09) — Phase 3 core auth complete + finance animations:**
+**Latest Update (2026-05-09) — Phase 3 complete: profile management:**
+- ✅ **Profile modal** — `ProfileModal` with change-email + change-password forms; "Manage Account" in user dropdown; compact `h-8` inputs; same visual style as auth modal
+- ✅ **Phase 3 complete** — all auth flows done (sign up, sign in, sign out, password reset, profile management)
+- 🎯 **Next:** Phase 4 (data persistence / named scenarios)
+
+**Previous Update (2026-05-09) — Phase 3 core auth complete + finance animations:**
 - ✅ **Auth modal** (redesigned) — contextual mode-switching via footer links; Motion finance animation in header (60fps bars + trend line + pulsing dot); inline "Forgot password?"; pill-style status messages
 - ✅ **User menu** — "Sign In" for anon; email + "Sign Out" dropdown for real users; wired into calculator header
 - ✅ **Welcome banner** — static finance chart + "Welcome back, {name}" shown on home page for authenticated users only
@@ -29,6 +34,7 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 - ✅ **SupabaseProvider** — `onAuthStateChange` listener; `useAuth()` hook; post-signout handled gracefully via localStorage
 - ✅ **proxy.ts + auth callback** — Next.js 16 session refresh + email confirmation/password reset redirect handler
 - ✅ **Motion installed** — `pnpm add motion`; use pnpm for all installs (npm broken due to pnpm/jiti lockfile conflict)
+- ✅ **Favicon** — `app/icon.tsx`; blue rounded-square chart icon via Next.js `ImageResponse`
 - 🎯 **Next:** Profile management page, or Phase 4 (data persistence / scenarios)
 
 **Latest Update (2026-05-09) — Phase 6 complete: account depletion tracking, RA optimisation, tax constant fixes:**

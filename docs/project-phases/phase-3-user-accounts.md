@@ -17,11 +17,12 @@
 - [x] **Redesigned auth modal** — dropped shadcn Tabs for contextual mode-switching via footer links; branded Motion animation in header; inline "Forgot password?" link; status messages as pill banners
 - [x] **Finance animation** — `FinanceAnimation` (Motion-powered, 60fps): growing bars + animated trend line + pulsing dot; `StaticFinanceChart` (plain SVG, no deps) for static contexts
 - [x] **Welcome banner** — shown on home page when real user is signed in; static finance chart + "Welcome back, {name}" + sync status line; hidden for anonymous users
+- [x] **Favicon** — `app/icon.tsx` using Next.js `ImageResponse`; blue rounded-square with white bars + rising trend line + dot; consistent with auth modal motif
 - [x] **Sign-out race condition fixed** — removed `signInAnonymously()` from `onAuthStateChange(SIGNED_OUT)` handler; was racing with cookie cleanup and restoring the real user session
+- [x] **Profile management modal** — `ProfileModal` with change-email + change-password forms; "Manage Account" item in `UserMenu` dropdown; same visual style as auth modal (static finance chart header, pill status messages, compact `h-8` inputs)
 
 ## Pending
 
-- [ ] Profile management page (change email, password)
 - [ ] Social login (Google OAuth) — optional
 - [ ] Protected routes / redirect to login — not needed currently (app works anonymously)
 
