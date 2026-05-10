@@ -1,4 +1,4 @@
-# Phase 5: Export Functionality ✅ COMPLETE
+# Phase 5: Export Functionality 🔄 Mostly Complete
 
 **Goal:** Generate downloadable reports and data exports.
 
@@ -6,7 +6,7 @@
 - [x] PDF report generation (projection summary) — `/print` route, browser "Save as PDF"
 - [x] CSV data export (year-by-year projections) — `lib/utils/export-csv.ts`
 - [x] Print-friendly view — `app/print/print-client.tsx` with `@media print` CSS
-- [x] Shareable scenario links — base64 URL token, `?share=<token>` loads plan on arrival
+- [ ] Shareable scenario links — logic implemented in `lib/utils/share-link.ts` (base64 URL token) but UI wiring removed; pending re-integration
 
 ## Implementation
 

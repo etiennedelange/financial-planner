@@ -15,7 +15,7 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 | **Phase 2** | 🔄 In Progress | [Supabase Integration](project-phases/phase-2-supabase.md) |
 | **Phase 3** | ✅ Complete | [User Accounts](project-phases/phase-3-user-accounts.md) |
 | **Phase 4** | ✅ Complete | [Data Persistence](project-phases/phase-4-data-persistence.md) |
-| **Phase 5** | ✅ Complete | [Export Functionality](project-phases/phase-5-export-functionality.md) |
+| **Phase 5** | 🔄 In Progress | [Export Functionality](project-phases/phase-5-export-functionality.md) |
 | **Phase 6** | ✅ Complete | [Enhanced Tax Calculations](project-phases/phase-6-enhanced-tax.md) |
 | **Future** | 📋 Planned | [Future Enhancements](project-phases/future-enhancements.md) |
 
@@ -28,11 +28,14 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 - ✅ **New fields** — `LumpSumCommutationResult.taxableLumpSum/creditAppliedToLumpSum/creditCarriedIntoDrawdown`, `YearlyProjection.excessCreditApplied/excessCreditRemaining`, `ProjectionResult.accumulatedExcessCredit`
 - ✅ **Tests** — 6 unit tests for `calculateExcessContributionCredit`, 5 for lump sum with credit, 5 projection engine integration tests
 
-**Latest Update (2026-05-10) — Phase 5 complete + bug fixes:**
+**Latest Update (2026-05-10) — share link removed from UI:**
+- ↩️ **Share link UI removed** — `lib/utils/share-link.ts` retained for future use; UI wiring, `useSearchParams`, and `<Suspense>` wrapper removed; marked as pending in Phase 5
+
+**Latest Update (2026-05-10) — Phase 5 mostly complete + bug fixes:**
 - ✅ **Print / PDF** — `/print` route; reads plan from localStorage (Zustand hydration), recalculates projection, renders clean A4 report, auto-triggers `window.print()`; respects `displayMode` with per-row age-based deflation
 - ✅ **CSV export** — `lib/utils/export-csv.ts`; `exportProjectionCsv()` downloads all year-by-year projection columns
 - ✅ **Print-friendly view** — `@media print` CSS; A4 page size, hidden UI chrome, print-color-adjust
-- ✅ **Share link** — `lib/utils/share-link.ts`; base64 encodes full plan into `?share=<token>`; decoded on arrival and stripped from URL
+- ⏳ **Share link** — `lib/utils/share-link.ts` implemented (base64 URL token) but UI wiring pending
 - ✅ **Medical aid escalation fix** — `monthlyMedicalAid` now inflated from today's value each retirement year; label clarified; 4 tests added
 - ✅ **Lump Sum slider** — now shows actual Rand value alongside %, respects `displayMode`
 - ✅ **Print page unit bugs fixed** — percentage fields no longer double-multiplied; inflationRate correctly divided by 100 for `formatCurrency`; 23 tests added
