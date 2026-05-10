@@ -111,7 +111,16 @@
       "Bash(yarn add *)",
       "Bash(xargs cat *)",
       "mcp__supabase-local__apply_migration",
-      "mcp__supabase-local__generate_typescript_types"
+      "mcp__supabase-local__generate_typescript_types",
+      "Bash(pip show *)",
+      "Bash(pip3 show *)",
+      "Bash(uv --version)",
+      "Bash(uv tool *)",
+      "Bash(ldd --version)",
+      "WebFetch(domain:semgrep.dev)",
+      "Read(//home/node/.claude/plugins/**)",
+      "Read(//home/node/.claude/**)",
+      "Bash(semgrep install-semgrep-pro *)"
     ]
   },
   "enableAllProjectMcpServers": true,

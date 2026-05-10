@@ -21,6 +21,9 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
+**Latest Update (2026-05-10) — UI audit (visual clunkiness):**
+- 📋 **6 UI polish items logged** in `future-enhancements.md`: double headings in Planning Inputs cards, two-row header layout, overcrowded right-side nav, redundant welcome banner, oversized empty chart placeholders, duplicate account CTAs
+
 **Latest Update (2026-05-10) — Section 11F excess contribution credit:**
 - ✅ **Excess contribution tracking** — accumulation loop now tracks RA/pension/preservation contributions vs inflation-escalated Section 11F limit (`min(income × 27.5%, R430k)`) each year; excess accumulates as carry-forward credit
 - ✅ **Lump sum credit application** — `calculateLumpSumCommutation` reduces taxable lump sum by accumulated credit; unused credit carried into drawdown

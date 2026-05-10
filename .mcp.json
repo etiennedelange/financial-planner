@@ -39,6 +39,14 @@
     "supabase-local": {
       "type": "http",
       "url": "http://127.0.0.1:54321/mcp"
+    },
+     "vibe-check-mcp": {
+      "command": "npx",
+      "args": ["-y", "@pv-bhat/vibe-check-mcp", "start", "--stdio"]
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": ["mcp-server-fetch"]
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "SA Retirement Calculator",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bookworm",
 
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},
@@ -62,7 +62,7 @@
 
   "runArgs": ["--ipc=host"],
 
-  "postCreateCommand": "sudo bash .devcontainer/install-chrome.sh && npx playwright install --with-deps chromium && curl -fsSL https://claude.ai/install.sh | bash && echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> ~/.bashrc",
+  "postCreateCommand": "sudo bash .devcontainer/install-chrome.sh && npx playwright install --with-deps chromium && curl -fsSL https://claude.ai/install.sh | bash && curl -LsSf https://astral.sh/uv/install.sh | sh && echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> ~/.bashrc && ~/.local/bin/uv tool install semgrep",
 
   "remoteUser": "node",
 
