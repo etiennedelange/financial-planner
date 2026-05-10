@@ -3,9 +3,7 @@
 import { calculateProjection } from "@/lib/calculations/projection-engine"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { formatCurrency } from "@/lib/utils/currency"
-import { decodeShareToken } from "@/lib/utils/share-link"
 import type { ProjectionResult } from "@/types"
-import { useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
 
@@ -14,9 +12,6 @@ function pct(n: number) {
 }
 
 export function PrintClient() {
-  const searchParams = useSearchParams()
-  const shareToken = searchParams.get("share")
-
   const storeState = useCalculatorStore(
     useShallow((s) => ({
       accounts: s.accounts,
@@ -30,13 +25,7 @@ export function PrintClient() {
 
   const [ready, setReady] = useState(false)
 
-  const plan = useMemo(() => {
-    if (shareToken) {
-      const decoded = decodeShareToken(shareToken)
-      if (decoded) return decoded
-    }
-    return storeState
-  }, [shareToken, storeState])
+  const plan = storeState
 
   const projection: ProjectionResult | null = useMemo(
     () =>

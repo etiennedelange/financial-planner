@@ -34,16 +34,13 @@ import { useMonteCarloWorker } from "@/lib/monte-carlo/use-monte-carlo-worker"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { exportPlan, parsePlanFile } from "@/lib/utils/plan-io"
 import { exportProjectionCsv } from "@/lib/utils/export-csv"
-import { copyShareUrl, decodeShareToken } from "@/lib/utils/share-link"
 import type { ProjectionResult } from "@/types"
-import { BarChart3, BookOpen, Calculator, Download, FileSpreadsheet, Link, Printer, RotateCcw, Settings, TrendingDown, Upload } from "lucide-react"
+import { BarChart3, BookOpen, Calculator, Download, FileSpreadsheet, Printer, RotateCcw, Settings, TrendingDown, Upload } from "lucide-react"
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react"
-import { useSearchParams } from "next/navigation"
 import { useShallow } from "zustand/react/shallow"
 
 export function CalculatorClient() {
   const { user } = useAuth()
-  const searchParams = useSearchParams()
   const {
     accounts,
     personalInfo,
@@ -69,19 +66,6 @@ export function CalculatorClient() {
       loadPlan: state.loadPlan,
     }))
   )
-
-  // Load shared plan from ?share= URL param on first render
-  useEffect(() => {
-    const token = searchParams.get("share")
-    if (!token) return
-    const plan = decodeShareToken(token)
-    if (plan) loadPlan(plan)
-    // Remove the param from the URL without reloading
-    const url = new URL(window.location.href)
-    url.searchParams.delete("share")
-    window.history.replaceState({}, "", url.toString())
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   // Deferred inputs: React will re-render with the previous values while new
   // values are still processing, so the expensive Monte Carlo useMemo only
@@ -199,13 +183,6 @@ export function CalculatorClient() {
   const handleExportCsv = () => {
     if (!projection) return
     exportProjectionCsv(projection.yearlyProjections)
-  }
-
-  const [shareCopied, setShareCopied] = useState(false)
-  const handleShareLink = async () => {
-    await copyShareUrl({ personalInfo, retirementGoals, assumptions, drawdownConfig, displayMode, accounts })
-    setShareCopied(true)
-    setTimeout(() => setShareCopied(false), 2000)
   }
 
   // Calculate totals for dashboard metrics
@@ -338,10 +315,6 @@ export function CalculatorClient() {
                   <FileSpreadsheet className="mr-2 h-4 w-4" />
                   Export CSV
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleShareLink} className="cursor-pointer">
-                  <Link className="mr-2 h-4 w-4" />
-                  {shareCopied ? "Link Copied!" : "Copy Share Link"}
-                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel>Plan File</DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -418,8 +391,6 @@ export function CalculatorClient() {
             onViewInsights={handleViewInsights}
             onPrintReport={handlePrintReport}
             onExportCsv={handleExportCsv}
-            onShareLink={handleShareLink}
-            shareCopied={shareCopied}
           />
           <KeyInsightsSummary
             projection={projection}

@@ -1,6 +1,6 @@
 "use client"
 
-import { Plus, Eye, Printer, FileSpreadsheet, Link } from "lucide-react"
+import { Plus, Eye, Printer, FileSpreadsheet } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -9,8 +9,6 @@ interface QuickActionsCardProps {
   onViewInsights?: () => void
   onPrintReport?: () => void
   onExportCsv?: () => void
-  onShareLink?: () => void
-  shareCopied?: boolean
 }
 
 export function QuickActionsCard({
@@ -18,8 +16,6 @@ export function QuickActionsCard({
   onViewInsights,
   onPrintReport,
   onExportCsv,
-  onShareLink,
-  shareCopied,
 }: QuickActionsCardProps) {
   return (
     <Card className="dashboard-card">
@@ -51,12 +47,7 @@ export function QuickActionsCard({
             Export CSV
           </Button>
         )}
-        {onShareLink && (
-          <Button onClick={onShareLink} variant="outline" className="w-full justify-start">
-            <Link className="mr-2 h-4 w-4" />
-            {shareCopied ? "Link Copied!" : "Copy Share Link"}
-          </Button>
-        )}
+
       </CardContent>
     </Card>
   )
