@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { formatCurrency } from "@/lib/utils/currency"
 import { useShallow } from "zustand/react/shallow"
 import { DRAWDOWN_STRATEGY_LABELS } from "@/types"
 import type { DrawdownStrategy } from "@/types"
@@ -31,7 +32,19 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>
 
-export function AssumptionsForm() {
+interface AssumptionsFormProps {
+  portfolioAtRetirement?: number
+  yearsToRetirement?: number
+  displayMode?: "nominal" | "real"
+  inflationRate?: number
+}
+
+export function AssumptionsForm({
+  portfolioAtRetirement,
+  yearsToRetirement = 0,
+  displayMode = "nominal",
+  inflationRate = 0.055,
+}: AssumptionsFormProps) {
   const { assumptions, setAssumptions, drawdownConfig, setDrawdownConfig } =
     useCalculatorStore(
       useShallow(state => ({
@@ -228,9 +241,19 @@ export function AssumptionsForm() {
                   side="left"
                 />
               </div>
-              <span className="text-sm font-medium">
-                {localLumpSum.toFixed(0)}%
-              </span>
+              <div className="text-right">
+                <span className="text-sm font-medium">{localLumpSum.toFixed(0)}%</span>
+                {portfolioAtRetirement != null && localLumpSum > 0 && (
+                  <span className="ml-2 text-sm text-muted-foreground">
+                    ≈ {formatCurrency(
+                      portfolioAtRetirement * (localLumpSum / 100),
+                      displayMode,
+                      yearsToRetirement,
+                      inflationRate
+                    )}
+                  </span>
+                )}
+              </div>
             </div>
             <Slider
               value={[localLumpSum]}
@@ -248,9 +271,9 @@ export function AssumptionsForm() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Label htmlFor="monthlyMedicalAid">Medical Aid (R/month)</Label>
+                <Label htmlFor="monthlyMedicalAid">Medical Aid (R/month, today&apos;s value)</Label>
                 <InfoTooltip
-                  content="Monthly medical aid contribution paid from retirement income. This reduces net income but also generates an s6A tax credit (R364/month for principal member + first dependant, R246/month per additional dependant) that directly reduces income tax."
+                  content="Enter your current monthly medical aid contribution in today's Rands. The projection escalates this with inflation each year. It reduces net retirement income but generates an s6A tax credit (R364/month for principal member + first dependant, R246/month per additional dependant) that directly reduces income tax."
                   side="left"
                 />
               </div>

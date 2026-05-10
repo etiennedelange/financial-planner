@@ -33,13 +33,17 @@ import { calculateProjection } from "@/lib/calculations/projection-engine"
 import { useMonteCarloWorker } from "@/lib/monte-carlo/use-monte-carlo-worker"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { exportPlan, parsePlanFile } from "@/lib/utils/plan-io"
+import { exportProjectionCsv } from "@/lib/utils/export-csv"
+import { copyShareUrl, decodeShareToken } from "@/lib/utils/share-link"
 import type { ProjectionResult } from "@/types"
-import { BarChart3, BookOpen, Calculator, Download, RotateCcw, Settings, TrendingDown, Upload } from "lucide-react"
+import { BarChart3, BookOpen, Calculator, Download, FileSpreadsheet, Link, Printer, RotateCcw, Settings, TrendingDown, Upload } from "lucide-react"
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { useShallow } from "zustand/react/shallow"
 
 export function CalculatorClient() {
   const { user } = useAuth()
+  const searchParams = useSearchParams()
   const {
     accounts,
     personalInfo,
@@ -65,6 +69,19 @@ export function CalculatorClient() {
       loadPlan: state.loadPlan,
     }))
   )
+
+  // Load shared plan from ?share= URL param on first render
+  useEffect(() => {
+    const token = searchParams.get("share")
+    if (!token) return
+    const plan = decodeShareToken(token)
+    if (plan) loadPlan(plan)
+    // Remove the param from the URL without reloading
+    const url = new URL(window.location.href)
+    url.searchParams.delete("share")
+    window.history.replaceState({}, "", url.toString())
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Deferred inputs: React will re-render with the previous values while new
   // values are still processing, so the expensive Monte Carlo useMemo only
@@ -175,53 +192,20 @@ export function CalculatorClient() {
     }, 100)
   }
 
-  const handleExportReport = () => {
+  const handlePrintReport = () => {
+    window.open("/print", "_blank")
+  }
+
+  const handleExportCsv = () => {
     if (!projection) return
+    exportProjectionCsv(projection.yearlyProjections)
+  }
 
-    const exportData = {
-      generatedAt: new Date().toISOString(),
-      personalInfo,
-      retirementGoals,
-      assumptions,
-      accounts: accounts.map(acc => ({
-        name: acc.name,
-        type: acc.type,
-        currentBalance: acc.currentBalance,
-        monthlyContribution: acc.monthlyContribution,
-      })),
-      projection: {
-        portfolioAtRetirement: projection.portfolioAtRetirement,
-        monthlyIncomeAtRetirement: projection.monthlyIncomeAtRetirement,
-        monthlyNetIncomeAtRetirement: projection.monthlyNetIncomeAtRetirement,
-        portfolioDepletionAge: projection.portfolioDepletionAge,
-        shortfallAmount: projection.shortfallAmount,
-        surplusAmount: projection.surplusAmount,
-        totalLifetimeIncomeTax: projection.totalLifetimeIncomeTax,
-        totalLumpSumTax: projection.totalLumpSumTax,
-        averageEffectiveTaxRate: projection.averageEffectiveTaxRate,
-        replacementRatio: projection.replacementRatio,
-      },
-      monteCarloSimulation: simulationResult ? {
-        successRate: simulationResult.successRate,
-        averageFinalBalance: simulationResult.averageFinalBalance,
-        medianDepletionAge: simulationResult.medianDepletionAge,
-        percentiles: {
-          p10: simulationResult.percentiles.p10[simulationResult.percentiles.p10.length - 1],
-          p50: simulationResult.percentiles.p50[simulationResult.percentiles.p50.length - 1],
-          p90: simulationResult.percentiles.p90[simulationResult.percentiles.p90.length - 1],
-        },
-      } : null,
-    }
-
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `retirement-plan-${new Date().toISOString().split('T')[0]}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+  const [shareCopied, setShareCopied] = useState(false)
+  const handleShareLink = async () => {
+    await copyShareUrl({ personalInfo, retirementGoals, assumptions, drawdownConfig, displayMode, accounts })
+    setShareCopied(true)
+    setTimeout(() => setShareCopied(false), 2000)
   }
 
   // Calculate totals for dashboard metrics
@@ -343,8 +327,23 @@ export function CalculatorClient() {
                   <span className="ml-2 hidden md:inline">Plan</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel>Plan Data</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuLabel>Export</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handlePrintReport} className="cursor-pointer">
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print / Save PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportCsv} disabled={!projection} className="cursor-pointer">
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Export CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleShareLink} className="cursor-pointer">
+                  <Link className="mr-2 h-4 w-4" />
+                  {shareCopied ? "Link Copied!" : "Copy Share Link"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Plan File</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleExportPlan} className="cursor-pointer">
                   <Download className="mr-2 h-4 w-4" />
@@ -417,7 +416,10 @@ export function CalculatorClient() {
           <QuickActionsCard
             onAddAccount={handleAddAccount}
             onViewInsights={handleViewInsights}
-            onExportReport={handleExportReport}
+            onPrintReport={handlePrintReport}
+            onExportCsv={handleExportCsv}
+            onShareLink={handleShareLink}
+            shareCopied={shareCopied}
           />
           <KeyInsightsSummary
             projection={projection}
@@ -465,7 +467,12 @@ export function CalculatorClient() {
             </div>
             <div>
               <h3 className="text-lg font-semibold mb-4">Investment Assumptions</h3>
-              <AssumptionsForm />
+              <AssumptionsForm
+                portfolioAtRetirement={projection?.portfolioAtRetirement}
+                yearsToRetirement={personalInfo.retirementAge - personalInfo.currentAge}
+                displayMode={displayMode}
+                inflationRate={assumptions.inflationRate / 100}
+              />
             </div>
           </div>
         </CollapsibleSection>
