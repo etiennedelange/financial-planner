@@ -23,6 +23,12 @@
 - [x] Bug fix: payslip `monthlyIncomeAtRetirement` now uses `remainingPortfolio` (post-lump-sum) not `portfolioAtRetirement`
 - [x] Bug fix: Monte Carlo `simulateSingleRun` now deducts lump sum before calculating initial withdrawal — success rate was previously too optimistic when lump sum > 0
 
+**Completed (2026-05-10):**
+- [x] Section 11F excess contribution credit — `calculateExcessContributionCredit()` in `retirement-tax.ts`; projection engine accumulates credit yearly (income escalated with inflation); credit reduces taxable lump sum at retirement; remainder offsets pension/RA annuity income in drawdown until exhausted; does not apply to TFSA or CGT income
+- [x] New type fields: `LumpSumCommutationResult.taxableLumpSum`, `creditAppliedToLumpSum`, `creditCarriedIntoDrawdown`, `accumulatedExcessCredit`; `YearlyProjection.excessCreditApplied`, `excessCreditRemaining`; `ProjectionResult.accumulatedExcessCredit`
+- [x] RA Optimisation card (section 8) shows blue "Section 11F carry-forward credit" panel when `isOverLimit`: annual excess, accumulated credit at retirement, credit applied to lump sum and any remainder carried into annuity
+- [x] 16 new tests (6 unit for `calculateExcessContributionCredit`, 5 for `calculateLumpSumCommutation` with credit, 5 projection engine integration)
+
 **Completed (2026-05-09):**
 - [x] TFSA lifetime limit tracking — `tfsaContributionsToDate` field on Account; projection engine caps contributions at R36k/year and R500k lifetime; account card shows remaining room and warnings; Supabase migration + type regen
 - [x] Medical aid tax credits (s6A) — `calculateMedicalAidTaxCredit()` reduces income tax directly (not taxable income); `monthlyMedicalAid` and `medicalAidDependants` added to DrawdownConfig; wired into projection engine drawdown phase; UI fields in Assumptions form; 2026/2027 rates: R364/month (member + first dependant), R246/month per additional
