@@ -1,6 +1,6 @@
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import { TFSA_LIMITS_CONFIG } from "@/lib/constants/tax-year.config"
-import { calculateIncomeTaxWithRebates, calculateLumpSumCommutation } from "./retirement-tax"
+import { calculateIncomeTaxWithRebates, calculateLumpSumCommutation, calculateExcessContributionCredit } from "./retirement-tax"
 import { getSpendingPhaseMultiplier } from "./utils/spending-phase"
 import type {
   Account,
@@ -183,10 +183,15 @@ export function calculateProjection(
       lumpSumCommutation: {
         lumpSumPercentage: 0,
         lumpSumAmount: 0,
+        taxableLumpSum: 0,
         lumpSumTax: 0,
         netLumpSum: 0,
         remainingPortfolio: 0,
+        accumulatedExcessCredit: 0,
+        creditAppliedToLumpSum: 0,
+        creditCarriedIntoDrawdown: 0,
       },
+      accumulatedExcessCredit: 0,
       accountBalancesAtRetirement: {},
     }
   }
@@ -206,12 +211,18 @@ export function calculateProjection(
     acc.type === 'tfsa' ? (acc.tfsaContributionsToDate ?? 0) : 0
   )
 
+  // Section 11F excess contribution credit accumulated during the accumulation phase.
+  // Income is escalated with inflation each year so the deduction limit grows in line
+  // with contributions (both expressed in nominal terms).
+  let accumulatedExcessCredit = 0
+
   for (let year = 0; year < yearsToRetirement; year++) {
     const age = personalInfo.currentAge + year
     const startingBalance = accountBalances.reduce((sum, bal) => sum + bal, 0)
     let yearlyGrowth = 0
     let yearlyFees = 0
     let yearlyContributions = 0
+    let yearlyPensionContributions = 0
 
     // Reset annual TFSA contribution tracker each year
     const tfsaYearlyUsed = accounts.map(() => 0)
@@ -240,6 +251,7 @@ export function calculateProjection(
         }
 
         yearlyContributions += monthlyContribution
+        if (PENSION_TYPES.includes(acc.type)) yearlyPensionContributions += monthlyContribution
 
         // Apply growth first (end-of-period contributions, matches Excel FV type=0)
         const monthGrowth = accountBalances[accIdx] * accMonthlyReturn
@@ -255,6 +267,11 @@ export function calculateProjection(
     }
 
     totalBalance = accountBalances.reduce((sum, bal) => sum + bal, 0)
+
+    // Accumulate Section 11F excess credit. Income is escalated with inflation so the
+    // deduction limit grows in nominal terms alongside escalating contributions.
+    const effectiveIncome = personalInfo.annualIncome * Math.pow(1 + inflationRate, year)
+    accumulatedExcessCredit += calculateExcessContributionCredit(yearlyPensionContributions, effectiveIncome)
 
     yearlyProjections.push({
       year: year + 1,
@@ -278,7 +295,8 @@ export function calculateProjection(
   // Apply lump sum commutation proportionally across all accounts at retirement
   const lumpSumCommutation = calculateLumpSumCommutation(
     portfolioAtRetirement,
-    drawdownConfig.lumpSumPercentage ?? 0
+    drawdownConfig.lumpSumPercentage ?? 0,
+    accumulatedExcessCredit,
   )
   const lumpSumFraction = portfolioAtRetirement > 0
     ? lumpSumCommutation.lumpSumAmount / portfolioAtRetirement
@@ -312,6 +330,7 @@ export function calculateProjection(
   )
 
   // Drawdown phase — tax-optimized sequential withdrawal: TFSA → Discretionary → Pension/RA
+  let creditRemaining = lumpSumCommutation.creditCarriedIntoDrawdown
   let portfolioDepletionAge: number | null = null
   let totalLifetimeIncomeTax = 0
   const totalLumpSumTax = lumpSumCommutation.lumpSumTax
@@ -404,14 +423,23 @@ export function calculateProjection(
     }
 
     const totalWithdrawal = tfsaWithdrawal + discretionaryWithdrawal + pensionWithdrawal
+
+    // Apply any remaining Section 11F credit against pension annuity income
+    const creditAppliedThisYear = Math.min(pensionWithdrawal, creditRemaining)
+    creditRemaining -= creditAppliedThisYear
+
     // Only pension withdrawals and CGT inclusion amount are taxable income
-    const taxableIncome = pensionWithdrawal + cgtTaxableAmount
+    const taxableIncome = (pensionWithdrawal - creditAppliedThisYear) + cgtTaxableAmount
     const incomeTax = calculateIncomeTaxWithRebates(
       taxableIncome,
       age,
       drawdownConfig.monthlyMedicalAid ? drawdownConfig.medicalAidDependants ?? 0 : undefined
     )
-    const medicalAidContribution = (drawdownConfig.monthlyMedicalAid ?? 0) * 12
+    // monthlyMedicalAid is entered in today's Rands; escalate to retirement-year value
+    const medicalAidContribution =
+      (drawdownConfig.monthlyMedicalAid ?? 0) *
+      Math.pow(1 + inflationRate, yearsToRetirement + year) *
+      12
     const netIncome = totalWithdrawal - incomeTax - medicalAidContribution
 
     currentTotal = drawdownAccounts.reduce((s, a) => s + a.balance, 0)
@@ -440,6 +468,8 @@ export function calculateProjection(
       cgtTaxableAmount,
       taxableIncome,
       accountBalances: Object.fromEntries(drawdownAccounts.map(a => [a.id, Math.max(0, a.balance)])),
+      excessCreditApplied: creditAppliedThisYear,
+      excessCreditRemaining: creditRemaining,
     })
 
     annualWithdrawal *= 1 + inflationRate
@@ -495,10 +525,15 @@ export function calculateProjection(
     lumpSumCommutation: {
       lumpSumPercentage: drawdownConfig.lumpSumPercentage ?? 0,
       lumpSumAmount: lumpSumCommutation.lumpSumAmount,
+      taxableLumpSum: lumpSumCommutation.taxableLumpSum,
       lumpSumTax: lumpSumCommutation.lumpSumTax,
       netLumpSum: lumpSumCommutation.netLumpSum,
       remainingPortfolio,
+      accumulatedExcessCredit: lumpSumCommutation.accumulatedExcessCredit,
+      creditAppliedToLumpSum: lumpSumCommutation.creditAppliedToLumpSum,
+      creditCarriedIntoDrawdown: lumpSumCommutation.creditCarriedIntoDrawdown,
     },
+    accumulatedExcessCredit,
     accountBalancesAtRetirement,
   }
 }

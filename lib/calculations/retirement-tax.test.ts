@@ -5,6 +5,7 @@ import {
   isBelowTaxThreshold,
   calculateRetirementTax,
   calculateLumpSumCommutation,
+  calculateExcessContributionCredit,
   calculateReplacementRatio,
   calculateLifetimeTaxBurden,
 } from './retirement-tax'
@@ -368,6 +369,89 @@ describe('retirement-tax', () => {
       expect(result.lumpSumTax).toBe(0) // Below R550k threshold
       expect(result.netLumpSum).toBe(500000)
       expect(result.remainingPortfolio).toBe(0)
+    })
+
+    describe('with excess contribution credit', () => {
+      it('should reduce taxable lump sum by credit when credit < lump sum', () => {
+        // R1,200,000 lump sum, R200,000 credit
+        // taxableLumpSum = R1,000,000 (tier 3: R39,600 + (R1,000,000 - R770,000) × 27% = R101,700)
+        const result = calculateLumpSumCommutation(2400000, 50, 200000)
+        expect(result.lumpSumAmount).toBe(1200000)
+        expect(result.taxableLumpSum).toBe(1000000)
+        expect(result.lumpSumTax).toBe(101700)
+        expect(result.netLumpSum).toBe(1200000 - 101700)
+        expect(result.creditAppliedToLumpSum).toBe(200000)
+        expect(result.creditCarriedIntoDrawdown).toBe(0)
+        expect(result.accumulatedExcessCredit).toBe(200000)
+      })
+
+      it('should carry excess credit into drawdown when credit > lump sum', () => {
+        // R500,000 lump sum (100%), R800,000 credit
+        // taxableLumpSum = 0 → tax = 0; R300,000 carried forward
+        const result = calculateLumpSumCommutation(500000, 100, 800000)
+        expect(result.lumpSumAmount).toBe(500000)
+        expect(result.taxableLumpSum).toBe(0)
+        expect(result.lumpSumTax).toBe(0)
+        expect(result.netLumpSum).toBe(500000)
+        expect(result.creditAppliedToLumpSum).toBe(500000)
+        expect(result.creditCarriedIntoDrawdown).toBe(300000)
+      })
+
+      it('should behave identically to zero credit when credit is 0', () => {
+        const withCredit = calculateLumpSumCommutation(2400000, 50, 0)
+        const withoutCredit = calculateLumpSumCommutation(2400000, 50)
+        expect(withCredit.lumpSumTax).toBe(withoutCredit.lumpSumTax)
+        expect(withCredit.taxableLumpSum).toBe(withCredit.lumpSumAmount)
+        expect(withCredit.creditAppliedToLumpSum).toBe(0)
+        expect(withCredit.creditCarriedIntoDrawdown).toBe(0)
+      })
+
+      it('should handle credit exactly equal to lump sum', () => {
+        const result = calculateLumpSumCommutation(1000000, 50, 500000)
+        expect(result.taxableLumpSum).toBe(0)
+        expect(result.lumpSumTax).toBe(0)
+        expect(result.creditCarriedIntoDrawdown).toBe(0)
+      })
+
+      it('should carry full credit into drawdown when lump sum is 0%', () => {
+        const result = calculateLumpSumCommutation(3000000, 0, 400000)
+        expect(result.lumpSumAmount).toBe(0)
+        expect(result.creditAppliedToLumpSum).toBe(0)
+        expect(result.creditCarriedIntoDrawdown).toBe(400000)
+      })
+    })
+  })
+
+  describe('calculateExcessContributionCredit', () => {
+    it('should return 0 when contributions are below the 27.5% limit', () => {
+      // income R1,200,000 → limit = min(R330,000, R430,000) = R330,000
+      // contributions R300,000 < R330,000 → no excess
+      expect(calculateExcessContributionCredit(300000, 1200000)).toBe(0)
+    })
+
+    it('should return 0 when contributions exactly equal the limit', () => {
+      // income R1,200,000 → limit R330,000
+      expect(calculateExcessContributionCredit(330000, 1200000)).toBe(0)
+    })
+
+    it('should compute correct excess below the R430k cap', () => {
+      // income R1,000,000 → limit = R275,000; contributions R500,000 → excess R225,000
+      expect(calculateExcessContributionCredit(500000, 1000000)).toBe(225000)
+    })
+
+    it('should use the R430k cap when income is high enough', () => {
+      // income R2,000,000 → 27.5% = R550,000 but capped at R430,000
+      // contributions R500,000 → excess R70,000
+      expect(calculateExcessContributionCredit(500000, 2000000)).toBe(70000)
+    })
+
+    it('should return full contribution amount when income is zero', () => {
+      // limit = min(0, R430,000) = 0 → all contributions are disallowed
+      expect(calculateExcessContributionCredit(120000, 0)).toBe(120000)
+    })
+
+    it('should return 0 when contributions are zero', () => {
+      expect(calculateExcessContributionCredit(0, 1000000)).toBe(0)
     })
   })
 

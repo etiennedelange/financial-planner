@@ -1115,17 +1115,48 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                     </div>
                   )}
 
-                  {opt.isOverLimit && (
-                    <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 p-4">
-                      <p className="font-medium text-red-800 dark:text-red-200">
-                        Contributions exceed the deduction limit
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {formatCurrency(opt.currentAnnualContributions - opt.annualDeductionLimit)}/year of your contributions are not tax-deductible.
-                        The excess is not immediately penalised but check with your fund — it may be deductible in future years.
-                      </p>
-                    </div>
-                  )}
+                  {opt.isOverLimit && (() => {
+                    const annualExcess = opt.currentAnnualContributions - opt.annualDeductionLimit
+                    const accumulated = projection?.accumulatedExcessCredit ?? 0
+                    const creditToLumpSum = projection?.lumpSumCommutation.creditAppliedToLumpSum ?? 0
+                    const creditToDrawdown = projection?.lumpSumCommutation.creditCarriedIntoDrawdown ?? 0
+                    return (
+                      <div className="space-y-3">
+                        <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950 p-4 space-y-3">
+                          <p className="font-medium text-blue-800 dark:text-blue-200">
+                            Section 11F carry-forward credit
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {formatCurrency(annualExcess)}/year of your contributions exceed the deduction limit and are not tax-deductible now.
+                            These disallowed contributions accumulate as a carry-forward credit that reduces your tax at retirement.
+                          </p>
+                          <div className="grid gap-3 sm:grid-cols-3 pt-1">
+                            <div className="rounded-lg bg-background/60 p-3 space-y-1">
+                              <p className="text-xs text-muted-foreground">Annual excess</p>
+                              <p className="font-semibold">{formatCurrency(annualExcess)}</p>
+                              <p className="text-xs text-muted-foreground">not deductible this year</p>
+                            </div>
+                            <div className="rounded-lg bg-background/60 p-3 space-y-1">
+                              <p className="text-xs text-muted-foreground">Accumulated credit at retirement</p>
+                              <p className="font-semibold">{accumulated > 0 ? formatCurrency(accumulated) : "—"}</p>
+                              <p className="text-xs text-muted-foreground">total carry-forward built up</p>
+                            </div>
+                            <div className="rounded-lg bg-background/60 p-3 space-y-1">
+                              <p className="text-xs text-muted-foreground">Applied at retirement</p>
+                              <p className="font-semibold">
+                                {creditToLumpSum > 0 ? formatCurrency(creditToLumpSum) : "—"}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {creditToDrawdown > 0
+                                  ? `+ ${formatCurrency(creditToDrawdown)} offsets annuity income`
+                                  : "reduces taxable lump sum"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })()}
 
                   {!hasRAAccounts && (
                     <p className="text-sm text-muted-foreground">
@@ -1140,7 +1171,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                       <li>Contributions to pension funds, RAs, and preservation funds reduce your taxable income</li>
                       <li>Limit: the lesser of 27.5% of your income or R430,000 per year</li>
                       <li>Tax saved = marginal tax rate × amount deducted (varies by bracket)</li>
-                      <li>Excess contributions are carried forward and deductible in future years</li>
+                      <li>Excess contributions accumulate as a Section 11F credit — this reduces your taxable lump sum at retirement, with any remainder offsetting annuity income</li>
                       <li>Source: s11(k) of the Income Tax Act, 2026/2027 limits</li>
                     </ul>
                   </div>

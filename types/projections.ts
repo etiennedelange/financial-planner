@@ -28,14 +28,21 @@ export interface YearlyProjection {
   accountSources?: AccountSourceBreakdown[] // Optional: which accounts contributed to withdrawal
   // Per-account balance snapshot at year-end (drawdown years only), keyed by account id
   accountBalances?: Record<string, number>
+  // Section 11F excess contribution credit applied this drawdown year
+  excessCreditApplied?: number
+  excessCreditRemaining?: number
 }
 
 export interface LumpSumCommutationResult {
   lumpSumPercentage: number
   lumpSumAmount: number // Gross amount taken as lump sum
+  taxableLumpSum: number // Gross lump sum after excess credit reduction (what tax is calculated on)
   lumpSumTax: number // Tax payable on lump sum
   netLumpSum: number // Net amount received after tax
   remainingPortfolio: number // Portfolio available for ongoing drawdown
+  accumulatedExcessCredit: number // Total Section 11F credit built up during accumulation
+  creditAppliedToLumpSum: number // Portion of credit used to reduce taxable lump sum
+  creditCarriedIntoDrawdown: number // Remaining credit carried into annuity phase
 }
 
 export interface ProjectionResult {
@@ -52,6 +59,7 @@ export interface ProjectionResult {
   averageEffectiveTaxRate: number // Average tax rate on withdrawals
   lumpSumCommutation: LumpSumCommutationResult // Lump sum details at retirement
   replacementRatio?: number // Optional: retirement income vs pre-retirement income
+  accumulatedExcessCredit: number // Total Section 11F credit built up during accumulation
   // Per-account balance at start of drawdown (after lump sum deduction), keyed by account id
   accountBalancesAtRetirement: Record<string, number>
 }

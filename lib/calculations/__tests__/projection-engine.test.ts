@@ -893,4 +893,207 @@ describe('calculateProjection', () => {
       expect(bal2).toBeCloseTo(bal1 * 0.7, 0)
     })
   })
+
+  describe('Medical aid escalation', () => {
+    const shortInfo: PersonalInfo = { currentAge: 60, retirementAge: 65, lifeExpectancy: 70, annualIncome: 600000 }
+    const inflationRate = 5.5 // stored as percentage
+    const goals: RetirementGoals = { ...baseRetirementGoals, inflationRate }
+    const monthlyMedicalAid = 3000 // today's Rands
+
+    it('medical aid contribution increases each retirement year with inflation', () => {
+      const result = calculateProjection(
+        [baseAccount],
+        shortInfo,
+        goals,
+        { ...baseDrawdownConfig, monthlyMedicalAid }
+      )
+
+      const retirementRows = result.yearlyProjections.filter(r => r.age >= shortInfo.retirementAge)
+      // Each year's medical aid should be strictly greater than the previous year's
+      for (let i = 1; i < retirementRows.length; i++) {
+        expect(retirementRows[i].medicalAidContribution).toBeGreaterThan(
+          retirementRows[i - 1].medicalAidContribution
+        )
+      }
+    })
+
+    it('first retirement year medical aid equals today value escalated to retirement', () => {
+      const result = calculateProjection(
+        [baseAccount],
+        shortInfo,
+        goals,
+        { ...baseDrawdownConfig, monthlyMedicalAid }
+      )
+
+      const yearsToRetirement = shortInfo.retirementAge - shortInfo.currentAge // 5
+      const inflationDecimal = inflationRate / 100
+      const expectedAnnual = monthlyMedicalAid * Math.pow(1 + inflationDecimal, yearsToRetirement) * 12
+
+      const firstRetirementRow = result.yearlyProjections.find(r => r.age === shortInfo.retirementAge)!
+      expect(firstRetirementRow.medicalAidContribution).toBeCloseTo(expectedAnnual, 0)
+    })
+
+    it('without medical aid, medicalAidContribution is zero in all retirement rows', () => {
+      const result = calculateProjection(
+        [baseAccount],
+        shortInfo,
+        goals,
+        { ...baseDrawdownConfig, monthlyMedicalAid: undefined }
+      )
+
+      const retirementRows = result.yearlyProjections.filter(r => r.age >= shortInfo.retirementAge)
+      retirementRows.forEach(r => expect(r.medicalAidContribution).toBe(0))
+    })
+
+    it('medical aid reduces net income relative to no medical aid', () => {
+      const withMedical = calculateProjection(
+        [baseAccount], shortInfo, goals, { ...baseDrawdownConfig, monthlyMedicalAid }
+      )
+      const withoutMedical = calculateProjection(
+        [baseAccount], shortInfo, goals, { ...baseDrawdownConfig, monthlyMedicalAid: undefined }
+      )
+
+      const firstWith = withMedical.yearlyProjections.find(r => r.age === shortInfo.retirementAge)!
+      const firstWithout = withoutMedical.yearlyProjections.find(r => r.age === shortInfo.retirementAge)!
+      expect(firstWith.netIncome).toBeLessThan(firstWithout.netIncome)
+    })
+  })
+
+  describe('Section 11F excess contribution credit', () => {
+    // High earner: R1.8M income → limit capped at R430k. RA contributions R600k/year.
+    // Excess = R170k/year. Static income escalated with inflation; for cap-dominated users
+    // it remains R430k regardless, so excess per year stays R170k (before escalation of contributions).
+    const highEarnerInfo: PersonalInfo = {
+      currentAge: 55,
+      retirementAge: 65,
+      lifeExpectancy: 85,
+      annualIncome: 1800000,
+    }
+
+    // Monthly RA contribution R50,000 = R600,000/year
+    const highContribAccount: Account = {
+      id: 'ra1',
+      name: 'RA',
+      type: 'retirement_annuity',
+      provider: 'Test',
+      currentBalance: 5000000,
+      monthlyContribution: 50000,
+      expectedReturn: 10,
+      annualFees: 1,
+      contributionEscalation: 0, // keep simple for predictable excess
+    }
+
+    const highEarnerGoals: RetirementGoals = {
+      desiredMonthlyIncome: 80000,
+      inflationRate: 5.5,
+      legacyAmount: 0,
+    }
+
+    it('should accumulate excess credit for high earner over accumulation phase', () => {
+      const result = calculateProjection(
+        [highContribAccount],
+        highEarnerInfo,
+        highEarnerGoals,
+        { ...baseDrawdownConfig, lumpSumPercentage: 0 },
+      )
+
+      // R600k contributions/year, limit R430k → R170k excess/year × 10 years = R1,700,000
+      // (contributions don't escalate so limit stays R430k each year)
+      expect(result.accumulatedExcessCredit).toBeCloseTo(1700000, -3)
+    })
+
+    it('should reduce taxable lump sum by the credit applied', () => {
+      const result = calculateProjection(
+        [highContribAccount],
+        highEarnerInfo,
+        highEarnerGoals,
+        { ...baseDrawdownConfig, lumpSumPercentage: 33 },
+      )
+
+      const { lumpSumAmount, taxableLumpSum, creditAppliedToLumpSum } = result.lumpSumCommutation
+      expect(creditAppliedToLumpSum).toBeGreaterThan(0)
+      expect(taxableLumpSum).toBeLessThan(lumpSumAmount)
+      expect(taxableLumpSum).toBeCloseTo(lumpSumAmount - creditAppliedToLumpSum, 0)
+    })
+
+    it('should carry credit into drawdown when credit exceeds lump sum', () => {
+      const result = calculateProjection(
+        [highContribAccount],
+        highEarnerInfo,
+        highEarnerGoals,
+        { ...baseDrawdownConfig, lumpSumPercentage: 0 }, // no lump sum → all credit carried forward
+      )
+
+      expect(result.lumpSumCommutation.creditAppliedToLumpSum).toBe(0)
+      expect(result.lumpSumCommutation.creditCarriedIntoDrawdown).toBeGreaterThan(0)
+
+      // First drawdown year should apply credit
+      const firstDrawdownYear = result.yearlyProjections.find(r => r.age === highEarnerInfo.retirementAge)!
+      expect(firstDrawdownYear.excessCreditApplied).toBeGreaterThan(0)
+    })
+
+    it('should exhaust credit over drawdown years', () => {
+      const result = calculateProjection(
+        [highContribAccount],
+        highEarnerInfo,
+        highEarnerGoals,
+        { ...baseDrawdownConfig, lumpSumPercentage: 0 },
+      )
+
+      const drawdownRows = result.yearlyProjections.filter(r => r.age >= highEarnerInfo.retirementAge)
+      const lastRowWithCredit = drawdownRows.filter(r => (r.excessCreditRemaining ?? 0) > 0)
+      const firstRowWithoutCredit = drawdownRows.find(r => (r.excessCreditRemaining ?? 1) === 0)
+
+      // Credit should be non-zero initially and reach zero at some point
+      expect(lastRowWithCredit.length).toBeGreaterThan(0)
+      expect(firstRowWithoutCredit).toBeDefined()
+      // After credit is exhausted, remaining rows should stay at zero
+      if (firstRowWithoutCredit) {
+        const indexAfter = drawdownRows.indexOf(firstRowWithoutCredit)
+        drawdownRows.slice(indexAfter).forEach(r => {
+          expect(r.excessCreditRemaining).toBe(0)
+        })
+      }
+    })
+
+    it('should produce zero excess credit when contributions are within limit', () => {
+      const withinLimitAccount: Account = {
+        ...highContribAccount,
+        monthlyContribution: 5000, // R60k/year, well within R430k
+      }
+      const result = calculateProjection(
+        [withinLimitAccount],
+        highEarnerInfo,
+        highEarnerGoals,
+        { ...baseDrawdownConfig, lumpSumPercentage: 33 },
+      )
+
+      expect(result.accumulatedExcessCredit).toBe(0)
+      expect(result.lumpSumCommutation.creditAppliedToLumpSum).toBe(0)
+      expect(result.lumpSumCommutation.creditCarriedIntoDrawdown).toBe(0)
+    })
+
+    it('should not apply credit to TFSA or discretionary withdrawals', () => {
+      const tfsaAccount: Account = {
+        id: 'tfsa1',
+        name: 'TFSA',
+        type: 'tfsa',
+        provider: 'Test',
+        currentBalance: 200000,
+        monthlyContribution: 3000,
+        expectedReturn: 10,
+        annualFees: 0.5,
+        contributionEscalation: 0,
+      }
+      const result = calculateProjection(
+        [tfsaAccount],
+        highEarnerInfo,
+        highEarnerGoals,
+        { ...baseDrawdownConfig, lumpSumPercentage: 0 },
+      )
+
+      // TFSA contributions don't count toward Section 11F → no excess credit
+      expect(result.accumulatedExcessCredit).toBe(0)
+    })
+  })
 })

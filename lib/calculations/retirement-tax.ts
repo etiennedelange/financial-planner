@@ -147,40 +147,64 @@ export function calculateRetirementTax(
 }
 
 /**
- * Calculate lump sum commutation tax at retirement
- * @param portfolioValue Total portfolio value at retirement
- * @param lumpSumPercentage Percentage to take as lump sum (0-100)
- * @returns Lump sum amount, tax payable, and net amount
+ * Calculate how much of this year's pension/RA/preservation contributions are disallowed
+ * (i.e. exceed the Section 11F deduction limit) and should accumulate as a carry-forward credit.
+ *
+ * The credit reduces the taxable lump sum at retirement and, if any remains, offsets
+ * pension annuity income during drawdown.
+ */
+export function calculateExcessContributionCredit(
+  annualPensionContributions: number,
+  annualIncome: number,
+): number {
+  const limit = Math.min(
+    annualIncome * SA_TAX_LIMITS.pensionRaDeductionRate,
+    SA_TAX_LIMITS.pensionRaMaxDeduction,
+  )
+  return Math.max(0, annualPensionContributions - limit)
+}
+
+/**
+ * Calculate lump sum commutation tax at retirement.
+ * If accumulatedExcessCredit is provided, it reduces the taxable lump sum before tax
+ * is calculated — the credit offsets previously-disallowed contributions that were
+ * already taxed as income. Any unused credit carries into the drawdown phase.
+ *
+ * Note: the credit is applied against the full gross lump sum regardless of account mix
+ * (a simplification — legally it applies only to pension/RA/preservation lump sums).
  */
 export function calculateLumpSumCommutation(
   portfolioValue: number,
-  lumpSumPercentage: number
+  lumpSumPercentage: number,
+  accumulatedExcessCredit: number = 0,
 ): {
   lumpSumAmount: number
+  taxableLumpSum: number
   lumpSumTax: number
   netLumpSum: number
   remainingPortfolio: number
+  accumulatedExcessCredit: number
+  creditAppliedToLumpSum: number
+  creditCarriedIntoDrawdown: number
 } {
-  // Validate percentage
   const percentage = Math.max(0, Math.min(100, lumpSumPercentage))
-
-  // Calculate lump sum amount
   const lumpSumAmount = portfolioValue * (percentage / 100)
 
-  // Calculate tax on lump sum
-  const lumpSumTax = calculateLumpSumTax(lumpSumAmount)
-
-  // Net lump sum after tax
+  const creditAppliedToLumpSum = Math.min(accumulatedExcessCredit, lumpSumAmount)
+  const taxableLumpSum = lumpSumAmount - creditAppliedToLumpSum
+  const lumpSumTax = calculateLumpSumTax(taxableLumpSum)
   const netLumpSum = lumpSumAmount - lumpSumTax
-
-  // Remaining portfolio for ongoing withdrawals
   const remainingPortfolio = portfolioValue - lumpSumAmount
 
   return {
     lumpSumAmount,
+    taxableLumpSum,
     lumpSumTax,
     netLumpSum,
     remainingPortfolio,
+    accumulatedExcessCredit,
+    creditAppliedToLumpSum,
+    creditCarriedIntoDrawdown: accumulatedExcessCredit - creditAppliedToLumpSum,
   }
 }
 
