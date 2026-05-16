@@ -1,0 +1,5 @@
+blockExoticSubdeps: true
+
+allowBuilds:
+  sharp: true        # next.js image optimisation
+  unrs-resolver: true  # eslint-import-resolver-typescript (Rust native binary)
