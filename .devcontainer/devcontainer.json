@@ -5,8 +5,7 @@
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
-    "ghcr.io/devcontainers-extra/features/supabase-cli:1": {}
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
 
   "customizations": {
@@ -20,7 +19,8 @@
         "formulahendry.auto-rename-tag",
         "christian-kohler.path-intellisense",
         "anthropic.claude-code",
-        "TypeScriptTeam.native-preview"
+        "TypeScriptTeam.native-preview",
+        "ms-playwright.playwright"
       ],
       "settings": {
         "editor.formatOnSave": true,

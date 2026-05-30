@@ -1,10 +1,5 @@
 {
   "features": {
-    "ghcr.io/devcontainers-extra/features/supabase-cli:1": {
-      "version": "1.0.7",
-      "resolved": "ghcr.io/devcontainers-extra/features/supabase-cli@sha256:53c2def442886b29bb7719ffbe2e67bdbdeb8651b38d0bbfbd8dd6ffc3645cd9",
-      "integrity": "sha256:53c2def442886b29bb7719ffbe2e67bdbdeb8651b38d0bbfbd8dd6ffc3645cd9"
-    },
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "version": "2.16.1",
       "resolved": "ghcr.io/devcontainers/features/docker-in-docker@sha256:ce078b7bf7d9ef3bcb9813b32103795d8d72172446890b64772cbe1dec6baafd",
