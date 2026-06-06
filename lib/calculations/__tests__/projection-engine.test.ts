@@ -758,7 +758,7 @@ describe('calculateProjection', () => {
       expect(totalContributions).toBe(0)
     })
 
-    it('should cap annual contributions at R36k even with higher monthly amounts', () => {
+    it('should cap annual contributions at R46k even with higher monthly amounts', () => {
       const overContributingAccount: Account = {
         ...tfsaAccount,
         monthlyContribution: 5000, // R60k/year — over annual limit
@@ -773,8 +773,8 @@ describe('calculateProjection', () => {
         baseDrawdownConfig
       )
 
-      // Year 1 contributions must not exceed R36k annual limit
-      expect(result.yearlyProjections[0].contributions).toBeLessThanOrEqual(36000 + 1)
+      // Year 1 contributions must not exceed R46k annual limit
+      expect(result.yearlyProjections[0].contributions).toBeLessThanOrEqual(46000 + 1)
     })
 
     it('should not apply TFSA limits to non-TFSA accounts', () => {
@@ -794,7 +794,7 @@ describe('calculateProjection', () => {
       )
 
       // Year 1 contributions should reflect full R60k (no cap for RA)
-      expect(result.yearlyProjections[0].contributions).toBeGreaterThan(36000)
+      expect(result.yearlyProjections[0].contributions).toBeGreaterThan(46000)
     })
   })
 

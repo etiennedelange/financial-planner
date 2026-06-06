@@ -66,7 +66,7 @@ export const RETIREMENT_CONTRIBUTION_LIMITS_CONFIG = {
 // Tax-Free Savings Account limits
 // ---------------------------------------------------------------------------
 export const TFSA_LIMITS_CONFIG = {
-  annualLimit:   36000,  // R36,000 p.a.
+  annualLimit:   46000,  // R46,000 p.a. (increased from R36,000 effective 1 March 2026)
   lifetimeLimit: 500000, // R500,000 lifetime
 } as const
 

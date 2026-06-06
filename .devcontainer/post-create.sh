@@ -83,6 +83,12 @@ if [ -f "package.json" ] && grep -q '"@playwright/test"' package.json 2>/dev/nul
     || echo "    Warning: Playwright browser install failed — run 'pnpm exec playwright install' manually"
 fi
 
+# ─── Google Chrome stable ─────────────────────────────────────────────────────
+# Installs Chrome stable for chrome-devtools-mcp (headless DevTools inspection).
+# Playwright uses its own Chromium build; this is a separate binary.
+echo "--> Installing Google Chrome stable..."
+sudo bash .devcontainer/install-chrome.sh
+
 # ─── shadcn/ui ─────────────────────────────────────────────────────────────────
 # Only initialise if components.json doesn't exist yet
 if [ -f "package.json" ] && [ ! -f "components.json" ]; then
@@ -129,6 +135,9 @@ if [ "$CURRENT_NAME" = "$TEMPLATE_NAME" ]; then
 else
   echo "--> App already renamed ($CURRENT_NAME) — skipping"
 fi
+
+# Claude Code plugins
+npx plugins add vercel/vercel-plugin
 
 echo ""
 echo "==> Post-create complete!"
