@@ -14,26 +14,15 @@ interface PlanPageProps {
 
 export function PlanPage({ projection, yearsToRetirement, displayMode, inflationRate }: PlanPageProps) {
   return (
-    <div className="space-y-10">
-      <section className="space-y-4">
-        <h2 className="text-base font-semibold">Personal Information</h2>
-        <PersonalInfoForm />
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-base font-semibold">Retirement Goals</h2>
-        <RetirementGoalsForm />
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-base font-semibold">Investment Assumptions</h2>
-        <AssumptionsForm
-          portfolioAtRetirement={projection?.portfolioAtRetirement}
-          yearsToRetirement={yearsToRetirement}
-          displayMode={displayMode}
-          inflationRate={inflationRate}
-        />
-      </section>
+    <div className="space-y-6">
+      <PersonalInfoForm />
+      <RetirementGoalsForm />
+      <AssumptionsForm
+        portfolioAtRetirement={projection?.portfolioAtRetirement}
+        yearsToRetirement={yearsToRetirement}
+        displayMode={displayMode}
+        inflationRate={inflationRate}
+      />
     </div>
   )
 }
