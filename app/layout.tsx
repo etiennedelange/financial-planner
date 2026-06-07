@@ -3,10 +3,20 @@ import { SupabaseProvider } from "@/components/supabase-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Analytics } from "@vercel/analytics/next"
 import type { Metadata, Viewport } from "next"
-import { Inter } from "next/font/google"
+import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google"
 import "./globals.css"
 
-const inter = Inter({ subsets: ["latin"] })
+const ibmPlexSans = IBM_Plex_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  variable: "--font-ibm-sans",
+})
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-ibm-mono",
+})
 
 export const metadata: Metadata = {
   title: "SA Retirement Calculator",
@@ -24,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className="h-full">
+    <html lang="en" suppressHydrationWarning className={`${ibmPlexSans.variable} ${ibmPlexMono.variable} h-full`}>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -32,14 +42,14 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.className} h-full`}>
+      <body className={`${ibmPlexSans.className} h-full`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="dark"
+          enableSystem={false}
           disableTransitionOnChange
         >
-          <ColorThemeProvider defaultTheme="blue" storageKey="color-theme">
+          <ColorThemeProvider defaultTheme="gold" storageKey="color-theme">
             <SupabaseProvider>
               <main className="bg-background h-full">
                 {children}

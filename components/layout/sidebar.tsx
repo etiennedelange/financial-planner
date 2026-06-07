@@ -3,7 +3,6 @@
 import { AuthModal } from "@/components/auth/auth-modal"
 import { ProfileModal } from "@/components/auth/profile-modal"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
 import type { User } from "@supabase/supabase-js"
 import {
   LayoutDashboard,
@@ -40,16 +39,28 @@ export function Sidebar({ activePage, onNavigate, accountCount, user }: SidebarP
   const email = user?.email
 
   return (
-    <aside className="fixed left-0 top-0 z-30 flex h-screen w-[220px] flex-col bg-card border-r">
+    <aside className="fixed left-0 top-0 z-30 flex h-screen w-[220px] flex-col bg-background border-r border-border">
       {/* Wordmark */}
-      <div className="px-4 py-5">
-        <span className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-          SA Retirement
-        </span>
+      <div className="px-4 pt-5 pb-4 border-b border-border">
+        <div className="flex items-center gap-2.5">
+          <div className="h-7 w-7 rounded-sm bg-primary flex items-center justify-center shrink-0">
+            <span className="font-mono text-[9px] font-bold tracking-tight text-primary-foreground leading-none">
+              SA
+            </span>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground leading-none">
+              Retirement
+            </span>
+            <span className="font-mono text-[8px] uppercase tracking-[0.14em] text-muted-foreground leading-none">
+              Calculator
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-2 py-2 space-y-0.5">
+      <nav className="flex-1 px-3 py-4 space-y-0.5">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon
           const isActive = activePage === item.id
@@ -58,18 +69,24 @@ export function Sidebar({ activePage, onNavigate, accountCount, user }: SidebarP
               key={item.id}
               onClick={() => onNavigate(item.id)}
               className={cn(
-                "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium transition-colors",
+                "group relative flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-all duration-150",
                 isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
               )}
             >
-              <Icon className="h-5 w-5 shrink-0" />
-              <span className="flex-1 text-left">{item.label}</span>
+              {isActive && (
+                <span className="absolute left-0 inset-y-1 w-[2px] rounded-full bg-primary" />
+              )}
+              <Icon className="h-4 w-4 shrink-0" />
+              <span className="flex-1 text-left tracking-wide">{item.label}</span>
               {item.showBadge && accountCount > 0 && (
                 <Badge
-                  variant={isActive ? "secondary" : "outline"}
-                  className="ml-auto h-5 min-w-5 px-1.5 text-xs"
+                  variant="outline"
+                  className={cn(
+                    "ml-auto h-4 min-w-4 px-1 text-[10px]",
+                    isActive ? "border-primary/30 bg-primary/10 text-primary" : ""
+                  )}
                 >
                   {accountCount}
                 </Badge>
@@ -80,27 +97,29 @@ export function Sidebar({ activePage, onNavigate, accountCount, user }: SidebarP
       </nav>
 
       {/* Bottom utility */}
-      <div className="px-2 pb-4">
-        <Separator className="mb-2" />
+      <div className="px-3 pb-4 border-t border-border pt-3 space-y-0.5">
         <button
           onClick={() => onNavigate("settings")}
           className={cn(
-            "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium transition-colors",
+            "group relative flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-all duration-150",
             activePage === "settings"
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:bg-accent hover:text-foreground"
           )}
         >
-          <Settings className="h-5 w-5 shrink-0" />
-          <span>Settings</span>
+          {activePage === "settings" && (
+            <span className="absolute left-0 inset-y-1 w-[2px] rounded-full bg-primary" />
+          )}
+          <Settings className="h-4 w-4 shrink-0" />
+          <span className="tracking-wide">Settings</span>
         </button>
 
         <button
           onClick={() => isAnon ? setAuthModalOpen(true) : setProfileModalOpen(true)}
-          className="mt-0.5 flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+          className="flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
         >
-          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted">
-            <UserIcon className="h-3.5 w-3.5" />
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 border border-primary/25">
+            <UserIcon className="h-3 w-3 text-primary" />
           </div>
           <span className="flex-1 truncate text-left text-xs">
             {isAnon ? "Sign in" : email}

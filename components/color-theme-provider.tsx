@@ -2,7 +2,7 @@
 
 import * as React from "react"
 
-type ColorTheme = "blue" | "green" | "rose" | "violet" | "orange"
+type ColorTheme = "gold" | "blue" | "green" | "rose" | "violet" | "orange"
 
 type ColorThemeProviderProps = {
   children: React.ReactNode
@@ -22,7 +22,7 @@ const initialState: ColorThemeProviderState = {
 
 const ColorThemeProviderContext = React.createContext<ColorThemeProviderState>(initialState)
 
-const THEME_CLASSES = ["theme-blue", "theme-green", "theme-rose", "theme-violet", "theme-orange"] as const
+const THEME_CLASSES = ["theme-gold", "theme-blue", "theme-green", "theme-rose", "theme-violet", "theme-orange"] as const
 
 export function ColorThemeProvider({
   children,

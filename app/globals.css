@@ -29,6 +29,10 @@
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
 
+  /* Fonts */
+  --font-sans: var(--font-ibm-sans), system-ui, sans-serif;
+  --font-mono: var(--font-ibm-mono), ui-monospace, monospace;
+
   /* Border radius */
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
@@ -58,61 +62,82 @@
 /* ─── Base CSS variables ────────────────────────────────────────────────── */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 210 25% 98%;
+    --foreground: 222 40% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 222 40% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --popover-foreground: 222 40% 10%;
+    --primary: 43 85% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 20% 94%;
+    --secondary-foreground: 222 40% 15%;
+    --muted: 210 20% 94%;
+    --muted-foreground: 220 12% 48%;
+    --accent: 210 20% 92%;
+    --accent-foreground: 222 40% 10%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 43 85% 45%;
     --radius: 0.5rem;
-    --chart-1: 221.2 83.2% 53.3%;
-    --chart-2: 142 76% 36%;
-    --chart-3: 142 71% 45%;
-    --chart-4: 47 85% 57%;
-    --chart-5: 27 87% 67%;
+    --chart-1: 43 85% 45%;
+    --chart-2: 162 72% 38%;
+    --chart-3: 43 80% 62%;
+    --chart-4: 220 75% 58%;
+    --chart-5: 0 65% 52%;
   }
 
+  /* ── Dark theme: deep navy + gold ── */
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-    --chart-1: 217.2 91.2% 59.8%;
-    --chart-2: 142 76% 36%;
-    --chart-3: 142 71% 45%;
-    --chart-4: 47 85% 57%;
-    --chart-5: 27 87% 67%;
+    --background: 222 47% 5%;
+    --foreground: 210 20% 92%;
+    --card: 222 40% 8%;
+    --card-foreground: 210 20% 92%;
+    --popover: 222 40% 10%;
+    --popover-foreground: 210 20% 92%;
+    --primary: 43 90% 52%;
+    --primary-foreground: 222 47% 5%;
+    --secondary: 222 30% 13%;
+    --secondary-foreground: 210 15% 80%;
+    --muted: 222 30% 12%;
+    --muted-foreground: 220 12% 50%;
+    --accent: 222 30% 14%;
+    --accent-foreground: 210 20% 92%;
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 222 25% 18%;
+    --input: 222 30% 13%;
+    --ring: 43 90% 52%;
+    --chart-1: 43 90% 52%;
+    --chart-2: 162 72% 42%;
+    --chart-3: 43 85% 70%;
+    --chart-4: 220 80% 62%;
+    --chart-5: 0 65% 55%;
   }
 
-  /* Blue Theme (Default) */
+  /* ── Gold Theme (default) ── */
+  .theme-gold {
+    --primary: 43 85% 45%;
+    --ring: 43 85% 45%;
+    --chart-1: 43 85% 45%;
+    --chart-2: 162 72% 38%;
+    --chart-3: 43 80% 62%;
+    --chart-4: 220 75% 58%;
+    --chart-5: 0 65% 52%;
+  }
+  .theme-gold.dark {
+    --primary: 43 90% 52%;
+    --ring: 43 90% 52%;
+    --chart-1: 43 90% 52%;
+    --chart-2: 162 72% 42%;
+    --chart-3: 43 85% 70%;
+    --chart-4: 220 80% 62%;
+    --chart-5: 0 65% 55%;
+  }
+
+  /* Blue Theme */
   .theme-blue {
     --primary: 225 73% 57%;
     --ring: 225 73% 57%;
@@ -122,7 +147,6 @@
     --chart-4: 225 73% 47%;
     --chart-5: 225 73% 37%;
   }
-
   .theme-blue.dark {
     --primary: 225 73% 65%;
     --ring: 225 73% 65%;
@@ -143,7 +167,6 @@
     --chart-4: 142 76% 28%;
     --chart-5: 142 76% 20%;
   }
-
   .theme-green.dark {
     --primary: 142 71% 45%;
     --ring: 142 71% 45%;
@@ -164,7 +187,6 @@
     --chart-4: 346.8 77.2% 39.8%;
     --chart-5: 346.8 77.2% 29.8%;
   }
-
   .theme-rose.dark {
     --primary: 346.8 77.2% 59.8%;
     --ring: 346.8 77.2% 59.8%;
@@ -185,7 +207,6 @@
     --chart-4: 262.1 83.3% 47.8%;
     --chart-5: 262.1 83.3% 37.8%;
   }
-
   .theme-violet.dark {
     --primary: 263.4 70% 66.4%;
     --ring: 263.4 70% 66.4%;
@@ -206,7 +227,6 @@
     --chart-4: 24.6 95% 43.1%;
     --chart-5: 24.6 95% 33.1%;
   }
-
   .theme-orange.dark {
     --primary: 20.5 90.2% 58.2%;
     --ring: 20.5 90.2% 58.2%;
@@ -217,6 +237,12 @@
     --chart-5: 20.5 90.2% 38.2%;
   }
 }
+
+/* ─── Dark mode scrollbar ────────────────────────────────────────────────── */
+.dark ::-webkit-scrollbar { width: 5px; height: 5px; }
+.dark ::-webkit-scrollbar-track { background: hsl(var(--background)); }
+.dark ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
+.dark ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
 
 /* ─── Dashboard utility classes ─────────────────────────────────────────── */
 @layer components {

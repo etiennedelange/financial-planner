@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 const themes = [
+  { name: "Gold", value: "gold", color: "bg-yellow-500" },
   { name: "Blue", value: "blue", color: "bg-blue-500" },
   { name: "Green", value: "green", color: "bg-green-500" },
   { name: "Rose", value: "rose", color: "bg-rose-500" },
