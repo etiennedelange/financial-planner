@@ -43,7 +43,7 @@ export function Sidebar({ activePage, onNavigate, accountCount, user }: SidebarP
     <aside className="fixed left-0 top-0 z-30 flex h-screen w-[220px] flex-col bg-card border-r">
       {/* Wordmark */}
       <div className="px-4 py-5">
-        <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+        <span className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
           SA Retirement
         </span>
       </div>
@@ -58,13 +58,13 @@ export function Sidebar({ activePage, onNavigate, accountCount, user }: SidebarP
               key={item.id}
               onClick={() => onNavigate(item.id)}
               className={cn(
-                "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium transition-colors",
                 isActive
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               )}
             >
-              <Icon className="h-4 w-4 shrink-0" />
+              <Icon className="h-5 w-5 shrink-0" />
               <span className="flex-1 text-left">{item.label}</span>
               {item.showBadge && accountCount > 0 && (
                 <Badge
@@ -85,13 +85,13 @@ export function Sidebar({ activePage, onNavigate, accountCount, user }: SidebarP
         <button
           onClick={() => onNavigate("settings")}
           className={cn(
-            "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+            "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium transition-colors",
             activePage === "settings"
               ? "bg-primary text-primary-foreground"
               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
           )}
         >
-          <Settings className="h-4 w-4 shrink-0" />
+          <Settings className="h-5 w-5 shrink-0" />
           <span>Settings</span>
         </button>
 

@@ -5,8 +5,16 @@ import type { NavPage } from "@/components/layout/sidebar"
 import { AccountsPage } from "@/components/pages/accounts-page"
 import { OverviewPage } from "@/components/pages/overview-page"
 import { PlanPage } from "@/components/pages/plan-page"
-import { ProjectionsPage } from "@/components/pages/projections-page"
-import { SettingsPage } from "@/components/pages/settings-page"
+import dynamic from "next/dynamic"
+
+const ProjectionsPage = dynamic(
+  () => import("@/components/pages/projections-page").then((m) => ({ default: m.ProjectionsPage })),
+  { ssr: false }
+)
+const SettingsPage = dynamic(
+  () => import("@/components/pages/settings-page").then((m) => ({ default: m.SettingsPage })),
+  { ssr: false }
+)
 import { DebugWindow } from "@/components/debug/debug-window"
 import { useAuth } from "@/components/supabase-provider"
 import { calculateProjection } from "@/lib/calculations/projection-engine"
@@ -52,7 +60,8 @@ export function CalculatorClient() {
     deferredRetirementGoals,
     deferredDrawdownConfig,
     1000,
-    deferredAssumptions
+    deferredAssumptions,
+    activePage === "overview"
   )
 
   const isSimulating =

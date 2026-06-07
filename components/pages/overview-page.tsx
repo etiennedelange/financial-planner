@@ -34,7 +34,7 @@ export function OverviewPage({
   annualIncome,
 }: OverviewPageProps) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <DashboardMetricsGrid
         projection={projection}
         simulationResult={simulationResult}

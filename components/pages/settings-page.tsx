@@ -100,7 +100,7 @@ export function SettingsPage({ projection }: SettingsPageProps) {
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="space-y-6">
       <input ref={importInputRef} type="file" accept=".json" className="sr-only" onChange={handleImportPlan} />
 
       {/* Display */}

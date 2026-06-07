@@ -47,8 +47,7 @@ export function AccountsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Retirement Accounts</h2>
+      <div className="flex justify-end">
         <Button onClick={handleAddClick}>
           <Plus className="mr-2 h-4 w-4" />
           Add Account

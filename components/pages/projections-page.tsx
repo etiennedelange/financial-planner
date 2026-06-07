@@ -10,7 +10,7 @@ interface ProjectionsPageProps {
 
 export function ProjectionsPage({ projection }: ProjectionsPageProps) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <InsightsPanel />
       <CalculationsBreakdown projection={projection} />
     </div>

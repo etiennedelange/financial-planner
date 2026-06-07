@@ -38,7 +38,7 @@ export function TopBar({ activePage, user, displayMode, onSetDisplayMode }: TopB
     <header className="sticky top-0 z-20 border-b bg-background">
       <div className="mx-auto flex h-12 w-full max-w-6xl items-center gap-4 px-8">
       {/* Page title */}
-      <span className="text-sm font-semibold">{PAGE_TITLES[activePage]}</span>
+      <span className="text-base font-semibold">{PAGE_TITLES[activePage]}</span>
 
       {/* Scenario switcher */}
       <div className="flex-1 flex justify-center">
