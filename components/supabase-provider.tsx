@@ -37,8 +37,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         if (session.user.id !== sessionId) {
           setSessionId(session.user.id)
           await syncFromDb()
-          await syncExpensesFromDb(session.user.id)
         }
+        await syncExpensesFromDb(session.user.id)
         return
       }
 
