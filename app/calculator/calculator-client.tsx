@@ -22,7 +22,7 @@ import { calculateProjection } from "@/lib/calculations/projection-engine"
 import { useMonteCarloWorker } from "@/lib/monte-carlo/use-monte-carlo-worker"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import type { ProjectionResult } from "@/types"
-import { useDeferredValue, useMemo, useState } from "react"
+import { useEffect, useDeferredValue, useMemo, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
 
 export function CalculatorClient() {
@@ -47,7 +47,14 @@ export function CalculatorClient() {
     }))
   )
 
-  const [activePage, setActivePage] = useState<NavPage>("overview")
+  const [activePage, setActivePage] = useState<NavPage>(() => {
+    if (typeof window === "undefined") return "overview"
+    return (localStorage.getItem("activePage") as NavPage) ?? "overview"
+  })
+
+  useEffect(() => {
+    localStorage.setItem("activePage", activePage)
+  }, [activePage])
 
   const deferredAccounts = useDeferredValue(accounts)
   const deferredPersonalInfo = useDeferredValue(personalInfo)

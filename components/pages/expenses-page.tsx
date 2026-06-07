@@ -391,6 +391,15 @@ export function ExpensesPage() {
   )
 
   const setRetirementGoals = useCalculatorStore((s) => s.setRetirementGoals)
+  const syncFromDb = useExpensesStore((s) => s.syncFromDb)
+  const storeSessionId = useExpensesStore((s) => s.sessionId)
+
+  // Seed defaults on first mount when store is empty (works offline too)
+  useEffect(() => {
+    if (groups.length === 0) {
+      syncFromDb(storeSessionId ?? "")
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-sync retirement total → desiredMonthlyIncome
   useEffect(() => {

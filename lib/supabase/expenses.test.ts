@@ -135,10 +135,11 @@ describe('deleteExpense', () => {
 })
 
 describe('seedExpenses', () => {
-  it('returns empty when supabase is disabled', async () => {
+  it('returns seed data when supabase is disabled (offline mode)', async () => {
     vi.mocked(createClient).mockReturnValue(null)
     const result = await seedExpenses('s-1')
-    expect(result).toEqual({ groups: [], expenses: [] })
+    expect(result.groups).toHaveLength(12)
+    expect(result.expenses).toHaveLength(32)
   })
 
   it('returns 12 groups and 32 expenses', async () => {
