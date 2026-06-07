@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="h-full">
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -32,7 +32,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} h-full`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -41,7 +41,7 @@ export default function RootLayout({
         >
           <ColorThemeProvider defaultTheme="blue" storageKey="color-theme">
             <SupabaseProvider>
-              <main className="min-h-screen bg-background">
+              <main className="bg-background h-full">
                 {children}
               </main>
             </SupabaseProvider>
