@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import type { User } from "@supabase/supabase-js"
 import {
   LayoutDashboard,
+  Receipt,
   SlidersHorizontal,
   TrendingUp,
   Wallet,
@@ -15,12 +16,13 @@ import {
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 
-export type NavPage = "overview" | "accounts" | "plan" | "projections" | "settings"
+export type NavPage = "overview" | "accounts" | "plan" | "expenses" | "projections" | "settings"
 
 const NAV_ITEMS: { id: NavPage; label: string; icon: React.ElementType; showBadge?: boolean }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "accounts", label: "Accounts", icon: Wallet, showBadge: true },
   { id: "plan", label: "Plan", icon: SlidersHorizontal },
+  { id: "expenses", label: "Expenses", icon: Receipt },
   { id: "projections", label: "Projections", icon: TrendingUp },
 ]
 

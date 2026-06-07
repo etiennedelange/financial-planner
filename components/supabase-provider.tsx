@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 import { createClient, SUPABASE_ENABLED } from "@/lib/supabase/client"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { useExpensesStore } from "@/lib/store/expenses-store"
 
 interface AuthContext {
   user: User | null
@@ -19,6 +20,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const setSessionId = useCalculatorStore((s) => s.setSessionId)
   const syncFromDb = useCalculatorStore((s) => s.syncFromDb)
   const sessionId = useCalculatorStore((s) => s.sessionId)
+  const syncExpensesFromDb = useExpensesStore((s) => s.syncFromDb)
 
   const [user, setUser] = useState<User | null>(null)
 
@@ -35,6 +37,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         if (session.user.id !== sessionId) {
           setSessionId(session.user.id)
           await syncFromDb()
+          await syncExpensesFromDb(session.user.id)
         }
         return
       }
@@ -48,6 +51,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         setUser(data.user)
         setSessionId(data.user.id)
         await syncFromDb()
+        await syncExpensesFromDb(data.user.id)
       }
     }
 
@@ -60,6 +64,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       if (newUser && newUser.id !== useCalculatorStore.getState().sessionId) {
         setSessionId(newUser.id)
         await syncFromDb()
+        await syncExpensesFromDb(newUser.id)
       }
       // On SIGNED_OUT: user becomes null, UserMenu shows "Sign In".
       // A new anon session is created on the next page load via init().

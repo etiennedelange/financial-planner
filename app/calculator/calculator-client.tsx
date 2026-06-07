@@ -3,6 +3,7 @@
 import { AppShell } from "@/components/layout/app-shell"
 import type { NavPage } from "@/components/layout/sidebar"
 import { AccountsPage } from "@/components/pages/accounts-page"
+import { ExpensesPage } from "@/components/pages/expenses-page"
 import { OverviewPage } from "@/components/pages/overview-page"
 import { PlanPage } from "@/components/pages/plan-page"
 import dynamic from "next/dynamic"
@@ -118,6 +119,8 @@ export function CalculatorClient() {
             inflationRate={assumptions.inflationRate / 100}
           />
         )
+      case "expenses":
+        return <ExpensesPage />
       case "projections":
         return <ProjectionsPage projection={projection} />
       case "settings":
