@@ -96,9 +96,6 @@ if [ -f "package.json" ] && [ ! -f "components.json" ]; then
   npx --yes shadcn@latest init -d --base radix || echo "    shadcn init skipped — run 'npx shadcn@latest init -d --base radix' manually"
 fi
 
-# Claude Code plugins
-npx plugins add vercel/vercel-plugin
-
 echo ""
 echo "==> Post-create complete!"
 echo "    Run 'pnpm dev' to start the dev server."
