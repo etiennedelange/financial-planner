@@ -61,7 +61,11 @@
     }
   },
 
-  "runArgs": ["--ipc=host"],
+  "runArgs": ["--ipc=host", "--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
+
+  "containerEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/node/.claude"
+  },
 
   "postCreateCommand": "bash .devcontainer/post-create.sh",
 
@@ -69,9 +73,5 @@
 
   "mounts": [
     "source=claude-code-config-${devcontainerId},target=/home/node/.claude,type=volume"
-  ],
-
-   "containerEnv": {
-    "CLAUDE_CONFIG_DIR": "/home/node/.claude"
-  }
+  ]
 }
