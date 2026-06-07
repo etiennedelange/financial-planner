@@ -20,6 +20,7 @@ const PAGE_TITLES: Record<NavPage, string> = {
   overview: "Overview",
   accounts: "Accounts",
   plan: "Plan",
+  expenses: "Expenses",
   projections: "Projections",
   settings: "Settings",
 }
