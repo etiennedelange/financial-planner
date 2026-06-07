@@ -3,9 +3,10 @@
   "image": "mcr.microsoft.com/devcontainers/typescript-node:dev-24-bookworm",
 
   "features": {
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {},
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    "ghcr.io/devcontainers/features/docker-in-docker:3.0.1": {}
   },
 
   "customizations": {
@@ -18,7 +19,6 @@
         "ms-vscode.vscode-typescript-next",
         "formulahendry.auto-rename-tag",
         "christian-kohler.path-intellisense",
-        "anthropic.claude-code",
         "TypeScriptTeam.native-preview",
         "ms-playwright.playwright"
       ],
@@ -68,8 +68,10 @@
   "remoteUser": "node",
 
   "mounts": [
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/node/.ssh,readonly,type=bind,consistency=cached",
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.claude,target=/home/node/.claude,type=bind,consistency=cached"
-    // "source=${localEnv:HOME}${localEnv:USERPROFILE}/.claude.json,target=/home/node/.claude.json,type=bind,consistency=cached"
-  ]
+    "source=claude-code-config-${devcontainerId},target=/home/node/.claude,type=volume"
+  ],
+
+   "containerEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/node/.claude"
+  }
 }
