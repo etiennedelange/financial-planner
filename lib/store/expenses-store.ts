@@ -12,21 +12,26 @@ import {
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
-let groupSyncTimer: ReturnType<typeof setTimeout> | null = null
-let expenseSyncTimer: ReturnType<typeof setTimeout> | null = null
+const groupSyncTimers = new Map<string, ReturnType<typeof setTimeout>>()
+const expenseSyncTimers = new Map<string, ReturnType<typeof setTimeout>>()
+let syncInProgress = false
 
 function scheduleGroupSync(group: ExpenseGroup, sessionId: string) {
-  if (groupSyncTimer) clearTimeout(groupSyncTimer)
-  groupSyncTimer = setTimeout(() => {
+  const existing = groupSyncTimers.get(group.id)
+  if (existing) clearTimeout(existing)
+  groupSyncTimers.set(group.id, setTimeout(() => {
     upsertGroup(sessionId, group).catch(console.error)
-  }, 800)
+    groupSyncTimers.delete(group.id)
+  }, 800))
 }
 
 function scheduleExpenseSync(expense: Expense, sessionId: string) {
-  if (expenseSyncTimer) clearTimeout(expenseSyncTimer)
-  expenseSyncTimer = setTimeout(() => {
+  const existing = expenseSyncTimers.get(expense.id)
+  if (existing) clearTimeout(existing)
+  expenseSyncTimers.set(expense.id, setTimeout(() => {
     upsertExpense(sessionId, expense).catch(console.error)
-  }, 800)
+    expenseSyncTimers.delete(expense.id)
+  }, 800))
 }
 
 interface ExpensesState {
@@ -61,13 +66,19 @@ export const useExpensesStore = create<ExpensesState>()(
       setSessionId: (id) => set({ sessionId: id }),
 
       syncFromDb: async (sessionId) => {
-        set({ sessionId })
-        const { groups, expenses } = await fetchExpenses(sessionId)
-        if (groups.length === 0) {
-          const seeded = await seedExpenses(sessionId)
-          set({ groups: seeded.groups, expenses: seeded.expenses })
-        } else {
-          set({ groups, expenses })
+        if (syncInProgress) return
+        syncInProgress = true
+        try {
+          set({ sessionId })
+          const { groups, expenses } = await fetchExpenses(sessionId)
+          if (groups.length === 0) {
+            const seeded = await seedExpenses(sessionId)
+            set({ groups: seeded.groups, expenses: seeded.expenses })
+          } else {
+            set({ groups, expenses })
+          }
+        } finally {
+          syncInProgress = false
         }
       },
 
