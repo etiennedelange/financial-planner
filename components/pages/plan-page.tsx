@@ -14,7 +14,7 @@ interface PlanPageProps {
 
 export function PlanPage({ projection, yearsToRetirement, displayMode, inflationRate }: PlanPageProps) {
   return (
-    <div className="p-6 max-w-3xl space-y-10">
+    <div className="max-w-3xl space-y-10">
       <section className="space-y-4">
         <h2 className="text-base font-semibold">Personal Information</h2>
         <PersonalInfoForm />
