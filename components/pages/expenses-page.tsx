@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useExpensesStore } from "@/lib/store/expenses-store"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { SUPABASE_ENABLED } from "@/lib/supabase/client"
 import { formatCurrency } from "@/lib/utils/currency"
 import { GROUP_COLOR_OPTIONS, type Expense, type ExpenseGroup } from "@/types/expenses"
 import { cn } from "@/lib/utils"
@@ -394,10 +395,10 @@ export function ExpensesPage() {
   const syncFromDb = useExpensesStore((s) => s.syncFromDb)
   const storeSessionId = useExpensesStore((s) => s.sessionId)
 
-  // Seed defaults on first mount when store is empty (works offline too)
+  // Offline-only seed: when Supabase is unavailable, self-seed defaults on first mount
   useEffect(() => {
-    if (groups.length === 0) {
-      syncFromDb(storeSessionId ?? "")
+    if (!SUPABASE_ENABLED && groups.length === 0) {
+      syncFromDb("")
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
