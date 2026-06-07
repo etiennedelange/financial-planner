@@ -44,7 +44,7 @@ function EditRow({
         className="h-7 text-sm flex-1 min-w-0" autoFocus />
       <Input value={amount} onChange={(e) => setAmount(e.target.value)} onKeyDown={onKey}
         className="h-7 text-sm w-28 text-right font-mono" placeholder="0" />
-      <Button size="icon" variant="ghost" className="h-7 w-7 text-emerald-600" onClick={commit}>
+      <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" onClick={commit}>
         <Check className="h-3.5 w-3.5" />
       </Button>
       <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onCancel}>
@@ -86,7 +86,7 @@ function AddExpenseRow({
         className="h-7 text-sm flex-1 min-w-0" placeholder="Expense name" autoFocus />
       <Input value={amount} onChange={(e) => setAmount(e.target.value)} onKeyDown={onKey}
         className="h-7 text-sm w-28 text-right font-mono" placeholder="0" />
-      <Button size="icon" variant="ghost" className="h-7 w-7 text-emerald-600" onClick={commit}>
+      <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" onClick={commit}>
         <Check className="h-3.5 w-3.5" />
       </Button>
       <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onCancel}>
@@ -100,7 +100,7 @@ function AddExpenseRow({
 
 function AddGroupRow({ onSave, onCancel }: { onSave: (name: string, color: string) => void; onCancel: () => void }) {
   const [name, setName] = useState("")
-  const [color, setColor] = useState<string>(GROUP_COLOR_OPTIONS[8]) // indigo default
+  const [color, setColor] = useState<string>("#6366f1") // indigo — from GROUP_COLOR_OPTIONS
 
   const commit = () => {
     if (!name.trim()) { onCancel(); return }
@@ -122,7 +122,7 @@ function AddGroupRow({ onSave, onCancel }: { onSave: (name: string, color: strin
           />
         ))}
       </div>
-      <Button size="icon" variant="ghost" className="h-7 w-7 text-emerald-600" onClick={commit}>
+      <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" onClick={commit}>
         <Check className="h-3.5 w-3.5" />
       </Button>
       <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onCancel}>
@@ -206,7 +206,7 @@ function GroupSection({
                   className={cn(
                     "shrink-0 text-[10px] px-2 py-0.5 rounded-full border font-medium transition-colors",
                     expense.inRetirement
-                      ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30 dark:text-emerald-400"
+                      ? "bg-primary/10 text-primary border-primary/30"
                       : "bg-muted/50 text-muted-foreground border-border"
                   )}
                 >
@@ -255,10 +255,15 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
   const [editIncome, setEditIncome] = useState(false)
   const [incomeInput, setIncomeInput] = useState(String(monthlyIncome))
 
+  useEffect(() => {
+    if (!editIncome) setIncomeInput(String(monthlyIncome))
+  }, [monthlyIncome, editIncome])
+
   const total = expenses.reduce((s, e) => s + e.amount, 0)
   const retirementTotal = expenses.filter((e) => e.inRetirement).reduce((s, e) => s + e.amount, 0)
   const surplus = monthlyIncome - total
-  const fourPctTarget = retirementTotal * 300
+  const FOUR_PCT_MULTIPLIER = 300 // 12 months / 4% = 300
+  const fourPctTarget = retirementTotal * FOUR_PCT_MULTIPLIER
 
   const groupTotals = groups
     .map((g) => ({ group: g, total: expenses.filter((e) => e.groupId === g.id).reduce((s, e) => s + e.amount, 0) }))
@@ -270,6 +275,7 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
   const saveIncome = () => {
     const parsed = parseFloat(incomeInput.replace(/[\s,]/g, ""))
     if (!isNaN(parsed) && parsed > 0) onSetIncome(parsed)
+    else setIncomeInput(String(monthlyIncome))
     setEditIncome(false)
   }
 
@@ -285,7 +291,7 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
                 <Input value={incomeInput} onChange={(e) => setIncomeInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") saveIncome(); if (e.key === "Escape") setEditIncome(false) }}
                   className="h-6 w-28 text-right text-sm font-mono" autoFocus />
-                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={saveIncome}>
+                <Button size="icon" variant="ghost" className="h-6 w-6 text-primary" onClick={saveIncome}>
                   <Check className="h-3 w-3" />
                 </Button>
               </div>
@@ -303,7 +309,7 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
           <div className="h-px bg-border" />
           <div className="flex justify-between items-center">
             <span className="text-sm font-semibold">Surplus</span>
-            <span className={cn("text-sm font-mono font-bold", surplus >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-destructive")}>
+            <span className={cn("text-sm font-mono font-bold", surplus >= 0 ? "text-primary" : "text-destructive")}>
               {formatCurrency(surplus)}
             </span>
           </div>
