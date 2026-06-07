@@ -68,24 +68,30 @@ export function PortfolioGrowthChart({
         </CardDescription>
       </CardHeader>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
-        <ChartContainer config={chartConfig} className="h-[400px] w-full">
+        <ChartContainer config={chartConfig} className="h-[260px] w-full">
           <AreaChart
             data={data}
-            margin={{ top: 20, right: 10, left: 0, bottom: 10 }}
+            margin={{ top: 16, right: 16, left: 0, bottom: 0 }}
           >
             <defs>
               <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.1} />
+                <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.18} />
+                <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
             <XAxis
               dataKey="age"
+              tickLine={false}
+              axisLine={false}
+              tick={{ fontSize: 11 }}
               tickFormatter={(age) => `${age}`}
-              label={{ value: "Age", position: "insideBottom", offset: 0 }}
             />
             <YAxis
+              tickLine={false}
+              axisLine={false}
+              tick={{ fontSize: 11 }}
+              width={68}
               tickFormatter={(value) => formatCurrency(value, { compact: true })}
             />
             <ChartTooltip
@@ -98,13 +104,14 @@ export function PortfolioGrowthChart({
             />
             <ReferenceLine
               x={retirementAge}
-              stroke="hsl(var(--muted-foreground) / 0.5)"
-              strokeDasharray="5 5"
+              stroke="hsl(var(--muted-foreground))"
+              strokeOpacity={0.4}
+              strokeDasharray="4 4"
               label={{
-                value: `Retirement (${retirementAge})`,
+                value: `Retire ${retirementAge}`,
                 position: "insideTopLeft",
                 fill: "hsl(var(--muted-foreground))",
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: 500,
               }}
             />
@@ -112,8 +119,10 @@ export function PortfolioGrowthChart({
               type="monotone"
               dataKey="balance"
               stroke="hsl(var(--chart-1))"
+              strokeWidth={2}
               fillOpacity={1}
               fill="url(#colorBalance)"
+              dot={false}
             />
           </AreaChart>
         </ChartContainer>

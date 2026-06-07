@@ -57,24 +57,24 @@ export function MonteCarloChart({
 
   const chartConfig = {
     p50: {
-      label: "Median (50th)",
+      label: "Median",
       color: "hsl(var(--chart-1))",
     },
     p75: {
-      label: "75th Percentile",
-      color: "hsl(var(--chart-2))",
+      label: "Likely range",
+      color: "hsl(var(--chart-1))",
     },
     p90: {
-      label: "90th Percentile",
-      color: "hsl(var(--chart-3))",
+      label: "Possible range",
+      color: "hsl(var(--chart-1))",
     },
     p25: {
-      label: "25th Percentile",
-      color: "hsl(var(--chart-4))",
+      label: "25th pct",
+      color: "hsl(var(--chart-1))",
     },
     p10: {
-      label: "10th Percentile",
-      color: "hsl(var(--chart-5))",
+      label: "10th pct",
+      color: "hsl(var(--chart-1))",
     },
   } satisfies ChartConfig
 
@@ -96,28 +96,37 @@ export function MonteCarloChart({
         </CardDescription>
       </CardHeader>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
-        <ChartContainer config={chartConfig} className="h-[400px] w-full">
+        <ChartContainer config={chartConfig} className="h-[260px] w-full">
           <AreaChart
             data={data}
-            margin={{ top: 20, right: 10, left: 0, bottom: 0 }}
+            margin={{ top: 16, right: 16, left: 0, bottom: 0 }}
           >
             <defs>
-              <linearGradient id="colorP90" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0.05} />
+              <linearGradient id="mcBand90" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.08} />
+                <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.02} />
               </linearGradient>
-              <linearGradient id="colorP75" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0.1} />
+              <linearGradient id="mcBand75" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.15} />
+                <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.05} />
               </linearGradient>
-              <linearGradient id="colorP50" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.6} />
-                <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.2} />
+              <linearGradient id="mcBand50" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.22} />
+                <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.06} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="age" />
+            <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
+            <XAxis
+              dataKey="age"
+              tickLine={false}
+              axisLine={false}
+              tick={{ fontSize: 11 }}
+            />
             <YAxis
+              tickLine={false}
+              axisLine={false}
+              tick={{ fontSize: 11 }}
+              width={68}
               tickFormatter={(value) => formatCurrency(value, { compact: true })}
             />
             <ChartTooltip
@@ -130,39 +139,43 @@ export function MonteCarloChart({
             />
             <ReferenceLine
               x={retirementAge}
-              stroke="hsl(var(--muted-foreground) / 0.5)"
-              strokeDasharray="5 5"
+              stroke="hsl(var(--muted-foreground))"
+              strokeOpacity={0.4}
+              strokeDasharray="4 4"
               label={{
-                value: `Retirement (${retirementAge})`,
+                value: `Retire ${retirementAge}`,
                 position: "insideTopLeft",
                 fill: "hsl(var(--muted-foreground))",
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: 500,
               }}
             />
-            {/* Outer band: 10th-90th percentile */}
+            {/* Outer band: 10th–90th percentile */}
             <Area
               type="monotone"
               dataKey="p90"
               stroke="none"
-              fill="url(#colorP90)"
+              fill="url(#mcBand90)"
               stackId="1"
+              dot={false}
             />
-            {/* Middle band: 25th-75th percentile */}
+            {/* Inner band: 25th–75th percentile */}
             <Area
               type="monotone"
               dataKey="p75"
               stroke="none"
-              fill="url(#colorP75)"
+              fill="url(#mcBand75)"
               stackId="2"
+              dot={false}
             />
             {/* Median line */}
             <Area
               type="monotone"
               dataKey="p50"
               stroke="hsl(var(--chart-1))"
-              fill="url(#colorP50)"
               strokeWidth={2}
+              fill="url(#mcBand50)"
+              dot={false}
             />
           </AreaChart>
         </ChartContainer>
