@@ -96,6 +96,15 @@ if [ -f "package.json" ] && [ ! -f "components.json" ]; then
   npx --yes shadcn@latest init -d --base radix || echo "    shadcn init skipped — run 'npx shadcn@latest init -d --base radix' manually"
 fi
 
+# ─── Environment variables ─────────────────────────────────────────────────────
+# Copy .env.example → .env.local on first container build so the app can
+# connect to local Supabase without any manual setup.
+if [ ! -f ".env.local" ] && [ -f ".env.example" ]; then
+  echo "--> Creating .env.local from .env.example..."
+  cp .env.example .env.local
+  echo "    .env.local created. Edit it if you need to point at a different Supabase project."
+fi
+
 # Ensure the node user owns the Claude config directory for credential storage
 sudo chown node:node /home/node/.claude
 
