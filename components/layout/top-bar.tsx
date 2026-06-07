@@ -35,7 +35,8 @@ export function TopBar({ activePage, user, displayMode, onSetDisplayMode }: TopB
   const isSignedIn = user && !user.is_anonymous
 
   return (
-    <header className="sticky top-0 z-20 flex h-12 items-center border-b bg-background px-4 gap-4">
+    <header className="sticky top-0 z-20 border-b bg-background">
+      <div className="mx-auto flex h-12 w-full max-w-6xl items-center gap-4 px-8">
       {/* Page title */}
       <span className="text-sm font-semibold">{PAGE_TITLES[activePage]}</span>
 
@@ -89,6 +90,7 @@ export function TopBar({ activePage, user, displayMode, onSetDisplayMode }: TopB
 
         <ThemeToggle />
         <ColorThemeToggle />
+      </div>
       </div>
     </header>
   )
