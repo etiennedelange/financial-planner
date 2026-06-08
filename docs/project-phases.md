@@ -17,9 +17,16 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 | **Phase 4** | ✅ Complete | [Data Persistence](project-phases/phase-4-data-persistence.md) |
 | **Phase 5** | 🔄 In Progress | [Export Functionality](project-phases/phase-5-export-functionality.md) |
 | **Phase 6** | ✅ Complete | [Enhanced Tax Calculations](project-phases/phase-6-enhanced-tax.md) |
+| **Phase 9** | 📋 Planned | [Site-Wide Improvement](project-phases/phase-9-site-improvement.md) |
 | **Future** | 📋 Planned | [Future Enhancements](project-phases/future-enhancements.md) |
 
 ## Current Status Summary
+
+**Latest Update (2026-06-07) — Phase 9 planned: site-wide improvement audit:**
+- 📋 **Phase 9 doc created** — `docs/project-phases/phase-9-site-improvement.md`; three-agent parallel audit covering UI/UX, calculation correctness, and test coverage
+- 📋 **9.1 Calculations** — 4 critical fixes (negative years guard, CGT constant, Monte Carlo deduplication, `calculateMonthlyReturn` triplicated); 4 high-priority SA-specific gaps (TFSA drawdown room, dividend tax, medical credit threshold, spending phase sources)
+- 📋 **9.2 Tests** — `calculator-store.ts` and `expenses-store.ts` have zero tests; estimated coverage ~65-70% vs 90% threshold; 6 additional gap areas identified
+- 📋 **9.3 UI/UX** — success rate color logic duplicated 4×; only 5 aria-labels across 58 components; missing confirmation dialogs and success toasts; responsive gaps on mobile
 
 **Latest Update (2026-05-10) — UI audit (visual clunkiness):**
 - 📋 **6 UI polish items logged** in `future-enhancements.md`: double headings in Planning Inputs cards, two-row header layout, overcrowded right-side nav, redundant welcome banner, oversized empty chart placeholders, duplicate account CTAs

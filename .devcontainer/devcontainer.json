@@ -64,7 +64,8 @@
   "runArgs": ["--ipc=host", "--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
 
   "containerEnv": {
-    "CLAUDE_CONFIG_DIR": "/home/node/.claude"
+    "CLAUDE_CONFIG_DIR": "/home/node/.claude",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
 
   "postCreateCommand": "bash .devcontainer/post-create.sh",

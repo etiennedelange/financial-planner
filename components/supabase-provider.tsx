@@ -8,9 +8,10 @@ import { useExpensesStore } from "@/lib/store/expenses-store"
 
 interface AuthContext {
   user: User | null
+  isLoaded: boolean
 }
 
-const AuthContext = createContext<AuthContext>({ user: null })
+const AuthContext = createContext<AuthContext>({ user: null, isLoaded: false })
 
 export function useAuth() {
   return useContext(AuthContext)
@@ -23,9 +24,13 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const syncExpensesFromDb = useExpensesStore((s) => s.syncFromDb)
 
   const [user, setUser] = useState<User | null>(null)
+  const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
-    if (!SUPABASE_ENABLED) return
+    if (!SUPABASE_ENABLED) {
+      setIsLoaded(true)
+      return
+    }
 
     const supabase = createClient()!
 
@@ -36,15 +41,17 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         setUser(session.user)
         if (session.user.id !== sessionId) {
           setSessionId(session.user.id)
-          await syncFromDb()
         }
+        await syncFromDb()
         await syncExpensesFromDb(session.user.id)
+        setIsLoaded(true)
         return
       }
 
       const { data, error } = await supabase.auth.signInAnonymously()
       if (error) {
         console.error("Anonymous sign-in failed:", error.message)
+        setIsLoaded(true)
         return
       }
       if (data.user) {
@@ -53,6 +60,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         await syncFromDb()
         await syncExpensesFromDb(data.user.id)
       }
+      setIsLoaded(true)
     }
 
     init()
@@ -73,5 +81,5 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  return <AuthContext.Provider value={{ user }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ user, isLoaded }}>{children}</AuthContext.Provider>
 }

@@ -1,5 +1,5 @@
-import { CalculatorClient } from "./calculator-client"
+import { redirect } from "next/navigation"
 
 export default function CalculatorPage() {
-  return <CalculatorClient />
+  redirect("/calculator/overview")
 }

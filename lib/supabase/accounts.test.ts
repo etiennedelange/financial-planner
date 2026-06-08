@@ -19,7 +19,7 @@ function makeChain(resolveWith: { data?: unknown; error?: unknown }) {
 
 function mockSupabase(data: unknown, error: unknown = null) {
   const chain = makeChain({ data, error })
-  vi.mocked(createClient).mockReturnValue(chain as ReturnType<typeof createClient>)
+  vi.mocked(createClient).mockReturnValue(chain as unknown as ReturnType<typeof createClient>)
   return chain
 }
 

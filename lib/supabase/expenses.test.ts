@@ -17,7 +17,7 @@ function makeChain(resolveWith: { data?: unknown; error?: unknown }) {
 
 function mockSupabase(data: unknown, error: unknown = null) {
   const chain = makeChain({ data, error })
-  vi.mocked(createClient).mockReturnValue(chain as ReturnType<typeof createClient>)
+  vi.mocked(createClient).mockReturnValue(chain as unknown as ReturnType<typeof createClient>)
   return chain
 }
 
@@ -40,7 +40,7 @@ function mockSupabaseForFetch(
       table === 'expense_groups' ? groupChain : expenseChain
     ),
   }
-  vi.mocked(createClient).mockReturnValue(client as ReturnType<typeof createClient>)
+  vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
   return { groupChain, expenseChain }
 }
 

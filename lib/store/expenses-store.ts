@@ -152,6 +152,6 @@ export const useExpensesStore = create<ExpensesState>()(
 
       setMonthlyIncome: (income) => set({ monthlyIncome: income }),
     }),
-    { name: "expenses-store-v2" }
+    { name: "expenses-store-v2", skipHydration: true }
   )
 )

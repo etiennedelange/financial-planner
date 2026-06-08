@@ -277,6 +277,7 @@ export const useCalculatorStore = create<CalculatorState>()(
     }),
     {
       name: "retirement-calculator-storage",
+      skipHydration: true,
       partialize: (state) => ({
         sessionId: state.sessionId,
         activeScenarioId: state.activeScenarioId,

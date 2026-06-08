@@ -12,11 +12,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useCalculatorStore } from "@/lib/store/calculator-store"
 import type { User } from "@supabase/supabase-js"
 import { TrendingDown } from "lucide-react"
-import type { NavPage } from "./sidebar"
+import { usePathname } from "next/navigation"
 
-const PAGE_TITLES: Record<NavPage, string> = {
+const PAGE_TITLES: Record<string, string> = {
   overview: "Overview",
   accounts: "Accounts",
   plan: "Plan",
@@ -26,13 +27,17 @@ const PAGE_TITLES: Record<NavPage, string> = {
 }
 
 interface TopBarProps {
-  activePage: NavPage
   user: User | null
-  displayMode: "nominal" | "real"
-  onSetDisplayMode: (mode: "nominal" | "real") => void
 }
 
-export function TopBar({ activePage, user, displayMode, onSetDisplayMode }: TopBarProps) {
+export function TopBar({ user }: TopBarProps) {
+  const pathname = usePathname()
+  const section = pathname.split("/").pop() ?? ""
+  const title = PAGE_TITLES[section] ?? ""
+
+  const displayMode = useCalculatorStore((s) => s.displayMode)
+  const setDisplayMode = useCalculatorStore((s) => s.setDisplayMode)
+
   const isSignedIn = user && !user.is_anonymous
 
   return (
@@ -40,7 +45,7 @@ export function TopBar({ activePage, user, displayMode, onSetDisplayMode }: TopB
       <div className="mx-auto flex h-12 w-full max-w-6xl items-center gap-4 px-8">
       {/* Page title */}
       <span className="font-mono text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-        {PAGE_TITLES[activePage]}
+        {title}
       </span>
 
       {/* Scenario switcher */}
@@ -61,7 +66,7 @@ export function TopBar({ activePage, user, displayMode, onSetDisplayMode }: TopB
             <DropdownMenuLabel>Display Values As</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => onSetDisplayMode("nominal")}
+              onClick={() => setDisplayMode("nominal")}
               className="flex flex-col items-start gap-1 cursor-pointer"
             >
               <div className="flex items-center gap-2">
@@ -73,7 +78,7 @@ export function TopBar({ activePage, user, displayMode, onSetDisplayMode }: TopB
               </span>
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => onSetDisplayMode("real")}
+              onClick={() => setDisplayMode("real")}
               className="flex flex-col items-start gap-1 cursor-pointer"
             >
               <div className="flex items-center gap-2">
