@@ -41,7 +41,7 @@ function CalculatorShell({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </AppShell>
-      <DebugWindow projection={projection} simulationResult={simulationResult} />
+      <DebugWindow projection={projection} simulationResult={simulationResult} className="fixed bottom-4 right-4 z-50" />
     </>
   )
 }
