@@ -105,6 +105,11 @@ if [ ! -f ".env.local" ] && [ -f ".env.example" ]; then
   echo "    .env.local created. Edit it if you need to point at a different Supabase project."
 fi
 
+# ─── Claude Code user settings ────────────────────────────────────────────────
+# Symlink ~/.claude/settings.json to the repo file so changes are always committed
+echo "--> Linking Claude Code user settings..."
+ln -sf /workspaces/retirement-calculator-claude/.devcontainer/claude-settings.json "$HOME/.claude/settings.json"
+
 # Ensure the node user owns the Claude config directory for credential storage
 sudo chown node:node /home/node/.claude
 
