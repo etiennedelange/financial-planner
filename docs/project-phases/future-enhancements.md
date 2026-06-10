@@ -10,6 +10,7 @@
 ## Pending
 
 ### UI Polish (identified 2026-05-10 via visual audit)
+- **Floating bottom action bar** — a fixed bar at the bottom of the viewport for quick actions (e.g. "+ Add Account", "+ Add Expense", scenario switcher). Surfaces the most common write actions without requiring the user to scroll to a section header or navigate away. Should appear on contextually relevant pages (Accounts, Expenses) and collapse/hide on scroll-down to avoid obscuring content. Design to match the sharp/minimal brand — not a mobile-app dock, more like a command-bar footer.
 - **Double headings in Planning Inputs** — each sub-section has an outer label AND an inner card heading with the same text (Personal Information × 2, Retirement Goals × 2, Investment Assumptions / Market Assumptions, Detailed Insights / Insights); remove outer labels or inner card headings
 - **Header two-row layout** — "My Plan" dropdown sits alone below the title, disconnected from the right-side nav; pull it into the nav bar for a single-height header
 - **Overcrowded right-side nav** — 7 interactive elements in one row: debug icon, "Future Value" dropdown, "Nominal" dropdown, "Plan" dropdown, color theme toggle, dark/light toggle, email button; consolidate or move debug elsewhere, merge theme controls
