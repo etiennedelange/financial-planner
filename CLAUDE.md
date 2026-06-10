@@ -56,6 +56,13 @@ describe('functionName', () => {
 })
 ```
 
+## App Structure (post-redesign)
+
+- Layout: fixed left sidebar (220px) + sticky top bar + scrollable page content area
+- Routes: `app/calculator/{overview,plan,projections,settings,accounts,expenses}/page.tsx`
+- `lib/store/calculator-store.ts` — scenario state (per-scenario)
+- `lib/store/expenses-store.ts` — **global** (not scenario-tied); reflects real current spending
+
 ## Key Calculation Files
 
 - `lib/calculations/utils/projection.ts` — **single source of truth** for `projectFinalSavings`
@@ -70,6 +77,8 @@ describe('functionName', () => {
 - ❌ Don't omit `assumptions` from useMemo deps
 - ❌ Don't use local formatCurrency — import from `lib/utils/currency`
 - ❌ Don't hardcode colors (`bg-blue-500`) — use semantic tokens (`bg-primary`, `text-foreground`)
+- ❌ Don't tie expenses to a scenario — `expenses-store.ts` is intentionally global
+- ⚠️ `calculator-store.ts` and `expenses-store.ts` have **zero tests** — Phase 9 critical gap
 
 ## Theming
 

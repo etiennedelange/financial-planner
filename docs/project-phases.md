@@ -17,10 +17,17 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 | **Phase 4** | ✅ Complete | [Data Persistence](project-phases/phase-4-data-persistence.md) |
 | **Phase 5** | 🔄 In Progress | [Export Functionality](project-phases/phase-5-export-functionality.md) |
 | **Phase 6** | ✅ Complete | [Enhanced Tax Calculations](project-phases/phase-6-enhanced-tax.md) |
+| **Phase 7** | ✅ Complete | [UI Redesign — Sidebar App Shell](project-phases/phase-7-ui-redesign.md) |
+| **Phase 8** | ✅ Complete | [Expense Tracker](project-phases/phase-8-expense-tracker.md) |
 | **Phase 9** | 📋 Planned | [Site-Wide Improvement](project-phases/phase-9-site-improvement.md) |
 | **Future** | 📋 Planned | [Future Enhancements](project-phases/future-enhancements.md) |
 
 ## Current Status Summary
+
+**Latest Update (2026-06-10) — Phase 7 & 8 complete: UI redesign + expense tracker:**
+- ✅ **Phase 7 — Sidebar app shell** — fixed 220px sidebar, sticky top bar, scrollable content; four SPA-style page routes (Overview, Accounts, Plan, Projections) + Settings + Expenses; Account Sheet overlay; semantic color tokens throughout
+- ✅ **Phase 8 — Expense tracker** — `expense_groups` + `expenses` Supabase tables; user-defined groups with colour coding; per-item `inRetirement` toggle; debounced Supabase sync; offline seed; wired into sidebar nav
+- ⚠️ **Zero tests** — `calculator-store.ts` and `expenses-store.ts` both untested; Phase 9 critical gap
 
 **Latest Update (2026-06-07) — Phase 9 planned: site-wide improvement audit:**
 - 📋 **Phase 9 doc created** — `docs/project-phases/phase-9-site-improvement.md`; three-agent parallel audit covering UI/UX, calculation correctness, and test coverage
@@ -163,6 +170,9 @@ docs/
 │   ├── phase-4-data-persistence.md
 │   ├── phase-5-export-functionality.md
 │   ├── phase-6-enhanced-tax.md
+│   ├── phase-7-ui-redesign.md
+│   ├── phase-8-expense-tracker.md
+│   ├── phase-9-site-improvement.md
 │   └── future-enhancements.md
 └── project-phases.md (this file)
 ```
