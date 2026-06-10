@@ -113,6 +113,13 @@ ln -sf /workspaces/retirement-calculator-claude/.devcontainer/claude-settings.js
 # Ensure the node user owns the Claude config directory for credential storage
 sudo chown node:node /home/node/.claude
 
+# Fix claude-code ownership: the devcontainer feature installs as root, which
+# blocks auto-updates. Transfer ownership to node so npm can write to the prefix.
+echo "--> Fixing Claude Code npm prefix ownership..."
+sudo chown -R node:npm \
+  /usr/local/share/npm-global/lib/node_modules/@anthropic-ai \
+  /usr/local/share/npm-global/bin/claude 2>/dev/null || true
+
 echo ""
 echo "==> Post-create complete!"
 echo "    Run 'pnpm dev' to start the dev server."
