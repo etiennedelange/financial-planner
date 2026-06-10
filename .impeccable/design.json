@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-10T00:00:00.000Z",
+  "title": "Design System: SA Retirement Calculator",
+  "extensions": {
+    "colorMeta": {
+      "analyst-gold":    { "role": "primary",  "displayName": "Analyst Gold",   "canonical": "#F3B416", "tonalRamp": ["#3D2B00","#6B4B00","#9A6C00","#C98C00","#F3B416","#F5C044","#F8CE72","#FBDCA0","#FDE9CA","#FFF4E5"] },
+      "warm-gold-light": { "role": "primary",  "displayName": "Warm Gold (Light)", "canonical": "#D49D11", "tonalRamp": ["#362700","#5E4500","#866200","#AE8000","#D49D11","#DCAF3E","#E5C26B","#EED498","#F5E3BF","#FBF3DF"] },
+      "vault-black":     { "role": "neutral",  "displayName": "Vault Black",    "canonical": "#070A13", "tonalRamp": ["#070A13","#0C111D","#131926","#1A2230","#222B3F","#3A4560","#536085","#7A8DB5","#B2BFD8","#E6EBEF"] },
+      "surface-dark":    { "role": "neutral",  "displayName": "Surface Dark",   "canonical": "#0C111D", "tonalRamp": ["#070A13","#0C111D","#131926","#1A2230","#222B3F","#3A4560","#536085","#7A8DB5","#B2BFD8","#E6EBEF"] },
+      "surface-raised":  { "role": "neutral",  "displayName": "Surface Raised", "canonical": "#171D2B", "tonalRamp": ["#0C111D","#131926","#171D2B","#1E2638","#283044","#3A4560","#536085","#7A8DB5","#B2BFD8","#E6EBEF"] },
+      "near-white":      { "role": "neutral",  "displayName": "Near White",     "canonical": "#E6EBEF", "tonalRamp": ["#222939","#3A4560","#536085","#7A8DB5","#B2BFD8","#CDD5DF","#D9DFE8","#E6EBEF","#F2F5F8","#FAFBFC"] },
+      "ink-dark":        { "role": "neutral",  "displayName": "Ink Dark",       "canonical": "#0F1524", "tonalRamp": ["#070A13","#0F1524","#161E32","#1E2840","#2A3654","#3E5080","#6070A8","#8C9DC8","#C0CADE","#EDF0F5"] },
+      "paper-white":     { "role": "neutral",  "displayName": "Paper White",    "canonical": "#F9FAFB", "tonalRamp": ["#D0D5DC","#DDE1E8","#E7EBF0","#EFF2F6","#F4F6F9","#F7F8FA","#F9FAFB","#FBFCFD","#FDFEFE","#FFFFFF"] },
+      "ghost-text":      { "role": "neutral",  "displayName": "Ghost Text",     "canonical": "#6C7589", "tonalRamp": ["#1A1E28","#2C3040","#3E4558","#525870","#6C7589","#8290A8","#A0ABBD","#BDC5D0","#D8DDE4","#F0F2F4"] },
+      "subtle-border":   { "role": "neutral",  "displayName": "Subtle Border",  "canonical": "#222939", "tonalRamp": ["#0C111D","#171D2B","#1E2538","#222939","#2E3850","#3A4560","#506085","#7A90B5","#B2C0D8","#E6EBEF"] },
+      "signal-red":      { "role": "tertiary", "displayName": "Signal Red",     "canonical": "#DC2828", "tonalRamp": ["#380000","#5C0A0A","#8C1414","#B21E1E","#DC2828","#E85050","#F07878","#F5A0A0","#F8C8C8","#FCE8E8"] },
+      "chart-teal":      { "role": "secondary","displayName": "Chart Teal",     "canonical": "#1EB88A", "tonalRamp": ["#063024","#0D5040","#136858","#178070","#1EB88A","#3FCBA0","#70D9BA","#A0E6CE","#C8F0E4","#E8F9F3"] },
+      "chart-blue":      { "role": "secondary","displayName": "Chart Blue",     "canonical": "#5184EC", "tonalRamp": ["#0E1B48","#1A2E6C","#2A4494","#3E64C0","#5184EC","#7AA0F2","#A0BCF7","#C0D5FA","#DCE8FC","#F0F5FE"] }
+    },
+    "typographyMeta": {
+      "display":  { "displayName": "Display",  "purpose": "Page titles and primary projection headline. One per page maximum." },
+      "headline": { "displayName": "Headline", "purpose": "Section headings, card titles, modal headers." },
+      "title":    { "displayName": "Title",    "purpose": "Sub-section labels, metric labels, form group headers." },
+      "body":     { "displayName": "Body",     "purpose": "Descriptions, help text, table content. Max 65–75ch line length." },
+      "label":    { "displayName": "Label / Mono", "purpose": "Currency values, percentages, financial output. IBM Plex Mono only — signals calculation context." }
+    },
+    "shadows": [
+      {
+        "name": "ambient",
+        "value": "0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3)",
+        "purpose": "Standard card. Near-invisible on dark surfaces; provides tactile structure without visual noise."
+      }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "State transitions: color, opacity, background." },
+      { "name": "ease-out-quart", "value": "cubic-bezier(0.25, 1, 0.5, 1)", "purpose": "Entrance animations. Exits use ease-in." },
+      { "name": "duration-fast",  "value": "150ms", "purpose": "Hover/focus state changes." },
+      { "name": "duration-standard", "value": "200ms", "purpose": "Accordion expand, panel open." }
+    ],
+    "breakpoints": [
+      { "name": "sm",  "value": "640px"  },
+      { "name": "md",  "value": "768px"  },
+      { "name": "lg",  "value": "1024px" },
+      { "name": "xl",  "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Gold fill. Save, confirm, and calculate actions. One per view.",
+      "html": "<button class=\"ds-btn-primary\">Calculate</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; height: 40px; padding: 0 16px; background: #F3B416; color: #070A13; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 14px; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1); white-space: nowrap; } .ds-btn-primary:hover { background: #DDA312; } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px #070A13, 0 0 0 4px #F3B416; } .ds-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Border stroke, transparent fill. Secondary actions alongside a primary.",
+      "html": "<button class=\"ds-btn-outline\">Settings</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; height: 40px; padding: 0 16px; background: transparent; color: #E6EBEF; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 14px; font-weight: 500; border: 1px solid #222939; border-radius: 6px; cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1), color 150ms; } .ds-btn-outline:hover { background: #171D2B; color: #E6EBEF; } .ds-btn-outline:focus-visible { outline: none; box-shadow: 0 0 0 2px #070A13, 0 0 0 4px #F3B416; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "No chrome at rest. Icon buttons, nav triggers, sidebar links.",
+      "html": "<button class=\"ds-btn-ghost\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg> Settings</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; background: transparent; color: #6C7589; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 14px; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; transition: background 150ms, color 150ms; } .ds-btn-ghost:hover { background: #171D2B; color: #E6EBEF; } .ds-btn-ghost:focus-visible { outline: none; box-shadow: 0 0 0 2px #070A13, 0 0 0 4px #F3B416; }"
+    },
+    {
+      "name": "Metric Card",
+      "kind": "card",
+      "refersTo": "metric-card",
+      "description": "Data-forward card for financial KPIs. The mono value is the hero; label and description are supporting cast.",
+      "html": "<div class=\"ds-metric-card\"><div class=\"ds-metric-card__header\"><svg class=\"ds-metric-card__icon\" xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 3v18h18\"/><path d=\"m19 9-5 5-4-4-3 3\"/></svg><span class=\"ds-metric-card__label\">Portfolio at Retirement</span></div><div class=\"ds-metric-card__value\">R 8,420,000</div><div class=\"ds-metric-card__desc\">At age 65</div></div>",
+      "css": ".ds-metric-card { background: #171D2B; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 4px; } .ds-metric-card__header { display: flex; align-items: center; gap: 6px; } .ds-metric-card__icon { color: #6C7589; flex-shrink: 0; } .ds-metric-card__label { font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 11px; font-weight: 500; color: #6C7589; text-transform: uppercase; letter-spacing: 0.05em; } .ds-metric-card__value { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 18px; font-weight: 600; color: #E6EBEF; line-height: 1.2; letter-spacing: -0.01em; } .ds-metric-card__desc { font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 11px; color: #6C7589; }"
+    },
+    {
+      "name": "Standard Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Container for a section of content: charts, forms, account details.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card__title\">Portfolio Growth</div><div class=\"ds-card__body\">Chart content here</div></div>",
+      "css": ".ds-card { background: #0C111D; border: 1px solid #222939; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3); } .ds-card__title { font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 15px; font-weight: 600; color: #E6EBEF; line-height: 1.25; margin-bottom: 16px; } .ds-card__body { color: #E6EBEF; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 14px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Standard form input. Gold ring on focus; signal-red border on error.",
+      "html": "<div class=\"ds-input-wrap\"><label class=\"ds-input-label\" for=\"ds-inp\">Monthly Contribution</label><div class=\"ds-input-prefix-wrap\"><span class=\"ds-input-prefix\">R</span><input class=\"ds-input\" id=\"ds-inp\" type=\"text\" placeholder=\"5 000\" /></div></div>",
+      "css": ".ds-input-wrap { display: flex; flex-direction: column; gap: 6px; } .ds-input-label { font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 12px; font-weight: 500; color: #6C7589; } .ds-input-prefix-wrap { display: flex; align-items: center; position: relative; } .ds-input-prefix { position: absolute; left: 10px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 13px; color: #6C7589; pointer-events: none; } .ds-input { width: 100%; height: 40px; padding: 0 12px 0 24px; background: transparent; border: 1px solid #222939; border-radius: 6px; color: #E6EBEF; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 14px; outline: none; transition: border-color 150ms, box-shadow 150ms; } .ds-input::placeholder { color: #6C7589; } .ds-input:hover { border-color: #3A4560; } .ds-input:focus { border-color: #F3B416; box-shadow: 0 0 0 2px rgba(243,180,22,0.2); } .ds-input.error { border-color: #DC2828; }"
+    },
+    {
+      "name": "Sidebar Nav Item — Active",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Active navigation state. Gold accent is the only solid-color element in the sidebar.",
+      "html": "<a class=\"ds-nav-item ds-nav-item--active\" href=\"#\"><span class=\"ds-nav-item__indicator\"></span><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"7\" height=\"9\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"14\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"9\" x=\"14\" y=\"12\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"3\" y=\"16\" rx=\"1\"/></svg>Overview</a>",
+      "css": ".ds-nav-item { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 12px; border-radius: 4px; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 14px; font-weight: 500; text-decoration: none; letter-spacing: 0.02em; transition: background 150ms, color 150ms; cursor: pointer; } .ds-nav-item--active { background: rgba(243,180,22,0.10); color: #F3B416; } .ds-nav-item--active .ds-nav-item__indicator { position: absolute; left: 0; top: 4px; bottom: 4px; width: 2px; border-radius: 9999px; background: #F3B416; } .ds-nav-item:not(.ds-nav-item--active) { color: #6C7589; } .ds-nav-item:not(.ds-nav-item--active):hover { background: #171D2B; color: #E6EBEF; }"
+    },
+    {
+      "name": "Data Table Row",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Tabular account data. Alternating tonal rows, mono-formatted values, left-aligned labels.",
+      "html": "<table class=\"ds-table\"><thead><tr><th>Account</th><th class=\"ds-table__num\">Balance</th><th class=\"ds-table__num\">Monthly</th></tr></thead><tbody><tr><td>Discovery RA</td><td class=\"ds-table__num\">R 420 000</td><td class=\"ds-table__num\">R 5 000</td></tr><tr class=\"ds-table__row--alt\"><td>Allan Gray TFSA</td><td class=\"ds-table__num\">R 180 000</td><td class=\"ds-table__num\">R 3 333</td></tr></tbody></table>",
+      "css": ".ds-table { width: 100%; border-collapse: collapse; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 14px; color: #E6EBEF; } .ds-table th { font-size: 11px; font-weight: 500; color: #6C7589; text-transform: uppercase; letter-spacing: 0.05em; padding: 8px 12px; border-bottom: 1px solid #222939; text-align: left; } .ds-table td { padding: 10px 12px; border-bottom: 1px solid #222939; } .ds-table__num { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 13px; text-align: right; } .ds-table__row--alt td { background: rgba(255,255,255,0.02); } .ds-table tr:last-child td { border-bottom: none; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Precision Instrument",
+    "overview": "This is a calibrated tool, not a dashboard. The SA Retirement Calculator surfaces exact financial projections for users who understand what they're looking at — RA contribution limits, TFSA tax treatment, Monte Carlo success rates, compounding methods. Every element exists to reduce the distance between the user and their number. Nothing decorates; everything informs.\n\nThe default theme is dark: deep navy that recedes so the data leads, with a single gold accent that marks the thing that matters — the primary value, the active state, the number you came here for. IBM Plex Sans and IBM Plex Mono carry the voice: technical, neutral, precise. The monospace logotype sets the register immediately — this is a calculation environment, not a consumer app.\n\nThis system explicitly rejects the cheerful nudge-culture of consumer fintech (Mint, PocketSmith), the navy-and-gold SaaS cliché with hero metric gradients and identical icon-card grids, and the corporate beige stiffness of bank and insurance portals.",
+    "keyCharacteristics": [
+      "Dark-first, Vault Black background with tonal surface layering (no shadows as structure)",
+      "Single accent: Analyst Gold, used sparingly — active states, primary values, key CTAs only",
+      "IBM Plex Sans body + IBM Plex Mono for the logotype, metric values, and code-adjacent labels",
+      "Component chrome is minimal (borders over fills, ghost hover states, no cards-in-cards)",
+      "Data visualization carries the visual weight; UI elements step back",
+      "Both dark and light themes meet WCAG AA independently"
+    ],
+    "rules": [
+      { "name": "The One Signal Rule",     "body": "Analyst Gold is used on ≤1 active element per view at a time. Applying it to multiple concurrent elements breaks the signal.", "section": "colors" },
+      { "name": "The Mono Reserve Rule",   "body": "IBM Plex Mono is reserved for financial output values and the wordmark. Not for UI labels or prose.", "section": "typography" },
+      { "name": "The Tonal Stack Rule",    "body": "Never exceed three tonal steps in a single view hierarchy (page → card → metric card). Nested bg-card is prohibited.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use Analyst Gold on exactly one active element per view. Rarity is authority.",
+      "Do use IBM Plex Mono for formatted financial values (currency, percentages) and the wordmark.",
+      "Do layer depth tonally: Vault Black → Surface Dark → Surface Raised. Three steps maximum.",
+      "Do use ghost or outline button variants for secondary actions when a primary is already present.",
+      "Do use text-wrap: balance on Display and Headline headings.",
+      "Do verify muted foreground text (Ghost Text #6C7589) at 4.5:1 contrast against its background.",
+      "Do label every chart series with a text label or legend entry — color alone does not carry information.",
+      "Do respect SA-specific account type labels (RA, TFSA, Pension Fund, Preservation Fund) exactly."
+    ],
+    "donts": [
+      "Don't nest bg-card inside bg-card — use bg-muted or bg-accent for inner surfaces.",
+      "Don't use border-left or border-right greater than 1px as a colored accent stripe on cards.",
+      "Don't apply gradient text (background-clip: text with a gradient).",
+      "Don't use IBM Plex Mono for UI labels, navigation, or prose copy.",
+      "Don't use Analyst Gold on more than one concurrent element.",
+      "Don't add glassmorphism (backdrop-filter blur) decoratively.",
+      "Don't create a fourth tonal depth step.",
+      "Don't use consumer-fintech UI patterns: no gamified progress bars, no pastel metric cards.",
+      "Don't use the hero-metric template: large number + small label + gradient accent.",
+      "Don't genericise SA account type names for 'clarity'."
+    ]
+  }
+}
