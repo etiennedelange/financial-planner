@@ -1,9 +1,9 @@
-import { SupabaseProvider } from "@/components/supabase-provider"
-import { ThemeProvider } from "@/components/theme-provider"
-import { Analytics } from "@vercel/analytics/next"
-import type { Metadata, Viewport } from "next"
-import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google"
-import "./globals.css"
+import { SupabaseProvider } from "@/components/supabase-provider";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Analytics } from "@vercel/analytics/next";
+import type { Metadata, Viewport } from "next";
+import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import "./globals.css";
 
 const ibmPlexSans = IBM_Plex_Sans({
   subsets: ["latin"],
@@ -50,9 +50,6 @@ export default function RootLayout({
             </SupabaseProvider>
         </ThemeProvider>
         <Analytics />
-      {/* impeccable-live-start */}
-<script src="http://localhost:8400/live.js"></script>
-{/* impeccable-live-end */}
 </body>
     </html>
   )
