@@ -1,14 +1,15 @@
 "use client"
 
 import {
-  AreaChart,
   Area,
-  XAxis,
-  YAxis,
+  AreaChart,
   CartesianGrid,
   ReferenceLine,
+  XAxis,
+  YAxis,
 } from "recharts"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { TrendingUp } from "lucide-react"
 import {
   ChartContainer,
   ChartTooltip,
@@ -29,17 +30,51 @@ export function PortfolioGrowthChart({
 }: PortfolioGrowthChartProps) {
   if (projections.length === 0) {
     return (
-      <Card>
+      <Card className="dashboard-card">
         <CardHeader className="pb-4">
           <CardTitle>Portfolio Growth Over Time</CardTitle>
-          <CardDescription>
-            Deterministic projection of portfolio value
-          </CardDescription>
+          <CardDescription>Deterministic projection of portfolio value</CardDescription>
         </CardHeader>
-        <CardContent className="flex h-[300px] items-center justify-center">
-          <p className="text-muted-foreground">
-            Add accounts to see projections
-          </p>
+        <CardContent className="relative flex h-[260px] items-center justify-center overflow-hidden">
+          {/* Ghost growth curve: accumulates to retirement, gentle withdrawal after */}
+          <svg
+            className="absolute inset-0 h-full w-full"
+            viewBox="0 0 360 260"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id="pgc-ghost" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.07} />
+                <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            {/* Area fill */}
+            <path
+              d="M 0 248 C 80 244 165 200 210 148 C 248 106 288 118 360 175 L 360 260 L 0 260 Z"
+              fill="url(#pgc-ghost)"
+            />
+            {/* Curve: slow growth → steep → peaks at retirement → slight decline */}
+            <path
+              d="M 0 248 C 80 244 165 200 210 148 C 248 106 288 118 360 175"
+              fill="none"
+              stroke="hsl(var(--chart-1))"
+              strokeWidth="1.5"
+              strokeOpacity={0.22}
+            />
+            {/* Retirement reference */}
+            <line
+              x1="210" y1="12" x2="210" y2="252"
+              stroke="hsl(var(--muted-foreground))"
+              strokeWidth="1"
+              strokeOpacity={0.12}
+              strokeDasharray="3 4"
+            />
+          </svg>
+          <div className="relative flex flex-col items-center gap-2 text-center">
+            <TrendingUp className="h-8 w-8 text-muted-foreground/30" />
+            <p className="text-sm text-muted-foreground">Add accounts to see your projections</p>
+          </div>
         </CardContent>
       </Card>
     )

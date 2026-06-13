@@ -23,38 +23,36 @@ export function DashboardMetricCard({
   // Determine styling based on success rate
   const getSuccessRateStyles = () => {
     if (successRate !== undefined) {
-      // Success rate card - colored based on value
       if (successRate >= 90) {
         return {
-          border: "border-green-500",
-          text: "text-green-600 dark:text-green-500",
-          icon: "text-green-600 dark:text-green-500"
+          border: "border-[hsl(var(--chart-2))]",
+          text: "text-[hsl(var(--chart-2))]",
+          icon: "text-[hsl(var(--chart-2))]",
         }
       } else if (successRate >= 75) {
         return {
-          border: "border-cyan-500",
-          text: "text-cyan-600 dark:text-cyan-500",
-          icon: "text-cyan-600 dark:text-cyan-500"
+          border: "border-[hsl(var(--chart-4))]",
+          text: "text-[hsl(var(--chart-4))]",
+          icon: "text-[hsl(var(--chart-4))]",
         }
       } else if (successRate >= 60) {
         return {
-          border: "border-orange-500",
-          text: "text-orange-600 dark:text-orange-500",
-          icon: "text-orange-600 dark:text-orange-500"
+          border: "border-[hsl(var(--chart-3))]",
+          text: "text-[hsl(var(--chart-3))]",
+          icon: "text-[hsl(var(--chart-3))]",
         }
       } else {
         return {
-          border: "border-red-500",
-          text: "text-red-600 dark:text-red-500",
-          icon: "text-red-600 dark:text-red-500"
+          border: "border-destructive",
+          text: "text-destructive",
+          icon: "text-destructive",
         }
       }
     }
-    // Default card - simple grey border
     return {
       border: "border-border",
       text: "",
-      icon: "text-muted-foreground"
+      icon: "text-muted-foreground",
     }
   }
 

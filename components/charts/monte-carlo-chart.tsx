@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/chart"
 import { formatCurrency } from "@/lib/utils/formatters"
 import type { SimulationResult } from "@/types"
+import { Activity, Loader2 } from "lucide-react"
 import {
   Area,
   AreaChart,
@@ -33,20 +34,48 @@ export function MonteCarloChart({
 }: MonteCarloChartProps) {
   if (!simulationResult || simulationResult.percentiles.p50.length === 0) {
     return (
-      <Card>
+      <Card className="dashboard-card">
         <CardHeader>
           <CardTitle>Monte Carlo Projection</CardTitle>
-          <CardDescription>
-            Run simulation to see probability ranges
-          </CardDescription>
+          <CardDescription>Run simulation to see probability ranges</CardDescription>
         </CardHeader>
-        <CardContent className="flex h-[300px] items-center justify-center">
+        <CardContent className="relative flex h-[260px] items-center justify-center overflow-hidden">
+          {/* Ghost probability fan: 5 percentile lines fanning from current age */}
+          <svg
+            className="absolute inset-0 h-full w-full"
+            viewBox="0 0 360 260"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            {/* p90 – best case */}
+            <path d="M 0 248 Q 150 168 360 18"  fill="none" stroke="hsl(var(--chart-1))" strokeWidth="1"   strokeOpacity={0.08} />
+            {/* p75 */}
+            <path d="M 0 248 Q 150 192 360 68"  fill="none" stroke="hsl(var(--chart-1))" strokeWidth="1.5" strokeOpacity={0.15} />
+            {/* p50 median */}
+            <path d="M 0 248 Q 150 212 360 130" fill="none" stroke="hsl(var(--chart-1))" strokeWidth="2"   strokeOpacity={0.26} />
+            {/* p25 */}
+            <path d="M 0 248 Q 150 232 360 202" fill="none" stroke="hsl(var(--chart-1))" strokeWidth="1.5" strokeOpacity={0.15} />
+            {/* p10 – worst case */}
+            <path d="M 0 248 Q 150 244 360 248" fill="none" stroke="hsl(var(--chart-1))" strokeWidth="1"   strokeOpacity={0.08} />
+            {/* Retirement reference */}
+            <line
+              x1="210" y1="12" x2="210" y2="252"
+              stroke="hsl(var(--muted-foreground))"
+              strokeWidth="1"
+              strokeOpacity={0.12}
+              strokeDasharray="3 4"
+            />
+          </svg>
           {isRunning ? (
-            <p className="text-muted-foreground">Running simulation...</p>
+            <div className="relative flex flex-col items-center gap-2">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground/50" />
+              <p className="text-sm text-muted-foreground">Running simulation…</p>
+            </div>
           ) : (
-            <p className="text-muted-foreground">
-              Add accounts and run simulation
-            </p>
+            <div className="relative flex flex-col items-center gap-2 text-center">
+              <Activity className="h-8 w-8 text-muted-foreground/30" />
+              <p className="text-sm text-muted-foreground">Add accounts and run simulation</p>
+            </div>
           )}
         </CardContent>
       </Card>

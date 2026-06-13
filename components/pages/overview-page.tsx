@@ -1,6 +1,7 @@
 "use client"
 
 import { DashboardMetricsGrid } from "@/components/dashboard/dashboard-metrics-grid"
+import { GettingStarted } from "@/components/dashboard/getting-started"
 import { KeyInsightsSummary } from "@/components/dashboard/key-insights-summary"
 import { MonteCarloChart } from "@/components/charts/monte-carlo-chart"
 import { PortfolioGrowthChart } from "@/components/charts/portfolio-growth-chart"
@@ -69,6 +70,8 @@ export function OverviewPage({
         inflationRate={inflationRate}
         monteCarloSuccessRate={simulationResult?.successRate}
       />
+
+      {!projection && <GettingStarted />}
     </div>
   )
 }

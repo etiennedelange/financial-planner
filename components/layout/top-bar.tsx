@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import type { User } from "@supabase/supabase-js"
-import { TrendingDown } from "lucide-react"
+import { Search, TrendingDown } from "lucide-react"
 import { usePathname } from "next/navigation"
 
 const PAGE_TITLES: Record<string, string> = {
@@ -55,6 +55,16 @@ export function TopBar({ user }: TopBarProps) {
 
       {/* Right controls */}
       <div className="flex items-center gap-1.5">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
+          onClick={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}
+          title="Open command palette (⌘K)"
+        >
+          <Search className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline font-mono text-[10px]">⌘K</span>
+        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-xs">

@@ -1,9 +1,11 @@
 "use client"
 
+import { Button } from "@/components/ui/button"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { formatCurrency } from "@/lib/utils/currency"
 import type { ProjectionResult, SimulationResult } from "@/types"
 import { Calendar, DollarSign, Gauge, Hourglass, Target, TrendingUp, Wallet } from "lucide-react"
+import Link from "next/link"
 import { DashboardMetricCard } from "./dashboard-metric-card"
 
 interface DashboardMetricsGridProps {
@@ -29,11 +31,43 @@ export function DashboardMetricsGrid({
 }: DashboardMetricsGridProps) {
   const { displayMode } = useCalculatorStore()
 
-  if (!projection) {
-    return null
-  }
-
   const yearsToRetirement = retirementAge - currentAge
+
+  if (!projection) {
+    const placeholders = [
+      { icon: Wallet, label: "Total Portfolio", value: totalCurrentBalance > 0 ? formatCurrency(totalCurrentBalance) : "--" },
+      { icon: Target, label: "Portfolio at Retirement", value: "--" },
+      { icon: TrendingUp, label: "Monthly Contributions", value: totalMonthlyContributions > 0 ? formatCurrency(totalMonthlyContributions) : "--" },
+      { icon: DollarSign, label: "Monthly Income", value: "--" },
+      { icon: Calendar, label: "Years to Retirement", value: yearsToRetirement > 0 ? yearsToRetirement : "--" },
+    ]
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between rounded-lg border border-dashed border-border bg-muted/20 px-4 py-3">
+          <div>
+            <p className="text-sm font-medium text-foreground">Add accounts to see your projections</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Configure your retirement accounts to generate personalised projections</p>
+          </div>
+          <Button asChild size="sm" variant="outline" className="ml-4 shrink-0">
+            <Link href="/calculator/accounts">Add accounts →</Link>
+          </Button>
+        </div>
+        <div className="dashboard-grid grid-cols-3 sm:grid-cols-5">
+          {placeholders.map((m) => (
+            <div key={m.label} className="dashboard-metric-card bg-card border border-border opacity-40">
+              <div className="flex flex-col h-full">
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="text-xs font-medium text-muted-foreground">{m.label}</h3>
+                  <m.icon className="w-5 h-5 text-muted-foreground shrink-0" />
+                </div>
+                <p className="text-lg md:text-xl font-bold text-foreground">{m.value}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
   const yearsToLifeExpectancy = lifeExpectancy - currentAge
 
   const successRate = simulationResult?.successRate ?? 0

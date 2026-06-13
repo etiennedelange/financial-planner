@@ -255,7 +255,7 @@
   }
 
   .dashboard-card {
-    @apply rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200;
+    @apply rounded-lg shadow-sm;
   }
 
   .dashboard-metric-card {

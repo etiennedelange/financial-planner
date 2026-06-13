@@ -1,11 +1,13 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { TrendingUp, AlertCircle, Target } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/utils/currency"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import type { ProjectionResult } from "@/types"
+import { AlertCircle, Target, TrendingUp } from "lucide-react"
+import Link from "next/link"
 
 interface KeyInsightsSummaryProps {
   projection: ProjectionResult | null
@@ -29,7 +31,21 @@ export function KeyInsightsSummary({
   monteCarloSuccessRate,
 }: KeyInsightsSummaryProps) {
   if (!projection) {
-    return null
+    return (
+      <Card className="dashboard-card">
+        <CardHeader>
+          <CardTitle className="text-lg">Key Insights</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center gap-3 py-4 text-center">
+            <p className="text-sm text-muted-foreground">Configure your accounts and plan to see personalised insights here.</p>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/calculator/accounts">Add accounts →</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   const yearsToRetirement = retirementAge - currentAge
@@ -79,21 +95,24 @@ export function KeyInsightsSummary({
       title: "On Track Status",
       value: isOnTrack ? "Yes" : "No",
       icon: Target,
-      badge: isOnTrack ? "success" : "warning",
+      badgeVariant: isOnTrack ? "success" : "warning",
+      badgeLabel: isOnTrack ? "On Track" : "At Risk",
       description: getOnTrackDescription(),
     },
     {
       title: "Contribution Potential",
       value: formatCurrency(monthlyRaContribution),
       icon: TrendingUp,
-      badge: "info",
+      badgeVariant: "info",
+      badgeLabel: "Tip",
       description: "Max RA contribution per month",
     },
     {
       title: "Income Replacement",
       value: `${incomeReplacementRatio}%`,
       icon: AlertCircle,
-      badge: isOnTrack && incomeReplacementRatio >= 100 ? "success" : "warning",
+      badgeVariant: isOnTrack && incomeReplacementRatio >= 100 ? "success" : "warning",
+      badgeLabel: isOnTrack && incomeReplacementRatio >= 100 ? "On Track" : "Below Target",
       description: "Inflation-adjusted replacement",
     },
   ]
@@ -112,9 +131,9 @@ export function KeyInsightsSummary({
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <p className="text-sm font-medium text-foreground">{insight.title}</p>
-                  {insight.badge && (
-                    <Badge variant={insight.badge === "success" ? "default" : insight.badge === "warning" ? "secondary" : "outline"}>
-                      {insight.badge}
+                  {insight.badgeLabel && (
+                    <Badge variant={insight.badgeVariant === "success" ? "default" : insight.badgeVariant === "warning" ? "secondary" : "outline"}>
+                      {insight.badgeLabel}
                     </Badge>
                   )}
                 </div>

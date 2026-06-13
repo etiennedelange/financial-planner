@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { CommandPalette } from "@/components/command-palette/command-palette"
 import { DebugWindow } from "@/components/debug/debug-window"
 import { AppShell } from "@/components/layout/app-shell"
 import { useAuth } from "@/components/supabase-provider"
@@ -41,6 +42,7 @@ function CalculatorShell({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </AppShell>
+      <CommandPalette />
       <DebugWindow projection={projection} simulationResult={simulationResult} className="fixed bottom-4 right-4 z-50" />
     </>
   )
