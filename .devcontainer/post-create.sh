@@ -99,6 +99,24 @@ fi
 # Ensure the node user owns the Claude config directory for credential storage
 sudo chown node:node /home/node/.claude
 
+# ─── Claude settings symlink ──────────────────────────────────────────────────
+# Keep settings.json in the repo so plugin installs persist across rebuilds.
+echo "--> Linking Claude settings to devcontainer config..."
+CLAUDE_SETTINGS="$HOME/.claude/settings.json"
+REPO_SETTINGS="/workspaces/retirement-calculator-claude/.devcontainer/claude-settings.json"
+# Replace with symlink only if it's a regular file (or missing); skip if already linked correctly
+if [ ! -L "$CLAUDE_SETTINGS" ] || [ "$(readlink "$CLAUDE_SETTINGS")" != "$REPO_SETTINGS" ]; then
+  # Seed repo file from existing settings if it has content
+  if [ -f "$CLAUDE_SETTINGS" ] && [ ! -L "$CLAUDE_SETTINGS" ] && [ -s "$CLAUDE_SETTINGS" ] && [ ! -s "$REPO_SETTINGS" ]; then
+    cp "$CLAUDE_SETTINGS" "$REPO_SETTINGS"
+  fi
+  rm -f "$CLAUDE_SETTINGS"
+  ln -s "$REPO_SETTINGS" "$CLAUDE_SETTINGS"
+  echo "    Linked $CLAUDE_SETTINGS -> $REPO_SETTINGS"
+else
+  echo "    Already linked — skipping"
+fi
+
 echo ""
 echo "==> Post-create complete!"
 echo "    Run 'pnpm dev' to start the dev server."
