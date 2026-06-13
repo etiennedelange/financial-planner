@@ -35,32 +35,37 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     const supabase = createClient()!
 
     async function init() {
-      const { data: { session } } = await supabase.auth.getSession()
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
 
-      if (session) {
-        setUser(session.user)
-        if (session.user.id !== sessionId) {
-          setSessionId(session.user.id)
+        if (session) {
+          setUser(session.user)
+          if (session.user.id !== sessionId) {
+            setSessionId(session.user.id)
+          }
+          await syncFromDb()
+          await syncExpensesFromDb(session.user.id)
+          setIsLoaded(true)
+          return
         }
-        await syncFromDb()
-        await syncExpensesFromDb(session.user.id)
-        setIsLoaded(true)
-        return
-      }
 
-      const { data, error } = await supabase.auth.signInAnonymously()
-      if (error) {
-        console.error("Anonymous sign-in failed:", error.message)
+        const { data, error } = await supabase.auth.signInAnonymously()
+        if (error) {
+          console.error("Anonymous sign-in failed:", error.message)
+          setIsLoaded(true)
+          return
+        }
+        if (data.user) {
+          setUser(data.user)
+          setSessionId(data.user.id)
+          await syncFromDb()
+          await syncExpensesFromDb(data.user.id)
+        }
+      } catch (err) {
+        console.error("Supabase init failed:", err)
+      } finally {
         setIsLoaded(true)
-        return
       }
-      if (data.user) {
-        setUser(data.user)
-        setSessionId(data.user.id)
-        await syncFromDb()
-        await syncExpensesFromDb(data.user.id)
-      }
-      setIsLoaded(true)
     }
 
     init()

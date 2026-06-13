@@ -60,24 +60,21 @@ export function DashboardMetricCard({
 
   return (
     <div className={`dashboard-metric-card bg-card text-card-foreground border ${styles.border}`}>
-      {/* Content */}
       <div className="flex flex-col h-full">
-        {/* Header with icon and label */}
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-1.5">
-            <h3 className="text-xs font-medium text-muted-foreground">
-              {label}
-            </h3>
-            {tooltip && (
-              <InfoTooltip content={tooltip} side="top" />
-            )}
-          </div>
-          <Icon className={`w-5 h-5 md:w-6 md:h-6 flex-shrink-0 ${styles.icon}`} />
+        {/* Label row: icon + label + tooltip all inline */}
+        <div className="flex items-center gap-1 mb-2">
+          <Icon aria-hidden="true" className={`w-3.5 h-3.5 shrink-0 ${styles.icon}`} />
+          <h3 className="text-xs font-medium text-muted-foreground truncate">
+            {label}
+          </h3>
+          {tooltip && (
+            <InfoTooltip content={tooltip} side="top" />
+          )}
         </div>
 
         {/* Value */}
         <div className="mb-1">
-          <p className={`text-lg md:text-xl font-bold ${styles.text}`}>
+          <p className={`text-base font-bold font-mono ${styles.text}`}>
             {value}
           </p>
         </div>

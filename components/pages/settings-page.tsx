@@ -1,17 +1,16 @@
 "use client"
 
-import { useColorTheme } from "@/components/color-theme-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { exportPlan, parsePlanFile } from "@/lib/utils/plan-io"
 import { exportProjectionCsv } from "@/lib/utils/export-csv"
+import { PageHeader } from "@/components/ui/page-header"
 import { useTheme } from "next-themes"
 import {
   Download,
   FileSpreadsheet,
   Moon,
-  Palette,
   Printer,
   RotateCcw,
   Sun,
@@ -21,15 +20,6 @@ import {
 import { useRef, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
 import type { ProjectionResult } from "@/types"
-import { cn } from "@/lib/utils"
-
-const COLOR_THEMES = [
-  { name: "Blue", value: "blue", color: "bg-blue-500" },
-  { name: "Green", value: "green", color: "bg-green-500" },
-  { name: "Rose", value: "rose", color: "bg-rose-500" },
-  { name: "Violet", value: "violet", color: "bg-violet-500" },
-  { name: "Orange", value: "orange", color: "bg-orange-500" },
-] as const
 
 interface SettingsPageProps {
   projection: ProjectionResult | null
@@ -63,7 +53,6 @@ export function SettingsPage({ projection }: SettingsPageProps) {
   )
 
   const { theme, setTheme } = useTheme()
-  const { colorTheme, setColorTheme } = useColorTheme()
   const importInputRef = useRef<HTMLInputElement>(null)
   const [importError, setImportError] = useState<string | null>(null)
   const [resetPending, setResetPending] = useState(false)
@@ -102,6 +91,7 @@ export function SettingsPage({ projection }: SettingsPageProps) {
   return (
     <div className="space-y-6">
       <input ref={importInputRef} type="file" accept=".json" className="sr-only" onChange={handleImportPlan} />
+      <PageHeader title="Settings" description="Display preferences, data export, and plan management." />
 
       {/* Display */}
       <Card>
@@ -157,28 +147,6 @@ export function SettingsPage({ projection }: SettingsPageProps) {
           <CardTitle className="text-base">Appearance</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Color Theme</p>
-            <div className="flex gap-2 flex-wrap">
-              {COLOR_THEMES.map((t) => (
-                <button
-                  key={t.value}
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  onClick={() => setColorTheme(t.value as any)}
-                  className={cn(
-                    "flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors",
-                    colorTheme === t.value
-                      ? "border-primary bg-primary/10 font-medium"
-                      : "border-border hover:bg-accent"
-                  )}
-                >
-                  <span className={cn("h-3 w-3 rounded-full", t.color)} />
-                  {t.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div className="space-y-2">
             <p className="text-sm font-medium">Dark Mode</p>
             <div className="flex gap-2">

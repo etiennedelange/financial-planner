@@ -1,6 +1,5 @@
 "use client"
 
-import { ColorThemeToggle } from "@/components/color-theme-toggle"
 import { ScenarioSwitcher } from "@/components/scenarios/scenario-switcher"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
@@ -44,9 +43,9 @@ export function TopBar({ user }: TopBarProps) {
     <header className="sticky top-0 z-20 border-b border-border bg-card/80 backdrop-blur-md">
       <div className="mx-auto flex h-12 w-full max-w-6xl items-center gap-4 px-8">
       {/* Page title */}
-      <span className="font-mono text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+      <h1 className="font-mono text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
         {title}
-      </span>
+      </h1>
 
       {/* Scenario switcher */}
       <div className="flex-1 flex justify-center">
@@ -107,7 +106,6 @@ export function TopBar({ user }: TopBarProps) {
         </DropdownMenu>
 
         <ThemeToggle />
-        <ColorThemeToggle />
       </div>
       </div>
     </header>

@@ -56,9 +56,9 @@ export function DashboardMetricsGrid({
           {placeholders.map((m) => (
             <div key={m.label} className="dashboard-metric-card bg-card border border-border opacity-40">
               <div className="flex flex-col h-full">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="text-xs font-medium text-muted-foreground">{m.label}</h3>
-                  <m.icon className="w-5 h-5 text-muted-foreground shrink-0" />
+                <div className="flex items-center gap-1 mb-2">
+                  <m.icon aria-hidden="true" className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  <h3 className="text-xs font-medium text-muted-foreground truncate">{m.label}</h3>
                 </div>
                 <p className="text-lg md:text-xl font-bold text-foreground">{m.value}</p>
               </div>
@@ -176,7 +176,10 @@ export function DashboardMetricsGrid({
   }
 
   return (
-    <div className="dashboard-grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-6">
+    <div className={metrics.length === 7
+      ? "dashboard-grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-7"
+      : "dashboard-grid grid-cols-3 sm:grid-cols-5"
+    }>
       {metrics.map((metric) => (
         <DashboardMetricCard
           key={metric.label}

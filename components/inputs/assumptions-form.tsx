@@ -93,7 +93,7 @@ export function AssumptionsForm({
       <CardContent className="space-y-6">
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <h4 className="text-sm font-medium">Expected Returns (Nominal)</h4>
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">Expected Returns (Nominal)</p>
             <InfoTooltip
               content="These are reference values for different asset classes. Each account uses its own expected return rate. Nominal returns include inflation - a 10% nominal return with 5% inflation gives ~5% real growth."
               side="right"
@@ -140,7 +140,7 @@ export function AssumptionsForm({
 
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <h4 className="text-sm font-medium">Volatility (Std Dev)</h4>
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">Volatility (Std Dev)</p>
             <InfoTooltip
               content="Volatility measures how much returns vary from year to year. Higher volatility means more uncertainty. In Monte Carlo simulations, higher volatility reduces the probability of success because of sequence-of-returns risk. Typical SA equity volatility: 15-18%."
               side="right"
@@ -175,7 +175,7 @@ export function AssumptionsForm({
 
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <h4 className="text-sm font-medium">Drawdown Strategy</h4>
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">Drawdown Strategy</p>
             <InfoTooltip
               content="Determines how you withdraw money during retirement. Fixed Percentage: withdraw a % of remaining balance each year (safer but variable income). Fixed Amount: withdraw a fixed amount adjusted for inflation (predictable income but higher risk). Variable strategies adjust based on portfolio performance."
               side="right"

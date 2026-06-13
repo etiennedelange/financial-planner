@@ -117,9 +117,9 @@ export function MonteCarloChart({
   }))
 
   return (
-    <Card className="dashboard-card">
+    <Card className="dashboard-card" role="figure" aria-label={`Monte Carlo simulation: ${simulationResult.runs.length.toLocaleString()} scenarios showing probability ranges from age ${currentAge} to life expectancy`}>
       <CardHeader className="pb-4">
-        <CardTitle>Monte Carlo Projection</CardTitle>
+        <CardTitle className="text-balance">Monte Carlo Projection</CardTitle>
         <CardDescription>
           Based on {simulationResult.runs.length.toLocaleString()} simulations
         </CardDescription>

@@ -5,6 +5,7 @@ import { useShallow } from "zustand/react/shallow"
 import { Check, ChevronDown, ChevronRight, Pencil, Plus, Trash2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { PageHeader } from "@/components/ui/page-header"
 import { Input } from "@/components/ui/input"
 import { useExpensesStore } from "@/lib/store/expenses-store"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
@@ -101,7 +102,7 @@ function AddExpenseRow({
 
 function AddGroupRow({ onSave, onCancel }: { onSave: (name: string, color: string) => void; onCancel: () => void }) {
   const [name, setName] = useState("")
-  const [color, setColor] = useState<string>("#6366f1") // indigo — from GROUP_COLOR_OPTIONS
+  const [color, setColor] = useState<string>("#a5b4fc") // indigo — from GROUP_COLOR_OPTIONS
 
   const commit = () => {
     if (!name.trim()) { onCancel(); return }
@@ -165,6 +166,8 @@ function GroupSection({
 
   return (
     <div className="border border-border rounded-md overflow-hidden">
+      {/* Top color bar — group identity */}
+      <div className="h-[3px] w-full" style={{ backgroundColor: group.color }} />
       {/* Group header */}
       <div
         className="group flex items-center gap-2.5 px-3 py-2.5 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
@@ -283,7 +286,7 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Monthly Summary</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-base">Monthly Summary</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Income</span>
@@ -315,7 +318,7 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
             </span>
           </div>
           <div>
-            <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+            <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
               <div className="h-full rounded-full bg-primary transition-all duration-300"
                 style={{ width: `${Math.min(100, monthlyIncome > 0 ? (total / monthlyIncome) * 100 : 0)}%` }} />
             </div>
@@ -327,7 +330,7 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
       </Card>
 
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">By Group</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-base">By Group</CardTitle></CardHeader>
         <CardContent className="space-y-2.5">
           {groupTotals.map(({ group, total: gt }) => (
             <div key={group.id}>
@@ -348,7 +351,7 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
       </Card>
 
       <Card className="bg-primary/5 border-primary/20">
-        <CardHeader className="pb-2"><CardTitle className="text-sm">4% Rule Target</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-base">4% Rule Target</CardTitle></CardHeader>
         <CardContent className="space-y-2">
           <p className="text-xs text-muted-foreground">Monthly retirement expenses × 300</p>
           <p className="text-2xl font-bold font-mono">{formatCurrency(fourPctTarget)}</p>
@@ -414,20 +417,16 @@ export function ExpensesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">Monthly Expenses</h2>
-          <p className="text-sm text-muted-foreground">
-            Expenses marked "in retirement" drive your retirement income target automatically.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => setAddingGroup(true)} disabled={addingGroup}>
+      <PageHeader
+        title="Expenses"
+        description='Expenses marked "in retirement" drive your retirement income target automatically.'
+        action={
+          <Button size="sm" onClick={() => setAddingGroup(true)} disabled={addingGroup}>
             <Plus className="mr-1.5 h-3.5 w-3.5" />
             New Group
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
         <div className="space-y-3">

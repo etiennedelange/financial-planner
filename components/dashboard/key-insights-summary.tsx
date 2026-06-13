@@ -34,7 +34,7 @@ export function KeyInsightsSummary({
     return (
       <Card className="dashboard-card">
         <CardHeader>
-          <CardTitle className="text-lg">Key Insights</CardTitle>
+          <CardTitle className="text-lg text-balance">Key Insights</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center gap-3 py-4 text-center">
@@ -127,17 +127,17 @@ export function KeyInsightsSummary({
           const Icon = insight.icon
           return (
             <div key={insight.title} className="flex items-start gap-3 pb-3 border-b border-border last:pb-0 last:border-0">
-              <Icon className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-1" />
+              <Icon aria-hidden="true" className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-1" />
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <p className="text-sm font-medium text-foreground">{insight.title}</p>
                   {insight.badgeLabel && (
-                    <Badge variant={insight.badgeVariant === "success" ? "default" : insight.badgeVariant === "warning" ? "secondary" : "outline"}>
+                    <Badge variant={insight.badgeVariant === "success" ? "default" : insight.badgeVariant === "warning" ? "destructive" : "outline"}>
                       {insight.badgeLabel}
                     </Badge>
                   )}
                 </div>
-                <p className="text-lg font-bold text-foreground">{insight.value}</p>
+                <p className="text-lg font-bold font-mono text-foreground">{insight.value}</p>
                 <p className="text-xs text-muted-foreground">{insight.description}</p>
               </div>
             </div>

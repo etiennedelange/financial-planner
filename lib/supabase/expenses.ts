@@ -111,18 +111,18 @@ export async function seedExpenses(sessionId: string): Promise<{ groups: Expense
   const supabase = createClient()
 
   const seedGroups: ExpenseGroup[] = [
-    { id: crypto.randomUUID(), name: "Housing",       color: "#ef4444", sortOrder: 0 },
-    { id: crypto.randomUUID(), name: "Food",          color: "#f97316", sortOrder: 1 },
-    { id: crypto.randomUUID(), name: "Savings",       color: "#10b981", sortOrder: 2 },
-    { id: crypto.randomUUID(), name: "Insurance",     color: "#3b82f6", sortOrder: 3 },
-    { id: crypto.randomUUID(), name: "Subscriptions", color: "#8b5cf6", sortOrder: 4 },
-    { id: crypto.randomUUID(), name: "Utilities",     color: "#06b6d4", sortOrder: 5 },
-    { id: crypto.randomUUID(), name: "Transport",     color: "#f59e0b", sortOrder: 6 },
-    { id: crypto.randomUUID(), name: "Family",        color: "#ec4899", sortOrder: 7 },
-    { id: crypto.randomUUID(), name: "Software",      color: "#6366f1", sortOrder: 8 },
-    { id: crypto.randomUUID(), name: "Health",        color: "#14b8a6", sortOrder: 9 },
-    { id: crypto.randomUUID(), name: "Banking",       color: "#94a3b8", sortOrder: 10 },
-    { id: crypto.randomUUID(), name: "Other",         color: "#71717a", sortOrder: 11 },
+    { id: crypto.randomUUID(), name: "Housing",       color: "#fca5a5", sortOrder: 0 },
+    { id: crypto.randomUUID(), name: "Food",          color: "#fdba74", sortOrder: 1 },
+    { id: crypto.randomUUID(), name: "Savings",       color: "#86efac", sortOrder: 2 },
+    { id: crypto.randomUUID(), name: "Insurance",     color: "#93c5fd", sortOrder: 3 },
+    { id: crypto.randomUUID(), name: "Subscriptions", color: "#c4b5fd", sortOrder: 4 },
+    { id: crypto.randomUUID(), name: "Utilities",     color: "#7dd3fc", sortOrder: 5 },
+    { id: crypto.randomUUID(), name: "Transport",     color: "#fcd34d", sortOrder: 6 },
+    { id: crypto.randomUUID(), name: "Family",        color: "#f9a8d4", sortOrder: 7 },
+    { id: crypto.randomUUID(), name: "Software",      color: "#a5b4fc", sortOrder: 8 },
+    { id: crypto.randomUUID(), name: "Health",        color: "#5eead4", sortOrder: 9 },
+    { id: crypto.randomUUID(), name: "Banking",       color: "#cbd5e1", sortOrder: 10 },
+    { id: crypto.randomUUID(), name: "Other",         color: "#d4d4d8", sortOrder: 11 },
   ]
 
   const g = (name: string) => seedGroups.find((g) => g.name === name)!.id

@@ -1,55 +1,92 @@
 "use client"
 
 import * as React from "react"
-import { Palette } from "lucide-react"
+import { Check } from "lucide-react"
 import { useColorTheme } from "@/components/color-theme-provider"
 
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
 const themes = [
-  { name: "Gold", value: "gold", color: "bg-yellow-500" },
-  { name: "Blue", value: "blue", color: "bg-blue-500" },
-  { name: "Green", value: "green", color: "bg-green-500" },
-  { name: "Rose", value: "rose", color: "bg-rose-500" },
-  { name: "Violet", value: "violet", color: "bg-violet-500" },
-  { name: "Orange", value: "orange", color: "bg-orange-500" },
+  { name: "Gold",   value: "gold",   color: "hsl(43 85% 45%)" },
+  { name: "Blue",   value: "blue",   color: "hsl(225 73% 57%)" },
+  { name: "Green",  value: "green",  color: "hsl(142 76% 36%)" },
+  { name: "Rose",   value: "rose",   color: "hsl(346.8 77.2% 49.8%)" },
+  { name: "Violet", value: "violet", color: "hsl(262.1 83.3% 57.8%)" },
+  { name: "Orange", value: "orange", color: "hsl(24.6 95% 53.1%)" },
 ] as const
+
+type ColorThemeValue = typeof themes[number]["value"]
 
 export function ColorThemeToggle() {
   const { colorTheme, setColorTheme } = useColorTheme()
+  const active = themes.find((t) => t.value === colorTheme) ?? themes[0]
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon">
-          <Palette className="h-[1.2rem] w-[1.2rem]" />
-          <span className="sr-only">Toggle color theme</span>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 px-0"
+          title="Accent color"
+          onMouseDown={(e) => e.currentTarget.blur()}
+        >
+          <span
+            className="h-3.5 w-3.5 rounded-full ring-1 ring-black/10 dark:ring-white/10 transition-colors"
+            style={{ backgroundColor: active.color }}
+          />
+          <span className="sr-only">Accent color</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuLabel>Color Theme</DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="w-44" onCloseAutoFocus={(e) => e.preventDefault()}>
+        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+          Accent color
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {themes.map((theme) => (
-          <DropdownMenuItem
-            key={theme.value}
-            onClick={() => setColorTheme(theme.value as any)}
-            className="flex items-center gap-2 cursor-pointer"
-          >
-            <div className={`w-4 h-4 rounded-full ${theme.color}`} />
-            <span>{theme.name}</span>
-            {colorTheme === theme.value && (
-              <span className="ml-auto text-xs">✓</span>
-            )}
-          </DropdownMenuItem>
-        ))}
+        <div className="grid grid-cols-3 gap-1 p-1.5">
+          {themes.map((t) => {
+            const isActive = colorTheme === t.value
+            return (
+              <button
+                key={t.value}
+                onClick={() => setColorTheme(t.value as ColorThemeValue)}
+                title={t.name}
+                className="group flex flex-col items-center gap-1.5 rounded-md p-2 hover:bg-accent transition-colors cursor-pointer outline-none focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <span
+                  className="relative flex h-6 w-6 items-center justify-center rounded-full transition-[box-shadow]"
+                  style={{
+                    backgroundColor: t.color,
+                    boxShadow: isActive
+                      ? `0 0 0 2px hsl(var(--background)), 0 0 0 4px ${t.color}`
+                      : undefined,
+                  }}
+                >
+                  {isActive && (
+                    <Check
+                      className="h-3 w-3 text-white"
+                      style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.4))" }}
+                    />
+                  )}
+                </span>
+                <span
+                  className={`text-[10px] leading-none transition-colors ${
+                    isActive ? "font-medium text-foreground" : "text-muted-foreground"
+                  }`}
+                >
+                  {t.name}
+                </span>
+              </button>
+            )
+          })}
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   )

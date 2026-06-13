@@ -95,9 +95,9 @@ export function PortfolioGrowthChart({
   }))
 
   return (
-    <Card className="dashboard-card">
+    <Card className="dashboard-card" role="figure" aria-label={`Portfolio balance projection from age ${projections[0].age} to ${projections[projections.length - 1].age}`}>
       <CardHeader className="pb-4">
-        <CardTitle>Portfolio Growth Over Time</CardTitle>
+        <CardTitle className="text-balance">Portfolio Growth Over Time</CardTitle>
         <CardDescription>
           Projected balance from age {projections[0].age} to {projections[projections.length - 1].age}
         </CardDescription>

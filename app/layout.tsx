@@ -1,4 +1,3 @@
-import { ColorThemeProvider } from "@/components/color-theme-provider"
 import { SupabaseProvider } from "@/components/supabase-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Analytics } from "@vercel/analytics/next"
@@ -35,13 +34,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${ibmPlexSans.variable} ${ibmPlexMono.variable} h-full`}>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('color-theme');if(t)document.documentElement.classList.add('theme-'+t)}catch(e){}`,
-          }}
-        />
-      </head>
+      <head />
+
       <body className={`${ibmPlexSans.className} h-full`}>
         <ThemeProvider
           attribute="class"
@@ -49,13 +43,11 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          <ColorThemeProvider defaultTheme="gold" storageKey="color-theme">
             <SupabaseProvider>
               <main className="bg-background h-full">
                 {children}
               </main>
             </SupabaseProvider>
-          </ColorThemeProvider>
         </ThemeProvider>
         <Analytics />
       {/* impeccable-live-start */}

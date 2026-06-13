@@ -16,18 +16,18 @@ export interface Expense {
 }
 
 export const GROUP_COLOR_OPTIONS = [
-  "#ef4444", // red
-  "#f97316", // orange
-  "#f59e0b", // amber
-  "#10b981", // emerald
-  "#06b6d4", // cyan
-  "#3b82f6", // blue
-  "#8b5cf6", // violet
-  "#ec4899", // pink
-  "#6366f1", // indigo
-  "#14b8a6", // teal
-  "#94a3b8", // slate
-  "#71717a", // zinc
+  "#fca5a5", // rose
+  "#fdba74", // orange
+  "#fcd34d", // amber
+  "#86efac", // green
+  "#7dd3fc", // sky
+  "#93c5fd", // blue
+  "#c4b5fd", // violet
+  "#f9a8d4", // pink
+  "#a5b4fc", // indigo
+  "#5eead4", // teal
+  "#cbd5e1", // slate
+  "#d4d4d8", // zinc
 ] as const
 
 export type GroupColorOption = (typeof GROUP_COLOR_OPTIONS)[number]

@@ -151,7 +151,7 @@ export function InsightsPanel() {
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Optimal Contribution</CardTitle>
+            <CardTitle className="text-base">Optimal Contribution</CardTitle>
             <InfoTooltip
               content="Calculates the minimum monthly contribution needed to reach your target retirement nest egg. The target is based on your desired monthly income and withdrawal rate. Contributing more than this amount builds a safety buffer and improves your success rate."
               side="right"
@@ -188,14 +188,14 @@ export function InsightsPanel() {
             </div>
 
             {isOnTrack ? (
-              <div className="mt-2 flex items-center gap-2 rounded-md bg-green-50 p-2 text-green-700 dark:bg-green-950 dark:text-green-300">
+              <div className="mt-2 flex items-center gap-2 rounded-md bg-primary/10 p-2 text-primary">
                 <CheckCircle2 className="h-4 w-4" />
                 <span className="text-sm">
                   You&apos;re on track! Current contributions exceed the minimum needed.
                 </span>
               </div>
             ) : (
-              <div className="mt-2 flex items-center gap-2 rounded-md bg-amber-50 p-2 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+              <div className="mt-2 flex items-center gap-2 rounded-md bg-warning/10 p-2 text-warning">
                 <AlertTriangle className="h-4 w-4" />
                 <span className="text-sm">
                   Consider increasing contributions by{" "}
@@ -212,7 +212,7 @@ export function InsightsPanel() {
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <Clock className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Cost of Delay</CardTitle>
+            <CardTitle className="text-base">Cost of Delay</CardTitle>
             <InfoTooltip
               content="Shows how much retirement savings you lose by delaying your start. Due to compound growth, starting early has a massive impact - every year you delay costs you years of compound returns. The earlier you start, the less you need to contribute per month."
               side="right"
@@ -227,7 +227,7 @@ export function InsightsPanel() {
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">1 year delay:</span>
               <div className="text-right">
-                <span className="font-semibold text-red-600 dark:text-red-400">
+                <span className="font-semibold text-destructive">
                   -{formatCurrency(insights.costOfDelay.costOfOneYearDelay, displayMode, insights.yearsToRetirement, insights.inflationRate)}
                 </span>
                 <span className="ml-2 text-sm text-muted-foreground">
@@ -238,7 +238,7 @@ export function InsightsPanel() {
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">2 year delay:</span>
               <div className="text-right">
-                <span className="font-semibold text-red-600 dark:text-red-400">
+                <span className="font-semibold text-destructive">
                   -{formatCurrency(insights.costOfDelay.costOfTwoYearDelay, displayMode, insights.yearsToRetirement, insights.inflationRate)}
                 </span>
                 <span className="ml-2 text-sm text-muted-foreground">
@@ -249,7 +249,7 @@ export function InsightsPanel() {
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">5 year delay:</span>
               <div className="text-right">
-                <span className="font-semibold text-red-600 dark:text-red-400">
+                <span className="font-semibold text-destructive">
                   -{formatCurrency(insights.costOfDelay.costOfFiveYearDelay, displayMode, insights.yearsToRetirement, insights.inflationRate)}
                 </span>
                 <span className="ml-2 text-sm text-muted-foreground">
@@ -266,7 +266,7 @@ export function InsightsPanel() {
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <PieChart className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Investment Scenarios</CardTitle>
+            <CardTitle className="text-base">Investment Scenarios</CardTitle>
             <InfoTooltip
               content="Compares how different investment strategies (Conservative, Balanced, Aggressive) affect your retirement outcomes. Each scenario runs a full Monte Carlo simulation (1,000 iterations) including both the accumulation phase (while saving) and drawdown phase (during retirement). Higher returns come with higher volatility."
               side="right"
@@ -345,7 +345,7 @@ export function InsightsPanel() {
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <Heart className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Medical Cost Projection</CardTitle>
+            <CardTitle className="text-base">Medical Cost Projection</CardTitle>
             <InfoTooltip
               content="Projects medical aid costs in retirement. SA medical inflation averages ~9% p.a. (higher than general inflation at 5.5%). These costs typically increase with age and can be a significant retirement expense. Plan to allocate 10-15% of retirement income for medical costs."
               side="right"
