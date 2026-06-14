@@ -1,6 +1,6 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
+import { PageCard } from "@/components/ui/page-card"
 import { Badge } from "@/components/ui/badge"
 import {
   TrendingUp,
@@ -124,14 +124,7 @@ export function InsightsPanel() {
   })()
 
   if (!insights) {
-    return (
-      <Card className="shadow-none">
-        <CardContent className="pt-6">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">Insights</p>
-          <p className="text-sm text-muted-foreground mt-1">Add accounts to see personalized insights</p>
-        </CardContent>
-      </Card>
-    )
+    return <PageCard label="Insights" description="Add accounts to see personalized insights" />
   }
 
   const contributionDiff =
@@ -141,22 +134,13 @@ export function InsightsPanel() {
   return (
     <div className="space-y-4">
       {/* Optimal Contribution */}
-      <Card className="shadow-none">
-        <CardContent className="pt-6 space-y-3">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Target className="h-4 w-4 text-primary flex-none" />
-              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">Optimal Contribution</p>
-              <InfoTooltip
-                content="Calculates the minimum monthly contribution needed to reach your target retirement nest egg. The target is based on your desired monthly income and withdrawal rate. Contributing more than this amount builds a safety buffer and improves your success rate."
-                side="right"
-              />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              The <strong>minimum</strong> monthly contribution needed to reach your target nest egg.
-              Contributing more builds a larger safety margin and retirement surplus.
-            </p>
-          </div>
+      <PageCard
+        label="Optimal Contribution"
+        description={<>The <strong>minimum</strong> monthly contribution needed to reach your target nest egg. Contributing more builds a larger safety margin and retirement surplus.</>}
+        leading={<Target className="h-4 w-4 text-primary flex-none" />}
+        trailing={<InfoTooltip content="Calculates the minimum monthly contribution needed to reach your target retirement nest egg. The target is based on your desired monthly income and withdrawal rate. Contributing more than this amount builds a safety buffer and improves your success rate." side="right" />}
+        contentClassName="space-y-3"
+      >
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Target nest egg:</span>
@@ -198,23 +182,16 @@ export function InsightsPanel() {
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
+      </PageCard>
 
       {/* Cost of Delay */}
-      <Card className="shadow-none">
-        <CardContent className="pt-6 space-y-3">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Clock className="h-4 w-4 text-primary flex-none" />
-              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">Cost of Delay</p>
-              <InfoTooltip
-                content="Shows how much retirement savings you lose by delaying your start. Due to compound growth, starting early has a massive impact - every year you delay costs you years of compound returns. The earlier you start, the less you need to contribute per month."
-                side="right"
-              />
-            </div>
-            <p className="text-sm text-muted-foreground">Impact of delaying retirement savings</p>
-          </div>
+      <PageCard
+        label="Cost of Delay"
+        description="Impact of delaying retirement savings"
+        leading={<Clock className="h-4 w-4 text-primary flex-none" />}
+        trailing={<InfoTooltip content="Shows how much retirement savings you lose by delaying your start. Due to compound growth, starting early has a massive impact - every year you delay costs you years of compound returns. The earlier you start, the less you need to contribute per month." side="right" />}
+        contentClassName="space-y-3"
+      >
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">1 year delay:</span>
@@ -250,20 +227,15 @@ export function InsightsPanel() {
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+      </PageCard>
 
       {/* Scenario Comparison */}
-      <Card className="shadow-none">
-        <CardContent className="pt-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <PieChart className="h-4 w-4 text-primary flex-none" />
-            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">Investment Scenarios</p>
-            <InfoTooltip
-              content="Compares how different investment strategies (Conservative, Balanced, Aggressive) affect your retirement outcomes. Each scenario runs a full Monte Carlo simulation (1,000 iterations) including both the accumulation phase (while saving) and drawdown phase (during retirement). Higher returns come with higher volatility."
-              side="right"
-            />
-          </div>
+      <PageCard
+        label="Investment Scenarios"
+        leading={<PieChart className="h-4 w-4 text-primary flex-none" />}
+        trailing={<InfoTooltip content="Compares how different investment strategies (Conservative, Balanced, Aggressive) affect your retirement outcomes. Each scenario runs a full Monte Carlo simulation (1,000 iterations) including both the accumulation phase (while saving) and drawdown phase (during retirement). Higher returns come with higher volatility." side="right" />}
+        contentClassName="space-y-4"
+      >
           <div className="space-y-4">
             {(["conservative", "balanced", "aggressive"] as ScenarioType[]).map(
               (key) => {
@@ -327,23 +299,16 @@ export function InsightsPanel() {
               {insights.scenarios.recommendation}
             </p>
           </div>
-        </CardContent>
-      </Card>
+      </PageCard>
 
       {/* Medical Costs */}
-      <Card className="shadow-none">
-        <CardContent className="pt-6 space-y-3">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Heart className="h-4 w-4 text-primary flex-none" />
-              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">Medical Cost Projection</p>
-              <InfoTooltip
-                content="Projects medical aid costs in retirement. SA medical inflation averages ~9% p.a. (higher than general inflation at 5.5%). These costs typically increase with age and can be a significant retirement expense. Plan to allocate 10-15% of retirement income for medical costs."
-                side="right"
-              />
-            </div>
-            <p className="text-sm text-muted-foreground">SA medical inflation: ~9% p.a. (vs 5.5% general)</p>
-          </div>
+      <PageCard
+        label="Medical Cost Projection"
+        description="SA medical inflation: ~9% p.a. (vs 5.5% general)"
+        leading={<Heart className="h-4 w-4 text-primary flex-none" />}
+        trailing={<InfoTooltip content="Projects medical aid costs in retirement. SA medical inflation averages ~9% p.a. (higher than general inflation at 5.5%). These costs typically increase with age and can be a significant retirement expense. Plan to allocate 10-15% of retirement income for medical costs." side="right" />}
+        contentClassName="space-y-3"
+      >
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">At retirement:</span>
@@ -374,8 +339,7 @@ export function InsightsPanel() {
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+      </PageCard>
     </div>
   )
 }

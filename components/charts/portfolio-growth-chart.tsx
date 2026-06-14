@@ -8,7 +8,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
+import { SectionLabel } from "@/components/ui/section-label"
 import { TrendingUp } from "lucide-react"
 import {
   ChartContainer,
@@ -30,11 +31,11 @@ export function PortfolioGrowthChart({
 }: PortfolioGrowthChartProps) {
   if (projections.length === 0) {
     return (
-      <Card className="dashboard-card">
-        <CardHeader className="pb-4">
-          <CardTitle>Portfolio Growth Over Time</CardTitle>
-          <CardDescription>Deterministic projection of portfolio value</CardDescription>
-        </CardHeader>
+      <Card className="dashboard-card shadow-none">
+        <div className="px-6 pt-6 pb-3 space-y-1">
+          <SectionLabel>Portfolio Growth Over Time</SectionLabel>
+          <p className="text-sm text-muted-foreground pl-3">Deterministic projection of portfolio value</p>
+        </div>
         <CardContent className="relative flex h-[260px] items-center justify-center overflow-hidden">
           {/* Ghost growth curve: accumulates to retirement, gentle withdrawal after */}
           <svg
@@ -95,13 +96,13 @@ export function PortfolioGrowthChart({
   }))
 
   return (
-    <Card className="dashboard-card" role="figure" aria-label={`Portfolio balance projection from age ${projections[0].age} to ${projections[projections.length - 1].age}`}>
-      <CardHeader className="pb-4">
-        <CardTitle className="text-balance">Portfolio Growth Over Time</CardTitle>
-        <CardDescription>
+    <Card className="dashboard-card shadow-none" role="figure" aria-label={`Portfolio balance projection from age ${projections[0].age} to ${projections[projections.length - 1].age}`}>
+      <div className="px-6 pt-6 pb-3 space-y-1">
+        <SectionLabel>Portfolio Growth Over Time</SectionLabel>
+        <p className="text-sm text-muted-foreground pl-3">
           Projected balance from age {projections[0].age} to {projections[projections.length - 1].age}
-        </CardDescription>
-      </CardHeader>
+        </p>
+      </div>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
         <ChartContainer config={chartConfig} className="h-[260px] w-full">
           <AreaChart

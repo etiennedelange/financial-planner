@@ -1,6 +1,6 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { PageCard } from "@/components/ui/page-card"
 
 interface SuccessGaugeProps {
   successRate: number // 0-100
@@ -27,11 +27,7 @@ export function SuccessGauge({ successRate }: SuccessGaugeProps) {
   const clampedRate = Math.min(100, Math.max(0, successRate))
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-center text-base">Success Rate</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col items-center gap-3">
+    <PageCard label="Success Rate" contentClassName="flex flex-col items-center gap-3">
         {/* Large percentage display */}
         <div className="flex items-baseline gap-1">
           <span className={`text-5xl font-bold ${colors.text}`}>
@@ -63,7 +59,6 @@ export function SuccessGauge({ successRate }: SuccessGaugeProps) {
         <p className="text-center text-xs text-muted-foreground">
           Probability of funds lasting through retirement
         </p>
-      </CardContent>
-    </Card>
+    </PageCard>
   )
 }

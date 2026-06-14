@@ -6,7 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
+import { PageCard } from "@/components/ui/page-card"
+import { SectionLabel } from "@/components/ui/section-label"
 import { Slider } from "@/components/ui/slider"
 import {
   Select,
@@ -82,20 +83,14 @@ export function AssumptionsForm({
   useEffect(() => { setLocalLumpSum(drawdownConfig.lumpSumPercentage ?? 0) }, [drawdownConfig.lumpSumPercentage])
 
   return (
-    <Card className="shadow-none">
-      <CardContent className="pt-6 space-y-6">
-        <div className="space-y-1">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">
-            Market Assumptions
-          </p>
-          <p className="text-sm text-muted-foreground pl-3">
-            Reference values for asset class returns. Each account uses its own expected return setting.
-            Volatility is used in Monte Carlo simulations.
-          </p>
-        </div>
+    <PageCard
+      label="Market Assumptions"
+      description="Reference values for asset class returns. Each account uses its own expected return setting. Volatility is used in Monte Carlo simulations."
+      contentClassName="space-y-6"
+    >
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">Expected Returns (Nominal)</p>
+            <SectionLabel>Expected Returns (Nominal)</SectionLabel>
             <InfoTooltip
               content="These are reference values for different asset classes. Each account uses its own expected return rate. Nominal returns include inflation - a 10% nominal return with 5% inflation gives ~5% real growth."
               side="right"
@@ -142,7 +137,7 @@ export function AssumptionsForm({
 
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">Volatility (Std Dev)</p>
+            <SectionLabel>Volatility (Std Dev)</SectionLabel>
             <InfoTooltip
               content="Volatility measures how much returns vary from year to year. Higher volatility means more uncertainty. In Monte Carlo simulations, higher volatility reduces the probability of success because of sequence-of-returns risk. Typical SA equity volatility: 15-18%."
               side="right"
@@ -177,7 +172,7 @@ export function AssumptionsForm({
 
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">Drawdown Strategy</p>
+            <SectionLabel>Drawdown Strategy</SectionLabel>
             <InfoTooltip
               content="Determines how you withdraw money during retirement. Fixed Percentage: withdraw a % of remaining balance each year (safer but variable income). Fixed Amount: withdraw a fixed amount adjusted for inflation (predictable income but higher risk). Variable strategies adjust based on portfolio performance."
               side="right"
@@ -322,7 +317,6 @@ export function AssumptionsForm({
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+    </PageCard>
   )
 }

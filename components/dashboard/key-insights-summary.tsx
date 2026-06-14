@@ -2,7 +2,7 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { PageCard } from "@/components/ui/page-card"
 import { formatCurrency } from "@/lib/utils/currency"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import type { ProjectionResult } from "@/types"
@@ -32,19 +32,14 @@ export function KeyInsightsSummary({
 }: KeyInsightsSummaryProps) {
   if (!projection) {
     return (
-      <Card className="dashboard-card">
-        <CardHeader>
-          <CardTitle className="text-lg text-balance">Key Insights</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center gap-3 py-4 text-center">
-            <p className="text-sm text-muted-foreground">Configure your accounts and plan to see personalised insights here.</p>
-            <Button asChild size="sm" variant="outline">
-              <Link href="/calculator/accounts">Add accounts →</Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <PageCard label="Key Insights" className="dashboard-card">
+        <div className="flex flex-col items-center gap-3 py-4 text-center">
+          <p className="text-sm text-muted-foreground">Configure your accounts and plan to see personalised insights here.</p>
+          <Button asChild size="sm" variant="outline">
+            <Link href="/calculator/accounts">Add accounts →</Link>
+          </Button>
+        </div>
+      </PageCard>
     )
   }
 
@@ -118,11 +113,7 @@ export function KeyInsightsSummary({
   ]
 
   return (
-    <Card className="dashboard-card">
-      <CardHeader>
-        <CardTitle className="text-lg">Key Insights</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <PageCard label="Key Insights" className="dashboard-card" contentClassName="space-y-4">
         {insights.map((insight) => {
           const Icon = insight.icon
           return (
@@ -143,7 +134,6 @@ export function KeyInsightsSummary({
             </div>
           )
         })}
-      </CardContent>
-    </Card>
+    </PageCard>
   )
 }

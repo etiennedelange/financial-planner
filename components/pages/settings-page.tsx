@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { PageCard } from "@/components/ui/page-card"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { exportPlan, parsePlanFile } from "@/lib/utils/plan-io"
 import { exportProjectionCsv } from "@/lib/utils/export-csv"
@@ -94,11 +94,7 @@ export function SettingsPage({ projection }: SettingsPageProps) {
       <PageHeader title="Settings" description="Display preferences, data export, and plan management." />
 
       {/* Display */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Display</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <PageCard label="Display" contentClassName="space-y-4">
           <div className="space-y-2">
             <p className="text-sm font-medium">Display Mode</p>
             <div className="flex gap-2">
@@ -138,15 +134,10 @@ export function SettingsPage({ projection }: SettingsPageProps) {
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+      </PageCard>
 
       {/* Appearance */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Appearance</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <PageCard label="Appearance" contentClassName="space-y-4">
           <div className="space-y-2">
             <p className="text-sm font-medium">Dark Mode</p>
             <div className="flex gap-2">
@@ -176,15 +167,10 @@ export function SettingsPage({ projection }: SettingsPageProps) {
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+      </PageCard>
 
       {/* Plan */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Plan</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
+      <PageCard label="Plan" contentClassName="space-y-2">
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={() => window.open("/print", "_blank")}>
               <Printer className="mr-2 h-4 w-4" />
@@ -206,15 +192,10 @@ export function SettingsPage({ projection }: SettingsPageProps) {
           {importError && (
             <p className="text-sm text-destructive">{importError}</p>
           )}
-        </CardContent>
-      </Card>
+      </PageCard>
 
       {/* Danger Zone */}
-      <Card className="border-destructive/40">
-        <CardHeader>
-          <CardTitle className="text-base text-destructive">Danger Zone</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <PageCard label="Danger Zone" labelVariant="destructive" className="border-destructive/40" contentClassName="space-y-3">
           {resetPending ? (
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
@@ -235,8 +216,7 @@ export function SettingsPage({ projection }: SettingsPageProps) {
               Reset to Defaults
             </Button>
           )}
-        </CardContent>
-      </Card>
+      </PageCard>
     </div>
   )
 }

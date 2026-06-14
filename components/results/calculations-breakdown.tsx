@@ -1,6 +1,6 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
+import { PageCard } from "@/components/ui/page-card"
 import {
   Accordion,
   AccordionContent,
@@ -148,24 +148,12 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
   })()
 
   if (!calculations || !projection) {
-    return (
-      <Card className="shadow-none">
-        <CardContent className="pt-6">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">Calculations Breakdown</p>
-          <p className="text-sm text-muted-foreground mt-1">Add accounts to see detailed calculations</p>
-        </CardContent>
-      </Card>
-    )
+    return <PageCard label="Calculations Breakdown" description="Add accounts to see detailed calculations" />
   }
 
   return (
     <div className="space-y-4">
-      <Card className="shadow-none">
-        <CardContent className="pt-6">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">Calculations Breakdown</p>
-          <p className="text-sm text-muted-foreground mt-1">Detailed view of all calculations and formulas used</p>
-        </CardContent>
-      </Card>
+      <PageCard label="Calculations Breakdown" description="Detailed view of all calculations and formulas used" />
 
       <Accordion type="multiple" defaultValue={["inputs", "formulas"]} className="space-y-2">
         {/* Input Summary */}

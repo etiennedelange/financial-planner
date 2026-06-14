@@ -1,6 +1,7 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
+import { SectionLabel } from "@/components/ui/section-label"
 import {
   ChartContainer,
   ChartTooltip,
@@ -34,11 +35,11 @@ export function MonteCarloChart({
 }: MonteCarloChartProps) {
   if (!simulationResult || simulationResult.percentiles.p50.length === 0) {
     return (
-      <Card className="dashboard-card">
-        <CardHeader>
-          <CardTitle>Monte Carlo Projection</CardTitle>
-          <CardDescription>Run simulation to see probability ranges</CardDescription>
-        </CardHeader>
+      <Card className="dashboard-card shadow-none">
+        <div className="px-6 pt-6 pb-3 space-y-1">
+          <SectionLabel>Monte Carlo Projection</SectionLabel>
+          <p className="text-sm text-muted-foreground pl-3">Run simulation to see probability ranges</p>
+        </div>
         <CardContent className="relative flex h-[260px] items-center justify-center overflow-hidden">
           {/* Ghost probability fan: 5 percentile lines fanning from current age */}
           <svg
@@ -117,13 +118,13 @@ export function MonteCarloChart({
   }))
 
   return (
-    <Card className="dashboard-card" role="figure" aria-label={`Monte Carlo simulation: ${simulationResult.runs.length.toLocaleString()} scenarios showing probability ranges from age ${currentAge} to life expectancy`}>
-      <CardHeader className="pb-4">
-        <CardTitle className="text-balance">Monte Carlo Projection</CardTitle>
-        <CardDescription>
+    <Card className="dashboard-card shadow-none" role="figure" aria-label={`Monte Carlo simulation: ${simulationResult.runs.length.toLocaleString()} scenarios showing probability ranges from age ${currentAge} to life expectancy`}>
+      <div className="px-6 pt-6 pb-3 space-y-1">
+        <SectionLabel>Monte Carlo Projection</SectionLabel>
+        <p className="text-sm text-muted-foreground pl-3">
           Based on {simulationResult.runs.length.toLocaleString()} simulations
-        </CardDescription>
-      </CardHeader>
+        </p>
+      </div>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
         <ChartContainer config={chartConfig} className="h-[260px] w-full">
           <AreaChart

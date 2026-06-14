@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
+import { PageCard } from "@/components/ui/page-card"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useShallow } from "zustand/react/shallow"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
@@ -55,11 +55,7 @@ export function PersonalInfoForm() {
     watchedValues.lifeExpectancy - watchedValues.retirementAge
 
   return (
-    <Card className="shadow-none">
-      <CardContent className="pt-6 space-y-4">
-        <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">
-          Personal Information
-        </p>
+    <PageCard label="Personal Information" contentClassName="space-y-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="currentAge">Current Age</Label>
@@ -149,7 +145,6 @@ export function PersonalInfoForm() {
             retirement
           </p>
         </div>
-      </CardContent>
-    </Card>
+    </PageCard>
   )
 }
