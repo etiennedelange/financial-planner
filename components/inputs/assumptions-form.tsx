@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -8,19 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PageCard } from "@/components/ui/page-card"
 import { SectionLabel } from "@/components/ui/section-label"
-import { Slider } from "@/components/ui/slider"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
-import { formatCurrency } from "@/lib/utils/currency"
 import { useShallow } from "zustand/react/shallow"
-import { DRAWDOWN_STRATEGY_LABELS } from "@/types"
-import type { DrawdownStrategy } from "@/types"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 
 const schema = z.object({
@@ -29,63 +18,52 @@ const schema = z.object({
   cashReturn: z.number().min(0).max(15),
   equityVolatility: z.number().min(0).max(40),
   bondVolatility: z.number().min(0).max(20),
+  inflationRate: z.number().min(0).max(20),
 })
 
 type FormData = z.infer<typeof schema>
 
-interface AssumptionsFormProps {
-  portfolioAtRetirement?: number
-  yearsToRetirement?: number
-  displayMode?: "nominal" | "real"
-  inflationRate?: number
-}
-
-export function AssumptionsForm({
-  portfolioAtRetirement,
-  yearsToRetirement = 0,
-  displayMode = "nominal",
-  inflationRate = 0.055,
-}: AssumptionsFormProps) {
-  const { assumptions, setAssumptions, drawdownConfig, setDrawdownConfig } =
+export function AssumptionsForm() {
+  const { assumptions, setAssumptions, retirementGoals, setRetirementGoals } =
     useCalculatorStore(
       useShallow(state => ({
         assumptions: state.assumptions,
         setAssumptions: state.setAssumptions,
-        drawdownConfig: state.drawdownConfig,
-        setDrawdownConfig: state.setDrawdownConfig,
+        retirementGoals: state.retirementGoals,
+        setRetirementGoals: state.setRetirementGoals,
       }))
     )
 
   const {
     register,
     watch,
-    formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: assumptions,
+    defaultValues: {
+      equityReturn: assumptions.equityReturn,
+      bondReturn: assumptions.bondReturn,
+      cashReturn: assumptions.cashReturn,
+      equityVolatility: assumptions.equityVolatility,
+      bondVolatility: assumptions.bondVolatility,
+      inflationRate: retirementGoals.inflationRate,
+    },
   })
 
   useEffect(() => {
     const subscription = watch((value) => {
       if (value.equityReturn !== undefined) {
-        setAssumptions(value as FormData)
+        const { inflationRate, ...assumptionFields } = value as FormData
+        setAssumptions({ ...assumptionFields, inflationRate })
+        setRetirementGoals({ inflationRate })
       }
     })
     return () => subscription.unsubscribe()
-  }, [watch, setAssumptions])
-
-  // Local slider state — updates instantly during drag, commits to store on release
-  const [localWithdrawalRate, setLocalWithdrawalRate] = useState(drawdownConfig.initialWithdrawalRate)
-  const [localLumpSum, setLocalLumpSum] = useState(drawdownConfig.lumpSumPercentage ?? 0)
-
-  // Sync from store when changed externally (e.g. reset to defaults)
-  useEffect(() => { setLocalWithdrawalRate(drawdownConfig.initialWithdrawalRate) }, [drawdownConfig.initialWithdrawalRate])
-  useEffect(() => { setLocalLumpSum(drawdownConfig.lumpSumPercentage ?? 0) }, [drawdownConfig.lumpSumPercentage])
+  }, [watch, setAssumptions, setRetirementGoals])
 
   return (
     <PageCard
       label="Market Assumptions"
-      description="Reference values for asset class returns. Each account uses its own expected return setting. Volatility is used in Monte Carlo simulations."
+      description="Reference values for asset class returns and inflation. Each account uses its own expected return setting. Volatility is used in Monte Carlo simulations."
       contentClassName="space-y-6"
     >
         <div className="space-y-4">
@@ -170,150 +148,26 @@ export function AssumptionsForm({
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <SectionLabel>Drawdown Strategy</SectionLabel>
-            <InfoTooltip
-              content="Determines how you withdraw money during retirement. Fixed Percentage: withdraw a % of remaining balance each year (safer but variable income). Fixed Amount: withdraw a fixed amount adjusted for inflation (predictable income but higher risk). Variable strategies adjust based on portfolio performance."
-              side="right"
-            />
-          </div>
-
+        <div className="pt-2 border-t border-border">
           <div className="space-y-2">
-            <Label>Strategy</Label>
-            <Select
-              value={drawdownConfig.strategy}
-              onValueChange={(value) =>
-                setDrawdownConfig({ strategy: value as DrawdownStrategy })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(DRAWDOWN_STRATEGY_LABELS).map(
-                  ([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  )
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Label>Initial Withdrawal Rate</Label>
-                <InfoTooltip
-                  content="The % of your retirement nest egg you plan to withdraw in the first year. Lower rates (3-4%) require a larger nest egg but are safer. Higher rates (5-6%) allow a smaller nest egg but increase the risk of running out of money. Example: 4% of R10M = R400k/year. To get R500k/year at 4%, you'd need R12.5M (hence why lower rates need bigger nest eggs)."
-                  side="left"
-                />
-              </div>
-              <span className="text-sm font-medium">
-                {localWithdrawalRate.toFixed(1)}%
-              </span>
-            </div>
-            <Slider
-              value={[localWithdrawalRate]}
-              onValueChange={([value]) => setLocalWithdrawalRate(value)}
-              onValueCommit={([value]) => setDrawdownConfig({ initialWithdrawalRate: value })}
-              min={2}
-              max={8}
-              step={0.5}
-            />
-            <p className="text-xs text-muted-foreground">
-              Traditional &quot;safe&quot; rate is 4%. SA research suggests 3-5%
-              may be appropriate.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Label>Lump Sum at Retirement</Label>
-                <InfoTooltip
-                  content="SA pension/RA rules allow you to take up to one-third of your fund as a lump sum at retirement. The first R550,000 is tax-free (lifetime); amounts above are taxed at 18–36%. The remaining two-thirds must be used to purchase an annuity."
-                  side="left"
-                />
-              </div>
-              <div className="text-right">
-                <span className="text-sm font-medium">{localLumpSum.toFixed(0)}%</span>
-                {portfolioAtRetirement != null && localLumpSum > 0 && (
-                  <span className="ml-2 text-sm text-muted-foreground">
-                    ≈ {formatCurrency(
-                      portfolioAtRetirement * (localLumpSum / 100),
-                      displayMode,
-                      yearsToRetirement,
-                      inflationRate
-                    )}
-                  </span>
-                )}
-              </div>
-            </div>
-            <Slider
-              value={[localLumpSum]}
-              onValueChange={([value]) => setLocalLumpSum(value)}
-              onValueCommit={([value]) => setDrawdownConfig({ lumpSumPercentage: value })}
-              min={0}
-              max={33}
-              step={1}
-            />
-            <p className="text-xs text-muted-foreground">
-              SA regulations cap the lump sum at one-third (33%) of pension/RA funds. TFSA and discretionary funds have no restriction.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="monthlyMedicalAid">Medical Aid (R/month, today&apos;s value)</Label>
-                <InfoTooltip
-                  content="Enter your current monthly medical aid contribution in today's Rands. The projection escalates this with inflation each year. It reduces net retirement income but generates an s6A tax credit (R364/month for principal member + first dependant, R246/month per additional dependant) that directly reduces income tax."
-                  side="left"
-                />
-              </div>
-              <Input
-                id="monthlyMedicalAid"
-                type="number"
-                min="0"
-                step="100"
-                placeholder="0"
-                value={drawdownConfig.monthlyMedicalAid ?? ""}
-                onChange={(e) =>
-                  setDrawdownConfig({
-                    monthlyMedicalAid: e.target.value === "" ? undefined : Number(e.target.value),
-                  })
-                }
+            <div className="flex items-center gap-2">
+              <Label htmlFor="inflationRate">Expected Inflation (%)</Label>
+              <InfoTooltip
+                content="Expected annual CPI inflation rate. Used to project your income needs at retirement and to adjust withdrawals each year to preserve purchasing power. SA historical average: 5–6%. This rate affects how much you'll need in nominal terms at retirement."
+                side="right"
               />
             </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="medicalAidDependants">Dependants</Label>
-                <InfoTooltip
-                  content="Number of additional beneficiaries on your medical aid (excluding yourself). Each additional dependant adds a s6A credit of R364/month (first) or R246/month (subsequent) to reduce your tax."
-                  side="left"
-                />
-              </div>
+            <div className="flex items-center gap-3">
               <Input
-                id="medicalAidDependants"
+                id="inflationRate"
                 type="number"
                 min="0"
-                max="10"
-                step="1"
-                placeholder="0"
-                value={drawdownConfig.medicalAidDependants ?? ""}
-                onChange={(e) =>
-                  setDrawdownConfig({
-                    medicalAidDependants: e.target.value === "" ? undefined : Number(e.target.value),
-                  })
-                }
+                max="20"
+                step="0.5"
+                className="max-w-[120px]"
+                {...register("inflationRate", { valueAsNumber: true })}
               />
-              <p className="text-xs text-muted-foreground">
-                Tax credits: R364/month (member), R364 (1st dependant), R246 each thereafter.
-              </p>
+              <p className="text-xs text-muted-foreground">SA historical average: 5–6%</p>
             </div>
           </div>
         </div>

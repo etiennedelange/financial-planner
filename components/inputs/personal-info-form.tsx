@@ -11,12 +11,28 @@ import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useShallow } from "zustand/react/shallow"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
+import { formatCurrency } from "@/lib/utils/currency"
 
 const schema = z.object({
   currentAge: z.number().min(18).max(100),
   retirementAge: z.number().min(40).max(100),
   lifeExpectancy: z.number().min(60).max(120),
   annualIncome: z.number().min(0),
+}).superRefine((data, ctx) => {
+  if (data.retirementAge <= data.currentAge) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Retirement age must be after current age",
+      path: ["retirementAge"],
+    })
+  }
+  if (data.lifeExpectancy <= data.retirementAge) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Life expectancy must be after retirement age",
+      path: ["lifeExpectancy"],
+    })
+  }
 })
 
 type FormData = z.infer<typeof schema>
@@ -134,6 +150,11 @@ export function PersonalInfoForm() {
               step="10000"
               {...register("annualIncome", { valueAsNumber: true })}
             />
+            {watchedValues.annualIncome > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {formatCurrency(watchedValues.annualIncome)} / year
+              </p>
+            )}
           </div>
         </div>
 

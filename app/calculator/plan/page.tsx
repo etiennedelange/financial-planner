@@ -7,10 +7,8 @@ import { useShallow } from "zustand/react/shallow"
 
 export default function PlanRoute() {
   const { projection } = useCalculator()
-  const { personalInfo, assumptions, displayMode } = useCalculatorStore(
+  const { displayMode } = useCalculatorStore(
     useShallow((s) => ({
-      personalInfo: s.personalInfo,
-      assumptions: s.assumptions,
       displayMode: s.displayMode,
     }))
   )
@@ -18,9 +16,7 @@ export default function PlanRoute() {
   return (
     <PlanPage
       projection={projection}
-      yearsToRetirement={personalInfo.retirementAge - personalInfo.currentAge}
       displayMode={displayMode}
-      inflationRate={assumptions.inflationRate / 100}
     />
   )
 }
