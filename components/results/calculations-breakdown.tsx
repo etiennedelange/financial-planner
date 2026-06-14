@@ -1,11 +1,6 @@
 "use client"
 
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   Accordion,
   AccordionContent,
@@ -154,24 +149,22 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
 
   if (!calculations || !projection) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Calculations Breakdown</CardTitle>
-          <CardDescription>Add accounts to see detailed calculations</CardDescription>
-        </CardHeader>
+      <Card className="shadow-none">
+        <CardContent className="pt-6">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">Calculations Breakdown</p>
+          <p className="text-sm text-muted-foreground mt-1">Add accounts to see detailed calculations</p>
+        </CardContent>
       </Card>
     )
   }
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Calculations Breakdown</CardTitle>
-          <CardDescription>
-            Detailed view of all calculations and formulas used
-          </CardDescription>
-        </CardHeader>
+      <Card className="shadow-none">
+        <CardContent className="pt-6">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">Calculations Breakdown</p>
+          <p className="text-sm text-muted-foreground mt-1">Detailed view of all calculations and formulas used</p>
+        </CardContent>
       </Card>
 
       <Accordion type="multiple" defaultValue={["inputs", "formulas"]} className="space-y-2">

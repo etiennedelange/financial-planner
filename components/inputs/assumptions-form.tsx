@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 import {
   Select,
@@ -82,15 +82,17 @@ export function AssumptionsForm({
   useEffect(() => { setLocalLumpSum(drawdownConfig.lumpSumPercentage ?? 0) }, [drawdownConfig.lumpSumPercentage])
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Market Assumptions</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Reference values for asset class returns. Each account uses its own expected return setting.
-          Volatility is used in Monte Carlo simulations.
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-6">
+    <Card className="shadow-none">
+      <CardContent className="pt-6 space-y-6">
+        <div className="space-y-1">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">
+            Market Assumptions
+          </p>
+          <p className="text-sm text-muted-foreground pl-3">
+            Reference values for asset class returns. Each account uses its own expected return setting.
+            Volatility is used in Monte Carlo simulations.
+          </p>
+        </div>
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">Expected Returns (Nominal)</p>

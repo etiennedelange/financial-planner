@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useShallow } from "zustand/react/shallow"
 import { formatCurrency } from "@/lib/utils/formatters"
@@ -57,11 +57,11 @@ export function RetirementGoalsForm() {
     Math.pow(1 + watchedValues.inflationRate / 100, yearsToRetirement)
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Retirement Goals</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <Card className="shadow-none">
+      <CardContent className="pt-6 space-y-4">
+        <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">
+          Retirement Goals
+        </p>
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Label htmlFor="desiredMonthlyIncome">

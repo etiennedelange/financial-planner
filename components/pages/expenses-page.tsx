@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
 import { Check, ChevronDown, ChevronRight, Pencil, Plus, Trash2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { PageHeader } from "@/components/ui/page-header"
 import { Input } from "@/components/ui/input"
 import { useExpensesStore } from "@/lib/store/expenses-store"
@@ -285,9 +285,9 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-base">Monthly Summary</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
+      <Card className="shadow-none">
+        <CardContent className="pt-6 space-y-3">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">Monthly Summary</p>
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Income</span>
             {editIncome ? (
@@ -329,9 +329,9 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-base">By Group</CardTitle></CardHeader>
-        <CardContent className="space-y-2.5">
+      <Card className="shadow-none">
+        <CardContent className="pt-6 space-y-2.5">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">By Group</p>
           {groupTotals.map(({ group, total: gt }) => (
             <div key={group.id}>
               <div className="flex justify-between mb-0.5">
@@ -350,9 +350,9 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
         </CardContent>
       </Card>
 
-      <Card className="bg-primary/5 border-primary/20">
-        <CardHeader className="pb-2"><CardTitle className="text-base">4% Rule Target</CardTitle></CardHeader>
-        <CardContent className="space-y-2">
+      <Card className="shadow-none bg-primary/5 border-primary/20">
+        <CardContent className="pt-6 space-y-2">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary pl-2">4% Rule Target</p>
           <p className="text-xs text-muted-foreground">Monthly retirement expenses × 300</p>
           <p className="text-2xl font-bold font-mono">{formatCurrency(fourPctTarget)}</p>
           <div className="grid grid-cols-2 gap-3 text-sm">
