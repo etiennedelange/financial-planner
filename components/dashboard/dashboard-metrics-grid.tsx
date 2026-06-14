@@ -52,7 +52,7 @@ export function DashboardMetricsGrid({
             <Link href="/calculator/accounts">Add accounts →</Link>
           </Button>
         </div>
-        <div className="dashboard-grid grid-cols-3 sm:grid-cols-5">
+        <div className="dashboard-grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
           {placeholders.map((m) => (
             <div key={m.label} className="dashboard-metric-card bg-card border border-border opacity-40">
               <div className="flex flex-col h-full">
@@ -177,8 +177,8 @@ export function DashboardMetricsGrid({
 
   return (
     <div className={metrics.length === 7
-      ? "dashboard-grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-7"
-      : "dashboard-grid grid-cols-3 sm:grid-cols-5"
+      ? "dashboard-grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7"
+      : "dashboard-grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
     }>
       {metrics.map((metric) => (
         <DashboardMetricCard

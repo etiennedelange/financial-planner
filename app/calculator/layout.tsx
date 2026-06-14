@@ -43,7 +43,7 @@ function CalculatorShell({ children }: { children: React.ReactNode }) {
         </div>
       </AppShell>
       <CommandPalette />
-      <DebugWindow projection={projection} simulationResult={simulationResult} className="fixed bottom-4 right-4 z-50" />
+      <DebugWindow projection={projection} simulationResult={simulationResult} className="hidden md:block fixed bottom-4 right-4 z-50" />
     </>
   )
 }

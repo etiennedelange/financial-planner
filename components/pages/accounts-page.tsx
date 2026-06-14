@@ -124,7 +124,7 @@ function PortfolioHero({
 
       {/* Hero balance — no container, raw typography */}
       <div>
-        <p className="font-mono text-[2.75rem] font-semibold tabular-nums tracking-tight leading-none">
+        <p className="font-mono text-[2rem] sm:text-[2.75rem] font-semibold tabular-nums tracking-tight leading-none">
           {formatCurrency(totalBalance)}
         </p>
       </div>
@@ -141,8 +141,8 @@ function PortfolioHero({
               />
             ))}
           </div>
-          {/* Legend + secondary stats in one row */}
-          <div className="flex items-center justify-between flex-wrap gap-y-1">
+          {/* Legend + secondary stats */}
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <div className="flex flex-wrap gap-x-3 gap-y-1">
               {nonZero.map((seg) => (
                 <span key={seg.type} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -154,7 +154,7 @@ function PortfolioHero({
                 </span>
               ))}
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <span className="text-[11px] text-muted-foreground">
                 <span className="font-mono font-medium text-foreground tabular-nums">
                   {formatCurrency(totalMonthly)}
@@ -162,21 +162,17 @@ function PortfolioHero({
                 /mo
               </span>
               {showReturn && (
-                <>
-                  <span className="text-border">·</span>
-                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                    <span className="font-mono font-medium text-foreground tabular-nums">
-                      {weightedNetReturn.toFixed(1)}%
-                    </span>
-                    weighted net
-                    <InfoTooltip
-                      content="Balance-weighted average return across all accounts, after fees."
-                      side="top"
-                    />
+                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <span className="font-mono font-medium text-foreground tabular-nums">
+                    {weightedNetReturn.toFixed(1)}%
                   </span>
-                </>
+                  net
+                  <InfoTooltip
+                    content="Balance-weighted average return across all accounts, after fees."
+                    side="top"
+                  />
+                </span>
               )}
-              <span className="text-border">·</span>
               <span className="text-[11px] text-muted-foreground">
                 <span className="font-mono font-medium text-foreground tabular-nums">{accountCount}</span> accounts
               </span>
@@ -323,7 +319,7 @@ function AccountCardV3({ account, portfolioPct, onEdit, onDelete }: AccountCardV
             <div className="flex items-center gap-0.5 flex-none">
               {/* Action buttons — appear on hover */}
               <div
-                className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity"
+                className="flex items-center gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity"
                 onClick={(e) => e.stopPropagation()}
                 onKeyDown={(e) => e.stopPropagation()}
               >

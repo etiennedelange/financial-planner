@@ -36,11 +36,11 @@ export function MonteCarloChart({
   if (!simulationResult || simulationResult.percentiles.p50.length === 0) {
     return (
       <Card className="dashboard-card shadow-none">
-        <div className="px-6 pt-6 pb-3 space-y-1">
+        <div className="px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-3 space-y-1">
           <SectionLabel>Monte Carlo Projection</SectionLabel>
           <p className="text-sm text-muted-foreground pl-3">Run simulation to see probability ranges</p>
         </div>
-        <CardContent className="relative flex h-[260px] items-center justify-center overflow-hidden">
+        <CardContent className="relative flex h-[180px] md:h-[260px] items-center justify-center overflow-hidden">
           {/* Ghost probability fan: 5 percentile lines fanning from current age */}
           <svg
             className="absolute inset-0 h-full w-full"
@@ -119,14 +119,14 @@ export function MonteCarloChart({
 
   return (
     <Card className="dashboard-card shadow-none" role="figure" aria-label={`Monte Carlo simulation: ${simulationResult.runs.length.toLocaleString()} scenarios showing probability ranges from age ${currentAge} to life expectancy`}>
-      <div className="px-6 pt-6 pb-3 space-y-1">
+      <div className="px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-3 space-y-1">
         <SectionLabel>Monte Carlo Projection</SectionLabel>
         <p className="text-sm text-muted-foreground pl-3">
           Based on {simulationResult.runs.length.toLocaleString()} simulations
         </p>
       </div>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
-        <ChartContainer config={chartConfig} className="h-[260px] w-full">
+        <ChartContainer config={chartConfig} className="h-[180px] md:h-[260px] w-full">
           <AreaChart
             data={data}
             margin={{ top: 16, right: 16, left: 0, bottom: 0 }}

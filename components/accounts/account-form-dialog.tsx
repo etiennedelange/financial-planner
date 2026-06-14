@@ -209,7 +209,7 @@ function Step2({ form, isEdit, onBack }: Step2Props) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label htmlFor="af-return">Expected Return (%)</Label>
           <Input

@@ -41,34 +41,45 @@ export function TopBar({ user }: TopBarProps) {
 
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-card/80 backdrop-blur-md">
-      <div className="mx-auto flex h-12 w-full max-w-6xl items-center gap-4 px-8">
+      <div className="mx-auto flex h-12 w-full max-w-6xl items-center gap-3 px-4 md:px-8">
+
+      {/* Brand mark — mobile only (sidebar hidden on mobile) */}
+      <div className="flex items-center gap-2 md:hidden shrink-0">
+        <div className="h-6 w-6 rounded-sm bg-primary flex items-center justify-center">
+          <span className="font-mono text-[8px] font-bold tracking-tight text-primary-foreground leading-none">SA</span>
+        </div>
+      </div>
+
       {/* Page title */}
       <h1 className="font-mono text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
         {title}
       </h1>
 
-      {/* Scenario switcher */}
-      <div className="flex-1 flex justify-center">
+      {/* Scenario switcher — desktop only */}
+      <div className="flex-1 hidden md:flex justify-center">
         {isSignedIn && <ScenarioSwitcher />}
       </div>
 
+      {/* Spacer on mobile */}
+      <div className="flex-1 md:hidden" />
+
       {/* Right controls */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1">
         <Button
           variant="ghost"
           size="sm"
-          className="h-8 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
+          className="hidden md:flex h-8 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
           onClick={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}
           title="Open command palette (⌘K)"
         >
           <Search className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline font-mono text-[10px]">⌘K</span>
+          <span className="font-mono text-[10px]">⌘K</span>
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-xs">
+            <Button variant="ghost" size="sm" className="h-8 px-2 text-xs gap-1.5">
               <TrendingDown className="h-3.5 w-3.5" />
-              {displayMode === "real" ? "Today's Value" : "Future Value"}
+              <span className="hidden md:inline">{displayMode === "real" ? "Today's Value" : "Future Value"}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">

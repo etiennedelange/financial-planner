@@ -2,6 +2,7 @@
 
 import { TopBar } from "./top-bar"
 import { Sidebar } from "./sidebar"
+import { BottomNav } from "./bottom-nav"
 import type { User } from "@supabase/supabase-js"
 
 interface AppShellProps {
@@ -14,17 +15,21 @@ interface AppShellProps {
 export function AppShell({ accountCount, user, isLoaded, children }: AppShellProps) {
   return (
     <div className="flex h-screen overflow-hidden">
+      {/* Sidebar — desktop only */}
       <Sidebar accountCount={accountCount} user={user} isLoaded={isLoaded} />
 
-      {/* Content area — offset by sidebar width */}
-      <div className="flex flex-1 flex-col pl-[220px] overflow-hidden">
+      {/* Content area — offset by sidebar on desktop, full width on mobile */}
+      <div className="flex flex-1 flex-col md:pl-[220px] overflow-hidden">
         <TopBar user={user} />
         <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-6xl px-8 py-6">
+          <div className="mx-auto w-full max-w-6xl px-4 pt-4 pb-24 md:px-8 md:py-6">
             {children}
           </div>
         </main>
       </div>
+
+      {/* Bottom nav — mobile only */}
+      <BottomNav />
     </div>
   )
 }
