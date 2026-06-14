@@ -39,7 +39,7 @@ function CalculatorShell({ children }: { children: React.ReactNode }) {
             transition: storeReady ? "opacity 0.1s ease" : "none",
           }}
         >
-          {children}
+          {storeReady && children}
         </div>
       </AppShell>
       <CommandPalette />
