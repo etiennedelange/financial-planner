@@ -21,7 +21,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { PageHeader } from "@/components/ui/page-header"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
-import { AccountSheet } from "@/components/accounts/account-sheet"
+import { AccountFormDialog } from "@/components/accounts/account-form-dialog"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { formatCurrency } from "@/lib/utils/currency"
 import { TFSA_LIMITS_CONFIG } from "@/lib/constants/tax-year.config"
@@ -553,7 +553,7 @@ export function AccountsPage() {
     }))
   )
 
-  const [sheetOpen, setSheetOpen] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(false)
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
 
   const totalBalance = useMemo(() => accounts.reduce((s, a) => s + a.currentBalance, 0), [accounts])
@@ -590,12 +590,12 @@ export function AccountsPage() {
 
   const handleAddClick = () => {
     setEditingAccount(null)
-    setSheetOpen(true)
+    setDialogOpen(true)
   }
 
   const handleEditClick = (account: Account) => {
     setEditingAccount(account)
-    setSheetOpen(true)
+    setDialogOpen(true)
   }
 
   const handleSubmit = (data: Omit<Account, "id">) => {
@@ -610,9 +610,9 @@ export function AccountsPage() {
     return (
       <>
         <EmptyStateV3 onAdd={handleAddClick} />
-        <AccountSheet
-          open={sheetOpen}
-          onOpenChange={setSheetOpen}
+        <AccountFormDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
           account={editingAccount}
           onSubmit={handleSubmit}
         />
@@ -655,9 +655,9 @@ export function AccountsPage() {
         Add another account
       </button>
 
-      <AccountSheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
+      <AccountFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
         account={editingAccount}
         onSubmit={handleSubmit}
       />
