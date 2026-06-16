@@ -43,8 +43,6 @@ export async function fetchExpenses(
   sessionId: string
 ): Promise<{ groups: ExpenseGroup[]; expenses: Expense[] }> {
   const supabase = createClient()
-  if (!supabase) return { groups: [], expenses: [] }
-
   const [{ data: groupData, error: ge }, { data: expData, error: ee }] = await Promise.all([
     supabase.from("expense_groups").select("*").eq("session_id", sessionId).order("sort_order"),
     supabase.from("expenses").select("*").eq("session_id", sessionId).order("sort_order"),
@@ -63,7 +61,6 @@ export async function fetchExpenses(
 
 export async function upsertGroup(sessionId: string, group: ExpenseGroup): Promise<void> {
   const supabase = createClient()
-  if (!supabase) return
   const { error } = await supabase.from("expense_groups").upsert(
     { id: group.id, session_id: sessionId, name: group.name, color: group.color, sort_order: group.sortOrder },
     { onConflict: "id" }
@@ -73,7 +70,6 @@ export async function upsertGroup(sessionId: string, group: ExpenseGroup): Promi
 
 export async function upsertExpense(sessionId: string, expense: Expense): Promise<void> {
   const supabase = createClient()
-  if (!supabase) return
   const { error } = await supabase.from("expenses").upsert(
     {
       id: expense.id,
@@ -89,18 +85,29 @@ export async function upsertExpense(sessionId: string, expense: Expense): Promis
   if (error) throw error
 }
 
+// ─── bulk delete ──────────────────────────────────────────────────────────────
+
+// Deletes all expense groups for a session in one query.
+// ON DELETE CASCADE on expenses means no separate expense delete is needed.
+export async function clearAllExpenses(sessionId: string): Promise<void> {
+  const supabase = createClient()
+  const { error } = await supabase
+    .from("expense_groups")
+    .delete()
+    .eq("session_id", sessionId)
+  if (error) throw error
+}
+
 // ─── delete ───────────────────────────────────────────────────────────────────
 
 export async function deleteGroup(id: string): Promise<void> {
   const supabase = createClient()
-  if (!supabase) return
   const { error } = await supabase.from("expense_groups").delete().eq("id", id)
   if (error) throw error
 }
 
 export async function deleteExpense(id: string): Promise<void> {
   const supabase = createClient()
-  if (!supabase) return
   const { error } = await supabase.from("expenses").delete().eq("id", id)
   if (error) throw error
 }
@@ -178,9 +185,6 @@ export function generateSeedData(): { groups: ExpenseGroup[]; expenses: Expense[
 export async function seedExpenses(sessionId: string): Promise<{ groups: ExpenseGroup[]; expenses: Expense[] }> {
   const supabase = createClient()
   const { groups: seedGroups, expenses: seedExpensesList } = generateSeedData()
-
-  if (!supabase) return { groups: seedGroups, expenses: seedExpensesList }
-
   const groupRows = seedGroups.map((g) => ({ id: g.id, session_id: sessionId, name: g.name, color: g.color, sort_order: g.sortOrder }))
   const expenseRows = seedExpensesList.map((e) => ({
     id: e.id, session_id: sessionId, group_id: e.groupId,

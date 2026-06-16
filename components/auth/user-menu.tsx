@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { createClient, SUPABASE_ENABLED } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
 import { LogIn, LogOut, Settings, User as UserIcon } from "lucide-react"
 import { useState } from "react"
@@ -28,9 +28,7 @@ export function UserMenu({ user }: UserMenuProps) {
   const email = user?.email
 
   async function handleSignOut() {
-    if (!SUPABASE_ENABLED) return
-    const supabase = createClient()!
-    await supabase.auth.signOut()
+    await createClient().auth.signOut()
   }
 
   if (isAnon) {

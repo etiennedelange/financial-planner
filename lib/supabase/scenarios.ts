@@ -18,7 +18,6 @@ export interface ScenarioMeta {
 
 export async function listScenarios(userId: string): Promise<ScenarioMeta[]> {
   const supabase = createClient()
-  if (!supabase) return []
   const { data, error } = await supabase
     .from("scenarios")
     .select("id, name, updated_at")
@@ -30,7 +29,6 @@ export async function listScenarios(userId: string): Promise<ScenarioMeta[]> {
 
 export async function fetchScenario(scenarioId: string): Promise<ScenarioData | null> {
   const supabase = createClient()
-  if (!supabase) return null
   const { data, error } = await supabase
     .from("scenarios")
     .select("*")
@@ -55,7 +53,6 @@ export async function createScenario(
   data: ScenarioData
 ): Promise<string> {
   const supabase = createClient()
-  if (!supabase) throw new Error("Supabase not available")
   const { data: row, error } = await supabase
     .from("scenarios")
     .insert({
@@ -75,7 +72,6 @@ export async function createScenario(
 
 export async function updateScenario(scenarioId: string, data: ScenarioData): Promise<void> {
   const supabase = createClient()
-  if (!supabase) return
   const { error } = await supabase
     .from("scenarios")
     .update({
@@ -91,7 +87,6 @@ export async function updateScenario(scenarioId: string, data: ScenarioData): Pr
 
 export async function renameScenario(scenarioId: string, name: string): Promise<void> {
   const supabase = createClient()
-  if (!supabase) return
   const { error } = await supabase
     .from("scenarios")
     .update({ name })
@@ -101,7 +96,6 @@ export async function renameScenario(scenarioId: string, name: string): Promise<
 
 export async function deleteScenario(scenarioId: string): Promise<void> {
   const supabase = createClient()
-  if (!supabase) return
   const { error } = await supabase.from("scenarios").delete().eq("id", scenarioId)
   if (error) throw error
 }

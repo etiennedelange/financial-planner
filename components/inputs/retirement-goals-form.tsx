@@ -33,6 +33,8 @@ export function RetirementGoalsForm() {
   const {
     register,
     watch,
+    reset,
+    getValues,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -49,6 +51,26 @@ export function RetirementGoalsForm() {
     })
     return () => subscription.unsubscribe()
   }, [watch, setRetirementGoals])
+
+  useEffect(() => {
+    const current = getValues()
+    if (
+      current.desiredMonthlyIncome === retirementGoals.desiredMonthlyIncome &&
+      current.legacyAmount === retirementGoals.legacyAmount
+    ) {
+      return
+    }
+
+    reset({
+      desiredMonthlyIncome: retirementGoals.desiredMonthlyIncome,
+      legacyAmount: retirementGoals.legacyAmount,
+    })
+  }, [
+    retirementGoals.desiredMonthlyIncome,
+    retirementGoals.legacyAmount,
+    reset,
+    getValues,
+  ])
 
   // Calculate inflation-adjusted income at retirement (uses inflation from Market Assumptions)
   const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge

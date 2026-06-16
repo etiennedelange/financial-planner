@@ -69,11 +69,6 @@ describe('fetchAccounts', () => {
     expect(result[0].tfsaContributionsToDate).toBe(80000)
   })
 
-  it('returns empty array when supabase unavailable', async () => {
-    vi.mocked(createClient).mockReturnValue(null)
-    expect(await fetchAccounts('scenario-1')).toEqual([])
-  })
-
   it('throws on error', async () => {
     mockSupabase(null, { message: 'DB error', code: '500' })
     await expect(fetchAccounts('scenario-1')).rejects.toMatchObject({ message: 'DB error' })
@@ -83,11 +78,6 @@ describe('fetchAccounts', () => {
 describe('upsertAccount', () => {
   it('resolves without error on success', async () => {
     mockSupabase(null, null)
-    await expect(upsertAccount(baseAccount, 'scenario-1')).resolves.toBeUndefined()
-  })
-
-  it('no-ops when supabase unavailable', async () => {
-    vi.mocked(createClient).mockReturnValue(null)
     await expect(upsertAccount(baseAccount, 'scenario-1')).resolves.toBeUndefined()
   })
 
@@ -105,12 +95,6 @@ describe('cloneAccounts', () => {
     expect(cloned[0].id).not.toBe(baseAccount.id)
     expect(cloned[0].name).toBe(baseAccount.name)
     expect(cloned[0].currentBalance).toBe(baseAccount.currentBalance)
-  })
-
-  it('returns empty array when supabase unavailable', async () => {
-    vi.mocked(createClient).mockReturnValue(null)
-    const cloned = await cloneAccounts([baseAccount], 'new-scenario-id')
-    expect(cloned).toEqual([])
   })
 
   it('clones multiple accounts all with distinct new IDs', async () => {
@@ -135,8 +119,4 @@ describe('deleteAccount', () => {
     await expect(deleteAccount('acc-1')).resolves.toBeUndefined()
   })
 
-  it('no-ops when supabase unavailable', async () => {
-    vi.mocked(createClient).mockReturnValue(null)
-    await expect(deleteAccount('acc-1')).resolves.toBeUndefined()
-  })
 })

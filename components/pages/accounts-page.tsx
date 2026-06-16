@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Plus, ChevronDown, AlertTriangle, Pencil, MoreHorizontal } from "lucide-react"
+import { Plus, ChevronDown, AlertTriangle, Pencil, MoreHorizontal, Database } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 import { AccountFormDialog } from "@/components/accounts/account-form-dialog"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { SEED_ACCOUNTS } from "@/lib/dev/seed-accounts"
 import { formatCurrency } from "@/lib/utils/currency"
 import { TFSA_LIMITS_CONFIG } from "@/lib/constants/tax-year.config"
 import { cn } from "@/lib/utils"
@@ -93,6 +94,7 @@ interface PortfolioHeroProps {
   accountCount: number
   segments: AllocationSegment[]
   onAddClick: () => void
+  onSeedClick: () => void
 }
 
 function PortfolioHero({
@@ -102,13 +104,18 @@ function PortfolioHero({
   accountCount,
   segments,
   onAddClick,
+  onSeedClick,
 }: PortfolioHeroProps) {
   const nonZero = segments.filter((s) => s.pct > 0.5)
   const showReturn = totalBalance > 0
 
   return (
     <div className="space-y-5 pb-2">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Button size="sm" variant="outline" onClick={onSeedClick}>
+          <Database className="mr-1.5 h-3.5 w-3.5" />
+          Seed
+        </Button>
         <Button size="sm" onClick={onAddClick}>
           <Plus className="mr-1.5 h-3.5 w-3.5" />
           Add Account
@@ -505,7 +512,7 @@ function GroupSectionV3({ type, accounts, totalBalance, onEdit, onDelete }: Grou
 
 // ─── Empty state ──────────────────────────────────────────────────────────────────
 
-function EmptyStateV3({ onAdd }: { onAdd: () => void }) {
+function EmptyStateV3({ onAdd, onSeed }: { onAdd: () => void; onSeed: () => void }) {
   return (
     <div className="space-y-4 pt-4">
       <div className="flex items-center justify-between">
@@ -521,10 +528,16 @@ function EmptyStateV3({ onAdd }: { onAdd: () => void }) {
             projections independently.
           </p>
         </div>
-        <Button onClick={onAdd}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Your First Account
-        </Button>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <Button variant="outline" onClick={onSeed}>
+            <Database className="mr-2 h-4 w-4" />
+            Seed Accounts
+          </Button>
+          <Button onClick={onAdd}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Your First Account
+          </Button>
+        </div>
       </div>
     </div>
   )
@@ -533,10 +546,11 @@ function EmptyStateV3({ onAdd }: { onAdd: () => void }) {
 // ─── Main component ───────────────────────────────────────────────────────────────
 
 export function AccountsPage() {
-  const { accounts, addAccount, updateAccount, removeAccount } = useCalculatorStore(
+  const { accounts, addAccount, seedAccounts, updateAccount, removeAccount } = useCalculatorStore(
     useShallow((state) => ({
       accounts: state.accounts,
       addAccount: state.addAccount,
+      seedAccounts: state.seedAccounts,
       updateAccount: state.updateAccount,
       removeAccount: state.removeAccount,
     }))
@@ -595,10 +609,16 @@ export function AccountsPage() {
     }
   }
 
+  const handleSeedClick = () => {
+    setEditingAccount(null)
+    setDialogOpen(false)
+    seedAccounts(SEED_ACCOUNTS)
+  }
+
   if (!accounts.length) {
     return (
       <>
-        <EmptyStateV3 onAdd={handleAddClick} />
+        <EmptyStateV3 onAdd={handleAddClick} onSeed={handleSeedClick} />
         <AccountFormDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
@@ -619,6 +639,7 @@ export function AccountsPage() {
         accountCount={accounts.length}
         segments={allocationSegments}
         onAddClick={handleAddClick}
+        onSeedClick={handleSeedClick}
       />
 
       {/* Type-grouped card grids */}

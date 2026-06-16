@@ -13,7 +13,6 @@ import {
   AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useExpensesStore } from "@/lib/store/expenses-store"
-import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { formatCurrency } from "@/lib/utils/currency"
 import { GROUP_COLOR_OPTIONS, type Expense, type ExpenseGroup } from "@/types/expenses"
 import { cn } from "@/lib/utils"
@@ -538,14 +537,6 @@ export function ExpensesPage() {
       clearAll: s.clearAll,
     }))
   )
-
-  const setRetirementGoals = useCalculatorStore((s) => s.setRetirementGoals)
-
-  // Auto-sync retirement total → desiredMonthlyIncome
-  useEffect(() => {
-    const retirementTotal = expenses.filter((e) => e.inRetirement).reduce((s, e) => s + e.amount, 0)
-    setRetirementGoals({ desiredMonthlyIncome: retirementTotal })
-  }, [expenses, setRetirementGoals])
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [addingToGroupId, setAddingToGroupId] = useState<string | null>(null)

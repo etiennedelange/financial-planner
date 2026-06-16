@@ -1,6 +1,6 @@
 "use client"
 
-import { createClient, SUPABASE_ENABLED } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/client"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
@@ -54,18 +54,16 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   }
 
   async function handleSignIn(values: EmailPasswordForm) {
-    if (!SUPABASE_ENABLED) return
     setLoading(true); setMessage(null)
-    const { error } = await createClient()!.auth.signInWithPassword({ email: values.email, password: values.password })
+    const { error } = await createClient().auth.signInWithPassword({ email: values.email, password: values.password })
     setLoading(false)
     if (error) setMessage({ type: "error", text: error.message })
     else onClose()
   }
 
   async function handleSignUp(values: EmailPasswordForm) {
-    if (!SUPABASE_ENABLED) return
     setLoading(true); setMessage(null)
-    const supabase = createClient()!
+    const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     const isAnon = user?.is_anonymous ?? false
 
@@ -87,9 +85,8 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   }
 
   async function handleReset(values: EmailForm) {
-    if (!SUPABASE_ENABLED) return
     setLoading(true); setMessage(null)
-    const { error } = await createClient()!.auth.resetPasswordForEmail(values.email, {
+    const { error } = await createClient().auth.resetPasswordForEmail(values.email, {
       redirectTo: `${window.location.origin}/auth/callback?next=/calculator`,
     })
     setLoading(false)

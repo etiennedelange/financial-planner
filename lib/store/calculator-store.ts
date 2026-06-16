@@ -22,6 +22,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
 let scenarioSyncTimer: ReturnType<typeof setTimeout> | null = null
+let dbSyncInProgress = false
 
 function scheduleScenarioSync() {
   if (scenarioSyncTimer) clearTimeout(scenarioSyncTimer)
@@ -53,6 +54,7 @@ interface CalculatorState {
   setSessionId: (id: string) => void
   syncFromDb: () => Promise<void>
   addAccount: (account: Account) => void
+  seedAccounts: (accounts: Omit<Account, "id">[]) => void
   updateAccount: (id: string, account: Partial<Account>) => void
   removeAccount: (id: string) => void
   setPersonalInfo: (info: Partial<PersonalInfo>) => void
@@ -122,46 +124,65 @@ export const useCalculatorStore = create<CalculatorState>()(
       setSessionId: (id) => set({ sessionId: id }),
 
       syncFromDb: async () => {
+        if (dbSyncInProgress) return
+        dbSyncInProgress = true
         const { sessionId, activeScenarioId } = useCalculatorStore.getState()
-        if (!sessionId) return
+        if (!sessionId) { dbSyncInProgress = false; return }
 
-        const scenarios = await listScenarios(sessionId)
+        try {
+          const scenarios = await listScenarios(sessionId)
 
-        if (scenarios.length === 0) {
-          // First sign-in: create scenario from current local state, clone local accounts into it
-          const state = useCalculatorStore.getState()
-          const scenarioId = await createScenario(sessionId, "My Plan", {
-            personalInfo: state.personalInfo,
-            retirementGoals: state.retirementGoals,
-            assumptions: state.assumptions,
-            drawdownConfig: state.drawdownConfig,
-            displayMode: state.displayMode,
-          })
-          // Persist local accounts under the new scenario
-          const cloned = await cloneAccounts(state.accounts, scenarioId)
-          const meta: ScenarioMeta = { id: scenarioId, name: "My Plan", updatedAt: new Date().toISOString() }
-          set({ activeScenarioId: scenarioId, scenarioList: [meta], accounts: cloned })
-          return
+          if (scenarios.length === 0) {
+            // First sign-in: create scenario from current local state, clone local accounts into it
+            const state = useCalculatorStore.getState()
+            const scenarioId = await createScenario(sessionId, "My Plan", {
+              personalInfo: state.personalInfo,
+              retirementGoals: state.retirementGoals,
+              assumptions: state.assumptions,
+              drawdownConfig: state.drawdownConfig,
+              displayMode: state.displayMode,
+            })
+            // Persist local accounts under the new scenario
+            const cloned = await cloneAccounts(state.accounts, scenarioId)
+            const meta: ScenarioMeta = { id: scenarioId, name: "My Plan", updatedAt: new Date().toISOString() }
+            set({ activeScenarioId: scenarioId, scenarioList: [meta], accounts: cloned })
+            return
+          }
+
+          // Pick previously active scenario if still exists, else most recent
+          const targetId =
+            activeScenarioId && scenarios.find((s) => s.id === activeScenarioId)
+              ? activeScenarioId
+              : scenarios[0].id
+
+          const [data, accounts] = await Promise.all([
+            fetchScenario(targetId),
+            fetchAccounts(targetId),
+          ])
+          if (data) set({ ...data, accounts, activeScenarioId: targetId, scenarioList: scenarios })
+          else set({ accounts: [], activeScenarioId: scenarios[0].id, scenarioList: scenarios })
+        } finally {
+          dbSyncInProgress = false
         }
-
-        // Pick previously active scenario if still exists, else most recent
-        const targetId =
-          activeScenarioId && scenarios.find((s) => s.id === activeScenarioId)
-            ? activeScenarioId
-            : scenarios[0].id
-
-        const [data, accounts] = await Promise.all([
-          fetchScenario(targetId),
-          fetchAccounts(targetId),
-        ])
-        if (data) set({ ...data, accounts, activeScenarioId: targetId, scenarioList: scenarios })
-        else set({ accounts: [], activeScenarioId: scenarios[0].id, scenarioList: scenarios })
       },
 
       addAccount: (account) => {
         set((state) => ({ accounts: [...state.accounts, account] }))
         const { activeScenarioId } = useCalculatorStore.getState()
         if (activeScenarioId) upsertAccount(account, activeScenarioId).catch(console.error)
+      },
+
+      seedAccounts: (accounts) => {
+        const seeded = accounts.map((account) => ({ ...account, id: crypto.randomUUID() }))
+        const { activeScenarioId, accounts: existingAccounts } = useCalculatorStore.getState()
+
+        set({ accounts: seeded })
+
+        if (activeScenarioId) {
+          Promise.all(existingAccounts.map((account) => deleteAccount(account.id)))
+            .then(() => Promise.all(seeded.map((account) => upsertAccount(account, activeScenarioId))))
+            .catch(console.error)
+        }
       },
 
       updateAccount: (id, updates) => {

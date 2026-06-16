@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { createClient, SUPABASE_ENABLED } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
 import {
   LayoutDashboard,
@@ -51,9 +51,7 @@ export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
   const email = user?.email
 
   async function handleSignOut() {
-    if (!SUPABASE_ENABLED) return
-    const supabase = createClient()!
-    await supabase.auth.signOut()
+    await createClient().auth.signOut()
   }
 
   return (

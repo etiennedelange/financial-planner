@@ -1,11 +1,17 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { notFound } from "next/navigation"
 
+// Proxies local Supabase through Next.js so the browser can reach it in
+// remote devcontainer environments (Codespaces) where port 54321 isn't
+// accessible from the user's browser. Only active in development.
+// To use: set NEXT_PUBLIC_SUPABASE_URL=http://localhost:3000/supabase
 const SUPABASE_INTERNAL_URL = "http://127.0.0.1:54321"
 
 async function proxy(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
+  if (process.env.NODE_ENV !== "development") notFound()
   const { path } = await params
   const search = request.nextUrl.search
   const targetUrl = `${SUPABASE_INTERNAL_URL}/${path.join("/")}${search}`

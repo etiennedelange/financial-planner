@@ -11,13 +11,14 @@ vi.mock('@/lib/supabase/expenses', () => ({
   upsertExpense: vi.fn(async () => {}),
   deleteGroup: vi.fn(async () => {}),
   deleteExpense: vi.fn(async () => {}),
+  clearAllExpenses: vi.fn(async () => {}),
 }))
 
 vi.mock('zustand/middleware', () => ({
   persist: (fn: unknown) => fn,
 }))
 
-import { generateSeedData, seedExpenses, deleteGroup, deleteExpense } from '@/lib/supabase/expenses'
+import { generateSeedData, seedExpenses, deleteGroup, deleteExpense, clearAllExpenses, upsertGroup, upsertExpense } from '@/lib/supabase/expenses'
 
 let useExpensesStore: typeof import('./expenses-store').useExpensesStore
 
@@ -68,7 +69,7 @@ describe('loadSampleData', () => {
   it('fires DB sync in the background when sessionId is set', () => {
     useExpensesStore.setState({ sessionId: 'session-abc' })
     useExpensesStore.getState().loadSampleData()
-    expect(seedExpenses).toHaveBeenCalledWith('session-abc')
+    expect(clearAllExpenses).toHaveBeenCalledWith('session-abc')
   })
 
   it('works when called multiple times', () => {
@@ -92,17 +93,15 @@ describe('clearAll', () => {
     useExpensesStore.getState().loadSampleData()
     vi.clearAllMocks()
     useExpensesStore.getState().clearAll()
-    expect(deleteGroup).not.toHaveBeenCalled()
-    expect(deleteExpense).not.toHaveBeenCalled()
+    expect(clearAllExpenses).not.toHaveBeenCalled()
   })
 
-  it('calls DB delete for each group and expense when sessionId is set', () => {
+  it('calls bulk DB delete when sessionId is set', () => {
     useExpensesStore.setState({ sessionId: 'session-abc' })
     useExpensesStore.getState().loadSampleData()
     vi.clearAllMocks()
     useExpensesStore.getState().clearAll()
-    expect(deleteGroup).toHaveBeenCalledWith('g-seed')
-    expect(deleteExpense).toHaveBeenCalledWith('e-seed')
+    expect(clearAllExpenses).toHaveBeenCalledWith('session-abc')
   })
 })
 
@@ -152,5 +151,56 @@ describe('toggleRetirement', () => {
     expect(useExpensesStore.getState().expenses[0].inRetirement).toBe(false)
     useExpensesStore.getState().toggleRetirement(expenses[0].id)
     expect(useExpensesStore.getState().expenses[0].inRetirement).toBe(true)
+  })
+})
+
+describe('expense DB sync — FK safety', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('upserts group before expense to satisfy FK constraint', async () => {
+    useExpensesStore.setState({ sessionId: 'session-xyz' })
+    useExpensesStore.getState().addGroup('Food', '#22c55e')
+    const { groups } = useExpensesStore.getState()
+    useExpensesStore.getState().addExpense(groups[0].id, 'Groceries', 5000)
+
+    const callOrder: string[] = []
+    ;(upsertGroup as ReturnType<typeof vi.fn>).mockImplementation(async () => { callOrder.push('group') })
+    ;(upsertExpense as ReturnType<typeof vi.fn>).mockImplementation(async () => { callOrder.push('expense') })
+
+    await vi.runAllTimersAsync()
+
+    // upsertGroup must appear before upsertExpense in the call order
+    const lastExpense = callOrder.lastIndexOf('expense')
+    const lastGroupBeforeExpense = callOrder.slice(0, lastExpense).lastIndexOf('group')
+    expect(lastExpense).toBeGreaterThan(-1)
+    expect(lastGroupBeforeExpense).toBeGreaterThan(-1)
+  })
+
+  it('upserts group before expense when updating an expense', async () => {
+    useExpensesStore.setState({ sessionId: 'session-xyz' })
+    useExpensesStore.getState().addGroup('Food', '#22c55e')
+    const { groups } = useExpensesStore.getState()
+    useExpensesStore.getState().addExpense(groups[0].id, 'Groceries', 5000)
+
+    // Flush pending timers and reset call tracking before the update
+    await vi.runAllTimersAsync()
+    vi.clearAllMocks()
+
+    const callOrder: string[] = []
+    ;(upsertGroup as ReturnType<typeof vi.fn>).mockImplementation(async () => { callOrder.push('group') })
+    ;(upsertExpense as ReturnType<typeof vi.fn>).mockImplementation(async () => { callOrder.push('expense') })
+
+    const { expenses } = useExpensesStore.getState()
+    useExpensesStore.getState().updateExpense(expenses[0].id, { amount: 7500 })
+
+    await vi.runAllTimersAsync()
+
+    expect(callOrder).toEqual(['group', 'expense'])
+    expect(useExpensesStore.getState().expenses[0].amount).toBe(7500)
   })
 })

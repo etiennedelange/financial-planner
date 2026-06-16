@@ -1,6 +1,6 @@
 "use client"
 
-import { createClient, SUPABASE_ENABLED } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/client"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
@@ -49,9 +49,8 @@ export function ProfileModal({ open, onClose, user }: ProfileModalProps) {
   const pwForm = useForm<PasswordForm>({ resolver: zodResolver(passwordSchema) })
 
   async function handleEmailChange(values: EmailForm) {
-    if (!SUPABASE_ENABLED) return
     setEmailLoading(true); setEmailMsg(null)
-    const { error } = await createClient()!.auth.updateUser({ email: values.email })
+    const { error } = await createClient().auth.updateUser({ email: values.email })
     setEmailLoading(false)
     if (error) setEmailMsg({ type: "error", text: error.message })
     else {
@@ -61,9 +60,8 @@ export function ProfileModal({ open, onClose, user }: ProfileModalProps) {
   }
 
   async function handlePasswordChange(values: PasswordForm) {
-    if (!SUPABASE_ENABLED) return
     setPwLoading(true); setPwMsg(null)
-    const { error } = await createClient()!.auth.updateUser({ password: values.password })
+    const { error } = await createClient().auth.updateUser({ password: values.password })
     setPwLoading(false)
     if (error) setPwMsg({ type: "error", text: error.message })
     else {

@@ -14,6 +14,8 @@ import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { SA_DEFAULTS_DISPLAY } from "@/lib/constants/defaults"
 import { useShallow } from "zustand/react/shallow"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
+import { COMPOUNDING_METHOD_DESCRIPTIONS, COMPOUNDING_METHOD_LABELS } from "@/types"
+import type { CompoundingMethod } from "@/types"
 
 const schema = z.object({
   equityReturn: z.number().min(0).max(30),
@@ -64,7 +66,8 @@ export function AssumptionsForm() {
 
   const handleReset = useCallback(() => {
     reset(saDefaults)
-  }, [reset]) // eslint-disable-line react-hooks/exhaustive-deps
+    setAssumptions({ compoundingMethod: "nominal" })
+  }, [reset, setAssumptions]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const subscription = watch((value) => {
@@ -175,6 +178,36 @@ export function AssumptionsForm() {
                 {...register("bondVolatility", { valueAsNumber: true })}
               />
             </div>
+          </div>
+        </div>
+
+        <div className="space-y-4 border-t border-border pt-4">
+          <div className="flex items-center gap-2">
+            <SectionLabel>Return Calculation Method</SectionLabel>
+            <InfoTooltip
+              content="Controls how annual returns are converted to monthly returns for projections. Compound is actuarially precise; nominal matches Excel-style monthly division."
+              side="right"
+            />
+          </div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {(["nominal", "compound"] as CompoundingMethod[]).map((method) => (
+              <Button
+                key={method}
+                type="button"
+                variant={assumptions.compoundingMethod === method ? "default" : "outline"}
+                className="h-auto min-h-16 justify-start whitespace-normal px-3 py-3 text-left"
+                onClick={() => setAssumptions({ compoundingMethod: method })}
+              >
+                <span className="space-y-1">
+                  <span className="block text-sm font-medium">
+                    {COMPOUNDING_METHOD_LABELS[method]}
+                  </span>
+                  <span className="block text-xs font-normal leading-5 opacity-80">
+                    {COMPOUNDING_METHOD_DESCRIPTIONS[method]}
+                  </span>
+                </span>
+              </Button>
+            ))}
           </div>
         </div>
 

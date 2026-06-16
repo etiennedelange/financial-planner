@@ -7,6 +7,7 @@ import {
   upsertExpense,
   deleteGroup,
   deleteExpense,
+  clearAllExpenses,
   seedExpenses as seedExpensesDb,
   generateSeedData,
 } from "@/lib/supabase/expenses"
@@ -26,11 +27,17 @@ function scheduleGroupSync(group: ExpenseGroup, sessionId: string) {
   }, 800))
 }
 
-function scheduleExpenseSync(expense: Expense, sessionId: string) {
+function scheduleExpenseSync(expense: Expense, group: ExpenseGroup, sessionId: string) {
   const existing = expenseSyncTimers.get(expense.id)
   if (existing) clearTimeout(existing)
-  expenseSyncTimers.set(expense.id, setTimeout(() => {
-    upsertExpense(sessionId, expense).catch(console.error)
+  expenseSyncTimers.set(expense.id, setTimeout(async () => {
+    try {
+      // Group must exist before expense due to FK constraint — upsert is idempotent.
+      await upsertGroup(sessionId, group)
+      await upsertExpense(sessionId, expense)
+    } catch (e) {
+      console.error(e)
+    }
     expenseSyncTimers.delete(expense.id)
   }, 800))
 }
@@ -74,37 +81,31 @@ export const useExpensesStore = create<ExpensesState>()(
         try {
           set({ sessionId })
           const { groups, expenses } = await fetchExpenses(sessionId)
-          if (groups.length === 0) {
-            const seeded = await seedExpensesDb(sessionId)
-            set({ groups: seeded.groups, expenses: seeded.expenses })
-          } else {
-            set({ groups, expenses })
-          }
+          set({ groups, expenses })
         } finally {
           syncInProgress = false
         }
       },
 
       loadSampleData: () => {
+        const { sessionId } = get()
         const { groups: seedGroups, expenses: seedExpensesList } = generateSeedData()
         set({ groups: seedGroups, expenses: seedExpensesList })
-        // Fire-and-forget DB sync; don't block the UI on it
-        const { sessionId } = get()
+        // Clear existing DB rows then seed — fire-and-forget, don't block UI.
+        // clearAllExpenses cascades to expenses via FK, so one query is enough.
         if (sessionId) {
-          seedExpensesDb(sessionId).catch(console.error)
+          clearAllExpenses(sessionId)
+            .then(() => seedExpensesDb(sessionId))
+            .catch(console.error)
         }
       },
 
       clearAll: () => {
-        const { groups, expenses, sessionId } = get()
+        const { sessionId } = get()
         set({ groups: [], expenses: [] })
+        // One bulk delete; cascade removes all child expenses automatically.
         if (sessionId) {
-          const groupIds = groups.map((g) => g.id)
-          const expenseIds = expenses.map((e) => e.id)
-          Promise.all([
-            ...groupIds.map((id) => deleteGroup(id)),
-            ...expenseIds.map((id) => deleteExpense(id)),
-          ]).catch(console.error)
+          clearAllExpenses(sessionId).catch(console.error)
         }
       },
 
@@ -148,7 +149,10 @@ export const useExpensesStore = create<ExpensesState>()(
           sortOrder: get().expenses.filter((e) => e.groupId === groupId).length,
         }
         set((s) => ({ expenses: [...s.expenses, expense] }))
-        if (sessionId) scheduleExpenseSync(expense, sessionId)
+        if (sessionId) {
+          const group = get().groups.find((g) => g.id === groupId)
+          if (group) scheduleExpenseSync(expense, group, sessionId)
+        }
       },
 
       updateExpense: (id, patch) => {
@@ -157,7 +161,10 @@ export const useExpensesStore = create<ExpensesState>()(
           expenses: s.expenses.map((e) => (e.id === id ? { ...e, ...patch } : e)),
         }))
         const updated = get().expenses.find((e) => e.id === id)
-        if (updated && sessionId) scheduleExpenseSync(updated, sessionId)
+        if (updated && sessionId) {
+          const group = get().groups.find((g) => g.id === updated.groupId)
+          if (group) scheduleExpenseSync(updated, group, sessionId)
+        }
       },
 
       removeExpense: (id) => {
@@ -173,7 +180,10 @@ export const useExpensesStore = create<ExpensesState>()(
           ),
         }))
         const updated = get().expenses.find((e) => e.id === id)
-        if (updated && sessionId) scheduleExpenseSync(updated, sessionId)
+        if (updated && sessionId) {
+          const group = get().groups.find((g) => g.id === updated.groupId)
+          if (group) scheduleExpenseSync(updated, group, sessionId)
+        }
       },
 
       setMonthlyIncome: (income) => set({ monthlyIncome: income }),

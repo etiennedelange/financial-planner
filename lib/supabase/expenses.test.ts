@@ -53,12 +53,6 @@ const expense: Expense = { id: 'e-1', groupId: 'g-1', name: 'Verband', amount: 1
 beforeEach(() => vi.clearAllMocks())
 
 describe('fetchExpenses', () => {
-  it('returns empty arrays when supabase is disabled', async () => {
-    vi.mocked(createClient).mockReturnValue(null)
-    const result = await fetchExpenses('s-1')
-    expect(result).toEqual({ groups: [], expenses: [] })
-  })
-
   it('maps group rows to ExpenseGroup objects', async () => {
     mockSupabaseForFetch({ data: [groupRow], error: null }, { data: [], error: null })
     const result = await fetchExpenses('s-1')
@@ -87,11 +81,6 @@ describe('fetchExpenses', () => {
 })
 
 describe('upsertGroup', () => {
-  it('does nothing when supabase is disabled', async () => {
-    vi.mocked(createClient).mockReturnValue(null)
-    await expect(upsertGroup('s-1', group)).resolves.toBeUndefined()
-  })
-
   it('calls upsert with correct row shape', async () => {
     const chain = mockSupabase(null)
     await upsertGroup('s-1', group)
@@ -103,11 +92,6 @@ describe('upsertGroup', () => {
 })
 
 describe('upsertExpense', () => {
-  it('does nothing when supabase is disabled', async () => {
-    vi.mocked(createClient).mockReturnValue(null)
-    await expect(upsertExpense('s-1', expense)).resolves.toBeUndefined()
-  })
-
   it('calls upsert with correct row shape', async () => {
     const chain = mockSupabase(null)
     await upsertExpense('s-1', expense)
@@ -135,13 +119,6 @@ describe('deleteExpense', () => {
 })
 
 describe('seedExpenses', () => {
-  it('returns seed data when supabase is disabled (offline mode)', async () => {
-    vi.mocked(createClient).mockReturnValue(null)
-    const result = await seedExpenses('s-1')
-    expect(result.groups).toHaveLength(12)
-    expect(result.expenses).toHaveLength(32)
-  })
-
   it('returns 12 groups and 32 expenses', async () => {
     const chain = mockSupabase(null)
     const result = await seedExpenses('s-1')
@@ -153,7 +130,7 @@ describe('seedExpenses', () => {
     mockSupabase(null)
     const result = await seedExpenses('s-1')
     const housing = result.groups.find((g) => g.name === 'Housing')
-    expect(housing?.color).toBe('#ef4444')
+    expect(housing?.color).toBe('#fca5a5')
   })
 
   it('seeds Verband with inRetirement=false', async () => {

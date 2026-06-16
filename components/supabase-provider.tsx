@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react"
 import type { User } from "@supabase/supabase-js"
-import { createClient, SUPABASE_ENABLED } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/client"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useExpensesStore } from "@/lib/store/expenses-store"
 
@@ -27,12 +27,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
-    if (!SUPABASE_ENABLED) {
-      setIsLoaded(true)
-      return
-    }
-
-    const supabase = createClient()!
+    const supabase = createClient()
 
     async function init() {
       try {
