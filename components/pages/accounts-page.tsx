@@ -62,22 +62,20 @@ const TYPE_SHORT: Record<AccountType, string> = {
   discretionary: "Disc",
 }
 
-const TYPE_CHART_VAR: Record<AccountType, string | null> = {
-  retirement_annuity: "--chart-1",
-  pension_fund: "--chart-4",
-  preservation_fund: "--chart-3",
-  tfsa: "--chart-2",
-  discretionary: null,
+const TYPE_COLOR: Record<AccountType, string> = {
+  retirement_annuity: "#818cf8", // indigo-400
+  pension_fund: "#60a5fa",       // blue-400
+  preservation_fund: "#2dd4bf",  // teal-400
+  tfsa: "#4ade80",               // green-400
+  discretionary: "#fb923c",      // orange-400
 }
 
 function typeColor(type: AccountType): string {
-  const v = TYPE_CHART_VAR[type]
-  return v ? `hsl(var(${v}))` : "hsl(var(--muted-foreground) / 0.4)"
+  return TYPE_COLOR[type]
 }
 
 function typeBg(type: AccountType): string {
-  const v = TYPE_CHART_VAR[type]
-  return v ? `hsl(var(${v}) / 0.12)` : "hsl(var(--muted))"
+  return `${TYPE_COLOR[type]}26` // 15% opacity
 }
 
 // ─── Portfolio hero ─────────────────────────────────────────────────────────────

@@ -132,7 +132,7 @@ export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
           <span className="tracking-wide">Settings</span>
         </Link>
 
-        <div className={cn(!isLoaded && "invisible")}>
+        <div>
           {isAnon ? (
             <button
               onClick={() => setAuthModalOpen(true)}
