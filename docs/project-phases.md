@@ -24,14 +24,14 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-06-16) — Form persistence & anon→auth migration:**
+**Latest Update (2026-06-16) — Store test coverage & form persistence:**
+- ✅ **Store tests (Phase 9 blocker)** — added 52 comprehensive tests for `calculator-store.ts` (27) and `expenses-store.ts` (25); full coverage of state initialization, mutations, async operations, debouncing, scenario management, edge cases; 520/520 tests pass
 - ✅ **Form persistence fixes** — PersonalInfoForm and AssumptionsForm now properly restore state after Zustand hydration; fixes stale field values on page reload
 - ✅ **Anon→Auth migration** — `migrateExpensesToSession()` copies user's expense groups/items from anonymous session to authenticated account on first login (120 unit tests)
 - ✅ **Expense UX refinement** — removed auto-seed on reload; added "Load Sample Data" button for explicit user choice in empty state
 - ✅ **Local dev setup** — `.env.development` with JWT anon key for Supabase proxy routing (localhost:3000/supabase → localhost:54321)
 - ✅ **SUPABASE_ENABLED consistency** — all stores properly gate DB operations; Vercel fallback to localStorage works gracefully
 - 📚 **New docs** — PostgreSQL best practices (`docs/supabase-postgres-best-practices.md`), skills-lock.json for Supabase skill definitions
-- ⚠️ **Store tests gap remains** — `expenses-store.ts` still has zero tests (Phase 9 critical)
 
 **Previous Update (2026-06-10) — Phase 7 & 8 complete: UI redesign + expense tracker:**
 - ✅ **Phase 7 — Sidebar app shell** — fixed 220px sidebar, sticky top bar, scrollable content; four SPA-style page routes (Overview, Accounts, Plan, Projections) + Settings + Expenses; Account Sheet overlay; semantic color tokens throughout

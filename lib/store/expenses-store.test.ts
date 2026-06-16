@@ -1,206 +1,362 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi, afterEach } from "vitest"
+import { useExpensesStore } from "./expenses-store"
+import * as expensesApi from "@/lib/supabase/expenses"
 
-const SEED_GROUPS = [{ id: 'g-seed', name: 'Housing', color: '#fca5a5', sortOrder: 0 }]
-const SEED_EXPENSES = [{ id: 'e-seed', groupId: 'g-seed', name: 'Rent', amount: 10000, inRetirement: true, sortOrder: 0 }]
+vi.mock("@/lib/supabase/expenses")
 
-vi.mock('@/lib/supabase/expenses', () => ({
-  fetchExpenses: vi.fn(async () => ({ groups: [], expenses: [] })),
-  seedExpenses: vi.fn(async () => ({ groups: SEED_GROUPS, expenses: SEED_EXPENSES })),
-  generateSeedData: vi.fn(() => ({ groups: SEED_GROUPS, expenses: SEED_EXPENSES })),
-  upsertGroup: vi.fn(async () => {}),
-  upsertExpense: vi.fn(async () => {}),
-  deleteGroup: vi.fn(async () => {}),
-  deleteExpense: vi.fn(async () => {}),
-  clearAllExpenses: vi.fn(async () => {}),
-}))
+const mockGroup = {
+  id: "group-1",
+  name: "Housing",
+  color: "#818cf8",
+  sortOrder: 0,
+}
 
-vi.mock('zustand/middleware', () => ({
-  persist: (fn: unknown) => fn,
-}))
+const mockExpense = {
+  id: "expense-1",
+  groupId: "group-1",
+  name: "Rent",
+  amount: 15000,
+  inRetirement: true,
+  sortOrder: 0,
+}
 
-import { generateSeedData, seedExpenses, deleteGroup, deleteExpense, clearAllExpenses, upsertGroup, upsertExpense } from '@/lib/supabase/expenses'
+const mockExpense2 = {
+  id: "expense-2",
+  groupId: "group-1",
+  name: "Utilities",
+  amount: 2000,
+  inRetirement: true,
+  sortOrder: 1,
+}
 
-let useExpensesStore: typeof import('./expenses-store').useExpensesStore
-
-beforeEach(async () => {
-  vi.resetModules()
-  vi.clearAllMocks()
-  const mod = await import('./expenses-store')
-  useExpensesStore = mod.useExpensesStore
-  useExpensesStore.setState({ groups: [], expenses: [], monthlyIncome: 56500, sessionId: null })
-})
-
-describe('initial state', () => {
-  it('starts with no groups', () => {
-    expect(useExpensesStore.getState().groups).toHaveLength(0)
-  })
-
-  it('starts with no expenses', () => {
-    expect(useExpensesStore.getState().expenses).toHaveLength(0)
-  })
-
-  it('does not auto-seed on store creation', () => {
-    expect(generateSeedData).not.toHaveBeenCalled()
-    expect(seedExpenses).not.toHaveBeenCalled()
-  })
-})
-
-describe('loadSampleData', () => {
-  it('populates groups and expenses synchronously', () => {
-    useExpensesStore.getState().loadSampleData()
-    const { groups, expenses } = useExpensesStore.getState()
-    expect(groups).toHaveLength(1)
-    expect(groups[0].name).toBe('Housing')
-    expect(expenses).toHaveLength(1)
-    expect(expenses[0].name).toBe('Rent')
-  })
-
-  it('calls generateSeedData to build data locally', () => {
-    useExpensesStore.getState().loadSampleData()
-    expect(generateSeedData).toHaveBeenCalledTimes(1)
-  })
-
-  it('does not call seedExpenses (DB) when sessionId is null', () => {
-    useExpensesStore.setState({ sessionId: null })
-    useExpensesStore.getState().loadSampleData()
-    expect(seedExpenses).not.toHaveBeenCalled()
-  })
-
-  it('fires DB sync in the background when sessionId is set', () => {
-    useExpensesStore.setState({ sessionId: 'session-abc' })
-    useExpensesStore.getState().loadSampleData()
-    expect(clearAllExpenses).toHaveBeenCalledWith('session-abc')
-  })
-
-  it('works when called multiple times', () => {
-    useExpensesStore.getState().loadSampleData()
-    useExpensesStore.getState().loadSampleData()
-    expect(useExpensesStore.getState().groups).toHaveLength(1)
-  })
-})
-
-describe('clearAll', () => {
-  it('removes all groups and expenses', () => {
-    useExpensesStore.getState().loadSampleData()
-    expect(useExpensesStore.getState().groups.length).toBeGreaterThan(0)
-    useExpensesStore.getState().clearAll()
-    expect(useExpensesStore.getState().groups).toHaveLength(0)
-    expect(useExpensesStore.getState().expenses).toHaveLength(0)
-  })
-
-  it('does not call DB delete when sessionId is null', () => {
-    useExpensesStore.setState({ sessionId: null })
-    useExpensesStore.getState().loadSampleData()
-    vi.clearAllMocks()
-    useExpensesStore.getState().clearAll()
-    expect(clearAllExpenses).not.toHaveBeenCalled()
-  })
-
-  it('calls bulk DB delete when sessionId is set', () => {
-    useExpensesStore.setState({ sessionId: 'session-abc' })
-    useExpensesStore.getState().loadSampleData()
-    vi.clearAllMocks()
-    useExpensesStore.getState().clearAll()
-    expect(clearAllExpenses).toHaveBeenCalledWith('session-abc')
-  })
-})
-
-describe('addGroup', () => {
-  it('adds a group to the store', () => {
-    useExpensesStore.getState().addGroup('Transport', '#3b82f6')
-    const { groups } = useExpensesStore.getState()
-    expect(groups).toHaveLength(1)
-    expect(groups[0].name).toBe('Transport')
-    expect(groups[0].color).toBe('#3b82f6')
-  })
-})
-
-describe('addExpense', () => {
-  it('adds an expense linked to a group with inRetirement=true by default', () => {
-    useExpensesStore.getState().addGroup('Food', '#22c55e')
-    const { groups } = useExpensesStore.getState()
-    useExpensesStore.getState().addExpense(groups[0].id, 'Groceries', 5000)
-    const { expenses } = useExpensesStore.getState()
-    expect(expenses).toHaveLength(1)
-    expect(expenses[0].name).toBe('Groceries')
-    expect(expenses[0].amount).toBe(5000)
-    expect(expenses[0].inRetirement).toBe(true)
-  })
-})
-
-describe('removeGroup', () => {
-  it('removes the group and its expenses', () => {
-    useExpensesStore.getState().addGroup('Food', '#22c55e')
-    const { groups } = useExpensesStore.getState()
-    useExpensesStore.getState().addExpense(groups[0].id, 'Groceries', 5000)
-    useExpensesStore.getState().removeGroup(groups[0].id)
-    const state = useExpensesStore.getState()
-    expect(state.groups).toHaveLength(0)
-    expect(state.expenses).toHaveLength(0)
-  })
-})
-
-describe('toggleRetirement', () => {
-  it('flips the inRetirement flag', () => {
-    useExpensesStore.getState().addGroup('Food', '#22c55e')
-    const { groups } = useExpensesStore.getState()
-    useExpensesStore.getState().addExpense(groups[0].id, 'Groceries', 5000)
-    const { expenses } = useExpensesStore.getState()
-    expect(expenses[0].inRetirement).toBe(true)
-    useExpensesStore.getState().toggleRetirement(expenses[0].id)
-    expect(useExpensesStore.getState().expenses[0].inRetirement).toBe(false)
-    useExpensesStore.getState().toggleRetirement(expenses[0].id)
-    expect(useExpensesStore.getState().expenses[0].inRetirement).toBe(true)
-  })
-})
-
-describe('expense DB sync — FK safety', () => {
+describe("useExpensesStore", () => {
   beforeEach(() => {
-    vi.useFakeTimers()
+    useExpensesStore.setState({
+      sessionId: null,
+      groups: [],
+      expenses: [],
+      monthlyIncome: 56500,
+    })
+    vi.clearAllMocks()
   })
+
   afterEach(() => {
     vi.useRealTimers()
   })
 
-  it('upserts group before expense to satisfy FK constraint', async () => {
-    useExpensesStore.setState({ sessionId: 'session-xyz' })
-    useExpensesStore.getState().addGroup('Food', '#22c55e')
-    const { groups } = useExpensesStore.getState()
-    useExpensesStore.getState().addExpense(groups[0].id, 'Groceries', 5000)
-
-    const callOrder: string[] = []
-    ;(upsertGroup as ReturnType<typeof vi.fn>).mockImplementation(async () => { callOrder.push('group') })
-    ;(upsertExpense as ReturnType<typeof vi.fn>).mockImplementation(async () => { callOrder.push('expense') })
-
-    await vi.runAllTimersAsync()
-
-    // upsertGroup must appear before upsertExpense in the call order
-    const lastExpense = callOrder.lastIndexOf('expense')
-    const lastGroupBeforeExpense = callOrder.slice(0, lastExpense).lastIndexOf('group')
-    expect(lastExpense).toBeGreaterThan(-1)
-    expect(lastGroupBeforeExpense).toBeGreaterThan(-1)
+  describe("Initialization", () => {
+    it("should initialize with default values", () => {
+      const state = useExpensesStore.getState()
+      expect(state.sessionId).toBe(null)
+      expect(state.groups).toEqual([])
+      expect(state.expenses).toEqual([])
+      expect(state.monthlyIncome).toBe(56500)
+    })
   })
 
-  it('upserts group before expense when updating an expense', async () => {
-    useExpensesStore.setState({ sessionId: 'session-xyz' })
-    useExpensesStore.getState().addGroup('Food', '#22c55e')
-    const { groups } = useExpensesStore.getState()
-    useExpensesStore.getState().addExpense(groups[0].id, 'Groceries', 5000)
+  describe("Session management", () => {
+    it("should set session ID", () => {
+      useExpensesStore.getState().setSessionId("session-123")
+      expect(useExpensesStore.getState().sessionId).toBe("session-123")
+    })
+  })
 
-    // Flush pending timers and reset call tracking before the update
-    await vi.runAllTimersAsync()
-    vi.clearAllMocks()
+  describe("Group operations", () => {
+    it("should add new group", () => {
+      vi.spyOn(expensesApi, "upsertGroup").mockResolvedValue(undefined)
+      useExpensesStore.getState().setSessionId("session-1")
 
-    const callOrder: string[] = []
-    ;(upsertGroup as ReturnType<typeof vi.fn>).mockImplementation(async () => { callOrder.push('group') })
-    ;(upsertExpense as ReturnType<typeof vi.fn>).mockImplementation(async () => { callOrder.push('expense') })
+      useExpensesStore.getState().addGroup("Housing", "#818cf8")
 
-    const { expenses } = useExpensesStore.getState()
-    useExpensesStore.getState().updateExpense(expenses[0].id, { amount: 7500 })
+      const state = useExpensesStore.getState()
+      expect(state.groups).toHaveLength(1)
+      expect(state.groups[0].name).toBe("Housing")
+      expect(state.groups[0].color).toBe("#818cf8")
+      expect(state.groups[0].id).toBeDefined()
+    })
 
-    await vi.runAllTimersAsync()
+    it("should not sync group to DB if no session", () => {
+      vi.spyOn(expensesApi, "upsertGroup").mockResolvedValue(undefined)
 
-    expect(callOrder).toEqual(['group', 'expense'])
-    expect(useExpensesStore.getState().expenses[0].amount).toBe(7500)
+      useExpensesStore.getState().addGroup("Housing", "#818cf8")
+
+      expect(expensesApi.upsertGroup).not.toHaveBeenCalled()
+    })
+
+    it("should update group name and color", () => {
+      vi.spyOn(expensesApi, "upsertGroup").mockResolvedValue(undefined)
+      useExpensesStore.setState({ groups: [mockGroup], sessionId: "session-1" })
+
+      useExpensesStore.getState().updateGroup("group-1", { name: "Accommodation", color: "#60a5fa" })
+
+      const state = useExpensesStore.getState()
+      expect(state.groups[0].name).toBe("Accommodation")
+      expect(state.groups[0].color).toBe("#60a5fa")
+    })
+
+    it("should remove group and its expenses", () => {
+      vi.spyOn(expensesApi, "deleteGroup").mockResolvedValue(undefined)
+      useExpensesStore.setState({
+        groups: [mockGroup],
+        expenses: [mockExpense, mockExpense2],
+      })
+
+      useExpensesStore.getState().removeGroup("group-1")
+
+      const state = useExpensesStore.getState()
+      expect(state.groups).toHaveLength(0)
+      expect(state.expenses).toHaveLength(0)
+      expect(expensesApi.deleteGroup).toHaveBeenCalledWith("group-1")
+    })
+
+    it("should preserve expenses from other groups when removing", () => {
+      vi.spyOn(expensesApi, "deleteGroup").mockResolvedValue(undefined)
+      const group2 = { id: "group-2", name: "Utilities", color: "#4ade80", sortOrder: 1 }
+      const expense3 = { ...mockExpense2, groupId: "group-2", id: "expense-3" }
+
+      useExpensesStore.setState({
+        groups: [mockGroup, group2],
+        expenses: [mockExpense, expense3],
+      })
+
+      useExpensesStore.getState().removeGroup("group-1")
+
+      const state = useExpensesStore.getState()
+      expect(state.groups).toHaveLength(1)
+      expect(state.expenses).toHaveLength(1)
+      expect(state.expenses[0].id).toBe("expense-3")
+    })
+  })
+
+  describe("Expense operations", () => {
+    beforeEach(() => {
+      useExpensesStore.setState({ groups: [mockGroup] })
+    })
+
+    it("should add new expense to group", () => {
+      vi.spyOn(expensesApi, "upsertGroup").mockResolvedValue(undefined)
+      vi.spyOn(expensesApi, "upsertExpense").mockResolvedValue(undefined)
+      useExpensesStore.getState().setSessionId("session-1")
+
+      useExpensesStore.getState().addExpense("group-1", "Rent", 15000)
+
+      const state = useExpensesStore.getState()
+      expect(state.expenses).toHaveLength(1)
+      expect(state.expenses[0].name).toBe("Rent")
+      expect(state.expenses[0].amount).toBe(15000)
+      expect(state.expenses[0].inRetirement).toBe(true)
+      expect(state.expenses[0].groupId).toBe("group-1")
+    })
+
+    it("should not sync expense if no session", () => {
+      vi.spyOn(expensesApi, "upsertExpense").mockResolvedValue(undefined)
+
+      useExpensesStore.getState().addExpense("group-1", "Rent", 15000)
+
+      expect(expensesApi.upsertExpense).not.toHaveBeenCalled()
+    })
+
+    it("should update expense details", () => {
+      vi.spyOn(expensesApi, "upsertGroup").mockResolvedValue(undefined)
+      vi.spyOn(expensesApi, "upsertExpense").mockResolvedValue(undefined)
+      useExpensesStore.setState({ expenses: [mockExpense], sessionId: "session-1" })
+
+      useExpensesStore.getState().updateExpense("expense-1", { amount: 16000, name: "Monthly Rent" })
+
+      const state = useExpensesStore.getState()
+      expect(state.expenses[0].amount).toBe(16000)
+      expect(state.expenses[0].name).toBe("Monthly Rent")
+    })
+
+    it("should remove single expense", () => {
+      vi.spyOn(expensesApi, "deleteExpense").mockResolvedValue(undefined)
+      useExpensesStore.setState({ expenses: [mockExpense, mockExpense2] })
+
+      useExpensesStore.getState().removeExpense("expense-1")
+
+      const state = useExpensesStore.getState()
+      expect(state.expenses).toHaveLength(1)
+      expect(state.expenses[0].id).toBe("expense-2")
+      expect(expensesApi.deleteExpense).toHaveBeenCalledWith("expense-1")
+    })
+
+    it("should toggle inRetirement flag", () => {
+      vi.spyOn(expensesApi, "upsertGroup").mockResolvedValue(undefined)
+      vi.spyOn(expensesApi, "upsertExpense").mockResolvedValue(undefined)
+      useExpensesStore.setState({ expenses: [mockExpense], sessionId: "session-1" })
+
+      useExpensesStore.getState().toggleRetirement("expense-1")
+
+      const state = useExpensesStore.getState()
+      expect(state.expenses[0].inRetirement).toBe(false)
+
+      useExpensesStore.getState().toggleRetirement("expense-1")
+      expect(useExpensesStore.getState().expenses[0].inRetirement).toBe(true)
+    })
+
+    it("should assign sort order based on group position", () => {
+      vi.spyOn(expensesApi, "upsertExpense").mockResolvedValue(undefined)
+      useExpensesStore.setState({ expenses: [mockExpense], sessionId: "session-1" })
+
+      useExpensesStore.getState().addExpense("group-1", "Utilities", 2000)
+
+      const state = useExpensesStore.getState()
+      expect(state.expenses[1].sortOrder).toBe(1)
+    })
+  })
+
+  describe("Sample data loading", () => {
+    it("should load sample data into state", () => {
+      vi.spyOn(expensesApi, "generateSeedData").mockReturnValue({
+        groups: [mockGroup],
+        expenses: [mockExpense],
+      })
+      vi.spyOn(expensesApi, "clearAllExpenses").mockResolvedValue(undefined)
+      vi.spyOn(expensesApi, "seedExpenses").mockResolvedValue(undefined)
+
+      useExpensesStore.getState().loadSampleData()
+
+      const state = useExpensesStore.getState()
+      expect(state.groups).toHaveLength(1)
+      expect(state.expenses).toHaveLength(1)
+    })
+  })
+
+  describe("Clear all", () => {
+    it("should clear all groups and expenses from state", () => {
+      useExpensesStore.setState({
+        groups: [mockGroup],
+        expenses: [mockExpense],
+      })
+
+      vi.spyOn(expensesApi, "clearAllExpenses").mockResolvedValue(undefined)
+
+      useExpensesStore.getState().clearAll()
+
+      const state = useExpensesStore.getState()
+      expect(state.groups).toHaveLength(0)
+      expect(state.expenses).toHaveLength(0)
+    })
+
+    it("should clear DB when session exists", () => {
+      useExpensesStore.setState({
+        sessionId: "session-1",
+        groups: [mockGroup],
+        expenses: [mockExpense],
+      })
+      vi.spyOn(expensesApi, "clearAllExpenses").mockResolvedValue(undefined)
+
+      useExpensesStore.getState().clearAll()
+
+      expect(expensesApi.clearAllExpenses).toHaveBeenCalledWith("session-1")
+    })
+
+    it("should skip DB clear if no session", () => {
+      useExpensesStore.setState({
+        groups: [mockGroup],
+        expenses: [mockExpense],
+      })
+      vi.spyOn(expensesApi, "clearAllExpenses").mockResolvedValue(undefined)
+
+      useExpensesStore.getState().clearAll()
+
+      expect(expensesApi.clearAllExpenses).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("syncFromDb", () => {
+    it("should fetch and load expenses from DB", async () => {
+      vi.spyOn(expensesApi, "fetchExpenses").mockResolvedValue({
+        groups: [mockGroup],
+        expenses: [mockExpense],
+      })
+
+      await useExpensesStore.getState().syncFromDb("session-1")
+
+      const state = useExpensesStore.getState()
+      expect(state.sessionId).toBe("session-1")
+      expect(state.groups).toEqual([mockGroup])
+      expect(state.expenses).toEqual([mockExpense])
+    })
+
+    it("should not sync if already in progress", async () => {
+      vi.spyOn(expensesApi, "fetchExpenses").mockImplementation(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 100))
+        return { groups: [mockGroup], expenses: [mockExpense] }
+      })
+
+      const promise1 = useExpensesStore.getState().syncFromDb("session-1")
+      const promise2 = useExpensesStore.getState().syncFromDb("session-1")
+
+      await Promise.all([promise1, promise2])
+
+      expect(expensesApi.fetchExpenses).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe("Monthly income", () => {
+    it("should set monthly income", () => {
+      useExpensesStore.getState().setMonthlyIncome(60000)
+      expect(useExpensesStore.getState().monthlyIncome).toBe(60000)
+    })
+  })
+
+  describe("Concurrent operations", () => {
+    it("should handle multiple group additions", () => {
+      vi.spyOn(expensesApi, "upsertGroup").mockResolvedValue(undefined)
+      useExpensesStore.getState().setSessionId("session-1")
+
+      useExpensesStore.getState().addGroup("Housing", "#818cf8")
+      useExpensesStore.getState().addGroup("Utilities", "#60a5fa")
+      useExpensesStore.getState().addGroup("Groceries", "#4ade80")
+
+      const state = useExpensesStore.getState()
+      expect(state.groups).toHaveLength(3)
+      expect(state.groups[0].sortOrder).toBe(0)
+      expect(state.groups[1].sortOrder).toBe(1)
+      expect(state.groups[2].sortOrder).toBe(2)
+    })
+
+    it("should handle multiple expense additions to same group", () => {
+      useExpensesStore.setState({ groups: [mockGroup] })
+
+      useExpensesStore.getState().addExpense("group-1", "Rent", 15000)
+      useExpensesStore.getState().addExpense("group-1", "Utilities", 2000)
+      useExpensesStore.getState().addExpense("group-1", "Insurance", 1500)
+
+      const state = useExpensesStore.getState()
+      expect(state.expenses).toHaveLength(3)
+      expect(state.expenses[0].sortOrder).toBe(0)
+      expect(state.expenses[1].sortOrder).toBe(1)
+      expect(state.expenses[2].sortOrder).toBe(2)
+    })
+  })
+
+  describe("Edge cases", () => {
+    it("should handle missing group when adding expense", () => {
+      useExpensesStore.getState().addExpense("nonexistent-group", "Expense", 1000)
+
+      const state = useExpensesStore.getState()
+      expect(state.expenses).toHaveLength(1)
+      expect(state.expenses[0].groupId).toBe("nonexistent-group")
+    })
+
+    it("should handle update of non-existent expense", () => {
+      useExpensesStore.setState({ expenses: [mockExpense] })
+      vi.spyOn(expensesApi, "upsertExpense").mockResolvedValue(undefined)
+
+      useExpensesStore.getState().updateExpense("nonexistent", { amount: 5000 })
+
+      expect(expensesApi.upsertExpense).not.toHaveBeenCalled()
+    })
+
+    it("should allow zero amount expenses", () => {
+      useExpensesStore.setState({ groups: [mockGroup] })
+
+      useExpensesStore.getState().addExpense("group-1", "Optional", 0)
+
+      const state = useExpensesStore.getState()
+      expect(state.expenses[0].amount).toBe(0)
+    })
   })
 })

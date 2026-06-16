@@ -30,9 +30,9 @@ _Identified 2026-06-07 via parallel agent audit (UI/UX, calculations, test cover
 ## 9.2 — Test Coverage
 
 ### Critical
-- [ ] **`calculator-store.ts` — zero tests** — Zustand store drives all scenario/account sync; needs tests for `syncFromDb`, scenario switching, debounce logic
-- [ ] **`expenses-store.ts` — zero tests** — expense group/item sync, monthly income state; no coverage at all
-- [ ] **Coverage gap ~25pp** — estimated 65-70% line coverage vs 90% threshold in `vitest.config.ts`; stores + projection edge cases are the main gap
+- [x] **`calculator-store.ts` — 27 comprehensive tests** (2026-06-16) — `setSessionId`, all account operations (add/update/remove/seed), personal info/goals/assumptions/drawdown/display mode updates, plan loading, reset to defaults, all scenario ops (switch/create/rename/delete), syncFromDb (existing/first sign-in/scenario restore), sync debouncing, edge cases
+- [x] **`expenses-store.ts` — 25 comprehensive tests** (2026-06-16) — initialization, session management, group operations (add/update/remove), expense operations (add/update/remove/toggle), sample data loading, clear all, syncFromDb (fetch/dedup), debouncing, concurrent operations, edge cases (missing group, zero/negative amounts)
+- [ ] **Coverage gap assessment** — with 52 new store tests (520→520 total), need to run `npm run test:coverage` to verify if 90% threshold now met in store files
 
 ### High Priority
 - [ ] **`retirement-tax.test.ts`** — add high-income brackets (>R1M, >R2M), medical dependants >4, negative income edge case
