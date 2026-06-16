@@ -5,7 +5,6 @@ import { PageCard } from "@/components/ui/page-card"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { exportPlan, parsePlanFile } from "@/lib/utils/plan-io"
 import { exportProjectionCsv } from "@/lib/utils/export-csv"
-import { PageHeader } from "@/components/ui/page-header"
 import { useTheme } from "next-themes"
 import {
   Download,
@@ -91,8 +90,6 @@ export function SettingsPage({ projection }: SettingsPageProps) {
   return (
     <div className="space-y-6">
       <input ref={importInputRef} type="file" accept=".json" className="sr-only" onChange={handleImportPlan} />
-      <PageHeader title="Settings" description="Display preferences, data export, and plan management." />
-
       {/* Display */}
       <PageCard label="Display" contentClassName="space-y-4">
           <div className="space-y-2">

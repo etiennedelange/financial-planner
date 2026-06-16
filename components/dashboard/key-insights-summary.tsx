@@ -8,6 +8,7 @@ import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import type { ProjectionResult } from "@/types"
 import { AlertCircle, Target, TrendingUp } from "lucide-react"
 import Link from "next/link"
+import { useMemo } from "react"
 
 interface KeyInsightsSummaryProps {
   projection: ProjectionResult | null
@@ -30,10 +31,48 @@ export function KeyInsightsSummary({
   inflationRate,
   monteCarloSuccessRate,
 }: KeyInsightsSummaryProps) {
-  if (!projection) {
+  const derived = useMemo(() => {
+    if (!projection) return null
+
+    const yearsToRetirement = retirementAge - currentAge
+    const monthlyIncome = currentMonthlyIncome || 1
+    const annualIncome = monthlyIncome * 12
+    const maxRaContribution = Math.min(annualIncome * SA_TAX_LIMITS.pensionRaDeductionRate, SA_TAX_LIMITS.pensionRaMaxDeduction)
+    const monthlyRaContribution = maxRaContribution / 12
+
+    const inflationMultiplier = Math.pow(1 + inflationRate / 100, yearsToRetirement)
+    const desiredIncomeAtRetirement = desiredMonthlyIncome * inflationMultiplier
+
+    const hasSuccessRate = monteCarloSuccessRate !== null && monteCarloSuccessRate !== undefined
+    const portfolioLastsUntilLifeExpectancy =
+      projection.portfolioDepletionAge === null || projection.portfolioDepletionAge >= lifeExpectancy
+
+    const isOnTrack = hasSuccessRate
+      ? monteCarloSuccessRate >= 70
+      : portfolioLastsUntilLifeExpectancy
+
+    const incomeReplacementRatio = Math.round(
+      (projection.monthlyIncomeAtRetirement / desiredIncomeAtRetirement) * 100
+    )
+
+    let onTrackDescription: string
+    if (hasSuccessRate) {
+      onTrackDescription = monteCarloSuccessRate >= 70
+        ? `${monteCarloSuccessRate.toFixed(0)}% success rate`
+        : `Only ${monteCarloSuccessRate.toFixed(0)}% success rate`
+    } else if (portfolioLastsUntilLifeExpectancy) {
+      onTrackDescription = "Portfolio lasts until life expectancy"
+    } else {
+      onTrackDescription = `Portfolio depletes at age ${projection.portfolioDepletionAge}`
+    }
+
+    return { monthlyRaContribution, isOnTrack, incomeReplacementRatio, onTrackDescription }
+  }, [projection, retirementAge, currentAge, currentMonthlyIncome, inflationRate, desiredMonthlyIncome, monteCarloSuccessRate, lifeExpectancy])
+
+  if (!projection || !derived) {
     return (
       <PageCard label="Key Insights" className="dashboard-card">
-        <div className="flex flex-col items-center gap-3 py-4 text-center">
+        <div className="flex min-h-[168px] flex-col items-center justify-center gap-3 text-center">
           <p className="text-sm text-muted-foreground">Configure your accounts and plan to see personalised insights here.</p>
           <Button asChild size="sm" variant="outline">
             <Link href="/calculator/accounts">Add accounts →</Link>
@@ -43,47 +82,7 @@ export function KeyInsightsSummary({
     )
   }
 
-  const yearsToRetirement = retirementAge - currentAge
-  const monthlyIncome = currentMonthlyIncome || 1 // Avoid division by zero
-  const annualIncome = monthlyIncome * 12
-  const maxRaContribution = Math.min(annualIncome * SA_TAX_LIMITS.pensionRaDeductionRate, SA_TAX_LIMITS.pensionRaMaxDeduction)
-  const monthlyRaContribution = maxRaContribution / 12
-
-  // Adjust desired income for inflation to compare in future terms
-  const inflationMultiplier = Math.pow(1 + inflationRate / 100, yearsToRetirement)
-  const desiredIncomeAtRetirement = desiredMonthlyIncome * inflationMultiplier
-
-  // On Track calculation - primary indicator is Monte Carlo success rate
-  // A plan is "on track" if:
-  // 1. Monte Carlo success rate >= 70% (funds last until life expectancy in most scenarios), OR
-  // 2. If no Monte Carlo data, portfolio doesn't deplete before life expectancy
-  const hasSuccessRate = monteCarloSuccessRate !== null && monteCarloSuccessRate !== undefined
-  const portfolioLastsUntilLifeExpectancy =
-    projection.portfolioDepletionAge === null || projection.portfolioDepletionAge >= lifeExpectancy
-
-  const isOnTrack = hasSuccessRate
-    ? monteCarloSuccessRate >= 70
-    : portfolioLastsUntilLifeExpectancy
-
-  // Calculate income replacement ratio using inflation-adjusted values
-  const incomeReplacementRatio = Math.round(
-    (projection.monthlyIncomeAtRetirement / desiredIncomeAtRetirement) * 100
-  )
-
-  // Determine On Track description
-  const getOnTrackDescription = (): string => {
-    if (hasSuccessRate) {
-      if (monteCarloSuccessRate >= 70) {
-        return `${monteCarloSuccessRate.toFixed(0)}% success rate`
-      } else {
-        return `Only ${monteCarloSuccessRate.toFixed(0)}% success rate`
-      }
-    }
-    if (portfolioLastsUntilLifeExpectancy) {
-      return "Portfolio lasts until life expectancy"
-    }
-    return `Portfolio depletes at age ${projection.portfolioDepletionAge}`
-  }
+  const { monthlyRaContribution, isOnTrack, incomeReplacementRatio, onTrackDescription } = derived
 
   const insights = [
     {
@@ -92,7 +91,7 @@ export function KeyInsightsSummary({
       icon: Target,
       badgeVariant: isOnTrack ? "success" : "warning",
       badgeLabel: isOnTrack ? "On Track" : "At Risk",
-      description: getOnTrackDescription(),
+      description: onTrackDescription,
     },
     {
       title: "Contribution Potential",

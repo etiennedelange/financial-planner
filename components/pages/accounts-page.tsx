@@ -19,7 +19,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { PageHeader } from "@/components/ui/page-header"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 import { AccountFormDialog } from "@/components/accounts/account-form-dialog"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
@@ -111,16 +110,12 @@ function PortfolioHero({
 
   return (
     <div className="space-y-5 pb-2">
-      <PageHeader
-        title="Accounts"
-        description="Your portfolio at a glance — balances, allocation, and contributions."
-        action={
-          <Button size="sm" onClick={onAddClick}>
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
-            Add Account
-          </Button>
-        }
-      />
+      <div className="flex justify-end">
+        <Button size="sm" onClick={onAddClick}>
+          <Plus className="mr-1.5 h-3.5 w-3.5" />
+          Add Account
+        </Button>
+      </div>
 
       {/* Hero balance — no container, raw typography */}
       <div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useCallback } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -8,7 +8,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PageCard } from "@/components/ui/page-card"
 import { SectionLabel } from "@/components/ui/section-label"
+import { Button } from "@/components/ui/button"
+import { RotateCcw } from "lucide-react"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { SA_DEFAULTS_DISPLAY } from "@/lib/constants/defaults"
 import { useShallow } from "zustand/react/shallow"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 
@@ -37,6 +40,7 @@ export function AssumptionsForm() {
   const {
     register,
     watch,
+    reset,
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -49,6 +53,19 @@ export function AssumptionsForm() {
     },
   })
 
+  const saDefaults = {
+    equityReturn: SA_DEFAULTS_DISPLAY.equityReturn,
+    bondReturn: SA_DEFAULTS_DISPLAY.bondReturn,
+    cashReturn: SA_DEFAULTS_DISPLAY.cashReturn,
+    equityVolatility: SA_DEFAULTS_DISPLAY.equityVolatility,
+    bondVolatility: SA_DEFAULTS_DISPLAY.bondVolatility,
+    inflationRate: SA_DEFAULTS_DISPLAY.inflation,
+  }
+
+  const handleReset = useCallback(() => {
+    reset(saDefaults)
+  }, [reset]) // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     const subscription = watch((value) => {
       if (value.equityReturn !== undefined) {
@@ -60,10 +77,23 @@ export function AssumptionsForm() {
     return () => subscription.unsubscribe()
   }, [watch, setAssumptions, setRetirementGoals])
 
+  const resetButton = (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={handleReset}
+      className="h-6 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground"
+    >
+      <RotateCcw className="h-3 w-3" />
+      SA defaults
+    </Button>
+  )
+
   return (
     <PageCard
       label="Market Assumptions"
       description="Reference values for asset class returns and inflation. Each account uses its own expected return setting. Volatility is used in Monte Carlo simulations."
+      trailing={resetButton}
       contentClassName="space-y-6"
     >
         <div className="space-y-4">

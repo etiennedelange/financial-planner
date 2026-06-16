@@ -150,9 +150,13 @@ export function PersonalInfoForm() {
               step="10000"
               {...register("annualIncome", { valueAsNumber: true })}
             />
-            {watchedValues.annualIncome > 0 && (
+            {watchedValues.annualIncome > 0 ? (
               <p className="text-xs text-muted-foreground">
                 {formatCurrency(watchedValues.annualIncome)} / year
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                R 0 / year — required for RA tax deduction calculations
               </p>
             )}
           </div>

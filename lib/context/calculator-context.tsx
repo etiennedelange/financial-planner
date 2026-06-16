@@ -12,12 +12,14 @@ interface CalculatorContextValue {
   projection: ProjectionResult | null
   simulationResult: SimulationResult | null
   isSimulating: boolean
+  isDeferred: boolean
 }
 
 const CalculatorContext = createContext<CalculatorContextValue>({
   projection: null,
   simulationResult: null,
   isSimulating: false,
+  isDeferred: false,
 })
 
 export function CalculatorProvider({ children }: { children: React.ReactNode }) {
@@ -50,13 +52,14 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
     pathname === "/calculator/overview"
   )
 
-  const isSimulating =
-    isWorkerRunning ||
+  const isDeferred =
     deferredAccounts !== accounts ||
     deferredPersonalInfo !== personalInfo ||
     deferredRetirementGoals !== retirementGoals ||
     deferredAssumptions !== assumptions ||
     deferredDrawdownConfig !== drawdownConfig
+
+  const isSimulating = isWorkerRunning || isDeferred
 
   const projection = useMemo(
     () =>
@@ -73,7 +76,7 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
   )
 
   return (
-    <CalculatorContext.Provider value={{ projection, simulationResult, isSimulating }}>
+    <CalculatorContext.Provider value={{ projection, simulationResult, isSimulating, isDeferred }}>
       {children}
     </CalculatorContext.Provider>
   )

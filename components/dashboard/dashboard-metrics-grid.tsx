@@ -6,11 +6,13 @@ import { formatCurrency } from "@/lib/utils/currency"
 import type { ProjectionResult, SimulationResult } from "@/types"
 import { Calendar, DollarSign, Gauge, Hourglass, Target, TrendingUp, Wallet } from "lucide-react"
 import Link from "next/link"
+import { useMemo } from "react"
 import { DashboardMetricCard } from "./dashboard-metric-card"
 
 interface DashboardMetricsGridProps {
   projection: ProjectionResult | null
   simulationResult: SimulationResult | null
+  isSimulating: boolean
   retirementAge: number
   currentAge: number
   lifeExpectancy: number
@@ -22,6 +24,7 @@ interface DashboardMetricsGridProps {
 export function DashboardMetricsGrid({
   projection,
   simulationResult,
+  isSimulating,
   retirementAge,
   currentAge,
   lifeExpectancy,
@@ -33,16 +36,104 @@ export function DashboardMetricsGrid({
 
   const yearsToRetirement = retirementAge - currentAge
 
-  if (!projection) {
-    const placeholders = [
-      { icon: Wallet, label: "Total Portfolio", value: totalCurrentBalance > 0 ? formatCurrency(totalCurrentBalance) : "--" },
-      { icon: Target, label: "Portfolio at Retirement", value: "--" },
-      { icon: TrendingUp, label: "Monthly Contributions", value: totalMonthlyContributions > 0 ? formatCurrency(totalMonthlyContributions) : "--" },
-      { icon: DollarSign, label: "Monthly Income", value: "--" },
-      { icon: Calendar, label: "Years to Retirement", value: yearsToRetirement > 0 ? yearsToRetirement : "--" },
-    ]
-    return (
-      <div className="space-y-3">
+  // Always build all 7 metrics. Simulation cards show "--" until results arrive.
+  // This keeps the grid structure fixed so Monte Carlo finishing never causes CLS.
+  const metrics = useMemo(() => {
+    const successRate = simulationResult?.successRate ?? null
+
+    const depletionValue = (() => {
+      if (!simulationResult) return isSimulating ? "…" : "--"
+      if (successRate !== null && successRate >= 50) return "Never"
+      const age = simulationResult.medianDepletionAge
+      return age ? `Age ${age}` : "Never"
+    })()
+
+    const depletionDescription = (() => {
+      if (!simulationResult) return isSimulating ? "Simulating…" : "Run simulation"
+      const sr = successRate ?? 0
+      const failureRate = 100 - sr
+      const depletionAge = simulationResult.medianDepletionAge
+      if (sr >= 50) {
+        return depletionAge && failureRate > 10
+          ? `${failureRate.toFixed(0)}% risk (median age ${depletionAge})`
+          : "Sustains through life expectancy"
+      }
+      const yearsUntilDepletion = depletionAge ? depletionAge - currentAge : null
+      return depletionAge
+        ? `${yearsUntilDepletion} years from now (${failureRate.toFixed(0)}% of scenarios)`
+        : "Sustains through life expectancy"
+    })()
+
+    return [
+      {
+        icon: Wallet,
+        label: "Total Portfolio",
+        value: totalCurrentBalance > 0 ? formatCurrency(totalCurrentBalance) : "--",
+        description: "Current balance",
+        tooltip: "Your total retirement savings across all accounts (RAs, Pension Funds, TFSAs, etc.). This is your starting point.",
+      },
+      {
+        icon: Target,
+        label: "Portfolio at Retirement",
+        value: projection
+          ? formatCurrency(projection.portfolioAtRetirement, displayMode, yearsToRetirement, inflationRate / 100)
+          : "--",
+        description: projection
+          ? `At age ${retirementAge}${displayMode === "real" ? " (today's value)" : ""}`
+          : `Target: age ${retirementAge}`,
+        tooltip: "Projected portfolio value when you retire. This is your 'nest egg' - the amount you'll have saved by retirement age.",
+      },
+      {
+        icon: TrendingUp,
+        label: "Monthly Contributions",
+        value: totalMonthlyContributions > 0 ? formatCurrency(totalMonthlyContributions) : "--",
+        description: "Total across all accounts",
+        tooltip: "Total monthly contributions across all retirement accounts. Increasing contributions significantly improves outcomes due to compound growth.",
+      },
+      {
+        icon: DollarSign,
+        label: "Monthly Income",
+        value: projection
+          ? formatCurrency(projection.monthlyIncomeAtRetirement, displayMode, yearsToRetirement, inflationRate / 100)
+          : "--",
+        description: projection
+          ? `At retirement${displayMode === "real" ? " (today's value)" : ""}`
+          : "Requires projection",
+        tooltip: "Monthly income your portfolio can support in retirement based on your withdrawal rate.",
+      },
+      {
+        icon: Calendar,
+        label: "Years to Retirement",
+        value: yearsToRetirement > 0 ? yearsToRetirement : "--",
+        description: `Currently age ${currentAge}`,
+      },
+      {
+        icon: Gauge,
+        label: "Plan Success Rate",
+        value: successRate !== null ? `${successRate.toFixed(0)}%` : isSimulating ? "…" : "--",
+        description: successRate !== null
+          ? successRate >= 90 ? "Excellent" : successRate >= 75 ? "Good" : successRate >= 60 ? "Fair" : "At Risk"
+          : isSimulating ? "Simulating…" : "Run simulation",
+        successRate: successRate ?? undefined,
+        tooltip: "Probability of successfully meeting your income goal throughout retirement. Based on 1,000 Monte Carlo simulations.",
+      },
+      {
+        icon: Hourglass,
+        label: "Portfolio Depletion",
+        value: depletionValue,
+        description: depletionDescription,
+        tooltip: successRate !== null && successRate >= 50
+          ? "When the majority of simulations succeed, 'Never' is the expected outcome. The description shows the risk percentage among scenarios that fail."
+          : "When the majority of simulations fail, this shows the median age at which your portfolio runs out. Increase contributions or adjust retirement age to improve this.",
+      },
+    ] as const
+  }, [projection, simulationResult, isSimulating, displayMode, yearsToRetirement, retirementAge, inflationRate, totalCurrentBalance, totalMonthlyContributions, currentAge])
+
+  const hasNoAccounts = !projection && totalCurrentBalance === 0 && totalMonthlyContributions === 0
+
+  return (
+    <div className="space-y-3">
+      {hasNoAccounts && (
         <div className="flex items-center justify-between rounded-lg border border-dashed border-border bg-muted/20 px-4 py-3">
           <div>
             <p className="text-sm font-medium text-foreground">Add accounts to see your projections</p>
@@ -52,145 +143,21 @@ export function DashboardMetricsGrid({
             <Link href="/calculator/accounts">Add accounts →</Link>
           </Button>
         </div>
-        <div className="dashboard-grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-          {placeholders.map((m) => (
-            <div key={m.label} className="dashboard-metric-card bg-card border border-border opacity-40">
-              <div className="flex flex-col h-full">
-                <div className="flex items-center gap-1 mb-2">
-                  <m.icon aria-hidden="true" className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                  <h3 className="text-xs font-medium text-muted-foreground truncate">{m.label}</h3>
-                </div>
-                <p className="text-lg md:text-xl font-bold text-foreground">{m.value}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+      )}
+      {/* Fixed 7-column grid — never changes structure, only values update */}
+      <div className="dashboard-grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
+        {metrics.map((metric) => (
+          <DashboardMetricCard
+            key={metric.label}
+            icon={metric.icon}
+            label={metric.label}
+            value={metric.value}
+            description={metric.description}
+            successRate={"successRate" in metric ? metric.successRate : undefined}
+            tooltip={"tooltip" in metric ? metric.tooltip : undefined}
+          />
+        ))}
       </div>
-    )
-  }
-  const yearsToLifeExpectancy = lifeExpectancy - currentAge
-
-  const successRate = simulationResult?.successRate ?? 0
-
-  const metrics: Array<{
-    icon: typeof Wallet
-    label: string
-    value: string | number
-    description: string
-    successRate?: number
-    tooltip?: string | React.ReactNode
-  }> = [
-    {
-      icon: Wallet,
-      label: "Total Portfolio",
-      value: formatCurrency(totalCurrentBalance),
-      description: "Current balance",
-      tooltip: "Your total retirement savings across all accounts (RAs, Pension Funds, TFSAs, etc.). This is your starting point.",
-    },
-    {
-      icon: Target,
-      label: "Portfolio at Retirement",
-      value: formatCurrency(
-        projection.portfolioAtRetirement,
-        displayMode,
-        yearsToRetirement,
-        inflationRate / 100
-      ),
-      description: `At age ${retirementAge}${displayMode === "real" ? " (today's value)" : ""}`,
-      tooltip: "Projected portfolio value when you retire. This is your 'nest egg' - the amount you'll have saved by retirement age. This projection assumes returns match expectations and you maintain your contribution schedule.",
-    },
-    {
-      icon: TrendingUp,
-      label: "Monthly Contributions",
-      value: formatCurrency(totalMonthlyContributions),
-      description: "Total across all accounts",
-      tooltip: "Total monthly contributions across all retirement accounts. Increasing contributions (or adding escalation) significantly improves your retirement outcomes due to compound growth.",
-    },
-    {
-      icon: DollarSign,
-      label: "Monthly Income",
-      value: formatCurrency(
-        projection.monthlyIncomeAtRetirement,
-        displayMode,
-        yearsToRetirement,
-        inflationRate / 100
-      ),
-      description: `At retirement${displayMode === "real" ? " (today's value)" : ""}`,
-      tooltip: "Monthly income your portfolio can support in retirement based on your withdrawal rate. Compare this to your desired monthly income goal to see if you're on track.",
-    },
-    {
-      icon: Calendar,
-      label: "Years to Retirement",
-      value: yearsToRetirement,
-      description: `Currently age ${currentAge}`,
-    },
-  ]
-
-  // Add success rate metric if simulation available
-  if (simulationResult) {
-    metrics.push({
-      icon: Gauge,
-      label: "Plan Success Rate",
-      value: `${successRate.toFixed(0)}%`,
-      description: successRate >= 90 ? "Excellent" : successRate >= 75 ? "Good" : successRate >= 60 ? "Fair" : "At Risk",
-      successRate: successRate,
-      tooltip: "Probability of successfully meeting your income goal throughout retirement. Based on 1,000 Monte Carlo simulations with random market returns. Higher success rates mean your plan is more resilient to market volatility and poor return sequences.",
-    })
-
-    // Add portfolio depletion metric
-    // Only show depletion age as primary metric when majority of runs fail
-    // When most runs succeed, "Never" is more accurate for expected outcome
-    const depletionAge = simulationResult.medianDepletionAge
-    const failureRate = 100 - successRate
-
-    let depletionValue: string
-    let depletionDescription: string
-
-    if (successRate >= 50) {
-      // Majority succeed - show "Never" as the expected outcome
-      depletionValue = "Never"
-      if (depletionAge && failureRate > 10) {
-        // But mention the risk if failure rate is notable
-        depletionDescription = `${failureRate.toFixed(0)}% risk of depletion (median age ${depletionAge})`
-      } else {
-        depletionDescription = "Portfolio sustains through life expectancy"
-      }
-    } else {
-      // Majority fail - show depletion age as primary
-      depletionValue = depletionAge ? `Age ${depletionAge}` : "Never"
-      const yearsUntilDepletion = depletionAge ? depletionAge - currentAge : null
-      depletionDescription = depletionAge
-        ? `${yearsUntilDepletion} years from now (${failureRate.toFixed(0)}% of scenarios)`
-        : "Portfolio sustains through life expectancy"
-    }
-
-    metrics.push({
-      icon: Hourglass,
-      label: "Portfolio Depletion",
-      value: depletionValue,
-      description: depletionDescription,
-      tooltip: successRate >= 50
-        ? "When the majority of simulations succeed, 'Never' represents the expected outcome. The description shows the risk percentage and median depletion age among scenarios that fail."
-        : "When the majority of simulations fail, this shows the median age at which your portfolio runs out across failing scenarios. Increase contributions, reduce withdrawal rate, or adjust retirement age to improve this.",
-    })
-  }
-
-  return (
-    <div className={metrics.length === 7
-      ? "dashboard-grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7"
-      : "dashboard-grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
-    }>
-      {metrics.map((metric) => (
-        <DashboardMetricCard
-          key={metric.label}
-          icon={metric.icon}
-          label={metric.label}
-          value={metric.value}
-          description={metric.description}
-          successRate={metric.successRate}
-          tooltip={metric.tooltip}
-        />
-      ))}
     </div>
   )
 }

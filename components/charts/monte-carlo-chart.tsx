@@ -11,6 +11,7 @@ import {
 import { formatCurrency } from "@/lib/utils/formatters"
 import type { SimulationResult } from "@/types"
 import { Activity, Loader2 } from "lucide-react"
+import { memo, useMemo } from "react"
 import {
   Area,
   AreaChart,
@@ -27,7 +28,15 @@ interface MonteCarloChartProps {
   isRunning?: boolean
 }
 
-export function MonteCarloChart({
+const chartConfig = {
+  p50: { label: "Median",         color: "hsl(var(--chart-1))" },
+  p75: { label: "Likely range",   color: "hsl(var(--chart-1))" },
+  p90: { label: "Possible range", color: "hsl(var(--chart-1))" },
+  p25: { label: "25th pct",       color: "hsl(var(--chart-1))" },
+  p10: { label: "10th pct",       color: "hsl(var(--chart-1))" },
+} satisfies ChartConfig
+
+export const MonteCarloChart = memo(function MonteCarloChart({
   simulationResult,
   currentAge,
   retirementAge,
@@ -85,37 +94,14 @@ export function MonteCarloChart({
 
   const { percentiles } = simulationResult
 
-  const chartConfig = {
-    p50: {
-      label: "Median",
-      color: "hsl(var(--chart-1))",
-    },
-    p75: {
-      label: "Likely range",
-      color: "hsl(var(--chart-1))",
-    },
-    p90: {
-      label: "Possible range",
-      color: "hsl(var(--chart-1))",
-    },
-    p25: {
-      label: "25th pct",
-      color: "hsl(var(--chart-1))",
-    },
-    p10: {
-      label: "10th pct",
-      color: "hsl(var(--chart-1))",
-    },
-  } satisfies ChartConfig
-
-  const data = percentiles.p50.map((_, index) => ({
+  const data = useMemo(() => percentiles.p50.map((_, index) => ({
     age: currentAge + index,
     p10: percentiles.p10[index],
     p25: percentiles.p25[index],
     p50: percentiles.p50[index],
     p75: percentiles.p75[index],
     p90: percentiles.p90[index],
-  }))
+  })), [percentiles, currentAge])
 
   return (
     <Card className="dashboard-card shadow-none" role="figure" aria-label={`Monte Carlo simulation: ${simulationResult.runs.length.toLocaleString()} scenarios showing probability ranges from age ${currentAge} to life expectancy`}>
@@ -188,6 +174,7 @@ export function MonteCarloChart({
               fill="url(#mcBand90)"
               stackId="1"
               dot={false}
+              isAnimationActive={false}
             />
             {/* Inner band: 25th–75th percentile */}
             <Area
@@ -197,6 +184,7 @@ export function MonteCarloChart({
               fill="url(#mcBand75)"
               stackId="2"
               dot={false}
+              isAnimationActive={false}
             />
             {/* Median line */}
             <Area
@@ -206,10 +194,11 @@ export function MonteCarloChart({
               strokeWidth={2}
               fill="url(#mcBand50)"
               dot={false}
+              isAnimationActive={false}
             />
           </AreaChart>
         </ChartContainer>
       </CardContent>
     </Card>
   )
-}
+})

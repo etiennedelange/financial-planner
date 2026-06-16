@@ -3,11 +3,12 @@
 import { Button } from "@/components/ui/button"
 import { BarChart2, ListChecks, Wallet } from "lucide-react"
 import Link from "next/link"
+import { memo } from "react"
 
 const STEPS = [
   {
     icon: Wallet,
-    label: "01",
+    step: "1",
     title: "Add accounts",
     description:
       "Enter your retirement accounts — RAs, pension funds, TFSAs, and discretionary investments — with their current balance and monthly contribution.",
@@ -15,7 +16,7 @@ const STEPS = [
   },
   {
     icon: ListChecks,
-    label: "02",
+    step: "2",
     title: "Configure your plan",
     description:
       "Set your retirement age, desired monthly income, inflation assumptions, and withdrawal rate to define what a successful retirement looks like for you.",
@@ -23,7 +24,7 @@ const STEPS = [
   },
   {
     icon: BarChart2,
-    label: "03",
+    step: "3",
     title: "Run the simulation",
     description:
       "Monte Carlo runs 1,000 market scenarios with randomised returns to calculate the probability of your portfolio funding your retirement goals.",
@@ -31,23 +32,21 @@ const STEPS = [
   },
 ]
 
-export function GettingStarted() {
+export const GettingStarted = memo(function GettingStarted() {
   return (
     <div className="border-t border-border/40 pt-6 pb-4">
-      <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/40 mb-5">
-        Getting started
-      </p>
+      <p className="text-xs text-muted-foreground/50 mb-5">Getting started</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 sm:divide-x sm:divide-border/30">
         {STEPS.map((step) => {
           const Icon = step.icon
           return (
             <div
-              key={step.label}
+              key={step.step}
               className="flex flex-col gap-2 py-5 sm:py-0 sm:px-7 first:sm:pl-0 last:sm:pr-0 border-b border-border/30 sm:border-b-0 last:border-b-0"
             >
               <div className="flex items-center gap-2 mb-0.5">
                 <span className="font-mono text-[10px] text-muted-foreground/30 tabular-nums">
-                  {step.label}
+                  {step.step}
                 </span>
                 <Icon className="h-3.5 w-3.5 text-muted-foreground/40" />
               </div>
@@ -71,4 +70,4 @@ export function GettingStarted() {
       </div>
     </div>
   )
-}
+})

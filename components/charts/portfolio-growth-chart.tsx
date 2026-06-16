@@ -19,13 +19,21 @@ import {
 } from "@/components/ui/chart"
 import type { YearlyProjection } from "@/types"
 import { formatCurrency } from "@/lib/utils/formatters"
+import { memo, useMemo } from "react"
 
 interface PortfolioGrowthChartProps {
   projections: YearlyProjection[]
   retirementAge: number
 }
 
-export function PortfolioGrowthChart({
+const chartConfig = {
+  balance: {
+    label: "Portfolio Balance",
+    color: "hsl(var(--chart-1))",
+  },
+} satisfies ChartConfig
+
+export const PortfolioGrowthChart = memo(function PortfolioGrowthChart({
   projections,
   retirementAge,
 }: PortfolioGrowthChartProps) {
@@ -81,19 +89,12 @@ export function PortfolioGrowthChart({
     )
   }
 
-  const chartConfig = {
-    balance: {
-      label: "Portfolio Balance",
-      color: "hsl(var(--chart-1))",
-    },
-  } satisfies ChartConfig
-
-  const data = projections.map((p) => ({
+  const data = useMemo(() => projections.map((p) => ({
     age: p.age,
     balance: p.endingBalance,
     contributions: p.contributions,
     withdrawals: p.withdrawals,
-  }))
+  })), [projections])
 
   return (
     <Card className="dashboard-card shadow-none" role="figure" aria-label={`Portfolio balance projection from age ${projections[0].age} to ${projections[projections.length - 1].age}`}>
@@ -159,10 +160,11 @@ export function PortfolioGrowthChart({
               fillOpacity={1}
               fill="url(#colorBalance)"
               dot={false}
+              isAnimationActive={false}
             />
           </AreaChart>
         </ChartContainer>
       </CardContent>
     </Card>
   )
-}
+})

@@ -15,9 +15,9 @@
     "vercel@claude-plugins-official": true,
     "commit-commands@claude-plugins-official": true,
     "supabase@claude-plugins-official": true,
-    "chrome-devtools-mcp@claude-plugins-official": false,
+    "chrome-devtools-mcp@claude-plugins-official": true,
     "remember@claude-plugins-official": true,
-    "andrej-karpathy-skills@karpathy-skills": false
+    "andrej-karpathy-skills@karpathy-skills": true
   },
   "extraKnownMarketplaces": {
     "karpathy-skills": {

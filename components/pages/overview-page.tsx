@@ -5,7 +5,6 @@ import { GettingStarted } from "@/components/dashboard/getting-started"
 import { KeyInsightsSummary } from "@/components/dashboard/key-insights-summary"
 import { MonteCarloChart } from "@/components/charts/monte-carlo-chart"
 import { PortfolioGrowthChart } from "@/components/charts/portfolio-growth-chart"
-import { PageHeader } from "@/components/ui/page-header"
 import type { ProjectionResult, SimulationResult } from "@/types"
 
 interface OverviewPageProps {
@@ -37,10 +36,10 @@ export function OverviewPage({
 }: OverviewPageProps) {
   return (
     <div className="space-y-6">
-      <PageHeader title="Overview" description="Your retirement plan at a glance." />
       <DashboardMetricsGrid
         projection={projection}
         simulationResult={simulationResult}
+        isSimulating={isSimulating}
         retirementAge={retirementAge}
         currentAge={currentAge}
         lifeExpectancy={lifeExpectancy}

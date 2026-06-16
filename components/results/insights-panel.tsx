@@ -1,6 +1,8 @@
 "use client"
 
+import Link from "next/link"
 import { PageCard } from "@/components/ui/page-card"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
   TrendingUp,
@@ -124,7 +126,14 @@ export function InsightsPanel() {
   })()
 
   if (!insights) {
-    return <PageCard label="Insights" description="Add accounts to see personalized insights" />
+    return (
+      <PageCard label="Insights" contentClassName="flex flex-col items-center gap-3 py-2 text-center">
+        <p className="text-sm text-muted-foreground">Add accounts to see personalised insights.</p>
+        <Button asChild size="sm" variant="outline">
+          <Link href="/calculator/accounts">Go to Accounts</Link>
+        </Button>
+      </PageCard>
+    )
   }
 
   const contributionDiff =
@@ -133,7 +142,7 @@ export function InsightsPanel() {
 
   return (
     <div className="space-y-4">
-      {/* Optimal Contribution */}
+      {/* Optimal Contribution — primary insight */}
       <PageCard
         label="Optimal Contribution"
         description={<>The <strong>minimum</strong> monthly contribution needed to reach your target nest egg. Contributing more builds a larger safety margin and retirement surplus.</>}
@@ -141,54 +150,56 @@ export function InsightsPanel() {
         trailing={<InfoTooltip content="Calculates the minimum monthly contribution needed to reach your target retirement nest egg. The target is based on your desired monthly income and withdrawal rate. Contributing more than this amount builds a safety buffer and improves your success rate." side="right" />}
         contentClassName="space-y-3"
       >
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Target nest egg:</span>
-              <span className="font-semibold">
-                {formatCurrency(insights.optimal.targetNestEgg, displayMode, insights.yearsToRetirement, insights.inflationRate)}
+        <div className="space-y-3">
+          {/* Status first — the key takeaway */}
+          {isOnTrack ? (
+            <div className="flex items-center gap-2 rounded-md bg-primary/10 p-2 text-primary">
+              <CheckCircle2 className="h-4 w-4 flex-none" />
+              <span className="text-sm">
+                You&apos;re on track! Current contributions exceed the minimum needed.
               </span>
             </div>
-            <div className="text-xs text-muted-foreground italic -mt-1 mb-2">
-              Based on {formatCurrency(retirementGoals.desiredMonthlyIncome, displayMode, 0, insights.inflationRate)}/month
-              desired income @ {drawdownConfig.initialWithdrawalRate}% withdrawal rate
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Recommended monthly:</span>
-              <span className="font-semibold">
-                {formatCurrency(insights.optimal.optimalMonthlyContribution, displayMode, 0, insights.inflationRate)}
+          ) : (
+            <div className="flex items-center gap-2 rounded-md bg-warning/10 p-2 text-warning">
+              <AlertTriangle className="h-4 w-4 flex-none" />
+              <span className="text-sm">
+                Consider increasing contributions by{" "}
+                {formatCurrency(contributionDiff, displayMode, 0, insights.inflationRate)}/month
               </span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Current monthly:</span>
-              <span className="font-semibold">
-                {formatCurrency(insights.currentContribution, displayMode, 0, insights.inflationRate)}
-              </span>
-            </div>
+          )}
 
-            {isOnTrack ? (
-              <div className="mt-2 flex items-center gap-2 rounded-md bg-primary/10 p-2 text-primary">
-                <CheckCircle2 className="h-4 w-4" />
-                <span className="text-sm">
-                  You&apos;re on track! Current contributions exceed the minimum needed.
-                </span>
-              </div>
-            ) : (
-              <div className="mt-2 flex items-center gap-2 rounded-md bg-warning/10 p-2 text-warning">
-                <AlertTriangle className="h-4 w-4" />
-                <span className="text-sm">
-                  Consider increasing contributions by{" "}
-                  {formatCurrency(contributionDiff, displayMode, 0, insights.inflationRate)}/month
-                </span>
-              </div>
-            )}
+          {/* Details */}
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Recommended monthly:</span>
+            <span className="font-semibold">
+              {formatCurrency(insights.optimal.optimalMonthlyContribution, displayMode, 0, insights.inflationRate)}
+            </span>
           </div>
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Current monthly:</span>
+            <span className="font-semibold">
+              {formatCurrency(insights.currentContribution, displayMode, 0, insights.inflationRate)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Target nest egg:</span>
+            <span className="font-semibold">
+              {formatCurrency(insights.optimal.targetNestEgg, displayMode, insights.yearsToRetirement, insights.inflationRate)}
+            </span>
+          </div>
+          <div className="text-xs text-muted-foreground italic">
+            Based on {formatCurrency(retirementGoals.desiredMonthlyIncome, displayMode, 0, insights.inflationRate)}/month
+            desired income @ {parseFloat(drawdownConfig.initialWithdrawalRate.toFixed(2))}% withdrawal rate
+          </div>
+        </div>
       </PageCard>
 
       {/* Cost of Delay */}
       <PageCard
         label="Cost of Delay"
         description="Impact of delaying retirement savings"
-        leading={<Clock className="h-4 w-4 text-primary flex-none" />}
+        leading={<Clock className="h-4 w-4 text-muted-foreground flex-none" />}
         trailing={<InfoTooltip content="Shows how much retirement savings you lose by delaying your start. Due to compound growth, starting early has a massive impact - every year you delay costs you years of compound returns. The earlier you start, the less you need to contribute per month." side="right" />}
         contentClassName="space-y-3"
       >
@@ -232,7 +243,7 @@ export function InsightsPanel() {
       {/* Scenario Comparison */}
       <PageCard
         label="Investment Scenarios"
-        leading={<PieChart className="h-4 w-4 text-primary flex-none" />}
+        leading={<PieChart className="h-4 w-4 text-muted-foreground flex-none" />}
         trailing={<InfoTooltip content="Compares how different investment strategies (Conservative, Balanced, Aggressive) affect your retirement outcomes. Each scenario runs a full Monte Carlo simulation (1,000 iterations) including both the accumulation phase (while saving) and drawdown phase (during retirement). Higher returns come with higher volatility." side="right" />}
         contentClassName="space-y-4"
       >
@@ -273,10 +284,10 @@ export function InsightsPanel() {
                         <span
                           className={
                             scenario.successProbability >= 75
-                              ? "text-green-600 dark:text-green-400"
+                              ? "text-chart-2"
                               : scenario.successProbability >= 50
-                              ? "text-amber-600 dark:text-amber-400"
-                              : "text-red-600 dark:text-red-400"
+                              ? "text-warning"
+                              : "text-destructive"
                           }
                         >
                           {scenario.successProbability.toFixed(0)}%
@@ -305,7 +316,7 @@ export function InsightsPanel() {
       <PageCard
         label="Medical Cost Projection"
         description="SA medical inflation: ~9% p.a. (vs 5.5% general)"
-        leading={<Heart className="h-4 w-4 text-primary flex-none" />}
+        leading={<Heart className="h-4 w-4 text-muted-foreground flex-none" />}
         trailing={<InfoTooltip content="Projects medical aid costs in retirement. SA medical inflation averages ~9% p.a. (higher than general inflation at 5.5%). These costs typically increase with age and can be a significant retirement expense. Plan to allocate 10-15% of retirement income for medical costs." side="right" />}
         contentClassName="space-y-3"
       >

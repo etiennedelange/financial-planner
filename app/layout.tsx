@@ -39,8 +39,8 @@ export default function RootLayout({
       <body className={`${ibmPlexSans.className} h-full`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
+          defaultTheme="system"
+          enableSystem={true}
           disableTransitionOnChange
         >
             <SupabaseProvider>

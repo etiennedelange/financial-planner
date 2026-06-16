@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import type { ProjectionResult, SimulationResult } from "@/types"
 import { formatCurrency } from "@/lib/utils/currency"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { cn } from "@/lib/utils"
 
 interface ProjectionSummaryProps {
   projection: ProjectionResult | null
@@ -29,34 +30,13 @@ export function ProjectionSummary({
     return null
   }
 
-  // Calculate success rate config
   const successRate = simulationResult?.successRate ?? 0
   const getSuccessConfig = (rate: number) => {
-    if (rate >= 90) return {
-      label: "Excellent",
-      border: "border-green-500",
-      text: "text-green-600 dark:text-green-400"
-    }
-    if (rate >= 75) return {
-      label: "Good",
-      border: "border-emerald-500",
-      text: "text-emerald-600 dark:text-emerald-400"
-    }
-    if (rate >= 60) return {
-      label: "Fair",
-      border: "border-yellow-500",
-      text: "text-yellow-600 dark:text-yellow-400"
-    }
-    if (rate >= 40) return {
-      label: "Risky",
-      border: "border-orange-500",
-      text: "text-orange-600 dark:text-orange-400"
-    }
-    return {
-      label: "Critical",
-      border: "border-red-500",
-      text: "text-red-600 dark:text-red-400"
-    }
+    if (rate >= 90) return { label: "Excellent", border: "border-chart-2", text: "text-chart-2", bg: "bg-chart-2/5" }
+    if (rate >= 75) return { label: "Good", border: "border-primary", text: "text-primary", bg: "bg-primary/5" }
+    if (rate >= 60) return { label: "Fair", border: "border-warning", text: "text-warning", bg: "bg-warning/5" }
+    if (rate >= 40) return { label: "Risky", border: "border-warning/60", text: "text-warning", bg: "bg-warning/5" }
+    return { label: "Critical", border: "border-destructive", text: "text-destructive", bg: "bg-destructive/5" }
   }
 
   const successConfig = getSuccessConfig(successRate)
@@ -64,102 +44,102 @@ export function ProjectionSummary({
   const yearsToRetirement = retirementAge - currentAge
   const yearsToLifeExpectancy = lifeExpectancy - currentAge
 
-  const metrics = [
+  const baseMetrics = [
     {
       label: "Portfolio at Retirement",
-      value: formatCurrency(
-        projection.portfolioAtRetirement,
-        displayMode,
-        yearsToRetirement,
-        inflationRate / 100
-      ),
+      value: formatCurrency(projection.portfolioAtRetirement, displayMode, yearsToRetirement, inflationRate / 100),
       icon: Wallet,
-      description: `At age ${retirementAge}${displayMode === 'real' ? " (today's value)" : ''}`,
+      description: `At age ${retirementAge}${displayMode === "real" ? " (today's value)" : ""}`,
     },
     {
       label: "Monthly Income",
-      value: formatCurrency(
-        projection.monthlyIncomeAtRetirement,
-        displayMode,
-        yearsToRetirement,
-        inflationRate / 100
-      ),
+      value: formatCurrency(projection.monthlyIncomeAtRetirement, displayMode, yearsToRetirement, inflationRate / 100),
       icon: TrendingUp,
-      description: `Gross withdrawal (before tax)${displayMode === 'real' ? " (today's value)" : ''}`,
+      description: `Gross withdrawal (before tax)${displayMode === "real" ? " (today's value)" : ""}`,
     },
     {
       label: "Portfolio Depletion",
-      value: projection.portfolioDepletionAge
-        ? `Age ${projection.portfolioDepletionAge}`
-        : "Never",
+      value: projection.portfolioDepletionAge ? `Age ${projection.portfolioDepletionAge}` : "Never",
       icon: projection.portfolioDepletionAge ? TrendingDown : TrendingUp,
-      description: projection.portfolioDepletionAge
-        ? "Funds run out"
-        : "Funds last lifetime",
+      description: projection.portfolioDepletionAge ? "Funds run out" : "Funds last lifetime",
       isWarning: !!projection.portfolioDepletionAge,
     },
     {
       label: "Final Balance",
-      value: formatCurrency(
-        projection.surplusAmount,
-        displayMode,
-        yearsToLifeExpectancy,
-        inflationRate / 100
-      ),
+      value: formatCurrency(projection.surplusAmount, displayMode, yearsToLifeExpectancy, inflationRate / 100),
       icon: Calendar,
-      description: `At life expectancy${displayMode === 'real' ? " (today's value)" : ''}`,
+      description: `At life expectancy${displayMode === "real" ? " (today's value)" : ""}`,
     },
-    ...(simulationResult ? [{
-      label: "Plan Success Rate",
-      value: `${successRate.toFixed(0)}%`,
-      icon: TrendingUp,
-      description: successConfig.label,
-      isSuccess: true,
-      successBorder: successConfig.border,
-      successText: successConfig.text,
-    }] : []),
+  ]
+
+  const metrics: Array<{
+    label: string
+    value: string
+    icon: typeof TrendingUp
+    description: string
+    isWarning?: boolean
+    isSuccess?: boolean
+    isHero?: boolean
+    successBorder?: string
+    successText?: string
+    successBg?: string
+  }> = [
+    ...(simulationResult
+      ? [
+          {
+            label: "Plan Success Rate",
+            value: `${successRate.toFixed(0)}%`,
+            icon: TrendingUp,
+            description: successConfig.label,
+            isSuccess: true,
+            isHero: true,
+            successBorder: successConfig.border,
+            successText: successConfig.text,
+            successBg: successConfig.bg,
+          },
+        ]
+      : []),
+    ...baseMetrics,
   ]
 
   return (
-    <div className="grid gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-5">
+    <div
+      className={cn(
+        "grid gap-3 md:gap-4",
+        simulationResult ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-5" : "grid-cols-2 lg:grid-cols-4"
+      )}
+    >
       {metrics.map((metric) => (
         <Card
           key={metric.label}
-          className={
-            metric.isWarning
-              ? "border-orange-500"
-              : metric.isSuccess
-                ? metric.successBorder
-                : ""
-          }
+          className={cn(
+            metric.isWarning ? "border-warning" : "",
+            metric.isSuccess ? `${metric.successBorder} ${metric.successBg}` : ""
+          )}
         >
           <CardContent className="pt-4 md:pt-6">
             <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">{metric.label}</p>
-                <p
-                  className={`text-2xl font-bold ${
-                    metric.isWarning
-                      ? "text-orange-500"
-                      : metric.isSuccess
-                        ? metric.successText
-                        : ""
-                  }`}
+              <dl>
+                <dt className="text-sm text-muted-foreground">{metric.label}</dt>
+                <dd
+                  className={cn(
+                    metric.isHero ? "text-3xl" : "text-2xl",
+                    "font-bold font-mono",
+                    metric.isWarning ? "text-warning" : "",
+                    metric.isSuccess ? metric.successText : ""
+                  )}
                 >
                   {metric.value}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {metric.description}
-                </p>
-              </div>
+                </dd>
+                <dd className="text-xs text-muted-foreground">{metric.description}</dd>
+              </dl>
               <metric.icon
-                className={`h-5 w-5 ${
-                  metric.isWarning
-                    ? "text-orange-500"
-                    : metric.isSuccess
-                      ? metric.successText
-                      : "text-muted-foreground"
-                }`}
+                className={cn(
+                  "h-5 w-5 flex-none",
+                  metric.isWarning ? "text-warning" : "",
+                  metric.isSuccess ? metric.successText : "text-muted-foreground"
+                )}
+                aria-hidden="true"
               />
             </div>
           </CardContent>

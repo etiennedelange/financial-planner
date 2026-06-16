@@ -2,17 +2,34 @@
 
 import { InsightsPanel } from "@/components/results/insights-panel"
 import { CalculationsBreakdown } from "@/components/results/calculations-breakdown"
-import { PageHeader } from "@/components/ui/page-header"
-import type { ProjectionResult } from "@/types"
+import { ProjectionSummary } from "@/components/results/projection-summary"
+import { useCalculatorStore } from "@/lib/store/calculator-store"
+import type { ProjectionResult, SimulationResult } from "@/types"
 
 interface ProjectionsPageProps {
   projection: ProjectionResult | null
+  simulationResult: SimulationResult | null
 }
 
-export function ProjectionsPage({ projection }: ProjectionsPageProps) {
+export function ProjectionsPage({ projection, simulationResult }: ProjectionsPageProps) {
+  const { personalInfo, retirementGoals } = useCalculatorStore()
+
   return (
     <div className="space-y-6">
-      <PageHeader title="Projections" description="In-depth analysis of your retirement outcomes and tax breakdown." />
+      <div>
+        <h1 className="text-lg font-semibold text-foreground">Projections</h1>
+        <p className="text-sm text-muted-foreground">Your retirement outlook based on current inputs</p>
+      </div>
+
+      <ProjectionSummary
+        projection={projection}
+        retirementAge={personalInfo.retirementAge}
+        currentAge={personalInfo.currentAge}
+        lifeExpectancy={personalInfo.lifeExpectancy}
+        inflationRate={retirementGoals.inflationRate}
+        simulationResult={simulationResult}
+      />
+
       <InsightsPanel />
       <CalculationsBreakdown projection={projection} />
     </div>

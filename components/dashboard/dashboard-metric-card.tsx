@@ -1,6 +1,7 @@
 "use client"
 
 import { LucideIcon } from "lucide-react"
+import { memo } from "react"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 
 interface DashboardMetricCardProps {
@@ -12,7 +13,15 @@ interface DashboardMetricCardProps {
   tooltip?: string | React.ReactNode
 }
 
-export function DashboardMetricCard({
+function successRateStyles(successRate: number | undefined) {
+  if (successRate === undefined) return { border: "border-border", text: "", icon: "text-muted-foreground" }
+  if (successRate >= 90) return { border: "border-[hsl(var(--chart-2))]", text: "text-[hsl(var(--chart-2))]", icon: "text-[hsl(var(--chart-2))]" }
+  if (successRate >= 75) return { border: "border-[hsl(var(--chart-4))]", text: "text-[hsl(var(--chart-4))]", icon: "text-[hsl(var(--chart-4))]" }
+  if (successRate >= 60) return { border: "border-[hsl(var(--chart-3))]", text: "text-[hsl(var(--chart-3))]", icon: "text-[hsl(var(--chart-3))]" }
+  return { border: "border-destructive", text: "text-destructive", icon: "text-destructive" }
+}
+
+export const DashboardMetricCard = memo(function DashboardMetricCard({
   icon: Icon,
   label,
   value,
@@ -20,43 +29,7 @@ export function DashboardMetricCard({
   successRate,
   tooltip,
 }: DashboardMetricCardProps) {
-  // Determine styling based on success rate
-  const getSuccessRateStyles = () => {
-    if (successRate !== undefined) {
-      if (successRate >= 90) {
-        return {
-          border: "border-[hsl(var(--chart-2))]",
-          text: "text-[hsl(var(--chart-2))]",
-          icon: "text-[hsl(var(--chart-2))]",
-        }
-      } else if (successRate >= 75) {
-        return {
-          border: "border-[hsl(var(--chart-4))]",
-          text: "text-[hsl(var(--chart-4))]",
-          icon: "text-[hsl(var(--chart-4))]",
-        }
-      } else if (successRate >= 60) {
-        return {
-          border: "border-[hsl(var(--chart-3))]",
-          text: "text-[hsl(var(--chart-3))]",
-          icon: "text-[hsl(var(--chart-3))]",
-        }
-      } else {
-        return {
-          border: "border-destructive",
-          text: "text-destructive",
-          icon: "text-destructive",
-        }
-      }
-    }
-    return {
-      border: "border-border",
-      text: "",
-      icon: "text-muted-foreground",
-    }
-  }
-
-  const styles = getSuccessRateStyles()
+  const styles = successRateStyles(successRate)
 
   return (
     <div className={`dashboard-metric-card bg-card text-card-foreground border ${styles.border}`}>
@@ -88,4 +61,4 @@ export function DashboardMetricCard({
       </div>
     </div>
   )
-}
+})

@@ -19,10 +19,11 @@ export default function CalculatorLayout({ children }: { children: React.ReactNo
 
 function CalculatorShell({ children }: { children: React.ReactNode }) {
   const { user, isLoaded } = useAuth()
-  const { projection, simulationResult } = useCalculator()
+  const { projection, simulationResult, isDeferred } = useCalculator()
   const accounts = useCalculatorStore((s) => s.accounts)
 
   const [storeReady, setStoreReady] = useState(false)
+  const [showContent, setShowContent] = useState(false)
 
   useEffect(() => {
     useCalculatorStore.persist.rehydrate()
@@ -30,16 +31,27 @@ function CalculatorShell({ children }: { children: React.ReactNode }) {
     setStoreReady(true)
   }, [])
 
+  // Reveal content once store is rehydrated AND deferred values have caught up.
+  // This prevents CLS: content stays invisible while the layout stabilises,
+  // then fades in once projection/simulation values are final.
+  // showContent never goes back to false, so subsequent input changes don't flash.
+  useEffect(() => {
+    if (showContent) return
+    if (storeReady && !isDeferred) {
+      setShowContent(true)
+    }
+  }, [storeReady, isDeferred, showContent])
+
   return (
     <>
       <AppShell accountCount={accounts.length} user={user} isLoaded={isLoaded}>
         <div
           style={{
-            opacity: storeReady ? 1 : 0,
-            transition: storeReady ? "opacity 0.1s ease" : "none",
+            opacity: showContent ? 1 : 0,
+            transition: showContent ? "opacity 0.15s ease" : "none",
           }}
         >
-          {storeReady && children}
+          {children}
         </div>
       </AppShell>
       <CommandPalette />
