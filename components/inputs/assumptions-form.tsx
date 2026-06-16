@@ -43,6 +43,7 @@ export function AssumptionsForm() {
     register,
     watch,
     reset,
+    getValues,
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -79,6 +80,38 @@ export function AssumptionsForm() {
     })
     return () => subscription.unsubscribe()
   }, [watch, setAssumptions, setRetirementGoals])
+
+  // Sync form when store hydrates from localStorage or scenario switches
+  useEffect(() => {
+    const current = getValues()
+    if (
+      current.equityReturn === assumptions.equityReturn &&
+      current.bondReturn === assumptions.bondReturn &&
+      current.cashReturn === assumptions.cashReturn &&
+      current.equityVolatility === assumptions.equityVolatility &&
+      current.bondVolatility === assumptions.bondVolatility &&
+      current.inflationRate === retirementGoals.inflationRate
+    ) {
+      return
+    }
+    reset({
+      equityReturn: assumptions.equityReturn,
+      bondReturn: assumptions.bondReturn,
+      cashReturn: assumptions.cashReturn,
+      equityVolatility: assumptions.equityVolatility,
+      bondVolatility: assumptions.bondVolatility,
+      inflationRate: retirementGoals.inflationRate,
+    })
+  }, [
+    assumptions.equityReturn,
+    assumptions.bondReturn,
+    assumptions.cashReturn,
+    assumptions.equityVolatility,
+    assumptions.bondVolatility,
+    retirementGoals.inflationRate,
+    reset,
+    getValues,
+  ])
 
   const resetButton = (
     <Button

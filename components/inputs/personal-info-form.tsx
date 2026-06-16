@@ -48,6 +48,8 @@ export function PersonalInfoForm() {
   const {
     register,
     watch,
+    reset,
+    getValues,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -65,6 +67,27 @@ export function PersonalInfoForm() {
     })
     return () => subscription.unsubscribe()
   }, [watch, setPersonalInfo])
+
+  // Sync form when store hydrates from localStorage or scenario switches
+  useEffect(() => {
+    const current = getValues()
+    if (
+      current.currentAge === personalInfo.currentAge &&
+      current.retirementAge === personalInfo.retirementAge &&
+      current.lifeExpectancy === personalInfo.lifeExpectancy &&
+      current.annualIncome === personalInfo.annualIncome
+    ) {
+      return
+    }
+    reset(personalInfo)
+  }, [
+    personalInfo.currentAge,
+    personalInfo.retirementAge,
+    personalInfo.lifeExpectancy,
+    personalInfo.annualIncome,
+    reset,
+    getValues,
+  ])
 
   const yearsToRetirement = watchedValues.retirementAge - watchedValues.currentAge
   const yearsInRetirement =
