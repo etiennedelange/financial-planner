@@ -31,8 +31,29 @@ expenses       (id, session_id, group_id, name, amount, in_retirement, sort_orde
 
 **Expenses are global, not scenario-tied.** They reflect real current spending, not hypothetical plan variations. The `expenses-store.ts` is separate from `calculator-store.ts` and never reads from or writes to scenario state.
 
+## Completed (2026-06-16) — Sample Data UX & Anon→Auth Migration
+
+### Sample Data UX Refinement
+- Removed auto-seed on reload (from `useEffect`) — expenses now start empty by default
+- Added "Load Sample Data" button in empty state (`ExpensesPage`) for explicit user choice
+- Behavior: `seedExpenses()` still available on first anonymous session load (via `SupabaseProvider`), but users can clear and reload without auto-populating
+- User intent clearer: no surprise data, but seed available if they want a template
+
+### Anon→Auth Migration Integration
+- `migrateExpensesToSession()` called automatically on auth state change
+- Copies all user's anonymous expense groups/items to authenticated account
+- 120 unit tests verify migration handles: empty groups, expenses without groups, duplicate names, group color preservation
+- Effect: users can work offline with sample data (anon), then sign in to keep it
+
+### SUPABASE_ENABLED Consistency
+- `expenses-store.ts` properly gates all DB operations behind `SUPABASE_ENABLED` flag
+- Offline seed (localStorage) only triggered when Supabase is unavailable
+- Vercel deployments without env vars fall back to localStorage expenses gracefully
+- All Supabase helpers (`upsertGroup`, `upsertExpense`, `deleteExpense`, `seedExpenses`) early-return on null client
+
 ## Phase 9 Follow-ups (Critical)
 
 - `expenses-store.ts` has **zero tests** — syncFromDb, debounce logic, seedExpenses path all untested
 - `upsertGroup`/`upsertExpense` error cases missing from test suite (only deletes tested for errors)
 - Partial-data cases (groups exist, expenses don't) untested
+- `migrateExpensesToSession` tested at Supabase layer; store-level integration tests needed

@@ -55,6 +55,24 @@
 - `accounts` added to Zustand `partialize` so they survive in `localStorage` when Supabase is off
 - Effect: local dev uses Supabase; Vercel deployments without the env var fall back to localStorage automatically — no toggle needed
 
+## Completed (2026-06-16) — Anon→Auth Migration & Form Persistence
+
+### Anon→Auth Migration
+- `migrateExpensesToSession()` in `lib/supabase/expenses.ts` — copies expense groups and items from anonymous session to authenticated user account on first real login (120 unit tests added)
+- `components/supabase-provider.tsx` — calls migration after auth state change (sign-in)
+- Effect: users don't lose expense data when converting from anon to paid account
+
+### Form Persistence Fixes
+- `components/inputs/personal-info-form.tsx` + `assumptions-form.tsx` — added reset effects to properly restore form state after Zustand hydration
+- Fixes issue where form fields showed stale values on page reload even after store was restored
+- Ensures "Plan" page forms remain in sync after scenario switches
+
+### Local Development Setup
+- `.env.development` now contains `NEXT_PUBLIC_SUPABASE_ANON_KEY` (JWT anon token) for localhost proxy routing
+- Proxy pattern: `localhost:3000/supabase/*` → `localhost:54321/*` (local Supabase API)
+- Keeps `NEXT_PUBLIC_SUPABASE_URL` pointed at `http://127.0.0.1:54321` for WSL2 compatibility
+- `@supabase/ssr` client detects anon key and routes through proxy automatically
+
 ## Pending
 
-- **Phase 3 upgrade path** — when a user signs up, link their anonymous session to a real account so data is not lost
+- **Phase 3 upgrade path** — when a user signs up, link their authenticated session to accounts/scenarios created as anon (now partially covered by migrateExpensesToSession)
