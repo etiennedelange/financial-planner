@@ -1,6 +1,6 @@
 // lib/supabase/expenses.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { fetchExpenses, upsertGroup, upsertExpense, deleteGroup, deleteExpense, seedExpenses } from './expenses'
+import { fetchExpenses, upsertGroup, upsertExpense, deleteGroup, deleteExpense, seedExpenses, migrateExpensesToSession } from './expenses'
 import type { Expense, ExpenseGroup } from '@/types/expenses'
 
 vi.mock('./client', () => ({ createClient: vi.fn() }))
@@ -8,11 +8,68 @@ import { createClient } from './client'
 
 function makeChain(resolveWith: { data?: unknown; error?: unknown }) {
   const chain: Record<string, unknown> = {}
-  const methods = ['from', 'select', 'insert', 'upsert', 'delete', 'eq', 'order']
+  const methods = ['from', 'select', 'insert', 'upsert', 'delete', 'eq', 'order', 'limit']
   methods.forEach((m) => { chain[m] = vi.fn(() => chain) })
   chain.then = (resolve: (v: unknown) => unknown) =>
     Promise.resolve(resolveWith).then(resolve)
   return chain
+}
+
+// Mock for migrateExpensesToSession: tracks inserts across 3 sequential DB calls
+// (existence check → group insert → expense insert) on the same client instance.
+function mockMigrateClient({
+  existingGroups = [] as unknown[],
+  groupInsertError = null as unknown,
+  expenseInsertError = null as unknown,
+} = {}) {
+  const insertedGroupRows: unknown[] = []
+  const insertedExpenseRows: unknown[] = []
+  let groupCallIdx = 0
+
+  function makeResolvable(resolveWith: unknown) {
+    const c: Record<string, unknown> = {}
+    ;['select', 'eq', 'order', 'limit'].forEach((m) => { c[m] = vi.fn(() => c) })
+    c.insert = vi.fn((rows: unknown) => {
+      const inner: Record<string, unknown> = {}
+      inner.then = (resolve: (v: unknown) => unknown) =>
+        Promise.resolve(resolveWith).then(resolve)
+      return inner
+    })
+    c.then = (resolve: (v: unknown) => unknown) =>
+      Promise.resolve(resolveWith).then(resolve)
+    return c
+  }
+
+  const client = {
+    from: vi.fn((table: string) => {
+      if (table === 'expense_groups') {
+        const idx = groupCallIdx++
+        if (idx === 0) {
+          // existence check — return existing data, no insert
+          return makeResolvable({ data: existingGroups, error: null })
+        }
+        // group insert — capture rows
+        const c = makeResolvable({ data: null, error: groupInsertError })
+        const origInsert = c.insert as ReturnType<typeof vi.fn>
+        c.insert = vi.fn((rows: unknown) => {
+          insertedGroupRows.push(...(rows as unknown[]))
+          return origInsert(rows)
+        })
+        return c
+      }
+      // expense insert — capture rows
+      const c = makeResolvable({ data: null, error: expenseInsertError })
+      const origInsert = c.insert as ReturnType<typeof vi.fn>
+      c.insert = vi.fn((rows: unknown) => {
+        insertedExpenseRows.push(...(rows as unknown[]))
+        return origInsert(rows)
+      })
+      return c
+    }),
+  }
+
+  vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
+  return { insertedGroupRows, insertedExpenseRows, client }
 }
 
 function mockSupabase(data: unknown, error: unknown = null) {
@@ -139,5 +196,64 @@ describe('seedExpenses', () => {
     const verband = result.expenses.find((e) => e.name === 'Verband')
     expect(verband?.inRetirement).toBe(false)
     expect(verband?.amount).toBe(12800)
+  })
+})
+
+describe('migrateExpensesToSession', () => {
+  const srcGroup: ExpenseGroup = { id: 'g-src', name: 'Housing', color: '#fca5a5', sortOrder: 0 }
+  const srcExpense: Expense = { id: 'e-src', groupId: 'g-src', name: 'Verband', amount: 12800, inRetirement: false, sortOrder: 0 }
+
+  it('returns early without hitting DB when groups array is empty', async () => {
+    const { client } = mockMigrateClient()
+    await migrateExpensesToSession('new-session', [], [])
+    expect(client.from).not.toHaveBeenCalled()
+  })
+
+  it('returns early without inserting when new session already has expense groups', async () => {
+    const { client, insertedGroupRows } = mockMigrateClient({ existingGroups: [{ id: 'existing' }] })
+    await migrateExpensesToSession('new-session', [srcGroup], [srcExpense])
+    expect(client.from).toHaveBeenCalledTimes(1) // only the existence check
+    expect(insertedGroupRows).toHaveLength(0)
+  })
+
+  it('inserts groups and expenses with remapped UUIDs and correct session_id', async () => {
+    const { insertedGroupRows, insertedExpenseRows } = mockMigrateClient()
+    await migrateExpensesToSession('new-session', [srcGroup], [srcExpense])
+
+    expect(insertedGroupRows).toHaveLength(1)
+    const insertedGroup = insertedGroupRows[0] as Record<string, unknown>
+    expect(insertedGroup.session_id).toBe('new-session')
+    expect(insertedGroup.name).toBe('Housing')
+    expect(insertedGroup.color).toBe('#fca5a5')
+    expect(insertedGroup.id).not.toBe('g-src') // new UUID
+
+    expect(insertedExpenseRows).toHaveLength(1)
+    const insertedExpense = insertedExpenseRows[0] as Record<string, unknown>
+    expect(insertedExpense.session_id).toBe('new-session')
+    expect(insertedExpense.name).toBe('Verband')
+    expect(insertedExpense.amount).toBe(12800)
+    expect(insertedExpense.id).not.toBe('e-src') // new UUID
+    expect(insertedExpense.group_id).toBe(insertedGroup.id) // FK matches new group UUID
+  })
+
+  it('skips expense insert when there are no expenses', async () => {
+    const { insertedGroupRows, insertedExpenseRows } = mockMigrateClient()
+    await migrateExpensesToSession('new-session', [srcGroup], [])
+    expect(insertedGroupRows).toHaveLength(1)
+    expect(insertedExpenseRows).toHaveLength(0)
+  })
+
+  it('throws when group insert fails', async () => {
+    mockMigrateClient({ groupInsertError: new Error('group insert failed') })
+    await expect(
+      migrateExpensesToSession('new-session', [srcGroup], [srcExpense])
+    ).rejects.toThrow('group insert failed')
+  })
+
+  it('throws when expense insert fails', async () => {
+    mockMigrateClient({ expenseInsertError: new Error('expense insert failed') })
+    await expect(
+      migrateExpensesToSession('new-session', [srcGroup], [srcExpense])
+    ).rejects.toThrow('expense insert failed')
   })
 })

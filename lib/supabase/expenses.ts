@@ -114,6 +114,58 @@ export async function deleteExpense(id: string): Promise<void> {
 
 // ─── seed ─────────────────────────────────────────────────────────────────────
 
+// Copies a user's in-memory expense data to a new session in the DB.
+// Used when an anonymous user signs in to a real account — the anon UUID changes
+// to the real user's UUID, so we need to re-insert under the new session_id.
+// Generates fresh UUIDs for all rows to avoid PK conflicts with the anon data.
+export async function migrateExpensesToSession(
+  sessionId: string,
+  groups: ExpenseGroup[],
+  expenses: Expense[]
+): Promise<void> {
+  if (groups.length === 0) return
+
+  const supabase = createClient()
+
+  // Don't overwrite if the new session already has its own data
+  const { data: existing } = await supabase
+    .from("expense_groups")
+    .select("id")
+    .eq("session_id", sessionId)
+    .limit(1)
+
+  if (existing && existing.length > 0) return
+
+  // New UUIDs avoid PK conflicts — the anon session's rows still exist in DB
+  const idMap = new Map(groups.map((g) => [g.id, crypto.randomUUID()]))
+
+  const groupRows = groups.map((g) => ({
+    id: idMap.get(g.id)!,
+    session_id: sessionId,
+    name: g.name,
+    color: g.color,
+    sort_order: g.sortOrder,
+  }))
+
+  const expenseRows = expenses.map((e) => ({
+    id: crypto.randomUUID(),
+    session_id: sessionId,
+    group_id: idMap.get(e.groupId)!,
+    name: e.name,
+    amount: e.amount,
+    in_retirement: e.inRetirement,
+    sort_order: e.sortOrder,
+  }))
+
+  const { error: ge } = await supabase.from("expense_groups").insert(groupRows)
+  if (ge) throw ge
+
+  if (expenseRows.length > 0) {
+    const { error: ee } = await supabase.from("expenses").insert(expenseRows)
+    if (ee) throw ee
+  }
+}
+
 export function generateSeedData(): { groups: ExpenseGroup[]; expenses: Expense[] } {
   const seedGroups: ExpenseGroup[] = [
     { id: crypto.randomUUID(), name: "Housing",       color: "#fca5a5", sortOrder: 0 },

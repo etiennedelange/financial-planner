@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/client"
+import { migrateExpensesToSession } from "@/lib/supabase/expenses"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useExpensesStore } from "@/lib/store/expenses-store"
 
@@ -70,8 +71,18 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       setUser(newUser)
 
       if (newUser && newUser.id !== useCalculatorStore.getState().sessionId) {
+        // Capture expenses from Zustand BEFORE syncExpensesFromDb overwrites the store.
+        // If this is an anon→real sign-in, we'll copy them to the new session in the DB.
+        const { groups, expenses } = useExpensesStore.getState()
+        const isAnonUpgrade = !newUser.is_anonymous && groups.length > 0
+
         setSessionId(newUser.id)
         await syncFromDb()
+
+        if (isAnonUpgrade) {
+          await migrateExpensesToSession(newUser.id, groups, expenses).catch(console.error)
+        }
+
         await syncExpensesFromDb(newUser.id)
       }
       // On SIGNED_OUT: user becomes null, UserMenu shows "Sign In".
