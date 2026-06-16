@@ -1,34 +1,28 @@
 "use client"
 
 import * as React from "react"
-import { Monitor, Moon, Sun } from "lucide-react"
+import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { AnimatePresence, motion } from "motion/react"
 
 import { Button } from "@/components/ui/button"
 
-const CYCLE: Array<"light" | "dark" | "system"> = ["light", "dark", "system"]
+const CYCLE: Array<"light" | "dark"> = ["light", "dark"]
 
-const ICONS = { light: Sun, dark: Moon, system: Monitor } as const
-const LABELS = { light: "Light", dark: "Dark", system: "System" } as const
+const ICONS = { light: Sun, dark: Moon } as const
+const LABELS = { light: "Light", dark: "Dark" } as const
 
 export function ThemeToggle() {
-  const { theme, resolvedTheme, setTheme } = useTheme()
+  const { resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
   React.useEffect(() => setMounted(true), [])
 
-  const current = (mounted ? theme ?? "dark" : "dark") as "light" | "dark" | "system"
+  const current = (mounted ? resolvedTheme ?? "dark" : "dark") as "light" | "dark"
   const next = CYCLE[(CYCLE.indexOf(current) + 1) % CYCLE.length]
 
-  const iconKey = mounted
-    ? theme === "system"
-      ? "system"
-      : resolvedTheme === "dark"
-        ? "dark"
-        : "light"
-    : "dark"
+  const iconKey = mounted ? (resolvedTheme === "dark" ? "dark" : "light") : "dark"
 
-  const Icon = ICONS[iconKey as keyof typeof ICONS]
+  const Icon = ICONS[iconKey]
 
   return (
     <Button

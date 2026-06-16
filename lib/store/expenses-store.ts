@@ -7,7 +7,8 @@ import {
   upsertExpense,
   deleteGroup,
   deleteExpense,
-  seedExpenses,
+  seedExpenses as seedExpensesDb,
+  generateSeedData,
 } from "@/lib/supabase/expenses"
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
@@ -42,6 +43,8 @@ interface ExpensesState {
 
   setSessionId: (id: string) => void
   syncFromDb: (sessionId: string) => Promise<void>
+  loadSampleData: () => void
+  clearAll: () => void
 
   addGroup: (name: string, color: string) => void
   updateGroup: (id: string, patch: Partial<Pick<ExpenseGroup, "name" | "color">>) => void
@@ -72,13 +75,36 @@ export const useExpensesStore = create<ExpensesState>()(
           set({ sessionId })
           const { groups, expenses } = await fetchExpenses(sessionId)
           if (groups.length === 0) {
-            const seeded = await seedExpenses(sessionId)
+            const seeded = await seedExpensesDb(sessionId)
             set({ groups: seeded.groups, expenses: seeded.expenses })
           } else {
             set({ groups, expenses })
           }
         } finally {
           syncInProgress = false
+        }
+      },
+
+      loadSampleData: () => {
+        const { groups: seedGroups, expenses: seedExpensesList } = generateSeedData()
+        set({ groups: seedGroups, expenses: seedExpensesList })
+        // Fire-and-forget DB sync; don't block the UI on it
+        const { sessionId } = get()
+        if (sessionId) {
+          seedExpensesDb(sessionId).catch(console.error)
+        }
+      },
+
+      clearAll: () => {
+        const { groups, expenses, sessionId } = get()
+        set({ groups: [], expenses: [] })
+        if (sessionId) {
+          const groupIds = groups.map((g) => g.id)
+          const expenseIds = expenses.map((e) => e.id)
+          Promise.all([
+            ...groupIds.map((id) => deleteGroup(id)),
+            ...expenseIds.map((id) => deleteExpense(id)),
+          ]).catch(console.error)
         }
       },
 

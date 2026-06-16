@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useExpensesStore } from "@/lib/store/expenses-store"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
-import { SUPABASE_ENABLED } from "@/lib/supabase/client"
 import { formatCurrency } from "@/lib/utils/currency"
 import { GROUP_COLOR_OPTIONS, type Expense, type ExpenseGroup } from "@/types/expenses"
 import { cn } from "@/lib/utils"
@@ -162,7 +161,7 @@ function AddGroupRow({ onSave, onCancel }: { onSave: (name: string, color: strin
 
 // ─── empty state ──────────────────────────────────────────────────────────────
 
-function EmptyGroups({ onAdd }: { onAdd: () => void }) {
+function EmptyGroups({ onAdd, onLoadSample }: { onAdd: () => void; onLoadSample: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
       <FolderPlus className="h-10 w-10 text-muted-foreground/40" />
@@ -170,10 +169,15 @@ function EmptyGroups({ onAdd }: { onAdd: () => void }) {
         <p className="text-sm font-medium text-muted-foreground">No expense groups yet</p>
         <p className="text-xs text-muted-foreground/70">Group your expenses to track what you spend in retirement vs. today.</p>
       </div>
-      <Button variant="outline" size="sm" onClick={onAdd}>
-        <Plus className="mr-1.5 h-3.5 w-3.5" />
-        Create first group
-      </Button>
+      <div className="flex gap-2">
+        <Button variant="outline" size="sm" onClick={onAdd}>
+          <Plus className="mr-1.5 h-3.5 w-3.5" />
+          Create first group
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onLoadSample}>
+          Load sample data
+        </Button>
+      </div>
     </div>
   )
 }
@@ -517,7 +521,7 @@ export function ExpensesPage() {
     groups, expenses, monthlyIncome,
     addGroup, removeGroup,
     addExpense, updateExpense, removeExpense, toggleRetirement,
-    setMonthlyIncome,
+    setMonthlyIncome, loadSampleData, clearAll,
   } = useExpensesStore(
     useShallow((s) => ({
       groups: s.groups,
@@ -530,18 +534,12 @@ export function ExpensesPage() {
       removeExpense: s.removeExpense,
       toggleRetirement: s.toggleRetirement,
       setMonthlyIncome: s.setMonthlyIncome,
+      loadSampleData: s.loadSampleData,
+      clearAll: s.clearAll,
     }))
   )
 
   const setRetirementGoals = useCalculatorStore((s) => s.setRetirementGoals)
-  const syncFromDb = useExpensesStore((s) => s.syncFromDb)
-
-  // Offline-only seed: when Supabase is unavailable, self-seed defaults on first mount
-  useEffect(() => {
-    if (!SUPABASE_ENABLED && groups.length === 0) {
-      syncFromDb("")
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-sync retirement total → desiredMonthlyIncome
   useEffect(() => {
@@ -559,10 +557,36 @@ export function ExpensesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm text-muted-foreground">Track your monthly spending to determine how much you need in retirement.</p>
-        <Button size="sm" className="shrink-0" onClick={handleAddGroup} disabled={addingGroup}>
-          <Plus className="mr-1.5 h-3.5 w-3.5" />
-          New Group
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          {groups.length > 0 && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-destructive">
+                  <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                  Clear all
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Clear all expenses?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete all {groups.length} group{groups.length !== 1 ? "s" : ""} and {expenses.length} expense{expenses.length !== 1 ? "s" : ""}. This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={clearAll} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Clear all
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+          <Button size="sm" onClick={handleAddGroup} disabled={addingGroup}>
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            New Group
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
@@ -574,7 +598,7 @@ export function ExpensesPage() {
             />
           )}
           {groups.length === 0 && !addingGroup ? (
-            <EmptyGroups onAdd={handleAddGroup} />
+            <EmptyGroups onAdd={handleAddGroup} onLoadSample={loadSampleData} />
           ) : (
             groups.map((group) => (
               <GroupSection

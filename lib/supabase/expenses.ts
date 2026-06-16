@@ -107,9 +107,7 @@ export async function deleteExpense(id: string): Promise<void> {
 
 // ─── seed ─────────────────────────────────────────────────────────────────────
 
-export async function seedExpenses(sessionId: string): Promise<{ groups: ExpenseGroup[]; expenses: Expense[] }> {
-  const supabase = createClient()
-
+export function generateSeedData(): { groups: ExpenseGroup[]; expenses: Expense[] } {
   const seedGroups: ExpenseGroup[] = [
     { id: crypto.randomUUID(), name: "Housing",       color: "#fca5a5", sortOrder: 0 },
     { id: crypto.randomUUID(), name: "Food",          color: "#fdba74", sortOrder: 1 },
@@ -173,6 +171,13 @@ export async function seedExpenses(sessionId: string): Promise<{ groups: Expense
     // Other
     { id: crypto.randomUUID(), groupId: g("Other"),         name: "Spending",               amount: 2000,  inRetirement: true,  sortOrder: 0 },
   ]
+
+  return { groups: seedGroups, expenses: seedExpensesList }
+}
+
+export async function seedExpenses(sessionId: string): Promise<{ groups: ExpenseGroup[]; expenses: Expense[] }> {
+  const supabase = createClient()
+  const { groups: seedGroups, expenses: seedExpensesList } = generateSeedData()
 
   if (!supabase) return { groups: seedGroups, expenses: seedExpensesList }
 
