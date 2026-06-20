@@ -43,8 +43,14 @@ export function DashboardMetricsGrid({
 
     const depletionValue = (() => {
       if (!simulationResult) return isSimulating ? "…" : "--"
-      if (successRate !== null && successRate >= 50) return "Never"
       const age = simulationResult.medianDepletionAge
+      if (successRate === null) return age ? `Age ${age}` : "Never"
+      // Thresholds mirror the Excellent/Good/Fair/At Risk tiers used by the
+      // Plan Success Rate card below — a near-coin-flip success rate (e.g. 56%)
+      // shouldn't be described as "Likely Never".
+      if (successRate >= 90) return "Never"
+      if (successRate >= 75) return "Likely Never"
+      if (successRate >= 60) return "Uncertain"
       return age ? `Age ${age}` : "Never"
     })()
 
@@ -122,9 +128,9 @@ export function DashboardMetricsGrid({
         label: "Portfolio Depletion",
         value: depletionValue,
         description: depletionDescription,
-        tooltip: successRate !== null && successRate >= 50
-          ? "When the majority of simulations succeed, 'Never' is the expected outcome. The description shows the risk percentage among scenarios that fail."
-          : "When the majority of simulations fail, this shows the median age at which your portfolio runs out. Increase contributions or adjust retirement age to improve this.",
+        tooltip: successRate !== null && successRate >= 60
+          ? "Reflects how confidently your plan avoids running out of money: 'Never' at 90%+ success, 'Likely Never' at 75%+, 'Uncertain' below that. The description shows the risk among scenarios that fail."
+          : "Below a 60% success rate, this shows the median age at which your portfolio runs out across failing scenarios. Increase contributions or adjust retirement age to improve this.",
       },
     ] as const
   }, [projection, simulationResult, isSimulating, displayMode, yearsToRetirement, retirementAge, inflationRate, totalCurrentBalance, totalMonthlyContributions, currentAge])
