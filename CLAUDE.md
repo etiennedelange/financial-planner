@@ -127,7 +127,7 @@ Design rules:
 
 ## Theming
 
-Dual-theming (color themes + dark mode). Full details: `docs/THEMING.md`.
+Locked gold accent + light/dark mode (no color-theme switching). Full details: `docs/THEMING.md`.
 
 ## Phase Docs (update after every meaningful change)
 
