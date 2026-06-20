@@ -24,7 +24,12 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-06-16) — Store test coverage & form persistence:**
+**Latest Update (2026-06-20) — Debug window maintenance:**
+- ✅ **Debug page verification** — ensured all DrawdownConfig fields are displayed: added `lumpSumPercentage` (always), optional `monthlyMedicalAid` and `medicalAidDependants` (conditional)
+- ✅ **Bug fix** — fixed Accounts section title interpolation (`{accounts.length}` literal → template literal)
+- ✅ **Test coverage maintained** — 520/520 tests passing, build verified
+
+**Previous Update (2026-06-16) — Store test coverage & form persistence:**
 - ✅ **Store tests (Phase 9 blocker)** — added 52 comprehensive tests for `calculator-store.ts` (27) and `expenses-store.ts` (25); full coverage of state initialization, mutations, async operations, debouncing, scenario management, edge cases; 520/520 tests pass
 - ✅ **Form persistence fixes** — PersonalInfoForm and AssumptionsForm now properly restore state after Zustand hydration; fixes stale field values on page reload
 - ✅ **Anon→Auth migration** — `migrateExpensesToSession()` copies user's expense groups/items from anonymous session to authenticated account on first login (120 unit tests)
