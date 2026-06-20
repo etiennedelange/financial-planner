@@ -515,14 +515,14 @@ export function calculateProjection(
       inflationRate
     ) / 12
 
-  // Calculate monthly net income (after tax)
-  const annualGrossIncomeAtRetirement = monthlyIncomeAtRetirement * 12
-  const firstYearTax = calculateIncomeTaxWithRebates(
-    annualGrossIncomeAtRetirement,
-    personalInfo.retirementAge
-  )
-  const annualNetIncomeAtRetirement = annualGrossIncomeAtRetirement - firstYearTax
-  const monthlyNetIncomeAtRetirement = annualNetIncomeAtRetirement / 12
+  // Net income after tax — sourced from the first drawdown year's projection so it
+  // reflects the actual account-mix tax treatment (TFSA tax-free, CGT on discretionary,
+  // full income tax on pension/RA/preservation) and medical aid, instead of re-taxing
+  // the gross withdrawal as if it were all ordinary income.
+  const firstDrawdownYear = yearlyProjections[yearsToRetirement]
+  const monthlyNetIncomeAtRetirement = firstDrawdownYear
+    ? firstDrawdownYear.netIncome / 12
+    : 0
 
   // Calculate average effective tax rate
   const averageEffectiveTaxRate =

@@ -16,17 +16,17 @@ describe('tax-tables', () => {
       // First bracket
       expect(INCOME_TAX_BRACKETS[0]).toEqual({
         min: 0,
-        max: 237100,
+        max: 245100,
         rate: 0.18,
         baseTax: 0,
       })
 
-      // Last bracket (min is threshold where 45% starts, which is R1,817,000)
+      // Last bracket (min is threshold where 45% starts, which is R1,878,600)
       expect(INCOME_TAX_BRACKETS[6]).toEqual({
-        min: 1817000,
+        min: 1878600,
         max: Infinity,
         rate: 0.45,
-        baseTax: 644489,
+        baseTax: 666339,
       })
     })
   })
@@ -83,7 +83,7 @@ describe('tax-tables', () => {
       })
     })
 
-    describe('First bracket (0 - R237,100 @ 18%)', () => {
+    describe('First bracket (0 - R245,100 @ 18%)', () => {
       it('should calculate tax at bottom of bracket', () => {
         // R1,000 * 18% = R180
         expect(calculateIncomeTax(1000)).toBe(180)
@@ -95,170 +95,168 @@ describe('tax-tables', () => {
       })
 
       it('should calculate tax at top of bracket', () => {
-        // R237,100 * 18% = R42,678
-        expect(calculateIncomeTax(237100)).toBe(42678)
+        // R245,100 * 18% = R44,118
+        expect(calculateIncomeTax(245100)).toBe(44118)
       })
     })
 
-    describe('Second bracket (R237,101 - R370,500 @ 26%)', () => {
+    describe('Second bracket (R245,101 - R383,100 @ 26%)', () => {
       it('should calculate tax at bottom of bracket', () => {
-        // Base: R42,678
+        // Base: R44,118
         // Additional: R1 * 26% = R0.26
-        // Total: R42,678.26
-        expect(calculateIncomeTax(237101)).toBe(42678.26)
+        // Total: R44,118.26
+        expect(calculateIncomeTax(245101)).toBe(44118.26)
       })
 
       it('should calculate tax at R300,000', () => {
-        // Base: R42,678
-        // Additional: (R300,000 - R237,100) * 26% = R62,900 * 26% = R16,354
-        // Total: R42,678 + R16,354 = R59,032
-        expect(calculateIncomeTax(300000)).toBe(59032)
+        // Base: R44,118
+        // Additional: (R300,000 - R245,100) * 26% = R54,900 * 26% = R14,274
+        // Total: R44,118 + R14,274 = R58,392
+        expect(calculateIncomeTax(300000)).toBe(58392)
       })
 
       it('should calculate tax at top of bracket', () => {
-        // Base: R42,678
-        // Additional: (R370,500 - R237,100) * 26% = R133,400 * 26% = R34,684
-        // Total: R42,678 + R34,684 = R77,362
-        expect(calculateIncomeTax(370500)).toBe(77362)
+        // Base: R44,118
+        // Additional: (R383,100 - R245,100) * 26% = R138,000 * 26% = R35,880
+        // Total: R44,118 + R35,880 = R79,998
+        expect(calculateIncomeTax(383100)).toBe(79998)
       })
     })
 
-    describe('Third bracket (R370,501 - R512,800 @ 31%)', () => {
+    describe('Third bracket (R383,101 - R530,200 @ 31%)', () => {
       it('should calculate tax at bottom of bracket', () => {
-        // Base: R77,362
+        // Base: R79,998
         // Additional: R1 * 31% = R0.31
-        // Total: R77,362.31
-        expect(calculateIncomeTax(370501)).toBe(77362.31)
+        // Total: R79,998.31
+        expect(calculateIncomeTax(383101)).toBe(79998.31)
       })
 
       it('should calculate tax at R450,000', () => {
-        // Base: R77,362
-        // Additional: (R450,000 - R370,500) * 31% = R79,500 * 31% = R24,645
-        // Total: R77,362 + R24,645 = R102,007
-        expect(calculateIncomeTax(450000)).toBe(102007)
+        // Base: R79,998
+        // Additional: (R450,000 - R383,100) * 31% = R66,900 * 31% = R20,739
+        // Total: R79,998 + R20,739 = R100,737
+        expect(calculateIncomeTax(450000)).toBe(100737)
       })
 
       it('should calculate tax at top of bracket', () => {
-        // Base: R77,362
-        // Additional: (R512,800 - R370,500) * 31% = R142,300 * 31% = R44,113
-        // Total: R77,362 + R44,113 = R121,475
-        expect(calculateIncomeTax(512800)).toBe(121475)
+        // Base: R79,998
+        // Additional: (R530,200 - R383,100) * 31% = R147,100 * 31% = R45,601
+        // Total: R79,998 + R45,601 = R125,599
+        expect(calculateIncomeTax(530200)).toBe(125599)
       })
     })
 
-    describe('Fourth bracket (R512,801 - R673,000 @ 36%)', () => {
+    describe('Fourth bracket (R530,201 - R695,800 @ 36%)', () => {
       it('should calculate tax at bottom of bracket', () => {
-        // Base: R121,475
+        // Base: R125,599
         // Additional: R1 * 36% = R0.36
-        // Total: R121,475.36
-        expect(calculateIncomeTax(512801)).toBe(121475.36)
+        // Total: R125,599.36
+        expect(calculateIncomeTax(530201)).toBe(125599.36)
       })
 
       it('should calculate tax at R600,000', () => {
-        // Base: R121,475
-        // Additional: (R600,000 - R512,800) * 36% = R87,200 * 36% = R31,392
-        // Total: R121,475 + R31,392 = R152,867
-        expect(calculateIncomeTax(600000)).toBe(152867)
+        // Base: R125,599
+        // Additional: (R600,000 - R530,200) * 36% = R69,800 * 36% = R25,128
+        // Total: R125,599 + R25,128 = R150,727
+        expect(calculateIncomeTax(600000)).toBe(150727)
       })
 
       it('should calculate tax at top of bracket', () => {
-        // Base: R121,475
-        // Additional: (R673,000 - R512,800) * 36% = R160,200 * 36% = R57,672
-        // Total: R121,475 + R57,672 = R179,147
-        expect(calculateIncomeTax(673000)).toBe(179147)
+        // Base: R125,599
+        // Additional: (R695,800 - R530,200) * 36% = R165,600 * 36% = R59,616
+        // Total: R125,599 + R59,616 = R185,215
+        expect(calculateIncomeTax(695800)).toBe(185215)
       })
     })
 
-    describe('Fifth bracket (R673,001 - R857,900 @ 39%)', () => {
+    describe('Fifth bracket (R695,801 - R887,000 @ 39%)', () => {
       it('should calculate tax at bottom of bracket', () => {
-        // Base: R179,147
+        // Base: R185,215
         // Additional: R1 * 39% = R0.39
-        // Total: R179,147.39
-        expect(calculateIncomeTax(673001)).toBe(179147.39)
+        // Total: R185,215.39
+        expect(calculateIncomeTax(695801)).toBe(185215.39)
       })
 
       it('should calculate tax at R750,000', () => {
-        // Base: R179,147
-        // Additional: (R750,000 - R673,000) * 39% = R77,000 * 39% = R30,030
-        // Total: R179,147 + R30,030 = R209,177
-        expect(calculateIncomeTax(750000)).toBe(209177)
+        // Base: R185,215
+        // Additional: (R750,000 - R695,800) * 39% = R54,200 * 39% = R21,138
+        // Total: R185,215 + R21,138 = R206,353
+        expect(calculateIncomeTax(750000)).toBe(206353)
       })
 
       it('should calculate tax at top of bracket', () => {
-        // Base: R179,147
-        // Additional: (R857,900 - R673,000) * 39% = R184,900 * 39% = R72,111
-        // Total: R179,147 + R72,111 = R251,258
-        expect(calculateIncomeTax(857900)).toBe(251258)
+        // Base: R185,215
+        // Additional: (R887,000 - R695,800) * 39% = R191,200 * 39% = R74,568
+        // Total: R185,215 + R74,568 = R259,783
+        expect(calculateIncomeTax(887000)).toBe(259783)
       })
     })
 
-    describe('Sixth bracket (R857,901 - R1,817,000 @ 41%)', () => {
+    describe('Sixth bracket (R887,001 - R1,878,600 @ 41%)', () => {
       it('should calculate tax at bottom of bracket', () => {
-        // Base: R251,258
+        // Base: R259,783
         // Additional: R1 * 41% = R0.41
-        // Total: R251,258.41
-        expect(calculateIncomeTax(857901)).toBe(251258.41)
+        // Total: R259,783.41
+        expect(calculateIncomeTax(887001)).toBe(259783.41)
       })
 
       it('should calculate tax at R1,000,000', () => {
-        // Base: R251,258
-        // Additional: (R1,000,000 - R857,900) * 41% = R142,100 * 41% = R58,261
-        // Total: R251,258 + R58,261 = R309,519
-        expect(calculateIncomeTax(1000000)).toBe(309519)
+        // Base: R259,783
+        // Additional: (R1,000,000 - R887,000) * 41% = R113,000 * 41% = R46,330
+        // Total: R259,783 + R46,330 = R306,113
+        expect(calculateIncomeTax(1000000)).toBe(306113)
       })
 
       it('should calculate tax at top of bracket', () => {
-        // Base: R251,258
-        // Additional: (R1,817,000 - R857,900) * 41% = R959,100 * 41% = R393,231
-        // Total: R251,258 + R393,231 = R644,489
-        expect(calculateIncomeTax(1817000)).toBe(644489)
+        // Base: R259,783
+        // Additional: (R1,878,600 - R887,000) * 41% = R991,600 * 41% = R406,556
+        // Total: R259,783 + R406,556 = R666,339
+        expect(calculateIncomeTax(1878600)).toBe(666339)
       })
     })
 
-    describe('Seventh bracket (R1,817,001+ @ 45%)', () => {
+    describe('Seventh bracket (R1,878,601+ @ 45%)', () => {
       it('should calculate tax at bottom of bracket', () => {
-        // Base: R644,489
+        // Base: R666,339
         // Additional: R1 * 45% = R0.45
-        // Total: R644,489.45
-        expect(calculateIncomeTax(1817001)).toBe(644489.45)
+        // Total: R666,339.45
+        expect(calculateIncomeTax(1878601)).toBe(666339.45)
       })
 
       it('should calculate tax at R2,000,000', () => {
-        // Base: R644,489
-        // Additional: (R2,000,000 - R1,817,000) * 45% = R183,000 * 45% = R82,350
-        // Total: R644,489 + R82,350 = R726,839
-        expect(calculateIncomeTax(2000000)).toBe(726839)
+        // Base: R666,339
+        // Additional: (R2,000,000 - R1,878,600) * 45% = R121,400 * 45% = R54,630
+        // Total: R666,339 + R54,630 = R720,969
+        expect(calculateIncomeTax(2000000)).toBe(720969)
       })
 
       it('should calculate tax at R5,000,000', () => {
-        // Base: R644,489
-        // Additional: (R5,000,000 - R1,817,000) * 45% = R3,183,000 * 45% = R1,432,350
-        // Total: R644,489 + R1,432,350 = R2,076,839
-        expect(calculateIncomeTax(5000000)).toBe(2076839)
+        // Base: R666,339
+        // Additional: (R5,000,000 - R1,878,600) * 45% = R3,121,400 * 45% = R1,404,630
+        // Total: R666,339 + R1,404,630 = R2,070,969
+        expect(calculateIncomeTax(5000000)).toBe(2070969)
       })
     })
 
     describe('Real-world retirement income scenarios', () => {
       it('should calculate tax for R20,000/month income (R240,000 p.a.)', () => {
-        // R240,000 falls in second bracket
-        // Base: R42,678
-        // Additional: (R240,000 - R237,100) * 26% = R2,900 * 26% = R754
-        // Total: R42,678 + R754 = R43,432
-        expect(calculateIncomeTax(240000)).toBe(43432)
+        // R240,000 falls in first bracket
+        // R240,000 * 18% = R43,200
+        expect(calculateIncomeTax(240000)).toBe(43200)
       })
 
       it('should calculate tax for R30,000/month income (R360,000 p.a.)', () => {
         // R360,000 falls in second bracket
-        // Base: R42,678
-        // Additional: (R360,000 - R237,100) * 26% = R122,900 * 26% = R31,954
-        // Total: R42,678 + R31,954 = R74,632
-        expect(calculateIncomeTax(360000)).toBe(74632)
+        // Base: R44,118
+        // Additional: (R360,000 - R245,100) * 26% = R114,900 * 26% = R29,874
+        // Total: R44,118 + R29,874 = R73,992
+        expect(calculateIncomeTax(360000)).toBe(73992)
       })
 
       it('should calculate tax for R50,000/month income (R600,000 p.a.)', () => {
         // R600,000 falls in fourth bracket
-        // Calculated above: R152,867
-        expect(calculateIncomeTax(600000)).toBe(152867)
+        // Calculated above: R150,727
+        expect(calculateIncomeTax(600000)).toBe(150727)
       })
     })
   })

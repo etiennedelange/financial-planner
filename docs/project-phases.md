@@ -24,7 +24,14 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-06-20) — `sa-retirement-calc-validator` audit: lump sum, annuitisation cap, MC tax, CGT exclusion fixes:**
+**Latest Update (2026-06-20) — Second audit pass: 2026/2027 tax config, net-income reconciliation, MC lump sum tax:**
+- ✅ **2026/2027 SARS figures corrected** — `tax-year.config.ts` income tax brackets, medical aid tax credits, and CGT annual exclusion were carried over from the prior tax year; updated to the current `INCOME_TAX_BRACKETS_CONFIG` (top bracket now starts at R1,878,600), `MEDICAL_AID_CREDITS_CONFIG` (R376 member/first dependant, R254 additional), and `CGT_ANNUAL_EXCLUSION_CONFIG.individual` (R50,000, up from R40,000); rebates and tax thresholds were verified self-consistent and left unchanged
+- ✅ **`monthlyNetIncomeAtRetirement` mismatch fixed** — `projection-engine.ts` previously recomputed tax on the full gross withdrawal via a flawed shortcut, ignoring medical aid credits and account-type tax segregation, so it disagreed with the detailed "Sample Retirement Payslip" breakdown; now sourced directly from the first drawdown year's already-correct `netIncome`
+- ✅ **Monte Carlo lump sum tax added** — `simulation-engine.ts` deducted the commuted lump sum from pension-type balances but never taxed it; now calls `calculateLumpSumCommutation` once per run and reports the result via new optional `SimulationRun.lumpSumTax` / `SimulationResult.averageLumpSumTax` (does not affect the success-rate metric, which only depends on portfolio balance)
+- ✅ 542/542 tests pass (10 new); build succeeds; coverage 95-100% on touched calculation files
+- 🎯 **Next:** Phase 9.1 High Priority remaining items (TFSA re-contribution room, dividend withholding tax) per suggested work order; revisit fees double-counting in CSV export (flagged as debatable, not yet actioned)
+
+**Previous Update (2026-06-20) — `sa-retirement-calc-validator` audit: lump sum, annuitisation cap, MC tax, CGT exclusion fixes:**
 - ✅ **Account-type-aware lump sum commutation** — `projection-engine.ts` and `simulation-engine.ts` no longer apply `lumpSumPercentage` to TFSA/discretionary balances; the commutation fraction now derives from and applies only to pension/RA/preservation-fund balances
 - ✅ **One-third annuitisation cap enforced in-engine** — new `SA_TAX_LIMITS.maxLumpSumCommutationPercentage` (100/3); both engines clamp the requested percentage at the call site rather than trusting the UI slider
 - ✅ **R40,000 CGT annual exclusion** — new `SA_TAX_LIMITS.cgtAnnualExclusion`; discretionary capital gains (summed across accounts) are reduced by the exclusion before the 40% inclusion rate applies, in both engines

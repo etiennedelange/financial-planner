@@ -40,13 +40,13 @@ pre-calculated tax at the bracket's lower bound (`baseTax`).
 
 | min (R) | max (R) | rate | baseTax (R) |
 |---|---|---|---|
-| 0 | 237,100 | 18% | 0 |
-| 237,100 | 370,500 | 26% | 42,678 |
-| 370,500 | 512,800 | 31% | 77,362 |
-| 512,800 | 673,000 | 36% | 121,475 |
-| 673,000 | 857,900 | 39% | 179,147 |
-| 857,900 | 1,817,000 | 41% | 251,258 |
-| 1,817,000 | ∞ | 45% | 644,489 |
+| 0 | 245,100 | 18% | 0 |
+| 245,100 | 383,100 | 26% | 44,118 |
+| 383,100 | 530,200 | 31% | 79,998 |
+| 530,200 | 695,800 | 36% | 125,599 |
+| 695,800 | 887,000 | 39% | 185,215 |
+| 887,000 | 1,878,600 | 41% | 259,783 |
+| 1,878,600 | ∞ | 45% | 666,339 |
 
 **Formula:**
 ```
@@ -58,13 +58,13 @@ tax = baseTax + (taxableIncome - bracketMin) × marginalRate
 function calculateIncomeTax(taxableIncome: number): number {
   if (taxableIncome <= 0) return 0
   const brackets = [
-    { min: 0,       max: 237100,   rate: 0.18, baseTax: 0      },
-    { min: 237100,  max: 370500,   rate: 0.26, baseTax: 42678  },
-    { min: 370500,  max: 512800,   rate: 0.31, baseTax: 77362  },
-    { min: 512800,  max: 673000,   rate: 0.36, baseTax: 121475 },
-    { min: 673000,  max: 857900,   rate: 0.39, baseTax: 179147 },
-    { min: 857900,  max: 1817000,  rate: 0.41, baseTax: 251258 },
-    { min: 1817000, max: Infinity, rate: 0.45, baseTax: 644489 },
+    { min: 0,       max: 245100,   rate: 0.18, baseTax: 0      },
+    { min: 245100,  max: 383100,   rate: 0.26, baseTax: 44118  },
+    { min: 383100,  max: 530200,   rate: 0.31, baseTax: 79998  },
+    { min: 530200,  max: 695800,   rate: 0.36, baseTax: 125599 },
+    { min: 695800,  max: 887000,   rate: 0.39, baseTax: 185215 },
+    { min: 887000,  max: 1878600,  rate: 0.41, baseTax: 259783 },
+    { min: 1878600, max: Infinity, rate: 0.45, baseTax: 666339 },
   ]
   for (const bracket of brackets) {
     if (taxableIncome <= bracket.max) {
@@ -188,25 +188,25 @@ These are **direct reductions of tax payable** (not income deductions).
 
 | Beneficiary | Monthly credit (R) |
 |---|---|
-| Principal member | 364 |
-| First additional beneficiary | 364 |
-| Each further beneficiary | 246 |
+| Principal member | 376 |
+| First additional beneficiary | 376 |
+| Each further beneficiary | 254 |
 
 ```typescript
 function calculateMedicalAidTaxCredit(dependants: number = 0): number {
-  let monthlyCredit = 364                                  // principal
-  if (dependants >= 1) monthlyCredit += 364               // first dependant
-  if (dependants >= 2) monthlyCredit += 246 * (dependants - 1) // further
+  let monthlyCredit = 376                                  // principal
+  if (dependants >= 1) monthlyCredit += 376               // first dependant
+  if (dependants >= 2) monthlyCredit += 254 * (dependants - 1) // further
   return monthlyCredit * 12
 }
 ```
 
 | Dependants | Monthly (R) | Annual (R) |
 |---|---|---|
-| 0 | 364 | 4,368 |
-| 1 | 728 | 8,736 |
-| 2 | 974 | 11,688 |
-| 3 | 1,220 | 14,640 |
+| 0 | 376 | 4,512 |
+| 1 | 752 | 9,024 |
+| 2 | 1,006 | 12,072 |
+| 3 | 1,260 | 15,120 |
 
 ---
 
@@ -395,7 +395,9 @@ interface SimulationRun {
   yearlyBalances: number[]
   finalBalance: number
   depletionAge: number | null
-  success: boolean       // balance > 0 at lifeExpectancy
+  success: boolean             // balance > 0 at lifeExpectancy
+  lifetimeIncomeTax?: number   // sum of annual income/CGT tax over drawdown, reporting only
+  lumpSumTax?: number          // one-time tax on the retirement lump sum, reporting only
 }
 
 interface SimulationResult {
@@ -410,6 +412,8 @@ interface SimulationResult {
   }
   medianDepletionAge: number | null
   averageFinalBalance: number
+  averageLifetimeIncomeTax?: number  // mean of SimulationRun.lifetimeIncomeTax across runs
+  averageLumpSumTax?: number         // mean of SimulationRun.lumpSumTax across runs
 }
 ```
 
@@ -785,28 +789,47 @@ for year = 0 to yearsToRetirement - 1:
 
 ### Simulation Run — Drawdown Phase
 
-Uses a single pool with a weighted average return from the per-account balances at retirement:
+Each account keeps its own stochastic return sequence into the drawdown phase (no
+single pooled return) — growth is applied per-account before each year's withdrawal:
 
 ```typescript
-const weightedReturn = accounts.reduce((sum, acc, idx) =>
-  sum + (acc.expectedReturn - acc.annualFees) / 100
-    × (accountBalances[idx] / portfolioAtRetirement), 0)
-
-// Generate drawdown return sequence
-const drawdownReturns = generateReturnSequence(weightedReturn, volatility, yearsInRetirement)
-
 for year = 0 to yearsInRetirement - 1:
-  if (balance > 0) balance *= (1 + drawdownReturns[year])   // growth first
+  for each drawdownAccount:
+    if (acc.balance > 0) acc.balance *= (1 + acc.returns[yearsToRetirement + year])
+
   const multiplier = getSpendingPhaseMultiplier(year)
-  balance = max(0, balance - withdrawal × multiplier)
+  let remaining = min(withdrawal × multiplier, balance)
+  // Withdraw in tax-efficient order, mirrors the deterministic projection engine:
+  // 1. TFSA (tax-free)        2. Discretionary (CGT only)        3. Pension/RA/preservation (income tax)
   withdrawal *= (1 + inflationRate)
 ```
 
+Tax on the pension withdrawal plus CGT-taxable discretionary gains is computed each
+year via `calculateIncomeTaxWithRebates` and accumulated into `lifetimeIncomeTax` —
+for reporting only; it does not force additional liquidation (it reduces net
+spendable income, matching the deterministic engine's treatment).
+
 ### Lump Sum in Monte Carlo
 
+Lump sum commutation is restricted to pension/RA/preservation balances and capped at
+one-third, mirroring the deterministic engine:
+
 ```typescript
-// Deduct lump sum before drawdown begins
-balance = portfolioAtRetirement × (1 - lumpSumPercentage / 100)
+const pensionBalanceAtRetirement = accounts.reduce((sum, acc, idx) =>
+  PENSION_TYPES.includes(acc.type) ? sum + accountBalances[idx] : sum, 0)
+const cappedLumpSumPercentage = Math.min(Math.max(0, lumpSumPercentage), SA_TAX_LIMITS.maxLumpSumCommutationPercentage)
+const lumpSumFraction = pensionBalanceAtRetirement > 0 ? cappedLumpSumPercentage / 100 : 0
+
+// Only pension-type accounts are reduced by the commutation fraction
+drawdownAccounts = accounts.map(acc => ({
+  ...acc,
+  balance: accountBalances[idx] × (1 - (PENSION_TYPES.includes(acc.type) ? lumpSumFraction : 0)),
+}))
+
+// Tax on the commuted amount itself, via the same retirement lump sum table as §1.2,
+// reported on SimulationRun.lumpSumTax (added to lifetimeIncomeTax is NOT done —
+// they are tracked as separate fields, see SimulationRun below)
+const lumpSumTax = calculateLumpSumCommutation(pensionBalanceAtRetirement, cappedLumpSumPercentage).lumpSumTax
 ```
 
 ### Initial Withdrawal for Monte Carlo
@@ -823,7 +846,10 @@ default:
 
 ### Success Criterion
 
-`balance > 0` at `lifeExpectancy` = success.
+`balance > 0` at `lifeExpectancy` = success. Lump sum and income/CGT tax are reported
+via `SimulationRun.lumpSumTax` / `lifetimeIncomeTax` (and their `SimulationResult`
+averages) but do not affect the success/failure determination — both leave the
+portfolio balance unchanged either way, only the reported tax differs.
 
 ### Percentile Calculation (linear interpolation)
 

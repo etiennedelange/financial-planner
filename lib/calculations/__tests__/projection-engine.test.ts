@@ -1,6 +1,7 @@
 import type { Account, DrawdownConfig, PersonalInfo, RetirementGoals } from '@/types'
 import { describe, expect, it } from 'vitest'
 import { calculateProjection } from '../projection-engine'
+import { SA_TAX_LIMITS } from '@/lib/constants/limits'
 
 describe('calculateProjection', () => {
   const baseAccount: Account = {
@@ -135,6 +136,71 @@ describe('calculateProjection', () => {
         (result.portfolioAtRetirement * baseDrawdownConfig.initialWithdrawalRate / 100) / 12
 
       expect(result.monthlyIncomeAtRetirement).toBeCloseTo(expectedMonthly, -1) // Within R10
+    })
+
+    it('should derive monthlyNetIncomeAtRetirement from the first drawdown year, not a flat re-tax of gross income', () => {
+      const result = calculateProjection(
+        [baseAccount],
+        basePersonalInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig
+      )
+
+      const yearsToRetirement = 65 - 35
+      const firstDrawdownYear = result.yearlyProjections[yearsToRetirement]
+
+      // Must reconcile exactly with the detailed first-year projection (the payslip
+      // shows incomeTax/medicalAid from this same row — they must add up).
+      expect(result.monthlyNetIncomeAtRetirement).toBeCloseTo(firstDrawdownYear.netIncome / 12, 6)
+
+      // Naively taxing the full gross withdrawal as ordinary income would produce a
+      // lower net figure than the account-mix-aware calculation (this account is a
+      // retirement annuity, fully taxable, so the two coincide for this fixture —
+      // the TFSA-mix test below is what actually exercises the discrepancy).
+      expect(result.monthlyNetIncomeAtRetirement).toBeLessThan(result.monthlyIncomeAtRetirement)
+    })
+
+    it('should not over-tax monthlyNetIncomeAtRetirement when withdrawals are sourced from a tax-free TFSA', () => {
+      const tfsaAccount: Account = {
+        id: 'tfsa-1',
+        name: 'TFSA',
+        type: 'tfsa',
+        provider: 'Test Provider',
+        currentBalance: 2_000_000,
+        monthlyContribution: 0,
+        expectedReturn: 8,
+        annualFees: 0.5,
+        contributionEscalation: 0,
+        tfsaContributionsToDate: 500000, // at lifetime cap, no further contributions allowed
+      }
+
+      const result = calculateProjection(
+        [tfsaAccount],
+        basePersonalInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig
+      )
+
+      // TFSA withdrawals are entirely tax-free, so net income should equal gross —
+      // the old shortcut incorrectly applied ordinary income tax to this amount.
+      expect(result.monthlyNetIncomeAtRetirement).toBeCloseTo(result.monthlyIncomeAtRetirement, 2)
+    })
+
+    it('should return zero monthlyNetIncomeAtRetirement when there are no years in retirement', () => {
+      const noRetirementYears: PersonalInfo = {
+        ...basePersonalInfo,
+        retirementAge: 90,
+        lifeExpectancy: 90,
+      }
+
+      const result = calculateProjection(
+        [baseAccount],
+        noRetirementYears,
+        baseRetirementGoals,
+        baseDrawdownConfig
+      )
+
+      expect(result.monthlyNetIncomeAtRetirement).toBe(0)
     })
 
     it('should track portfolio depletion age if applicable', () => {
@@ -790,7 +856,7 @@ describe('calculateProjection', () => {
       annualIncome: 600000,
     }
 
-    it('produces zero CGT when the realized gain is below the R40,000 annual exclusion', () => {
+    it('produces zero CGT when the realized gain is below the annual exclusion', () => {
       const smallDiscretionary: Account = {
         id: 'disc-small',
         name: 'Discretionary',
@@ -814,7 +880,7 @@ describe('calculateProjection', () => {
       expect(firstYear.cgtTaxableAmount).toBe(0)
     })
 
-    it('taxes only the gain in excess of the R40,000 annual exclusion', () => {
+    it('taxes only the gain in excess of the annual exclusion', () => {
       const largeDiscretionary: Account = {
         id: 'disc-large',
         name: 'Discretionary',
@@ -844,7 +910,7 @@ describe('calculateProjection', () => {
       const take = Math.min(annualWithdrawal, currentTotal)
       const gainFraction = (currentTotal - 50000000) / currentTotal
       const gainTaken = take * gainFraction
-      const expectedCgt = Math.max(0, gainTaken - 40000) * 0.4
+      const expectedCgt = Math.max(0, gainTaken - SA_TAX_LIMITS.cgtAnnualExclusion) * SA_TAX_LIMITS.cgtInclusionRateIndividual
 
       expect(firstYear.cgtTaxableAmount).toBeCloseTo(expectedCgt, -1)
       expect(firstYear.cgtTaxableAmount).toBeGreaterThan(0)

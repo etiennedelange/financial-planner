@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { runMonteCarloSimulation } from '../simulation-engine'
-import { calculateIncomeTaxWithRebates } from '@/lib/calculations/retirement-tax'
+import { calculateIncomeTaxWithRebates, calculateLumpSumCommutation } from '@/lib/calculations/retirement-tax'
 import { SA_TAX_LIMITS } from '@/lib/constants/limits'
 import type { Account, PersonalInfo, RetirementGoals, DrawdownConfig, SimulationConfig } from '@/types'
 
@@ -848,6 +848,52 @@ describe('runMonteCarloSimulation', () => {
       expect(overRequested.runs[0].yearlyBalances[idx]).toBeCloseTo(atCap.runs[0].yearlyBalances[idx], 5)
       expect(overRequested.runs[0].yearlyBalances[idx]).toBeCloseTo(1_000_000 * (1 - 1 / 3), 5)
     })
+
+    it('reports zero lump sum tax when no lump sum is taken', () => {
+      const result = runMonteCarloSimulation(
+        [flatAccount({ type: 'retirement_annuity' })],
+        flatPersonalInfo,
+        zeroIncomeGoals,
+        zeroWithdrawalDrawdownConfig,
+        { numberOfRuns: 1 }
+      )
+
+      expect(result.runs[0].lumpSumTax).toBe(0)
+      expect(result.averageLumpSumTax).toBe(0)
+    })
+
+    it('reports lump sum tax on the commuted pension balance, matching calculateLumpSumCommutation', () => {
+      // Large enough that the 20% commuted lump sum exceeds the R550,000 tax-free
+      // retirement lump sum threshold, so the expected tax is non-zero.
+      const largeBalance = 10_000_000
+      const result = runMonteCarloSimulation(
+        [flatAccount({ type: 'retirement_annuity', currentBalance: largeBalance })],
+        flatPersonalInfo,
+        zeroIncomeGoals,
+        { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 20 },
+        { numberOfRuns: 1 }
+      )
+
+      // No growth before retirement (expectedReturn: 0), so the pension balance at
+      // retirement equals the starting balance.
+      const expectedLumpSumTax = calculateLumpSumCommutation(largeBalance, 20).lumpSumTax
+      expect(expectedLumpSumTax).toBeGreaterThan(0)
+      expect(result.runs[0].lumpSumTax).toBeCloseTo(expectedLumpSumTax, 5)
+      expect(result.averageLumpSumTax).toBeCloseTo(expectedLumpSumTax, 5)
+    })
+
+    it('does not apply lump sum tax when the lump sum is sourced from a non-pension account', () => {
+      const result = runMonteCarloSimulation(
+        [flatAccount({ type: 'discretionary' })],
+        flatPersonalInfo,
+        zeroIncomeGoals,
+        { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 30 },
+        { numberOfRuns: 1 }
+      )
+
+      expect(result.runs[0].lumpSumTax).toBe(0)
+      expect(result.averageLumpSumTax).toBe(0)
+    })
   })
 
   describe('Income tax and CGT reporting (Monte Carlo)', () => {
@@ -888,7 +934,7 @@ describe('runMonteCarloSimulation', () => {
       expect(result.averageLifetimeIncomeTax).toBe(0)
     })
 
-    it('applies the R40,000 CGT annual exclusion to discretionary capital gains before taxing', () => {
+    it('applies the configured CGT annual exclusion to discretionary capital gains before taxing', () => {
       // expectedReturn !=0 re-enables stochastic volatility, so pin Math.random() to a fixed
       // cycle to make the per-account return sequence (and therefore the realized gain)
       // fully deterministic and reproducible by replicating the engine's own formulas below.

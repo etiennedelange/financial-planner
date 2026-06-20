@@ -14,7 +14,7 @@ import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import { getSpendingPhaseMultiplier } from "@/lib/calculations/utils/spending-phase"
 import { calculateMonthlyReturn } from "@/lib/calculations/utils/projection"
-import { calculateIncomeTaxWithRebates } from "@/lib/calculations/retirement-tax"
+import { calculateIncomeTaxWithRebates, calculateLumpSumCommutation } from "@/lib/calculations/retirement-tax"
 
 // Account types subject to full income tax on withdrawal — mirrors projection-engine.ts
 const PENSION_TYPES: AccountType[] = ['pension_fund', 'retirement_annuity', 'preservation_fund']
@@ -150,6 +150,10 @@ function simulateSingleRun(
     SA_TAX_LIMITS.maxLumpSumCommutationPercentage
   )
   const lumpSumFraction = pensionBalanceAtRetirement > 0 ? cappedLumpSumPercentage / 100 : 0
+  const lumpSumTax =
+    pensionBalanceAtRetirement > 0
+      ? calculateLumpSumCommutation(pensionBalanceAtRetirement, cappedLumpSumPercentage).lumpSumTax
+      : 0
 
   // Build per-account drawdown state with post-lump-sum balances (only pension-type
   // accounts are reduced by the commutation fraction)
@@ -246,6 +250,7 @@ function simulateSingleRun(
     depletionAge,
     success: balance > 0,
     lifetimeIncomeTax,
+    lumpSumTax,
   }
 }
 
@@ -295,6 +300,8 @@ function aggregateResults(
       runs.reduce((sum, r) => sum + r.finalBalance, 0) / runs.length,
     averageLifetimeIncomeTax:
       runs.reduce((sum, r) => sum + (r.lifetimeIncomeTax ?? 0), 0) / runs.length,
+    averageLumpSumTax:
+      runs.reduce((sum, r) => sum + (r.lumpSumTax ?? 0), 0) / runs.length,
   }
 }
 
