@@ -19,12 +19,20 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 | **Phase 6** | ✅ Complete | [Enhanced Tax Calculations](project-phases/phase-6-enhanced-tax.md) |
 | **Phase 7** | ✅ Complete | [UI Redesign — Sidebar App Shell](project-phases/phase-7-ui-redesign.md) |
 | **Phase 8** | ✅ Complete | [Expense Tracker](project-phases/phase-8-expense-tracker.md) |
-| **Phase 9** | 📋 Planned | [Site-Wide Improvement](project-phases/phase-9-site-improvement.md) |
+| **Phase 9** | 🔄 In Progress | [Site-Wide Improvement](project-phases/phase-9-site-improvement.md) |
 | **Future** | 📋 Planned | [Future Enhancements](project-phases/future-enhancements.md) |
 
 ## Current Status Summary
 
-**Latest Update (2026-06-20) — Debug window maintenance:**
+**Latest Update (2026-06-20) — Phase 9.1 Critical: calculation correctness & deduplication:**
+- ✅ **Negative years guard** — `calculateProjection` returns a safe degenerate result instead of producing nonsense output when `retirementAge <= currentAge` or `lifeExpectancy <= retirementAge`; 3 new tests
+- ✅ **CGT inclusion rate constant** — `0.40` hardcode replaced with `SA_TAX_LIMITS.cgtInclusionRateIndividual`
+- ✅ **`calculateMonthlyReturn()` deduplicated** — removed copies in `projection-engine.ts` and `simulation-engine.ts`; both import the canonical version from `lib/calculations/utils/projection.ts`
+- ✅ **Monte Carlo duplication removed** — `scenario-comparison.ts` no longer reimplements accumulation/drawdown; `runFullMonteCarloSimulation` now wraps scenario inputs into a synthetic account and delegates to `runMonteCarloSimulation` in `simulation-engine.ts`
+- ✅ 523/523 tests pass; build succeeds; coverage on touched files 95-99%
+- 🎯 **Next:** Phase 9.3 High (color logic dedup + aria labels) per suggested work order, then 9.2 High (tax/projection edge case tests)
+
+**Previous Update (2026-06-20) — Debug window maintenance:**
 - ✅ **Debug page verification** — ensured all DrawdownConfig fields are displayed: added `lumpSumPercentage` (always), optional `monthlyMedicalAid` and `medicalAidDependants` (conditional)
 - ✅ **Bug fix** — fixed Accounts section title interpolation (`{accounts.length}` literal → template literal)
 - ✅ **Test coverage maintained** — 520/520 tests passing, build verified

@@ -9,10 +9,10 @@ _Identified 2026-06-07 via parallel agent audit (UI/UX, calculations, test cover
 ## 9.1 — Calculation Correctness & Deduplication
 
 ### Critical
-- [ ] **Negative years guard** — `projection-engine.ts:151-152`: `yearsToRetirement` and `yearsInRetirement` can go negative if ages are inverted; add early-return validation
-- [ ] **CGT rate to constants** — `projection-engine.ts:408`: `0.40` hardcoded; move to `lib/constants/limits.ts` as `CGT_INCLUSION_RATE_INDIVIDUAL`
-- [ ] **Monte Carlo duplication** — `scenario-comparison.ts:108-170` reimplements full accumulation/drawdown logic separately from `simulation-engine.ts`; consolidate to use the shared engine
-- [ ] **`calculateMonthlyReturn()` triplicated** — exists in `projection.ts`, `simulation-engine.ts`, and `scenario-comparison.ts`; keep one, import everywhere
+- [x] **Negative years guard** (2026-06-20) — `calculateProjection` now returns a safe degenerate `ProjectionResult` (via new `buildEmptyProjectionResult` helper, shared with the empty-accounts path) when `yearsToRetirement < 0 || yearsInRetirement < 0`; 3 new tests covering inverted ages and the valid zero-years edge case
+- [x] **CGT rate to constants** (2026-06-20) — `0.40` moved to `SA_TAX_LIMITS.cgtInclusionRateIndividual` in `lib/constants/limits.ts`; `projection-engine.ts` imports it
+- [x] **Monte Carlo duplication** (2026-06-20) — `scenario-comparison.ts`'s `runFullMonteCarloSimulation` no longer reimplements accumulation/drawdown; it now wraps the scenario's aggregate inputs into a single synthetic `Account` and calls `runMonteCarloSimulation` from `simulation-engine.ts` directly. Removed the local `generateRandomReturn` sampler (now uses the shared log-normal RNG in `random-returns.ts`)
+- [x] **`calculateMonthlyReturn()` triplicated** (2026-06-20) — removed the duplicate in `projection-engine.ts` and the inline version in `simulation-engine.ts`; both now import the canonical version from `lib/calculations/utils/projection.ts`
 
 ### High Priority
 - [ ] **TFSA re-contribution room in drawdown** — `projection-engine.ts:391-398`: withdrawals restore annual room next tax year (SA rule) but `tfsaContributionsToDate` is never updated post-retirement

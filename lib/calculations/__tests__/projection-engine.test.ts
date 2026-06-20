@@ -239,6 +239,48 @@ describe('calculateProjection', () => {
     })
   })
 
+  describe('Negative years guard', () => {
+    it('should return a safe degenerate result when retirementAge is before currentAge', () => {
+      const result = calculateProjection(
+        [baseAccount],
+        { ...basePersonalInfo, currentAge: 65, retirementAge: 40 },
+        baseRetirementGoals,
+        baseDrawdownConfig
+      )
+
+      expect(result.yearlyProjections.length).toBe(0)
+      expect(result.portfolioAtRetirement).toBe(0)
+      expect(result.monthlyIncomeAtRetirement).toBe(0)
+      expect(result.surplusAmount).toBe(0)
+      expect(Number.isFinite(result.shortfallAmount)).toBe(true)
+    })
+
+    it('should return a safe degenerate result when lifeExpectancy is before retirementAge', () => {
+      const result = calculateProjection(
+        [baseAccount],
+        { ...basePersonalInfo, retirementAge: 65, lifeExpectancy: 50 },
+        baseRetirementGoals,
+        baseDrawdownConfig
+      )
+
+      expect(result.yearlyProjections.length).toBe(0)
+      expect(result.portfolioAtRetirement).toBe(0)
+      expect(result.shortfallAmount).toBe(0) // yearsInRetirement negative, clamped to 0
+    })
+
+    it('should still project normally when yearsToRetirement is exactly zero', () => {
+      const result = calculateProjection(
+        [baseAccount],
+        { ...basePersonalInfo, currentAge: 65, retirementAge: 65 },
+        baseRetirementGoals,
+        baseDrawdownConfig
+      )
+
+      expect(result.portfolioAtRetirement).toBeCloseTo(baseAccount.currentBalance, 0)
+      expect(result.yearlyProjections.length).toBeGreaterThan(0)
+    })
+  })
+
   describe('Compounding methods', () => {
     it('should use nominal compounding by default', () => {
       const resultNoAssumptions = calculateProjection(

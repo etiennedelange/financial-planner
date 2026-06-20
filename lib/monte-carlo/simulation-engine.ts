@@ -11,6 +11,7 @@ import type {
 import { generateReturnSequence, getPercentile } from "./random-returns"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import { getSpendingPhaseMultiplier } from "@/lib/calculations/utils/spending-phase"
+import { calculateMonthlyReturn } from "@/lib/calculations/utils/projection"
 
 /**
  * Calculate initial withdrawal for simulation based on strategy
@@ -99,9 +100,7 @@ function simulateSingleRun(
       const accEscalation = acc.contributionEscalation / 100
 
       // Calculate monthly return based on compounding method
-      const monthlyReturn = compoundingMethod === 'compound'
-        ? Math.pow(1 + annualReturn, 1 / 12) - 1  // Mathematically correct
-        : annualReturn / 12                        // Nominal (Excel-compatible)
+      const monthlyReturn = calculateMonthlyReturn(annualReturn, compoundingMethod)
 
       // Monthly compounding within each year for this account
       for (let month = 0; month < 12; month++) {

@@ -1,7 +1,9 @@
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
+import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import { TFSA_LIMITS_CONFIG } from "@/lib/constants/tax-year.config"
 import { calculateIncomeTaxWithRebates, calculateLumpSumCommutation, calculateExcessContributionCredit } from "./retirement-tax"
 import { getSpendingPhaseMultiplier } from "./utils/spending-phase"
+import { calculateMonthlyReturn } from "./utils/projection"
 import type {
   Account,
   AccountType,
@@ -126,21 +128,46 @@ function calculateInitialWithdrawal(
 }
 
 /**
- * Calculate monthly return from annual return based on compounding method
+ * Main projection calculation
  */
-function calculateMonthlyReturn(annualReturn: number, method: 'nominal' | 'compound'): number {
-  if (method === 'compound') {
-    // Mathematically correct: (1 + annual)^(1/12) - 1
-    return Math.pow(1 + annualReturn, 1 / 12) - 1
-  } else {
-    // Nominal rate (Excel FV compatible): annual / 12
-    return annualReturn / 12
+/**
+ * Degenerate ProjectionResult used when there's nothing to project — either no
+ * accounts, or ages are invalid (e.g. retirementAge <= currentAge inverted via
+ * direct API/test usage bypassing the form's Zod validation).
+ */
+function buildEmptyProjectionResult(
+  personalInfo: PersonalInfo,
+  retirementGoals: RetirementGoals,
+  yearsInRetirement: number
+): ProjectionResult {
+  return {
+    yearlyProjections: [],
+    portfolioAtRetirement: 0,
+    monthlyIncomeAtRetirement: 0,
+    monthlyNetIncomeAtRetirement: 0,
+    portfolioDepletionAge: personalInfo.retirementAge,
+    shortfallAmount: retirementGoals.desiredMonthlyIncome * 12 * Math.max(0, yearsInRetirement),
+    surplusAmount: 0,
+    totalLifetimeIncomeTax: 0,
+    totalLumpSumTax: 0,
+    totalMedicalAidContributions: 0,
+    averageEffectiveTaxRate: 0,
+    lumpSumCommutation: {
+      lumpSumPercentage: 0,
+      lumpSumAmount: 0,
+      taxableLumpSum: 0,
+      lumpSumTax: 0,
+      netLumpSum: 0,
+      remainingPortfolio: 0,
+      accumulatedExcessCredit: 0,
+      creditAppliedToLumpSum: 0,
+      creditCarriedIntoDrawdown: 0,
+    },
+    accumulatedExcessCredit: 0,
+    accountBalancesAtRetirement: {},
   }
 }
 
-/**
- * Main projection calculation
- */
 export function calculateProjection(
   accounts: Account[],
   personalInfo: PersonalInfo,
@@ -151,6 +178,13 @@ export function calculateProjection(
   const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
   const yearsInRetirement = personalInfo.lifeExpectancy - personalInfo.retirementAge
   const inflationRate = retirementGoals.inflationRate / 100
+
+  // Invalid/inverted ages (retirementAge before currentAge, or lifeExpectancy
+  // before retirementAge) — the input forms guard against this with Zod, but
+  // calculateProjection can be called directly (tests, debug tools, imports).
+  if (yearsToRetirement < 0 || yearsInRetirement < 0) {
+    return buildEmptyProjectionResult(personalInfo, retirementGoals, yearsInRetirement)
+  }
 
   const yearlyProjections: YearlyProjection[] = []
 
@@ -168,32 +202,7 @@ export function calculateProjection(
 
   // Handle case with no accounts
   if (accounts.length === 0) {
-    return {
-      yearlyProjections: [],
-      portfolioAtRetirement: 0,
-      monthlyIncomeAtRetirement: 0,
-      monthlyNetIncomeAtRetirement: 0,
-      portfolioDepletionAge: personalInfo.retirementAge,
-      shortfallAmount: retirementGoals.desiredMonthlyIncome * 12 * yearsInRetirement,
-      surplusAmount: 0,
-      totalLifetimeIncomeTax: 0,
-      totalLumpSumTax: 0,
-      totalMedicalAidContributions: 0,
-      averageEffectiveTaxRate: 0,
-      lumpSumCommutation: {
-        lumpSumPercentage: 0,
-        lumpSumAmount: 0,
-        taxableLumpSum: 0,
-        lumpSumTax: 0,
-        netLumpSum: 0,
-        remainingPortfolio: 0,
-        accumulatedExcessCredit: 0,
-        creditAppliedToLumpSum: 0,
-        creditCarriedIntoDrawdown: 0,
-      },
-      accumulatedExcessCredit: 0,
-      accountBalancesAtRetirement: {},
-    }
+    return buildEmptyProjectionResult(personalInfo, retirementGoals, yearsInRetirement)
   }
 
   // Accumulation phase with monthly compounding
@@ -405,7 +414,7 @@ export function calculateProjection(
       const take = Math.min(remaining, acc.balance)
       const gainFraction = Math.max(0, Math.min(1, (acc.balance - acc.costBasis) / acc.balance))
       const gainTaken = take * gainFraction
-      cgtTaxableAmount += gainTaken * 0.40 // 40% CGT inclusion rate for individuals
+      cgtTaxableAmount += gainTaken * SA_TAX_LIMITS.cgtInclusionRateIndividual
       acc.costBasis = Math.max(0, acc.costBasis - take * (1 - gainFraction))
       acc.balance -= take
       discretionaryWithdrawal += take
