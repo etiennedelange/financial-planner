@@ -307,8 +307,11 @@ Strategy: ${drawdownConfig.strategy}
 Initial Withdrawal Rate: ${drawdownConfig.initialWithdrawalRate}%
 Minimum Withdrawal (Monthly): ${formatCurrency(drawdownConfig.minimumWithdrawal)}
 Maximum Withdrawal (Monthly): ${formatCurrency(drawdownConfig.maximumWithdrawal)}
+Lump Sum at Retirement: ${drawdownConfig.lumpSumPercentage}%
 ${drawdownConfig.upperGuardrail ? `Upper Guardrail: ${drawdownConfig.upperGuardrail}%` : ''}
 ${drawdownConfig.lowerGuardrail ? `Lower Guardrail: ${drawdownConfig.lowerGuardrail}%` : ''}
+${drawdownConfig.monthlyMedicalAid ? `Monthly Medical Aid: ${formatCurrency(drawdownConfig.monthlyMedicalAid)}` : ''}
+${drawdownConfig.medicalAidDependants !== undefined ? `Medical Aid Dependants: ${drawdownConfig.medicalAidDependants}` : ''}
 
 ${assumptions ? `=====================================================
 MARKET ASSUMPTIONS
@@ -555,7 +558,7 @@ Single Source of Truth:
             </Section>
 
             {/* Accounts */}
-            <Section title="Accounts ({accounts.length})">
+            <Section title={`Accounts (${accounts.length})`}>
               {accounts.length === 0 ? (
                 <p className="text-sm text-muted-foreground italic">No accounts configured</p>
               ) : (
@@ -719,6 +722,10 @@ Single Source of Truth:
                 label="Maximum Withdrawal (Monthly)"
                 value={formatCurrency(drawdownConfig.maximumWithdrawal)}
               />
+              <Param
+                label="Lump Sum at Retirement"
+                value={`${drawdownConfig.lumpSumPercentage}%`}
+              />
               {drawdownConfig.upperGuardrail && (
                 <Param
                   label="Upper Guardrail"
@@ -729,6 +736,18 @@ Single Source of Truth:
                 <Param
                   label="Lower Guardrail"
                   value={`${drawdownConfig.lowerGuardrail}%`}
+                />
+              )}
+              {drawdownConfig.monthlyMedicalAid && (
+                <Param
+                  label="Monthly Medical Aid"
+                  value={formatCurrency(drawdownConfig.monthlyMedicalAid)}
+                />
+              )}
+              {drawdownConfig.medicalAidDependants !== undefined && (
+                <Param
+                  label="Medical Aid Dependants"
+                  value={drawdownConfig.medicalAidDependants}
                 />
               )}
             </Section>
