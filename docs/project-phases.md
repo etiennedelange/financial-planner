@@ -24,7 +24,15 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-06-20) — Phase 9.1 Critical: calculation correctness & deduplication:**
+**Latest Update (2026-06-20) — `sa-retirement-calc-validator` audit: lump sum, annuitisation cap, MC tax, CGT exclusion fixes:**
+- ✅ **Account-type-aware lump sum commutation** — `projection-engine.ts` and `simulation-engine.ts` no longer apply `lumpSumPercentage` to TFSA/discretionary balances; the commutation fraction now derives from and applies only to pension/RA/preservation-fund balances
+- ✅ **One-third annuitisation cap enforced in-engine** — new `SA_TAX_LIMITS.maxLumpSumCommutationPercentage` (100/3); both engines clamp the requested percentage at the call site rather than trusting the UI slider
+- ✅ **R40,000 CGT annual exclusion** — new `SA_TAX_LIMITS.cgtAnnualExclusion`; discretionary capital gains (summed across accounts) are reduced by the exclusion before the 40% inclusion rate applies, in both engines
+- ✅ **Monte Carlo drawdown rewritten** — per-account stochastic growth + TFSA→discretionary→pension sequential withdrawal (mirrors the deterministic engine) replaces the old single-blended-pool model; per-year income/CGT tax now tracked for reporting via new optional `SimulationRun.lifetimeIncomeTax` / `SimulationResult.averageLifetimeIncomeTax`
+- ✅ 536/536 tests pass (11 new); build succeeds; coverage on touched files 95.5-99.1%
+- 🎯 **Next:** Phase 9.1 High Priority remaining items (TFSA re-contribution room, medical aid credit threshold, dividend withholding tax) per suggested work order
+
+**Previous Update (2026-06-20) — Phase 9.1 Critical: calculation correctness & deduplication:**
 - ✅ **Negative years guard** — `calculateProjection` returns a safe degenerate result instead of producing nonsense output when `retirementAge <= currentAge` or `lifeExpectancy <= retirementAge`; 3 new tests
 - ✅ **CGT inclusion rate constant** — `0.40` hardcode replaced with `SA_TAX_LIMITS.cgtInclusionRateIndividual`
 - ✅ **`calculateMonthlyReturn()` deduplicated** — removed copies in `projection-engine.ts` and `simulation-engine.ts`; both import the canonical version from `lib/calculations/utils/projection.ts`
