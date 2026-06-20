@@ -37,6 +37,20 @@ export const RETIREMENT_LUMP_SUM_CONFIG = [
 ] as const
 
 // ---------------------------------------------------------------------------
+// Maximum share of a pension/RA/preservation fund that may be commuted as a
+// lump sum at retirement — the rest must be annuitised. SA law caps this at
+// one-third of the retirement-fund interest.
+// ---------------------------------------------------------------------------
+export const MAX_LUMP_SUM_COMMUTATION_PERCENTAGE = 100 / 3
+
+// ---------------------------------------------------------------------------
+// Capital Gains Tax — annual exclusion for individuals (s5(1) Eighth Schedule)
+// ---------------------------------------------------------------------------
+export const CGT_ANNUAL_EXCLUSION_CONFIG = {
+  individual: 40000,
+} as const
+
+// ---------------------------------------------------------------------------
 // Rebates (reduce tax liability directly)
 // ---------------------------------------------------------------------------
 export const TAX_REBATES_CONFIG = {

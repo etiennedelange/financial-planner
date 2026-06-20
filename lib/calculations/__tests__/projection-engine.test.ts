@@ -671,6 +671,188 @@ describe('calculateProjection', () => {
     })
   })
 
+  describe('Account-type-aware lump sum commutation', () => {
+    const shortHorizonInfo: PersonalInfo = {
+      currentAge: 63,
+      retirementAge: 65,
+      lifeExpectancy: 75,
+      annualIncome: 600000,
+    }
+
+    const raAccount: Account = {
+      id: 'ra-1',
+      name: 'RA',
+      type: 'retirement_annuity',
+      provider: 'Test',
+      currentBalance: 1000000,
+      monthlyContribution: 0,
+      expectedReturn: 8,
+      annualFees: 0.5,
+      contributionEscalation: 0,
+    }
+    const tfsaAccount: Account = {
+      id: 'tfsa-1',
+      name: 'TFSA',
+      type: 'tfsa',
+      provider: 'Test',
+      currentBalance: 1000000,
+      monthlyContribution: 0,
+      expectedReturn: 8,
+      annualFees: 0.5,
+      contributionEscalation: 0,
+    }
+    const discretionaryAccount: Account = {
+      id: 'disc-1',
+      name: 'Discretionary',
+      type: 'discretionary',
+      provider: 'Test',
+      currentBalance: 1000000,
+      monthlyContribution: 0,
+      expectedReturn: 8,
+      annualFees: 0.5,
+      contributionEscalation: 0,
+    }
+
+    it('does not apply lump sum commutation to TFSA balances', () => {
+      const noLumpSum = calculateProjection([tfsaAccount], shortHorizonInfo, baseRetirementGoals, { ...baseDrawdownConfig, lumpSumPercentage: 0 })
+      const withLumpSum = calculateProjection([tfsaAccount], shortHorizonInfo, baseRetirementGoals, { ...baseDrawdownConfig, lumpSumPercentage: 30 })
+
+      expect(withLumpSum.accountBalancesAtRetirement['tfsa-1']).toBeCloseTo(
+        noLumpSum.accountBalancesAtRetirement['tfsa-1'], 0
+      )
+      expect(withLumpSum.lumpSumCommutation.lumpSumAmount).toBe(0)
+    })
+
+    it('does not apply lump sum commutation to discretionary balances', () => {
+      const noLumpSum = calculateProjection([discretionaryAccount], shortHorizonInfo, baseRetirementGoals, { ...baseDrawdownConfig, lumpSumPercentage: 0 })
+      const withLumpSum = calculateProjection([discretionaryAccount], shortHorizonInfo, baseRetirementGoals, { ...baseDrawdownConfig, lumpSumPercentage: 30 })
+
+      expect(withLumpSum.accountBalancesAtRetirement['disc-1']).toBeCloseTo(
+        noLumpSum.accountBalancesAtRetirement['disc-1'], 0
+      )
+      expect(withLumpSum.lumpSumCommutation.lumpSumAmount).toBe(0)
+    })
+
+    it('applies lump sum commutation only to the pension-type portion of a mixed portfolio', () => {
+      const result = calculateProjection(
+        [raAccount, tfsaAccount, discretionaryAccount],
+        shortHorizonInfo,
+        baseRetirementGoals,
+        { ...baseDrawdownConfig, lumpSumPercentage: 30 }
+      )
+      const soloRa = calculateProjection([raAccount], shortHorizonInfo, baseRetirementGoals, { ...baseDrawdownConfig, lumpSumPercentage: 0 })
+      const soloTfsa = calculateProjection([tfsaAccount], shortHorizonInfo, baseRetirementGoals, { ...baseDrawdownConfig, lumpSumPercentage: 0 })
+      const soloDisc = calculateProjection([discretionaryAccount], shortHorizonInfo, baseRetirementGoals, { ...baseDrawdownConfig, lumpSumPercentage: 0 })
+
+      // RA balance reduced by ~30% (the commutation), TFSA/discretionary untouched
+      expect(result.accountBalancesAtRetirement['ra-1']).toBeCloseTo(soloRa.accountBalancesAtRetirement['ra-1'] * 0.7, 0)
+      expect(result.accountBalancesAtRetirement['tfsa-1']).toBeCloseTo(soloTfsa.accountBalancesAtRetirement['tfsa-1'], 0)
+      expect(result.accountBalancesAtRetirement['disc-1']).toBeCloseTo(soloDisc.accountBalancesAtRetirement['disc-1'], 0)
+
+      // The taxable lump sum should be based only on the RA balance, not the full mixed portfolio
+      expect(result.lumpSumCommutation.lumpSumAmount).toBeCloseTo(soloRa.accountBalancesAtRetirement['ra-1'] * 0.3, 0)
+    })
+
+    it('clamps lump sum commutation to one-third even when a larger percentage is requested', () => {
+      const result = calculateProjection(
+        [raAccount],
+        shortHorizonInfo,
+        baseRetirementGoals,
+        { ...baseDrawdownConfig, lumpSumPercentage: 90 }
+      )
+      const cappedAt33 = calculateProjection(
+        [raAccount],
+        shortHorizonInfo,
+        baseRetirementGoals,
+        { ...baseDrawdownConfig, lumpSumPercentage: 100 / 3 }
+      )
+
+      expect(result.lumpSumCommutation.lumpSumPercentage).toBeCloseTo(100 / 3, 2)
+      expect(result.lumpSumCommutation.lumpSumAmount).toBeCloseTo(cappedAt33.lumpSumCommutation.lumpSumAmount, 0)
+    })
+
+    it('does not clamp a request already within the one-third limit', () => {
+      const result = calculateProjection(
+        [raAccount],
+        shortHorizonInfo,
+        baseRetirementGoals,
+        { ...baseDrawdownConfig, lumpSumPercentage: 25 }
+      )
+      expect(result.lumpSumCommutation.lumpSumPercentage).toBe(25)
+    })
+  })
+
+  describe('CGT annual exclusion on discretionary withdrawals', () => {
+    const shortHorizonInfo: PersonalInfo = {
+      currentAge: 63,
+      retirementAge: 65,
+      lifeExpectancy: 75,
+      annualIncome: 600000,
+    }
+
+    it('produces zero CGT when the realized gain is below the R40,000 annual exclusion', () => {
+      const smallDiscretionary: Account = {
+        id: 'disc-small',
+        name: 'Discretionary',
+        type: 'discretionary',
+        provider: 'Test',
+        currentBalance: 100000,
+        monthlyContribution: 0,
+        expectedReturn: 8,
+        annualFees: 0.5,
+        contributionEscalation: 0,
+      }
+      const result = calculateProjection(
+        [smallDiscretionary],
+        shortHorizonInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig // 4% fixed_percentage withdrawal -> small realized gain
+      )
+      const firstYear = result.yearlyProjections.find(p => p.age === 65)!
+
+      expect(firstYear.discretionaryWithdrawal).toBeGreaterThan(0)
+      expect(firstYear.cgtTaxableAmount).toBe(0)
+    })
+
+    it('taxes only the gain in excess of the R40,000 annual exclusion', () => {
+      const largeDiscretionary: Account = {
+        id: 'disc-large',
+        name: 'Discretionary',
+        type: 'discretionary',
+        provider: 'Test',
+        currentBalance: 50000000,
+        monthlyContribution: 0,
+        expectedReturn: 8,
+        annualFees: 0.5,
+        contributionEscalation: 0,
+      }
+      const result = calculateProjection(
+        [largeDiscretionary],
+        shortHorizonInfo,
+        baseRetirementGoals,
+        { ...baseDrawdownConfig, strategy: 'fixed_percentage', initialWithdrawalRate: 80, lumpSumPercentage: 0 }
+      )
+      const firstYear = result.yearlyProjections.find(p => p.age === 65)!
+
+      // Replicate the engine's exact math: 2 years monthly-compounded accumulation
+      // (nominal method, no contributions), then one year of simple-annual drawdown growth.
+      const netReturn = (8 - 0.5) / 100
+      const monthlyRate = netReturn / 12
+      const v0 = 50000000 * Math.pow(1 + monthlyRate, 24)
+      const currentTotal = v0 * (1 + netReturn)
+      const annualWithdrawal = v0 * 0.8
+      const take = Math.min(annualWithdrawal, currentTotal)
+      const gainFraction = (currentTotal - 50000000) / currentTotal
+      const gainTaken = take * gainFraction
+      const expectedCgt = Math.max(0, gainTaken - 40000) * 0.4
+
+      expect(firstYear.cgtTaxableAmount).toBeCloseTo(expectedCgt, -1)
+      expect(firstYear.cgtTaxableAmount).toBeGreaterThan(0)
+      // Sanity check: exclusion meaningfully reduces tax vs. naive gain × 40% with no exclusion
+      expect(firstYear.cgtTaxableAmount).toBeLessThan(gainTaken * 0.4)
+    })
+  })
+
   describe('SA retirement scenario testing', () => {
     it('should handle typical professional retirement scenario', () => {
       const professionalAccount: Account = {

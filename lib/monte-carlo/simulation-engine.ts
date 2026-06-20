@@ -1,5 +1,6 @@
 import type {
   Account,
+  AccountType,
   PersonalInfo,
   RetirementGoals,
   MarketAssumptions,
@@ -10,8 +11,20 @@ import type {
 } from "@/types"
 import { generateReturnSequence, getPercentile } from "./random-returns"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
+import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import { getSpendingPhaseMultiplier } from "@/lib/calculations/utils/spending-phase"
 import { calculateMonthlyReturn } from "@/lib/calculations/utils/projection"
+import { calculateIncomeTaxWithRebates } from "@/lib/calculations/retirement-tax"
+
+// Account types subject to full income tax on withdrawal — mirrors projection-engine.ts
+const PENSION_TYPES: AccountType[] = ['pension_fund', 'retirement_annuity', 'preservation_fund']
+
+interface DrawdownAccount {
+  type: AccountType
+  balance: number
+  costBasis: number // For discretionary: tracks original value + contributions, for CGT gain calc
+  returns: number[] // Full totalYears stochastic return sequence (accumulation + drawdown years)
+}
 
 /**
  * Calculate initial withdrawal for simulation based on strategy
@@ -76,11 +89,14 @@ function simulateSingleRun(
 ): SimulationRun {
   const totalYears = yearsToRetirement + yearsInRetirement
 
-  // Track each account's balance separately during accumulation
+  // Track each account's balance and cost basis separately during accumulation
   const accountBalances = accounts.map(acc => acc.currentBalance)
+  const accountCostBases = accounts.map(acc => acc.currentBalance)
   const accountMonthlyContributions = accounts.map(acc => acc.monthlyContribution)
 
-  // Generate return sequences for each account based on their expected return
+  // Generate return sequences for each account based on their expected return.
+  // Full totalYears length so the same per-account sequence can be reused for the
+  // drawdown phase (indices [yearsToRetirement, totalYears)) below.
   const accountReturns = accounts.map(acc => {
     const netReturn = (acc.expectedReturn - acc.annualFees) / 100
     // Use per-account volatility (0 for cash/fixed accounts, or proportional to return)
@@ -113,6 +129,7 @@ function simulateSingleRun(
 
         // Then add contribution
         accountBalances[accIdx] += currentMonthlyContribution
+        accountCostBases[accIdx] += currentMonthlyContribution
       }
     }
 
@@ -120,25 +137,35 @@ function simulateSingleRun(
     yearlyBalances.push(totalBalance)
   }
 
-  // Combined balance at retirement; deduct lump sum before drawdown
   const portfolioAtRetirement = accountBalances.reduce((sum, bal) => sum + bal, 0)
-  let balance = portfolioAtRetirement * (1 - Math.max(0, Math.min(100, lumpSumPercentage)) / 100)
 
-  // Calculate weighted return for drawdown phase based on pre-lump-sum account proportions
-  const weightedReturnForDrawdown = portfolioAtRetirement > 0
-    ? accounts.reduce((sum, acc, idx) => {
-        const accNetReturn = (acc.expectedReturn - acc.annualFees) / 100
-        return sum + accNetReturn * (accountBalances[idx] / portfolioAtRetirement)
-      }, 0)
-    : SA_DEFAULTS.equityReturn - 0.01 // Default if somehow balance is 0
+  // Lump sum commutation is only available on pension/RA/preservation balances, and SA
+  // law caps it at one-third of the retirement-fund interest — mirrors projection-engine.ts.
+  const pensionBalanceAtRetirement = accounts.reduce(
+    (sum, acc, idx) => (PENSION_TYPES.includes(acc.type) ? sum + accountBalances[idx] : sum),
+    0
+  )
+  const cappedLumpSumPercentage = Math.min(
+    Math.max(0, lumpSumPercentage),
+    SA_TAX_LIMITS.maxLumpSumCommutationPercentage
+  )
+  const lumpSumFraction = pensionBalanceAtRetirement > 0 ? cappedLumpSumPercentage / 100 : 0
 
-  // Generate return sequence for drawdown phase using weighted return
-  const drawdownReturns = generateReturnSequence(weightedReturnForDrawdown, volatility, yearsInRetirement)
+  // Build per-account drawdown state with post-lump-sum balances (only pension-type
+  // accounts are reduced by the commutation fraction)
+  const drawdownAccounts: DrawdownAccount[] = accounts.map((acc, idx) => {
+    const fraction = PENSION_TYPES.includes(acc.type) ? lumpSumFraction : 0
+    return {
+      type: acc.type,
+      balance: accountBalances[idx] * (1 - fraction),
+      costBasis: accountCostBases[idx] * (1 - fraction),
+      returns: accountReturns[idx],
+    }
+  })
+
+  let balance = drawdownAccounts.reduce((sum, a) => sum + a.balance, 0)
 
   // Drawdown phase - calculate withdrawal based on strategy
-  // NOTE: Withdrawals represent gross amounts (before tax). Tax is implicitly
-  // included in the withdrawal amount. For detailed tax analysis, see the
-  // deterministic projection engine which tracks annual tax calculations.
   let withdrawal = calculateSimulationWithdrawal(
     balance,
     desiredMonthlyIncome,
@@ -148,22 +175,65 @@ function simulateSingleRun(
     inflationRate
   )
 
+  let lifetimeIncomeTax = 0
+
   for (let year = 0; year < yearsInRetirement; year++) {
     if (balance <= 0 && !depletionAge) {
       depletionAge = currentAge + yearsToRetirement + year
     }
 
-    // Apply return FIRST (on full balance before withdrawal)
-    if (balance > 0) {
-      balance = balance * (1 + drawdownReturns[year])
+    // Apply growth per-account FIRST (on full balance before withdrawal), continuing
+    // each account's own stochastic return sequence from the accumulation phase
+    for (const acc of drawdownAccounts) {
+      if (acc.balance <= 0) continue
+      acc.balance *= 1 + acc.returns[yearsToRetirement + year]
     }
+
+    balance = drawdownAccounts.reduce((sum, a) => sum + a.balance, 0)
 
     // Apply spending phase multiplier (Go-Go/Slow-Go/No-Go)
     const spendingMultiplier = getSpendingPhaseMultiplier(year)
-    const adjustedWithdrawal = withdrawal * spendingMultiplier
+    const targetWithdrawal = Math.min(withdrawal * spendingMultiplier, Math.max(0, balance))
+    let remaining = targetWithdrawal
 
-    // THEN withdraw
-    balance = Math.max(0, balance - adjustedWithdrawal)
+    // Tax-optimized sequential withdrawal: TFSA -> Discretionary -> Pension/RA, mirrors
+    // the deterministic projection engine's account-type-aware sourcing. Tax is computed
+    // for reporting only (it does not force additional portfolio liquidation, matching
+    // how the deterministic engine treats tax as a reduction of net spendable income).
+    for (const acc of drawdownAccounts) {
+      if (acc.type !== 'tfsa' || remaining <= 0 || acc.balance <= 0) continue
+      const take = Math.min(remaining, acc.balance)
+      acc.balance -= take
+      remaining -= take
+    }
+
+    let capitalGainRealized = 0
+    for (const acc of drawdownAccounts) {
+      if (acc.type !== 'discretionary' || remaining <= 0 || acc.balance <= 0) continue
+      const take = Math.min(remaining, acc.balance)
+      const gainFraction = Math.max(0, Math.min(1, (acc.balance - acc.costBasis) / acc.balance))
+      capitalGainRealized += take * gainFraction
+      acc.costBasis = Math.max(0, acc.costBasis - take * (1 - gainFraction))
+      acc.balance -= take
+      remaining -= take
+    }
+    const taxableCapitalGain = Math.max(0, capitalGainRealized - SA_TAX_LIMITS.cgtAnnualExclusion)
+    const cgtTaxableAmount = taxableCapitalGain * SA_TAX_LIMITS.cgtInclusionRateIndividual
+
+    let pensionWithdrawal = 0
+    for (const acc of drawdownAccounts) {
+      if (!PENSION_TYPES.includes(acc.type) || remaining <= 0 || acc.balance <= 0) continue
+      const take = Math.min(remaining, acc.balance)
+      acc.balance -= take
+      pensionWithdrawal += take
+      remaining -= take
+    }
+
+    const age = currentAge + yearsToRetirement + year
+    const taxableIncome = pensionWithdrawal + cgtTaxableAmount
+    lifetimeIncomeTax += calculateIncomeTaxWithRebates(taxableIncome, age)
+
+    balance = Math.max(0, drawdownAccounts.reduce((sum, a) => sum + a.balance, 0))
     yearlyBalances.push(balance)
 
     withdrawal *= 1 + inflationRate
@@ -175,6 +245,7 @@ function simulateSingleRun(
     finalBalance: balance,
     depletionAge,
     success: balance > 0,
+    lifetimeIncomeTax,
   }
 }
 
@@ -222,6 +293,8 @@ function aggregateResults(
       depletionAges.length > 0 ? getPercentile(depletionAges, 50) : null,
     averageFinalBalance:
       runs.reduce((sum, r) => sum + r.finalBalance, 0) / runs.length,
+    averageLifetimeIncomeTax:
+      runs.reduce((sum, r) => sum + (r.lifetimeIncomeTax ?? 0), 0) / runs.length,
   }
 }
 

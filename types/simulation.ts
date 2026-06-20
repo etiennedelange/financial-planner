@@ -9,6 +9,7 @@ export interface SimulationRun {
   finalBalance: number
   depletionAge: number | null
   success: boolean // funds lasted until life expectancy
+  lifetimeIncomeTax?: number // sum of annual income/CGT tax over the drawdown phase, for reporting only
 }
 
 export interface SimulationResult {
@@ -23,4 +24,5 @@ export interface SimulationResult {
   }
   medianDepletionAge: number | null
   averageFinalBalance: number
+  averageLifetimeIncomeTax?: number // mean of SimulationRun.lifetimeIncomeTax across runs
 }

@@ -301,26 +301,42 @@ export function calculateProjection(
 
   const portfolioAtRetirement = totalBalance
 
-  // Apply lump sum commutation proportionally across all accounts at retirement
-  const lumpSumCommutation = calculateLumpSumCommutation(
-    portfolioAtRetirement,
+  // Lump sum commutation is only available on pension/RA/preservation fund balances —
+  // TFSA and discretionary money is not subject to the retirement lump-sum tax table.
+  // SA law also caps commutation at one-third of the retirement-fund interest; the UI
+  // slider enforces this too, but the engine must clamp independently since it can be
+  // called directly (tests, debug tools, saved plans).
+  const pensionBalanceAtRetirement = accounts.reduce(
+    (sum, acc, i) => (PENSION_TYPES.includes(acc.type) ? sum + accountBalances[i] : sum),
+    0
+  )
+  const cappedLumpSumPercentage = Math.min(
     drawdownConfig.lumpSumPercentage ?? 0,
+    SA_TAX_LIMITS.maxLumpSumCommutationPercentage
+  )
+  const lumpSumCommutation = calculateLumpSumCommutation(
+    pensionBalanceAtRetirement,
+    cappedLumpSumPercentage,
     accumulatedExcessCredit,
   )
-  const lumpSumFraction = portfolioAtRetirement > 0
-    ? lumpSumCommutation.lumpSumAmount / portfolioAtRetirement
+  const lumpSumFraction = pensionBalanceAtRetirement > 0
+    ? lumpSumCommutation.lumpSumAmount / pensionBalanceAtRetirement
     : 0
 
-  // Build per-account drawdown state with post-lump-sum balances
-  const drawdownAccounts: DrawdownAccount[] = accounts.map((acc, i) => ({
-    id: acc.id,
-    name: acc.name,
-    type: acc.type,
-    balance: accountBalances[i] * (1 - lumpSumFraction),
-    costBasis: accountCostBases[i] * (1 - lumpSumFraction),
-    netReturn: (acc.expectedReturn - acc.annualFees) / 100,
-    feeRate: acc.annualFees / 100,
-  }))
+  // Build per-account drawdown state with post-lump-sum balances (lump sum fraction
+  // only applies to pension/RA/preservation accounts)
+  const drawdownAccounts: DrawdownAccount[] = accounts.map((acc, i) => {
+    const fraction = PENSION_TYPES.includes(acc.type) ? lumpSumFraction : 0
+    return {
+      id: acc.id,
+      name: acc.name,
+      type: acc.type,
+      balance: accountBalances[i] * (1 - fraction),
+      costBasis: accountCostBases[i] * (1 - fraction),
+      netReturn: (acc.expectedReturn - acc.annualFees) / 100,
+      feeRate: acc.annualFees / 100,
+    }
+  })
 
   const remainingPortfolio = drawdownAccounts.reduce((s, a) => s + a.balance, 0)
 
@@ -406,20 +422,23 @@ export function calculateProjection(
       remaining -= take
     }
 
-    // 2. Discretionary — CGT on gains only (40% inclusion rate)
+    // 2. Discretionary — CGT on gains only, after the annual exclusion (40% inclusion rate)
     let discretionaryWithdrawal = 0
-    let cgtTaxableAmount = 0
+    let capitalGainRealized = 0
     for (const acc of drawdownAccounts) {
       if (acc.type !== 'discretionary' || remaining <= 0 || acc.balance <= 0) continue
       const take = Math.min(remaining, acc.balance)
       const gainFraction = Math.max(0, Math.min(1, (acc.balance - acc.costBasis) / acc.balance))
       const gainTaken = take * gainFraction
-      cgtTaxableAmount += gainTaken * SA_TAX_LIMITS.cgtInclusionRateIndividual
+      capitalGainRealized += gainTaken
       acc.costBasis = Math.max(0, acc.costBasis - take * (1 - gainFraction))
       acc.balance -= take
       discretionaryWithdrawal += take
       remaining -= take
     }
+    // Annual exclusion applies once per taxpayer per year, across all discretionary accounts
+    const taxableCapitalGain = Math.max(0, capitalGainRealized - SA_TAX_LIMITS.cgtAnnualExclusion)
+    const cgtTaxableAmount = taxableCapitalGain * SA_TAX_LIMITS.cgtInclusionRateIndividual
 
     // 3. Pension / RA / Preservation — full income tax
     let pensionWithdrawal = 0
@@ -532,7 +551,7 @@ export function calculateProjection(
     totalMedicalAidContributions,
     averageEffectiveTaxRate,
     lumpSumCommutation: {
-      lumpSumPercentage: drawdownConfig.lumpSumPercentage ?? 0,
+      lumpSumPercentage: cappedLumpSumPercentage,
       lumpSumAmount: lumpSumCommutation.lumpSumAmount,
       taxableLumpSum: lumpSumCommutation.taxableLumpSum,
       lumpSumTax: lumpSumCommutation.lumpSumTax,

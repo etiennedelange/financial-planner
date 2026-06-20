@@ -3,6 +3,8 @@ import {
   TAX_THRESHOLDS_CONFIG,
   RETIREMENT_CONTRIBUTION_LIMITS_CONFIG,
   TFSA_LIMITS_CONFIG,
+  MAX_LUMP_SUM_COMMUTATION_PERCENTAGE,
+  CGT_ANNUAL_EXCLUSION_CONFIG,
 } from './tax-year.config'
 
 export const SA_TAX_LIMITS = {
@@ -26,4 +28,10 @@ export const SA_TAX_LIMITS = {
 
   // Capital gains tax: inclusion rate of the gain treated as taxable income (individuals)
   cgtInclusionRateIndividual: 0.40,
+  // Capital gains tax: annual exclusion before inclusion rate applies (individuals)
+  cgtAnnualExclusion: CGT_ANNUAL_EXCLUSION_CONFIG.individual,
+
+  // Max % of a pension/RA/preservation fund that may be commuted as a lump sum;
+  // the remainder must be annuitised (SA Income Tax Act one-third rule)
+  maxLumpSumCommutationPercentage: MAX_LUMP_SUM_COMMUTATION_PERCENTAGE,
 } as const
