@@ -29,5 +29,10 @@
   },
   "tui": "default",
   "theme": "dark",
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline-command.sh",
+    "padding": 2
+  }
 }
