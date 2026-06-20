@@ -142,7 +142,7 @@ These functions didn't accept or use the `compoundingMethod` parameter:
 
 ## Documentation Created
 
-### 1. `history/project-phases.md` (Updated)
+### 1. `docs/history/project-phases.md` (Updated)
 **Added:**
 - Phase 1.5: Testing & Validation Framework
 - 6 prioritized tasks (P0, P1, P2)
@@ -158,7 +158,7 @@ These functions didn't accept or use the `compoundingMethod` parameter:
 - P2: Display mode tests (Medium)
 - P2: Validation script (Medium)
 
-### 2. `history/testing-and-validation-plan.md` (Created)
+### 2. `docs/history/testing-and-validation-plan.md` (Created)
 **Contains:**
 - Complete implementation guide (500+ lines)
 - Vitest setup with latest best practices (2026)
@@ -183,7 +183,7 @@ These functions didn't accept or use the `compoundingMethod` parameter:
 - Debug Window usage guide
 - Documentation references
 
-### 4. `history/QUICK_START_TESTING.md` (Created)
+### 4. `docs/history/QUICK_START_TESTING.md` (Created)
 **Contains:**
 - Quick reference guide
 - Copy/paste commands to request implementation
@@ -285,11 +285,11 @@ formatCurrency(value, 'real', yearsFromNow, inflationRate)
 - `components/results/insights-panel.tsx`
 
 ### Documentation (4 files)
-- `history/project-phases.md` (updated)
+- `docs/history/project-phases.md` (updated)
 - `CLAUDE.md` (updated)
-- `history/testing-and-validation-plan.md` (created)
-- `history/QUICK_START_TESTING.md` (created)
-- `history/2026-01-05-insights-tab-fix-and-testing-framework.md` (this file)
+- `docs/history/testing-and-validation-plan.md` (created)
+- `docs/history/QUICK_START_TESTING.md` (created)
+- `docs/history/2026-01-05-insights-tab-fix-and-testing-framework.md` (this file)
 
 **Total:** 9 files
 
@@ -343,8 +343,8 @@ formatCurrency(value, 'real', yearsFromNow, inflationRate)
 
 ## References
 
-- **Testing Plan:** `history/testing-and-validation-plan.md`
-- **Quick Start Guide:** `history/QUICK_START_TESTING.md`
-- **Project Phases:** `history/project-phases.md`
+- **Testing Plan:** `docs/history/testing-and-validation-plan.md`
+- **Quick Start Guide:** `docs/history/QUICK_START_TESTING.md`
+- **Project Phases:** `docs/history/project-phases.md`
 - **Development Guide:** `CLAUDE.md`
-- **Previous Session:** `history/2026-01-02-calculation-fixes-and-ui-improvements.md`
+- **Previous Session:** `docs/history/2026-01-02-calculation-fixes-and-ui-improvements.md`

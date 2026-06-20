@@ -116,4 +116,4 @@
   - Slow component detection
   - **Impact:** Visibility into production performance
 
-**Documentation:** See `history/2026-01-15-performance-optimization.md`
+**Documentation:** See `docs/history/2026-01-15-performance-optimization.md`

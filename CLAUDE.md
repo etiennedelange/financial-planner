@@ -133,4 +133,4 @@ Dual-theming (color themes + dark mode). Full details: `docs/THEMING.md`.
 
 1. `docs/project-phases/` — mark tasks complete, update pending list
 2. `docs/project-phases.md` — add dated entry to "Current Status Summary", update status emoji
-3. `history/` — date-prefixed markdown for significant calculation/architecture changes
+3. `docs/docs/history/` — date-prefixed markdown for significant calculation/architecture changes

@@ -17,7 +17,7 @@ End the session by updating all project documentation and memory to reflect work
    - Add a dated entry to the "Current Status Summary" in `docs/project-phases.md`
    - Update the status emoji in the phase table
 
-3. **Update history** — if significant calculation or architecture changes were made, create a new `history/YYYY-MM-DD-<short-description>.md` file summarising what changed and why.
+3. **Update history** — if significant calculation or architecture changes were made, create a new `docs/history/YYYY-MM-DD-<short-description>.md` file summarising what changed and why.
 
 4. **Update memory** — review each memory file and update stale entries:
    - `memory/project-phase-status.md` — current phase completion state

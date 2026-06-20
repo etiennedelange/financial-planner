@@ -16,5 +16,5 @@
 - [x] Dark mode support with theme toggle (Light/Dark/System)
 
 **Documentation:**
-- See `history/2026-01-02-calculation-fixes-and-ui-improvements.md`
-- See `history/2026-01-05-insights-tab-fix-and-testing-framework.md`
+- See `docs/history/2026-01-02-calculation-fixes-and-ui-improvements.md`
+- See `docs/history/2026-01-05-insights-tab-fix-and-testing-framework.md`

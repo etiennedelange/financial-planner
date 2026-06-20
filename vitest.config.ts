@@ -1,5 +1,5 @@
-import { defineConfig } from 'vitest/config'
-import path from 'path'
+import path from 'path';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
@@ -27,7 +27,7 @@ export default defineConfig({
         '**/types/**',
         '**/__tests__/**',
         '**/verify-*.ts',
-        'history/**',
+        'docs/history/**',
       ],
       thresholds: {
         lines: 90,

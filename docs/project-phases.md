@@ -193,7 +193,7 @@ docs/
 2. Update the status emoji in the phase table above (✅ for complete, 🔄 for in progress, 🔲 for pending)
 3. Add a dated status update to the "Current Status Summary" section
 4. Each phase file should be self-contained and focus on that phase's scope
-5. Reference related history files in `history/` for deep dives
+5. Reference related history files in `docs/history/` for deep dives
 6. Keep the main `project-phases.md` file as a lightweight index
 
 **When creating new phases:**

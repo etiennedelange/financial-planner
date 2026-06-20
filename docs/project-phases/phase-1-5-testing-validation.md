@@ -72,4 +72,4 @@
 - UI components: 80%
 - Integration flows: 90%
 
-**Documentation:** See `history/testing-and-validation-plan.md`
+**Documentation:** See `docs/history/testing-and-validation-plan.md`

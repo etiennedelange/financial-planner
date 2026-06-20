@@ -14,14 +14,14 @@ Simply copy one of the commands below and paste it to Claude Code:
 
 ### Consolidate Duplicate Functions
 ```
-Implement Task 1 from history/testing-and-validation-plan.md:
+Implement Task 1 from docs/history/testing-and-validation-plan.md:
 Consolidate the duplicate projectFinalSavings functions into a single
 shared utility at lib/calculations/utils/projection.ts
 ```
 
 ### Enhance Debug Window
 ```
-Implement Task 2 from history/testing-and-validation-plan.md:
+Implement Task 2 from docs/history/testing-and-validation-plan.md:
 Add compounding method display and calculation checksums to the Debug Window
 ```
 
@@ -31,13 +31,13 @@ Add compounding method display and calculation checksums to the Debug Window
 
 ### Add Unit Tests
 ```
-Implement Task 3 from history/testing-and-validation-plan.md:
+Implement Task 3 from docs/history/testing-and-validation-plan.md:
 Set up Vitest and create unit tests for core calculation functions
 ```
 
 ### Add Integration Tests
 ```
-Implement Task 4 from history/testing-and-validation-plan.md:
+Implement Task 4 from docs/history/testing-and-validation-plan.md:
 Create cross-tab consistency tests to ensure all tabs show the same values
 ```
 
@@ -47,13 +47,13 @@ Create cross-tab consistency tests to ensure all tabs show the same values
 
 ### Display Mode Tests
 ```
-Implement Task 5 from history/testing-and-validation-plan.md:
+Implement Task 5 from docs/history/testing-and-validation-plan.md:
 Add tests to verify display mode toggle updates all currency values
 ```
 
 ### Validation Script
 ```
-Implement Task 6 from history/testing-and-validation-plan.md:
+Implement Task 6 from docs/history/testing-and-validation-plan.md:
 Create automated validation script for debug output
 ```
 
@@ -77,8 +77,8 @@ Please run the following tests and verify they all pass:
 ### Full Implementation
 ```
 Please implement Phase 1.5 (Testing & Validation Framework) from
-history/project-phases.md. Start with P0 tasks, then P1, then P2.
-Follow the detailed steps in history/testing-and-validation-plan.md.
+docs/history/project-phases.md. Start with P0 tasks, then P1, then P2.
+Follow the detailed steps in docs/history/testing-and-validation-plan.md.
 ```
 
 ---
@@ -87,7 +87,7 @@ Follow the detailed steps in history/testing-and-validation-plan.md.
 
 ### After Completing Tasks
 ```
-Please update history/project-phases.md to mark completed tasks
+Please update docs/history/project-phases.md to mark completed tasks
 and update the progress percentage for Phase 1.5
 ```
 
@@ -105,6 +105,6 @@ and update the progress percentage for Phase 1.5
 
 ## References
 
-- Full plan: `history/testing-and-validation-plan.md`
-- Project phases: `history/project-phases.md`
+- Full plan: `docs/history/testing-and-validation-plan.md`
+- Project phases: `docs/history/project-phases.md`
 - Development guide: `CLAUDE.md`
