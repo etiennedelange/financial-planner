@@ -15,6 +15,7 @@ import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import { getSpendingPhaseMultiplier } from "@/lib/calculations/utils/spending-phase"
 import { calculateMonthlyReturn } from "@/lib/calculations/utils/projection"
 import { calculateIncomeTaxWithRebates, calculateLumpSumCommutation } from "@/lib/calculations/retirement-tax"
+import { calculateNextWithdrawal } from "@/lib/calculations/utils/drawdown-withdrawal"
 
 // Account types subject to full income tax on withdrawal — mirrors projection-engine.ts
 const PENSION_TYPES: AccountType[] = ['pension_fund', 'retirement_annuity', 'preservation_fund']
@@ -81,8 +82,7 @@ function simulateSingleRun(
   yearsInRetirement: number,
   inflationRate: number,
   desiredMonthlyIncome: number,
-  strategy: string,
-  withdrawalRate: number,
+  drawdownConfig: DrawdownConfig,
   currentAge: number,
   compoundingMethod: 'nominal' | 'compound',
   lumpSumPercentage: number = 0
@@ -173,8 +173,8 @@ function simulateSingleRun(
   let withdrawal = calculateSimulationWithdrawal(
     balance,
     desiredMonthlyIncome,
-    strategy,
-    withdrawalRate,
+    drawdownConfig.strategy,
+    drawdownConfig.initialWithdrawalRate / 100,
     yearsToRetirement,
     inflationRate
   )
@@ -194,6 +194,21 @@ function simulateSingleRun(
     }
 
     balance = drawdownAccounts.reduce((sum, a) => sum + a.balance, 0)
+
+    // From year 1 onward, recompute the base withdrawal per-strategy against the
+    // live post-growth balance instead of blindly inflating last year's figure —
+    // mirrors projection-engine.ts so the deterministic and Monte Carlo engines
+    // diverge identically across drawdown strategies.
+    if (year > 0) {
+      withdrawal = calculateNextWithdrawal(
+        withdrawal,
+        balance,
+        drawdownConfig,
+        yearsToRetirement + year,
+        inflationRate,
+        desiredMonthlyIncome
+      )
+    }
 
     // Apply spending phase multiplier (Go-Go/Slow-Go/No-Go)
     const spendingMultiplier = getSpendingPhaseMultiplier(year)
@@ -239,8 +254,6 @@ function simulateSingleRun(
 
     balance = Math.max(0, drawdownAccounts.reduce((sum, a) => sum + a.balance, 0))
     yearlyBalances.push(balance)
-
-    withdrawal *= 1 + inflationRate
   }
 
   return {
@@ -351,8 +364,7 @@ export function runMonteCarloSimulation(
       yearsInRetirement,
       inflationRate,
       retirementGoals.desiredMonthlyIncome,
-      drawdownConfig.strategy,
-      drawdownConfig.initialWithdrawalRate / 100,
+      drawdownConfig,
       personalInfo.currentAge,
       compoundingMethod,
       drawdownConfig.lumpSumPercentage ?? 0

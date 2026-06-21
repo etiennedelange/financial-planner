@@ -24,7 +24,15 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-06-20) — Second audit pass: 2026/2027 tax config, net-income reconciliation, MC lump sum tax:**
+**Latest Update (2026-06-21) — Drawdown strategies now diverge after year 1:**
+- ✅ **Per-year withdrawal recompute** — new shared `calculateNextWithdrawal()` (`lib/calculations/utils/drawdown-withdrawal.ts`) replaces the blind `annualWithdrawal *= 1 + inflationRate` that every strategy fell back to from year 1 onward; called from both `projection-engine.ts` and `simulation-engine.ts`
+- ✅ **Fixed Percentage** now recomputed against the live balance every year (Monte Carlo retains the existing "greater of % or desired income" floor); **Variable Percentage** redefined for year 1+ as percentage-of-portfolio clamped to the inflation-adjusted min/max band every year (not just t=0); **Guardrails** implements the Guyton-Klinger ±10% decision rule against configurable upper/lower bands (default 20%)
+- ✅ **Guardrail bands and min/max now editable in the main UI** — `drawdown-strategy-form.tsx` gained "Withdrawal Floor & Ceiling" inputs (Variable Percentage / Guardrails) and "Guardrail Bands" sliders (Guardrails only); previously debug-window-only
+- ✅ 21 new tests (14 unit + 5 deterministic-engine + 2 Monte Carlo); 563/563 tests pass; build succeeds; coverage 96.6-100% on touched calculation files
+- ⚠️ UI changes not verified in a live browser this session (chrome-devtools MCP browser could not launch headful in this sandbox) — verified by code review against the `DrawdownConfig` type contract instead
+- 🎯 **Next:** Phase 9.1 High Priority remaining items (TFSA re-contribution room, dividend withholding tax) per suggested work order
+
+**Previous Update (2026-06-20) — Second audit pass: 2026/2027 tax config, net-income reconciliation, MC lump sum tax:**
 - ✅ **2026/2027 SARS figures corrected** — `tax-year.config.ts` income tax brackets, medical aid tax credits, and CGT annual exclusion were carried over from the prior tax year; updated to the current `INCOME_TAX_BRACKETS_CONFIG` (top bracket now starts at R1,878,600), `MEDICAL_AID_CREDITS_CONFIG` (R376 member/first dependant, R254 additional), and `CGT_ANNUAL_EXCLUSION_CONFIG.individual` (R50,000, up from R40,000); rebates and tax thresholds were verified self-consistent and left unchanged
 - ✅ **`monthlyNetIncomeAtRetirement` mismatch fixed** — `projection-engine.ts` previously recomputed tax on the full gross withdrawal via a flawed shortcut, ignoring medical aid credits and account-type tax segregation, so it disagreed with the detailed "Sample Retirement Payslip" breakdown; now sourced directly from the first drawdown year's already-correct `netIncome`
 - ✅ **Monte Carlo lump sum tax added** — `simulation-engine.ts` deducted the commuted lump sum from pension-type balances but never taxed it; now calls `calculateLumpSumCommutation` once per run and reports the result via new optional `SimulationRun.lumpSumTax` / `SimulationResult.averageLumpSumTax` (does not affect the success-rate metric, which only depends on portfolio balance)

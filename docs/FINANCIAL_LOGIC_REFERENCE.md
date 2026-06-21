@@ -693,10 +693,22 @@ const netIncome = totalWithdrawal - incomeTax - medicalAidContribution
 const inflationAdjustedWithdrawal = totalWithdrawal / Math.pow(1 + inflationRate, year)
 ```
 
-#### 3g. Withdrawal Inflation Adjustment (end of each drawdown year)
+#### 3g. Next Year's Withdrawal (end of each drawdown year)
+
+From year 1 onward, the base withdrawal is recomputed per-strategy against the live
+post-growth balance — see §15 for the per-strategy formulas (`calculateNextWithdrawal`
+in `lib/calculations/utils/drawdown-withdrawal.ts`, shared by both engines). Only
+`fixed_amount_inflation_adjusted` actually reduces to a flat CPI inflation of the prior
+amount; the other three strategies re-derive the amount from `currentBalance` each year,
+which is what makes them diverge from each other after year 0.
 
 ```typescript
-annualWithdrawal *= (1 + inflationRate)
+if (year > 0) {
+  annualWithdrawal = calculateNextWithdrawal(
+    annualWithdrawal, currentTotal, drawdownConfig,
+    yearsToRetirement + year, inflationRate
+  )
+}
 ```
 
 ### Initial Withdrawal by Strategy
@@ -801,7 +813,12 @@ for year = 0 to yearsInRetirement - 1:
   let remaining = min(withdrawal × multiplier, balance)
   // Withdraw in tax-efficient order, mirrors the deterministic projection engine:
   // 1. TFSA (tax-free)        2. Discretionary (CGT only)        3. Pension/RA/preservation (income tax)
-  withdrawal *= (1 + inflationRate)
+  if (year > 0) {
+    withdrawal = calculateNextWithdrawal(
+      withdrawal, balance, drawdownConfig,
+      yearsToRetirement + year, inflationRate, desiredMonthlyIncome
+    )
+  }
 ```
 
 Tax on the pension withdrawal plus CGT-taxable discretionary gains is computed each
@@ -1122,15 +1139,54 @@ function calculateReplacementRatio(
 
 ## 15. Drawdown Strategies
 
-| Strategy | Key | Description |
-|---|---|---|
-| Fixed Percentage | `fixed_percentage` | Withdraw `portfolio × rate` each year |
-| Fixed Amount Inflation-Adjusted | `fixed_amount_inflation_adjusted` | Fixed desired income inflated to retirement date, grows with inflation |
-| Variable Percentage | `variable_percentage` | Inflated desired income, clamped between min and max |
-| Guardrails | `guardrails` | Same clamping as variable, with guardrail triggers for adjustments |
+| Strategy | Key | Year 0 (retirement date) | Year 1+ |
+|---|---|---|---|
+| Fixed Percentage | `fixed_percentage` | `portfolio × rate` | Recomputed as `currentBalance × rate` every year (pure %-of-portfolio in the deterministic engine; Monte Carlo takes the greater of that and CPI-inflated desired income — see §7) |
+| Fixed Amount Inflation-Adjusted | `fixed_amount_inflation_adjusted` | Desired income inflated to retirement date | Prior year's withdrawal × `(1 + inflationRate)` — the only strategy that is a flat CPI escalation |
+| Variable Percentage | `variable_percentage` | Desired income inflated to retirement date, clamped to min/max | `currentBalance × rate`, clamped to the inflation-adjusted min/max for that year |
+| Guardrails | `guardrails` | Same as Variable Percentage | Guyton-Klinger decision rule (below), then clamped to the inflation-adjusted min/max |
 
-All strategies inflate desired income to the retirement date before calculating the first
-withdrawal. All strategies inflate the annual withdrawal by `inflationRate` at end of each year.
+All four strategies share year-0 logic in `calculateInitialWithdrawal` (§6) — this anchor is
+unchanged by the per-year recompute. From year 1 onward, `calculateNextWithdrawal` in
+`lib/calculations/utils/drawdown-withdrawal.ts` is the single source of truth, shared by both
+the deterministic engine (§3g) and Monte Carlo (§7). This is what makes the four strategies
+diverge after year 0 instead of collapsing to an identical CPI-escalation path.
+
+### Guardrails — Guyton-Klinger decision rule
+
+Each year, compare the *actual* withdrawal rate (`previousWithdrawal / currentBalance`) against
+upper/lower bands around the *target* rate (`initialWithdrawalRate`):
+
+```typescript
+const targetRate = initialWithdrawalRate / 100
+const actualRate = previousWithdrawal / currentBalance
+const upperBand = targetRate × (1 + upperGuardrail / 100)   // default upperGuardrail = 20
+const lowerBand = targetRate × (1 - lowerGuardrail / 100)   // default lowerGuardrail = 20
+
+if (actualRate > upperBand) next = previousWithdrawal × 0.9   // capital preservation: cut 10%
+else if (actualRate < lowerBand) next = previousWithdrawal × 1.1  // prosperity rule: raise 10%
+else next = previousWithdrawal × (1 + inflationRate)           // within band: CPI as normal
+```
+
+`upperGuardrail`/`lowerGuardrail` default to 20% (standard Guyton-Klinger) when not set in
+`DrawdownConfig`. Both are user-adjustable in the UI (`drawdown-strategy-form.tsx`,
+5–50% range). The result is then clamped to the same inflation-adjusted min/max as
+Variable Percentage.
+
+### Variable Percentage / Guardrails min-max clamp
+
+`minimumWithdrawal`/`maximumWithdrawal` are monthly figures in today's Rands. Each drawdown
+year they're inflated and annualized before clamping:
+
+```typescript
+const minAtYear = minimumWithdrawal × (1 + inflationRate) ** yearsSinceToday × 12
+const maxAtYear = maximumWithdrawal × (1 + inflationRate) ** yearsSinceToday × 12
+result = Math.min(Math.max(amount, minAtYear), maxAtYear)
+```
+
+This re-clamps every year (not just at year 0) — a percentage-of-portfolio withdrawal that
+falls outside the floor/ceiling in year 5 is just as constrained as one that does so at
+retirement.
 
 ---
 
@@ -1192,6 +1248,11 @@ These rules are non-obvious and easy to get wrong:
 
 17. **Spending phase multiplier applies to the target withdrawal** (`annualWithdrawal × multiplier`),
     not to the actual portfolio withdrawal. The multiplied amount is then capped at portfolio value.
+
+18. **Withdrawal strategy divergence is year 1+ only**: year 0 always uses
+    `calculateInitialWithdrawal` (§6) regardless of strategy. `calculateNextWithdrawal` (§15)
+    takes over from year 1 onward and is what makes the four strategies actually diverge —
+    don't confuse the two when debugging early-vs-later-year withdrawal amounts.
 
 ---
 

@@ -4,6 +4,7 @@ import { TFSA_LIMITS_CONFIG } from "@/lib/constants/tax-year.config"
 import { calculateIncomeTaxWithRebates, calculateLumpSumCommutation, calculateExcessContributionCredit } from "./retirement-tax"
 import { getSpendingPhaseMultiplier } from "./utils/spending-phase"
 import { calculateMonthlyReturn } from "./utils/projection"
+import { calculateNextWithdrawal } from "./utils/drawdown-withdrawal"
 import type {
   Account,
   AccountType,
@@ -407,6 +408,19 @@ export function calculateProjection(
 
     currentTotal = drawdownAccounts.reduce((s, a) => s + a.balance, 0)
 
+    // From year 1 onward, recompute the base withdrawal per-strategy against the
+    // live post-growth balance instead of blindly inflating last year's figure —
+    // this is what makes the four strategies actually diverge over time.
+    if (year > 0) {
+      annualWithdrawal = calculateNextWithdrawal(
+        annualWithdrawal,
+        currentTotal,
+        drawdownConfig,
+        yearsToRetirement + year,
+        inflationRate
+      )
+    }
+
     // Target withdrawal with spending phase multiplier
     const spendingMultiplier = getSpendingPhaseMultiplier(year)
     const targetWithdrawal = Math.min(annualWithdrawal * spendingMultiplier, currentTotal)
@@ -499,8 +513,6 @@ export function calculateProjection(
       excessCreditApplied: creditAppliedThisYear,
       excessCreditRemaining: creditRemaining,
     })
-
-    annualWithdrawal *= 1 + inflationRate
   }
 
   // Use remaining balance from per-account tracking for surplus

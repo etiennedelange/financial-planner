@@ -1386,4 +1386,125 @@ describe('calculateProjection', () => {
       expect(result.accumulatedExcessCredit).toBe(0)
     })
   })
+
+  describe('Drawdown strategy divergence after year 1', () => {
+    // No accumulation phase (currentAge === retirementAge) and a harsh -50% net
+    // return isolates the drawdown-year recompute so each strategy's year-1
+    // withdrawal can be hand-verified exactly. desiredMonthlyIncome is chosen so
+    // every strategy's year-0 withdrawal collapses to the same R40,000 anchor —
+    // any difference that emerges in year 1 is attributable purely to the
+    // per-year recompute logic, not to a different starting point.
+    const divergenceAccount: Account = {
+      id: '1',
+      name: 'Single RA',
+      type: 'retirement_annuity',
+      provider: 'Test Provider',
+      currentBalance: 1000000,
+      monthlyContribution: 0,
+      expectedReturn: -50,
+      annualFees: 0,
+      contributionEscalation: 0,
+    }
+    const divergencePersonalInfo: PersonalInfo = {
+      currentAge: 65,
+      retirementAge: 65,
+      lifeExpectancy: 67,
+      annualIncome: 0,
+    }
+    const divergenceGoals: RetirementGoals = {
+      desiredMonthlyIncome: (1000000 * 0.04) / 12, // R40,000/year anchor across all strategies
+      inflationRate: 5.5,
+      legacyAmount: 0,
+    }
+    const divergenceBaseConfig: DrawdownConfig = {
+      strategy: 'fixed_percentage',
+      initialWithdrawalRate: 4,
+      minimumWithdrawal: 1,
+      maximumWithdrawal: 1_000_000_000,
+      lumpSumPercentage: 0,
+    }
+
+    function withdrawalAtAge(result: ReturnType<typeof calculateProjection>, age: number): number {
+      const row = result.yearlyProjections.find(p => p.age === age)
+      if (!row) throw new Error(`No row at age ${age}`)
+      return row.withdrawals
+    }
+
+    it('year 0 is identical across all four strategies (shared anchor)', () => {
+      const strategies: DrawdownConfig['strategy'][] = [
+        'fixed_percentage',
+        'fixed_amount_inflation_adjusted',
+        'variable_percentage',
+        'guardrails',
+      ]
+      const year0Withdrawals = strategies.map(strategy =>
+        withdrawalAtAge(
+          calculateProjection([divergenceAccount], divergencePersonalInfo, divergenceGoals, {
+            ...divergenceBaseConfig,
+            strategy,
+          }),
+          65
+        )
+      )
+      year0Withdrawals.forEach(w => expect(w).toBeCloseTo(40000, 2))
+    })
+
+    it('fixed_percentage recomputes from the live balance in year 1, not CPI', () => {
+      const result = calculateProjection([divergenceAccount], divergencePersonalInfo, divergenceGoals, {
+        ...divergenceBaseConfig,
+        strategy: 'fixed_percentage',
+      })
+      // Balance after year 0: (1,000,000 * 0.5) - 40,000 = 460,000
+      // Balance after year 1 growth: 460,000 * 0.5 = 230,000
+      // Year-1 withdrawal = 230,000 * 4% = 9,200 (NOT 40,000 * 1.055 = 42,200)
+      expect(withdrawalAtAge(result, 66)).toBeCloseTo(9200, 2)
+    })
+
+    it('fixed_amount_inflation_adjusted still inflates by CPI in year 1 (unchanged behavior)', () => {
+      const result = calculateProjection([divergenceAccount], divergencePersonalInfo, divergenceGoals, {
+        ...divergenceBaseConfig,
+        strategy: 'fixed_amount_inflation_adjusted',
+      })
+      expect(withdrawalAtAge(result, 66)).toBeCloseTo(40000 * 1.055, 2)
+    })
+
+    it('guardrails applies the 10% capital-preservation cut when the rate breaches the upper band', () => {
+      const result = calculateProjection([divergenceAccount], divergencePersonalInfo, divergenceGoals, {
+        ...divergenceBaseConfig,
+        strategy: 'guardrails',
+        upperGuardrail: 20,
+        lowerGuardrail: 20,
+      })
+      // Actual rate = 40,000 / 230,000 ≈ 17.4%, far above the 4.8% upper band
+      // (target 4% × 1.2) → 10% cut: 40,000 × 0.9 = 36,000 (NOT 42,200)
+      expect(withdrawalAtAge(result, 66)).toBeCloseTo(36000, 2)
+    })
+
+    it('variable_percentage and fixed_percentage diverge from fixed_amount_inflation_adjusted by year 1', () => {
+      const fixedAmount = withdrawalAtAge(
+        calculateProjection([divergenceAccount], divergencePersonalInfo, divergenceGoals, {
+          ...divergenceBaseConfig,
+          strategy: 'fixed_amount_inflation_adjusted',
+        }),
+        66
+      )
+      const variablePct = withdrawalAtAge(
+        calculateProjection([divergenceAccount], divergencePersonalInfo, divergenceGoals, {
+          ...divergenceBaseConfig,
+          strategy: 'variable_percentage',
+        }),
+        66
+      )
+      const guardrails = withdrawalAtAge(
+        calculateProjection([divergenceAccount], divergencePersonalInfo, divergenceGoals, {
+          ...divergenceBaseConfig,
+          strategy: 'guardrails',
+        }),
+        66
+      )
+
+      expect(variablePct).not.toBeCloseTo(fixedAmount, 2)
+      expect(guardrails).not.toBeCloseTo(fixedAmount, 2)
+    })
+  })
 })

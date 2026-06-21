@@ -1023,4 +1023,100 @@ describe('runMonteCarloSimulation', () => {
       randomSpy.mockRestore()
     })
   })
+
+  describe('Drawdown strategy divergence after year 1', () => {
+    // No accumulation phase (currentAge === retirementAge), volatility forced to 0,
+    // and a single account isolate the drawdown-year recompute so withdrawals can
+    // be hand-verified exactly via the yearlyBalances deltas. desiredMonthlyIncome
+    // is chosen so every strategy's year-0 withdrawal is the same R40,000 anchor.
+    const personalInfo: PersonalInfo = {
+      currentAge: 65,
+      retirementAge: 65,
+      lifeExpectancy: 67,
+      annualIncome: 0,
+    }
+    const goals: RetirementGoals = {
+      desiredMonthlyIncome: (1000000 * 0.04) / 12,
+      inflationRate: 5.5,
+      legacyAmount: 0,
+    }
+    const baseConfig: DrawdownConfig = {
+      strategy: 'fixed_percentage',
+      initialWithdrawalRate: 4,
+      minimumWithdrawal: 1,
+      maximumWithdrawal: 1_000_000_000,
+      lumpSumPercentage: 0,
+    }
+    const zeroVolatility = {
+      compoundingMethod: 'nominal' as const,
+      equityReturn: 0,
+      bondReturn: 0,
+      cashReturn: 0,
+      equityVolatility: 0,
+      bondVolatility: 0,
+      inflationRate: 5.5,
+    }
+
+    function run(account: Account, config: DrawdownConfig) {
+      return runMonteCarloSimulation([account], personalInfo, goals, config, { numberOfRuns: 1 }, zeroVolatility)
+    }
+
+    it('a harsh negative return: guardrails cuts withdrawal by 10% when the rate breaches the upper band', () => {
+      const account: Account = {
+        id: '1',
+        name: 'Single RA',
+        type: 'retirement_annuity',
+        provider: 'Test Provider',
+        currentBalance: 1000000,
+        monthlyContribution: 0,
+        expectedReturn: -50,
+        annualFees: 0,
+        contributionEscalation: 0,
+      }
+
+      const fixedAmountResult = run(account, { ...baseConfig, strategy: 'fixed_amount_inflation_adjusted' })
+      const guardrailsResult = run(account, { ...baseConfig, strategy: 'guardrails', upperGuardrail: 20, lowerGuardrail: 20 })
+
+      // Year 0 balance: 1,000,000 * 0.5 - 40,000 = 460,000 (identical for both strategies)
+      expect(fixedAmountResult.runs[0].yearlyBalances[0]).toBeCloseTo(460000, 2)
+      expect(guardrailsResult.runs[0].yearlyBalances[0]).toBeCloseTo(460000, 2)
+
+      // Year 1: balance grows to 460,000 * 0.5 = 230,000 before withdrawal.
+      // fixed_amount_inflation_adjusted: withdrawal = 40,000 * 1.055 = 42,200 -> ending 187,800
+      // guardrails: actual rate 40,000/230,000 ≈ 17.4% breaches the 4.8% upper band
+      //   -> 10% cut: withdrawal = 36,000 -> ending 194,000 (NOT 187,800)
+      expect(fixedAmountResult.runs[0].yearlyBalances[1]).toBeCloseTo(230000 - 42200, 2)
+      expect(guardrailsResult.runs[0].yearlyBalances[1]).toBeCloseTo(230000 - 36000, 2)
+      expect(guardrailsResult.runs[0].yearlyBalances[1]).not.toBeCloseTo(fixedAmountResult.runs[0].yearlyBalances[1], 2)
+    })
+
+    it('a strong positive return: fixed_percentage tracks the live balance, diverging from CPI', () => {
+      const account: Account = {
+        id: '1',
+        name: 'Single RA',
+        type: 'retirement_annuity',
+        provider: 'Test Provider',
+        currentBalance: 1000000,
+        monthlyContribution: 0,
+        expectedReturn: 11,
+        annualFees: 0,
+        contributionEscalation: 0,
+      }
+
+      const fixedAmountResult = run(account, { ...baseConfig, strategy: 'fixed_amount_inflation_adjusted' })
+      const fixedPctResult = run(account, { ...baseConfig, strategy: 'fixed_percentage' })
+
+      // Year 0 balance: 1,000,000 * 1.11 - 40,000 = 1,070,000 (identical for both)
+      expect(fixedAmountResult.runs[0].yearlyBalances[0]).toBeCloseTo(1070000, 2)
+      expect(fixedPctResult.runs[0].yearlyBalances[0]).toBeCloseTo(1070000, 2)
+
+      // Year 1: balance grows to 1,070,000 * 1.11 = 1,187,700 before withdrawal.
+      // fixed_amount_inflation_adjusted: withdrawal = 40,000 * 1.055 = 42,200
+      // fixed_percentage: 4% of 1,187,700 = 47,508 (exceeds the desired-income
+      //   floor of 42,200, so the live-balance percentage wins) -> diverges
+      expect(fixedAmountResult.runs[0].yearlyBalances[1]).toBeCloseTo(1187700 - 42200, 2)
+      expect(fixedPctResult.runs[0].yearlyBalances[1]).toBeCloseTo(1187700 - 47508, 2)
+      expect(fixedPctResult.runs[0].yearlyBalances[1]).not.toBeCloseTo(fixedAmountResult.runs[0].yearlyBalances[1], 2)
+    })
+  })
 })

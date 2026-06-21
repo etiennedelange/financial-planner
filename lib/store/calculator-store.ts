@@ -104,6 +104,9 @@ const defaultSettings = {
     minimumWithdrawal: 15000,
     maximumWithdrawal: 60000,
     lumpSumPercentage: 0,
+    // Standard Guyton-Klinger guardrail bands (20% above/below the target rate)
+    upperGuardrail: 20,
+    lowerGuardrail: 20,
   } as DrawdownConfig,
   displayMode: "nominal" as const,
 }
