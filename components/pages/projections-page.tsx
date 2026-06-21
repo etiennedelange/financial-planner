@@ -9,9 +9,10 @@ import type { ProjectionResult, SimulationResult } from "@/types"
 interface ProjectionsPageProps {
   projection: ProjectionResult | null
   simulationResult: SimulationResult | null
+  isSimulating?: boolean
 }
 
-export function ProjectionsPage({ projection, simulationResult }: ProjectionsPageProps) {
+export function ProjectionsPage({ projection, simulationResult, isSimulating }: ProjectionsPageProps) {
   const { personalInfo, retirementGoals } = useCalculatorStore()
 
   return (
@@ -28,6 +29,7 @@ export function ProjectionsPage({ projection, simulationResult }: ProjectionsPag
         lifeExpectancy={personalInfo.lifeExpectancy}
         inflationRate={retirementGoals.inflationRate}
         simulationResult={simulationResult}
+        isSimulating={isSimulating}
       />
 
       <InsightsPanel />

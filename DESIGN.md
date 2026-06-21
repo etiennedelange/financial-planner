@@ -223,7 +223,7 @@ The chrome disappears; the action leads.
 ## 6. Do's and Don'ts
 
 ### Do:
-- **Do** use Analyst Gold on exactly one active element per view. Rarity is authority.
+- **Do** use Analyst Gold on exactly one active element per view, not counting `SectionLabel`'s structural left-border accent (a fixed, repeating chrome element, not a per-view signal). Rarity is authority for the signal use; the structural use is a constant.
 - **Do** use IBM Plex Mono for formatted financial values (currency, percentages) and the wordmark. Mono = calculation context.
 - **Do** layer depth tonally: Vault Black → Surface Dark → Surface Raised. Three steps maximum.
 - **Do** use `ghost` or `outline` button variants for secondary actions when a `primary` is already present in the view.
@@ -234,7 +234,7 @@ The chrome disappears; the action leads.
 
 ### Don't:
 - **Don't** nest `bg-card` inside `bg-card` — use `bg-muted` or `bg-accent` for inner surfaces. Nested cards are always wrong.
-- **Don't** use `border-left` or `border-right` greater than 1px as a colored accent stripe on cards, list items, or callouts. This is the absolute ban. Rewrite with full borders, background tints, or nothing.
+- **Don't** use `border-left` or `border-right` greater than 1px as a colored accent stripe on cards, list items, or callouts. This is the absolute ban. Rewrite with full borders, background tints, or nothing. **Exception:** the canonical `SectionLabel` component (mono-uppercase section headers) keeps a 2px gold (or red, for `destructive`) left-border accent — this is the one sanctioned use of the pattern, a deliberate identity choice for section eyebrows specifically. Don't extend the exception to any other component.
 - **Don't** apply gradient text (`background-clip: text` with a gradient). Financial values must read with the same weight as the rest of the text.
 - **Don't** use IBM Plex Mono for UI labels, navigation, or prose copy. Mono is reserved for financial output and the wordmark — it signals "this is a number," not "this is interesting."
 - **Don't** use Analyst Gold on more than one concurrent element. Two gold nav items, a gold card border, and a gold CTA button in the same view collapse the accent hierarchy.

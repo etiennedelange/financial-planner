@@ -2,6 +2,7 @@
 
 import { PageCard } from "@/components/ui/page-card"
 import { SectionLabel } from "@/components/ui/section-label"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   Accordion,
   AccordionContent,
@@ -182,11 +183,12 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
   }
 
   return (
-    <div className="space-y-4">
-      <SectionLabel>Calculations Breakdown</SectionLabel>
-      <Accordion type="multiple" defaultValue={["inputs", "formulas"]} className="space-y-2">
+    <Card className="dashboard-card shadow-none">
+      <CardContent className="pt-6 space-y-4">
+        <SectionLabel>Calculations Breakdown</SectionLabel>
+        <Accordion type="multiple" defaultValue={["inputs", "formulas"]}>
         {/* Input Summary */}
-        <AccordionItem value="inputs" className="border rounded-lg px-4">
+        <AccordionItem value="inputs" className="border-b last:border-b-0">
           <AccordionTrigger className="text-base font-semibold">
             <div className="flex items-center gap-2">
               <SlidersHorizontal className="h-4 w-4 text-muted-foreground flex-none" />
@@ -309,7 +311,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
         </AccordionItem>
 
         {/* Key Formulas */}
-        <AccordionItem value="formulas" className="border rounded-lg px-4">
+        <AccordionItem value="formulas" className="border-b last:border-b-0">
           <AccordionTrigger className="text-base font-semibold">
             <div className="flex items-center gap-2">
               <Calculator className="h-4 w-4 text-muted-foreground flex-none" />
@@ -413,7 +415,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
         </AccordionItem>
 
         {/* Accumulation Projections */}
-        <AccordionItem value="accumulation" className="border rounded-lg px-4">
+        <AccordionItem value="accumulation" className="border-b last:border-b-0">
           <AccordionTrigger className="text-base font-semibold">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-muted-foreground flex-none" />
@@ -472,7 +474,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
         </AccordionItem>
 
         {/* Drawdown Projections */}
-        <AccordionItem value="drawdown" className="border rounded-lg px-4">
+        <AccordionItem value="drawdown" className="border-b last:border-b-0">
           <AccordionTrigger className="text-base font-semibold">
             <div className="flex items-center gap-2">
               <TrendingDown className="h-4 w-4 text-muted-foreground flex-none" />
@@ -689,7 +691,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
         </AccordionItem>
 
         {/* Monte Carlo Info */}
-        <AccordionItem value="montecarlo" className="border rounded-lg px-4">
+        <AccordionItem value="montecarlo" className="border-b last:border-b-0">
           <AccordionTrigger className="text-base font-semibold">
             <div className="flex items-center gap-2">
               <Shuffle className="h-4 w-4 text-muted-foreground flex-none" />
@@ -748,7 +750,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
         </AccordionItem>
 
         {/* Retirement Tax Analysis */}
-        <AccordionItem value="tax-analysis" className="border rounded-lg px-4">
+        <AccordionItem value="tax-analysis" className="border-b last:border-b-0">
           <AccordionTrigger className="text-base font-semibold">
             <div className="flex items-center gap-2">
               <Receipt className="h-4 w-4 text-muted-foreground flex-none" />
@@ -908,7 +910,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
         </AccordionItem>
 
         {/* Sample Retirement Payslip */}
-        <AccordionItem value="payslip" className="border rounded-lg px-4">
+        <AccordionItem value="payslip" className="border-b last:border-b-0">
           <AccordionTrigger className="text-base font-semibold">
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-muted-foreground flex-none" />
@@ -1016,7 +1018,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
         {/* RA Contribution Optimization */}
         {(() => {
           if (personalInfo.annualIncome <= 0) return (
-            <AccordionItem value="ra-optimization" className="border rounded-lg px-4">
+            <AccordionItem value="ra-optimization" className="border-b last:border-b-0">
               <AccordionTrigger className="text-base font-semibold">
                 <div className="flex items-center gap-2">
                   <Percent className="h-4 w-4 text-muted-foreground flex-none" />
@@ -1037,7 +1039,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
           )
 
           return (
-            <AccordionItem value="ra-optimization" className="border rounded-lg px-4">
+            <AccordionItem value="ra-optimization" className="border-b last:border-b-0">
               <AccordionTrigger className="text-base font-semibold">
                 <div className="flex items-center gap-2">
                   <Percent className="h-4 w-4 text-muted-foreground flex-none" />
@@ -1209,7 +1211,8 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
           )
         })()
         })()}
-      </Accordion>
-    </div>
+        </Accordion>
+      </CardContent>
+    </Card>
   )
 }
