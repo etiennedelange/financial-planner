@@ -12,7 +12,12 @@ export function SuccessGauge({ successRate }: SuccessGaugeProps) {
   const clampedRate = Math.min(100, Math.max(0, successRate))
 
   return (
-    <PageCard label="Success Rate" contentClassName="flex flex-col items-center gap-3">
+    <PageCard
+      label="Success Rate"
+      contentClassName="flex flex-col items-center gap-3"
+      role="img"
+      aria-label={`Retirement success rate: ${successRate.toFixed(0)}% — ${style.label}`}
+    >
         {/* Large percentage display */}
         <div className="flex items-baseline gap-1">
           <span className={`text-5xl font-bold ${style.text}`}>

@@ -76,7 +76,7 @@ export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-0.5">
+      <nav aria-label="Main navigation" className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-0.5">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href
@@ -84,6 +84,7 @@ export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
             <Link
               key={item.href}
               href={item.href}
+              aria-current={isActive ? "page" : undefined}
               className={cn(
                 "group relative flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-all duration-150",
                 isActive
@@ -116,6 +117,7 @@ export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
       <div className="px-3 pb-4 border-t border-border pt-3 space-y-0.5">
         <Link
           href="/calculator/settings"
+          aria-current={pathname === "/calculator/settings" ? "page" : undefined}
           className={cn(
             "group relative flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-all duration-150",
             pathname === "/calculator/settings"
@@ -134,6 +136,7 @@ export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
           {isAnon ? (
             <button
               onClick={() => setAuthModalOpen(true)}
+              aria-label="Sign in to your account"
               className="flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
             >
               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 border border-primary/25">
@@ -144,7 +147,7 @@ export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
+                <button aria-label="Account menu" className="flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 border border-primary/25">
                     <UserIcon className="h-3 w-3 text-primary" />
                   </div>

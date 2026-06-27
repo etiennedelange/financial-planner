@@ -122,6 +122,7 @@ export function ScenarioSwitcher() {
                   className="shrink-0 rounded p-1 text-muted-foreground hover:text-foreground"
                   onClick={(e) => { e.stopPropagation(); startRename(s.id, s.name) }}
                   title="Rename"
+                  aria-label={`Rename scenario ${s.name}`}
                 >
                   <Pencil className="h-3 w-3" />
                 </button>
@@ -130,6 +131,7 @@ export function ScenarioSwitcher() {
                     className="shrink-0 rounded p-1 text-muted-foreground hover:text-destructive"
                     onClick={(e) => { e.stopPropagation(); handleDelete(s.id) }}
                     title="Delete"
+                    aria-label={`Delete scenario ${s.name}`}
                   >
                     <Trash2 className="h-3 w-3" />
                   </button>

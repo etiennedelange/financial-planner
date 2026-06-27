@@ -442,6 +442,7 @@ function AccountCardV3({ account, portfolioPct, onEdit, onDelete }: AccountCardV
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => onDelete(account.id)}
+              aria-label={`Delete account ${account.name}`}
             >
               Delete
             </AlertDialogAction>

@@ -89,7 +89,7 @@ export function ProjectionSummary({
                     <dt className="text-sm text-muted-foreground">Plan Success Rate</dt>
                     <dd className="text-2xl font-bold font-mono">{successRate.toFixed(0)}%</dd>
                   </dl>
-                  <Badge variant="outline" className={cn("border-current", successTier.text)}>
+                  <Badge variant="outline" className={cn("border-current", successTier.text)} aria-label={`Retirement success rate: ${successTier.label}`}>
                     {successTier.label}
                   </Badge>
                 </>
