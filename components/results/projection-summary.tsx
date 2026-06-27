@@ -7,6 +7,7 @@ import type { ProjectionResult, SimulationResult } from "@/types"
 import { formatCurrency } from "@/lib/utils/currency"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { cn } from "@/lib/utils"
+import { getSuccessRateStyle } from "@/lib/utils/success-rate"
 
 interface ProjectionSummaryProps {
   projection: ProjectionResult | null
@@ -18,13 +19,6 @@ interface ProjectionSummaryProps {
   isSimulating?: boolean
 }
 
-function getSuccessTier(rate: number) {
-  if (rate >= 90) return { label: "Excellent", text: "text-chart-2" }
-  if (rate >= 75) return { label: "Good", text: "text-chart-2" }
-  if (rate >= 60) return { label: "Fair", text: "text-warning" }
-  if (rate >= 40) return { label: "Risky", text: "text-warning" }
-  return { label: "Critical", text: "text-destructive" }
-}
 
 export function ProjectionSummary({
   projection,
@@ -42,7 +36,7 @@ export function ProjectionSummary({
   }
 
   const successRate = simulationResult?.successRate ?? 0
-  const successTier = getSuccessTier(successRate)
+  const successTier = getSuccessRateStyle(successRate)
 
   const yearsToRetirement = retirementAge - currentAge
   const yearsToLifeExpectancy = lifeExpectancy - currentAge
