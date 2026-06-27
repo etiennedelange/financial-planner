@@ -1,7 +1,7 @@
 import * as React from "react"
 
 const TOAST_LIMIT = 3
-const TOAST_REMOVE_DELAY = 3000
+const TOAST_REMOVE_DELAY = 4200
 
 type ToastProps = {
   id: string

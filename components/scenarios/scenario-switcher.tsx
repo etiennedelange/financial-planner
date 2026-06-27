@@ -198,7 +198,11 @@ export function ScenarioSwitcher() {
             <AlertDialogCancel onClick={() => setPendingDeleteId(null)}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => { handleDelete(pendingDeleteId!); setPendingDeleteId(null); toast({ title: "Scenario deleted" }) }}
+              onClick={async () => {
+                await handleDelete(pendingDeleteId!)
+                setPendingDeleteId(null)
+                toast({ title: "Scenario deleted" })
+              }}
             >
               Delete
             </AlertDialogAction>
