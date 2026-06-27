@@ -58,11 +58,11 @@ _Identified 2026-06-07 via parallel agent audit (UI/UX, calculations, test cover
 ## 9.3 — UI/UX Polish
 
 ### High Priority
-- [ ] **Success rate color logic** — duplicated across 4 components (`dashboard-metric-card.tsx`, `success-gauge.tsx`, `projection-summary.tsx`, `sticky-results-bar.tsx`); extract to `lib/utils/colors.ts`
-- [ ] **Hardcoded color classes** — `text-green-600`, `bg-red-500`, etc. used directly instead of semantic tokens; audit and replace across all 4 files above
-- [ ] **Accessibility: aria labels** — only 5 aria-label attributes found across 58 components; add to: sidebar nav buttons, form inputs, chart containers, modal dialogs, status badges
-- [ ] **Confirmation before delete** — no dialog before account or scenario deletion (`accounts-page.tsx:44-46`, `scenario-switcher.tsx:73-78`)
-- [ ] **Success feedback** — no toast/confirmation after: add/edit account, export plan, scenario rename, reset to defaults
+- [x] **Success rate color logic** (2026-06-27) — extracted to `lib/utils/success-rate.ts`; unified thresholds ≥90/75/60/40; all 4 consumer components updated; 10 new tests
+- [x] **Hardcoded color classes** (2026-06-27) — `text-green-*`, `text-red-*`, `text-orange-*` replaced with `text-success`, `text-destructive`, `text-warning`, `text-chart-2/4` semantic tokens across all affected components
+- [x] **Accessibility: aria labels** (2026-06-27) — added `aria-label="Main navigation"` + `aria-current="page"` to sidebar; `aria-label` on icon buttons (rename/delete scenario, delete account); `role="img"` + `aria-label` on success gauge; `aria-label` on success rate badge; charts already had labels from prior implementation
+- [x] **Confirmation before delete** (2026-06-27) — AlertDialog added to `scenario-switcher.tsx`; accounts page already had it
+- [x] **Success feedback** (2026-06-27) — shadcn toast system added (`lib/hooks/use-toast.ts`, `components/ui/toaster.tsx`, mounted in calculator layout); wired to: add/edit/delete account, scenario rename/delete, export plan, reset to defaults
 
 ### Medium Priority
 - [ ] **Responsive gaps** — sidebar fixed `w-[220px]` with no mobile collapse; `dashboard-metrics-grid.tsx:145` has no breakpoint below `sm`; expenses page grid has no `md` fallback
