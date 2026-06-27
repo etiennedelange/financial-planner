@@ -1,5 +1,15 @@
 "use client"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -28,6 +38,7 @@ export function ScenarioSwitcher() {
       }))
     )
 
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState("")
   const [creatingNew, setCreatingNew] = useState(false)
@@ -129,7 +140,7 @@ export function ScenarioSwitcher() {
                 {scenarioList.length > 1 && (
                   <button
                     className="shrink-0 rounded p-1 text-muted-foreground hover:text-destructive"
-                    onClick={(e) => { e.stopPropagation(); handleDelete(s.id) }}
+                    onClick={(e) => { e.stopPropagation(); setPendingDeleteId(s.id) }}
                     title="Delete"
                     aria-label={`Delete scenario ${s.name}`}
                   >
@@ -170,6 +181,28 @@ export function ScenarioSwitcher() {
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
+
+      <AlertDialog open={pendingDeleteId !== null} onOpenChange={(open) => { if (!open) setPendingDeleteId(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete {scenarioList.find((s) => s.id === pendingDeleteId)?.name}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove this scenario and all its settings.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingDeleteId(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { handleDelete(pendingDeleteId!); setPendingDeleteId(null) }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DropdownMenu>
   )
 }
