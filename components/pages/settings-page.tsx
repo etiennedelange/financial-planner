@@ -19,6 +19,7 @@ import {
 import { useRef, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
 import type { ProjectionResult } from "@/types"
+import { toast } from "@/lib/hooks/use-toast"
 
 interface SettingsPageProps {
   projection: ProjectionResult | null
@@ -58,6 +59,7 @@ export function SettingsPage({ projection }: SettingsPageProps) {
 
   const handleExportPlan = () => {
     exportPlan(personalInfo, retirementGoals, assumptions, drawdownConfig, displayMode, accounts)
+    toast({ title: "Plan exported" })
   }
 
   const handleImportPlan = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,6 +87,7 @@ export function SettingsPage({ projection }: SettingsPageProps) {
     }
     resetToDefaults()
     setResetPending(false)
+    toast({ title: "Reset to defaults" })
   }
 
   return (

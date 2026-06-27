@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { toast } from "@/lib/hooks/use-toast"
 import { ChevronDown, Pencil, Plus, Trash2 } from "lucide-react"
 import { useRef, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
@@ -60,6 +61,7 @@ export function ScenarioSwitcher() {
     const trimmed = renameValue.trim()
     if (trimmed && trimmed !== scenarioList.find((s) => s.id === id)?.name) {
       await renameScenario(id, trimmed)
+      toast({ title: `Scenario renamed to "${trimmed}"` })
     }
     setRenamingId(null)
   }
@@ -196,7 +198,7 @@ export function ScenarioSwitcher() {
             <AlertDialogCancel onClick={() => setPendingDeleteId(null)}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => { handleDelete(pendingDeleteId!); setPendingDeleteId(null) }}
+              onClick={() => { handleDelete(pendingDeleteId!); setPendingDeleteId(null); toast({ title: "Scenario deleted" }) }}
             >
               Delete
             </AlertDialogAction>

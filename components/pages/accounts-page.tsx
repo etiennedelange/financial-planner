@@ -28,6 +28,7 @@ import { TFSA_LIMITS_CONFIG } from "@/lib/constants/tax-year.config"
 import { cn } from "@/lib/utils"
 import type { Account, AccountType } from "@/types"
 import { useShallow } from "zustand/react/shallow"
+import { toast } from "@/lib/hooks/use-toast"
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -441,7 +442,7 @@ function AccountCardV3({ account, portfolioPct, onEdit, onDelete }: AccountCardV
             <AlertDialogCancel autoFocus>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => onDelete(account.id)}
+              onClick={() => { onDelete(account.id); toast({ title: "Account deleted" }) }}
               aria-label={`Delete account ${account.name}`}
             >
               Delete
@@ -605,8 +606,10 @@ export function AccountsPage() {
   const handleSubmit = (data: Omit<Account, "id">) => {
     if (editingAccount) {
       updateAccount(editingAccount.id, data)
+      toast({ title: "Account updated" })
     } else {
       addAccount({ ...data, id: crypto.randomUUID() })
+      toast({ title: "Account added" })
     }
   }
 

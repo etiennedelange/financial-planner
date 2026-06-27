@@ -8,6 +8,7 @@ import { useAuth } from "@/components/supabase-provider"
 import { CalculatorProvider, useCalculator } from "@/lib/context/calculator-context"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useExpensesStore } from "@/lib/store/expenses-store"
+import { Toaster } from "@/components/ui/toaster"
 
 export default function CalculatorLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -56,6 +57,7 @@ function CalculatorShell({ children }: { children: React.ReactNode }) {
       </AppShell>
       <CommandPalette />
       <DebugWindow projection={projection} simulationResult={simulationResult} className="hidden md:flex fixed bottom-4 right-4 z-50" />
+      <Toaster />
     </>
   )
 }
