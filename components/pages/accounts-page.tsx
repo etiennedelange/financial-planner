@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Plus, ChevronDown, AlertTriangle, Pencil, MoreHorizontal, Database } from "lucide-react"
+import { Plus, ChevronDown, AlertTriangle, Pencil, Trash2, Database, Wallet } from "lucide-react"
 import { FloatingActionBar } from "@/components/ui/floating-action-bar"
+import { PageCard } from "@/components/ui/page-card"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,12 +14,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 import { AccountFormDialog } from "@/components/accounts/account-form-dialog"
@@ -65,12 +60,13 @@ const TYPE_SHORT: Record<AccountType, string> = {
   discretionary: "Disc",
 }
 
+// Type colors: used only in the small type badge chip and the allocation bar (data encoding).
 const TYPE_COLOR: Record<AccountType, string> = {
-  retirement_annuity: "#818cf8", // indigo-400
-  pension_fund: "#60a5fa",       // blue-400
-  preservation_fund: "#2dd4bf",  // teal-400
-  tfsa: "#4ade80",               // green-400
-  discretionary: "#fb923c",      // orange-400
+  retirement_annuity: "#818cf8",
+  pension_fund: "#60a5fa",
+  preservation_fund: "#2dd4bf",
+  tfsa: "#4ade80",
+  discretionary: "#fb923c",
 }
 
 function typeColor(type: AccountType): string {
@@ -78,18 +74,17 @@ function typeColor(type: AccountType): string {
 }
 
 function typeBg(type: AccountType): string {
-  return `${TYPE_COLOR[type]}26` // 15% opacity
+  return `${TYPE_COLOR[type]}22`
 }
 
-// ─── Portfolio hero ─────────────────────────────────────────────────────────────
-// Unboxed, floating — the numbers are the design.
+// ─── Portfolio summary card ─────────────────────────────────────────────────────
 
 interface AllocationSegment {
   type: AccountType
   pct: number
 }
 
-interface PortfolioHeroProps {
+interface PortfolioSummaryCardProps {
   totalBalance: number
   totalMonthly: number
   weightedNetReturn: number
@@ -99,7 +94,7 @@ interface PortfolioHeroProps {
   onSeedClick: () => void
 }
 
-function PortfolioHero({
+function PortfolioSummaryCard({
   totalBalance,
   totalMonthly,
   weightedNetReturn,
@@ -107,84 +102,95 @@ function PortfolioHero({
   segments,
   onAddClick,
   onSeedClick,
-}: PortfolioHeroProps) {
+}: PortfolioSummaryCardProps) {
   const nonZero = segments.filter((s) => s.pct > 0.5)
-  const showReturn = totalBalance > 0
 
   return (
-    <div className="space-y-5 pb-2">
-      <div className="flex justify-end gap-2">
-        <Button size="sm" variant="outline" onClick={onSeedClick}>
-          <Database className="mr-1.5 h-3.5 w-3.5" />
-          Seed
-        </Button>
-        <Button size="sm" onClick={onAddClick}>
-          <Plus className="mr-1.5 h-3.5 w-3.5" />
-          Add Account
-        </Button>
-      </div>
-
-      {/* Hero balance — no container, raw typography */}
-      <div>
-        <p className="font-mono text-[2rem] sm:text-[2.75rem] font-semibold tabular-nums tracking-tight leading-none">
+    <PageCard
+      label="Portfolio"
+      leading={<Wallet className="h-3.5 w-3.5 text-muted-foreground" />}
+      trailing={
+        <div className="ml-auto flex items-center gap-1.5">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onSeedClick}
+            className="h-7 gap-1.5 px-2.5 text-xs text-muted-foreground"
+          >
+            <Database className="h-3 w-3" />
+            Seed
+          </Button>
+          <Button size="sm" onClick={onAddClick} className="h-7 gap-1.5 px-2.5 text-xs">
+            <Plus className="h-3 w-3" />
+            Add Account
+          </Button>
+        </div>
+      }
+      contentClassName="pt-5"
+    >
+      <div className="mt-3 space-y-3">
+        <p className="font-mono text-2xl font-semibold tabular-nums tracking-tight leading-none">
           {formatCurrency(totalBalance)}
         </p>
-      </div>
 
-      {/* Allocation bar — thick, prominent */}
-      {nonZero.length > 0 && (
-        <div className="space-y-2.5">
-          <div className="flex h-2 w-full overflow-hidden rounded-full gap-[2px]">
-            {nonZero.map((seg) => (
-              <div
-                key={seg.type}
-                className="transition-all duration-700"
-                style={{ width: `${seg.pct}%`, backgroundColor: typeColor(seg.type) }}
-              />
-            ))}
-          </div>
-          {/* Legend + secondary stats */}
-          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-            <div className="flex flex-wrap gap-x-3 gap-y-1">
+        {nonZero.length > 0 && (
+          <div className="space-y-2">
+            {/* Allocation bar — type colors allowed here as data encoding */}
+            <div className="flex h-1.5 w-full overflow-hidden rounded-full gap-[2px]">
               {nonZero.map((seg) => (
-                <span key={seg.type} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                  <span
-                    className="inline-block h-1.5 w-1.5 rounded-full flex-none"
-                    style={{ backgroundColor: typeColor(seg.type) }}
-                  />
-                  {GROUP_LABELS_SHORT[seg.type]} {seg.pct.toFixed(0)}%
-                </span>
+                <div
+                  key={seg.type}
+                  className="transition-all duration-700"
+                  style={{ width: `${seg.pct}%`, backgroundColor: typeColor(seg.type) }}
+                />
               ))}
             </div>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span className="text-[11px] text-muted-foreground">
-                <span className="font-mono font-medium text-foreground tabular-nums">
-                  {formatCurrency(totalMonthly)}
-                </span>
-                /mo
-              </span>
-              {showReturn && (
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <span className="font-mono font-medium text-foreground tabular-nums">
-                    {weightedNetReturn.toFixed(1)}%
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
+              <div className="flex flex-wrap gap-x-3 gap-y-1">
+                {nonZero.map((seg) => (
+                  <span
+                    key={seg.type}
+                    className="flex items-center gap-1.5 text-[11px] text-muted-foreground"
+                  >
+                    <span
+                      className="inline-block h-1.5 w-1.5 rounded-full flex-none"
+                      style={{ backgroundColor: typeColor(seg.type) }}
+                    />
+                    {GROUP_LABELS_SHORT[seg.type]} {seg.pct.toFixed(0)}%
                   </span>
-                  net
-                  <InfoTooltip
-                    content="Balance-weighted average return across all accounts, after fees."
-                    side="top"
-                  />
+                ))}
+              </div>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="text-[11px] text-muted-foreground">
+                  <span className="font-mono font-medium text-foreground tabular-nums">
+                    {formatCurrency(totalMonthly)}
+                  </span>
+                  /mo
                 </span>
-              )}
-              <span className="text-[11px] text-muted-foreground">
-                <span className="font-mono font-medium text-foreground tabular-nums">{accountCount}</span> accounts
-              </span>
+                {totalBalance > 0 && (
+                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                    <span className="font-mono font-medium text-foreground tabular-nums">
+                      {weightedNetReturn.toFixed(1)}%
+                    </span>{" "}
+                    net
+                    <InfoTooltip
+                      content="Balance-weighted average return across all accounts, after fees."
+                      side="top"
+                    />
+                  </span>
+                )}
+                <span className="text-[11px] text-muted-foreground">
+                  <span className="font-mono font-medium text-foreground tabular-nums">
+                    {accountCount}
+                  </span>{" "}
+                  {accountCount === 1 ? "account" : "accounts"}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
-      <div className="h-px bg-border" />
-    </div>
+        )}
+      </div>
+    </PageCard>
   )
 }
 
@@ -198,14 +204,23 @@ function TfsaLimitBars({ account }: { account: Account }) {
   const isAnnualOver = annualRate > TFSA_LIMITS_CONFIG.annualLimit
 
   return (
-    <div className="space-y-3 pt-3 mt-3 border-t border-border/50">
-      <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">TFSA Limits</p>
+    <div className="space-y-2.5 pt-3 mt-3 border-t border-border/50">
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+        TFSA Limits
+      </p>
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
           <span className="text-[11px] text-muted-foreground">Lifetime contributed</span>
-          <span className={cn("font-mono text-[11px] tabular-nums", isLifetimeFull ? "text-destructive" : "text-foreground")}>
+          <span
+            className={cn(
+              "font-mono text-[11px] tabular-nums",
+              isLifetimeFull ? "text-destructive" : "text-foreground"
+            )}
+          >
             {formatCurrency(contributed)}
-            <span className="text-muted-foreground"> / {formatCurrency(TFSA_LIMITS_CONFIG.lifetimeLimit)}</span>
+            <span className="text-muted-foreground">
+              {" "}/ {formatCurrency(TFSA_LIMITS_CONFIG.lifetimeLimit)}
+            </span>
           </span>
         </div>
         <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
@@ -229,7 +244,12 @@ function TfsaLimitBars({ account }: { account: Account }) {
       </div>
       <div className="flex items-start justify-between gap-4">
         <span className="text-[11px] text-muted-foreground">Annual rate</span>
-        <span className={cn("font-mono text-[11px] tabular-nums text-right", isAnnualOver ? "text-destructive" : "text-muted-foreground")}>
+        <span
+          className={cn(
+            "font-mono text-[11px] tabular-nums text-right",
+            isAnnualOver ? "text-destructive" : "text-muted-foreground"
+          )}
+        >
           {formatCurrency(annualRate)}/yr
           {isAnnualOver && (
             <span className="block text-destructive">
@@ -242,18 +262,15 @@ function TfsaLimitBars({ account }: { account: Account }) {
   )
 }
 
-// ─── Account card V3 ────────────────────────────────────────────────────────────
-// Cards in a 2-column grid. Top color bar as type identity.
-// Balance is the hero. Proportion bar shows portfolio weight.
+// ─── Account row ────────────────────────────────────────────────────────────────
 
-interface AccountCardV3Props {
+interface AccountRowProps {
   account: Account
-  portfolioPct: number
   onEdit: (account: Account) => void
   onDelete: (id: string) => void
 }
 
-function AccountCardV3({ account, portfolioPct, onEdit, onDelete }: AccountCardV3Props) {
+function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
   const [expanded, setExpanded] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
 
@@ -273,18 +290,13 @@ function AccountCardV3({ account, portfolioPct, onEdit, onDelete }: AccountCardV
 
   return (
     <>
-      <div
-        className={cn(
-          "rounded-xl border border-border bg-card overflow-hidden transition-shadow duration-200",
-          expanded && "shadow-sm"
-        )}
-      >
-        {/* Top color bar — type identity */}
-        <div className="h-[3px] w-full" style={{ backgroundColor: color }} />
-
-        {/* Card body — clickable */}
+      <div>
+        {/* Main row — extends full-width via -mx-6 on parent container */}
         <div
-          className="group p-4 cursor-pointer select-none transition-colors hover:bg-accent/30"
+          className={cn(
+            "group flex items-center gap-3 px-6 py-3 transition-colors cursor-pointer select-none",
+            expanded ? "bg-muted/50 hover:bg-muted/60" : "hover:bg-accent/30"
+          )}
           onClick={toggle}
           role="button"
           tabIndex={0}
@@ -296,138 +308,136 @@ function AccountCardV3({ account, portfolioPct, onEdit, onDelete }: AccountCardV
             }
           }}
         >
-          {/* Header: badge + name + actions + chevron */}
-          <div className="flex items-start justify-between gap-2 mb-4">
-            <div className="flex items-start gap-2 min-w-0">
-              <span
-                className="inline-flex items-center justify-center flex-none mt-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium"
-                style={{ backgroundColor: bg, color }}
-              >
-                {TYPE_SHORT[account.type]}
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm font-medium leading-tight truncate">{account.name}</p>
-                {account.provider && (
-                  <p className="text-xs text-muted-foreground truncate mt-0.5">{account.provider}</p>
-                )}
-              </div>
+          {/* Type badge — only constrained use of type color */}
+          <span
+            className="inline-flex items-center justify-center flex-none rounded px-1.5 py-0.5 text-[10px] font-medium"
+            style={{ backgroundColor: bg, color }}
+          >
+            {TYPE_SHORT[account.type]}
+          </span>
+
+          {/* Name + provider */}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <p className="text-sm font-medium leading-tight truncate">{account.name}</p>
               {tfsaWarning && (
                 <AlertTriangle
-                  className={cn("h-3.5 w-3.5 flex-none mt-0.5", tfsaWarning === "lifetime" ? "text-destructive" : "text-warning")}
-                  aria-label={tfsaWarning === "lifetime" ? "TFSA lifetime limit reached" : "TFSA annual limit exceeded"}
+                  className={cn(
+                    "h-3 w-3 flex-none",
+                    tfsaWarning === "lifetime" ? "text-destructive" : "text-warning"
+                  )}
+                  aria-label={
+                    tfsaWarning === "lifetime"
+                      ? "TFSA lifetime limit reached"
+                      : "TFSA annual limit exceeded"
+                  }
                 />
               )}
             </div>
-            <div className="flex items-center gap-0.5 flex-none">
-              {/* Action buttons — appear on hover */}
-              <div
-                className="flex items-center gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity"
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-              >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => onEdit(account)}
-                  aria-label="Edit account"
-                >
-                  <Pencil className="h-3 w-3" />
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="More actions">
-                      <MoreHorizontal className="h-3 w-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive"
-                      onClick={() => setDeleteOpen(true)}
-                    >
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              {/* Chevron — always visible, shows expand state */}
-              <ChevronDown
-                className={cn(
-                  "h-3.5 w-3.5 text-muted-foreground/50 transition-transform duration-200 flex-none",
-                  expanded && "rotate-180"
-                )}
-                aria-hidden
-              />
-            </div>
+            {account.provider && (
+              <p className="text-xs text-muted-foreground truncate">{account.provider}</p>
+            )}
           </div>
 
-          {/* Balance — hero number */}
-          <p className="font-mono text-2xl font-semibold tabular-nums tracking-tight leading-none mb-4">
+          {/* Secondary stats — hidden on mobile */}
+          <div className="hidden sm:flex items-center gap-3 flex-none">
+            <span className="text-[11px] text-muted-foreground font-mono tabular-nums">
+              +{formatCurrency(account.monthlyContribution)}/mo
+            </span>
+            <span className="text-[11px] text-muted-foreground font-mono tabular-nums">
+              {netReturn.toFixed(1)}% net
+            </span>
+          </div>
+
+          {/* Balance */}
+          <p className="font-mono text-sm font-semibold tabular-nums tracking-tight shrink-0">
             {formatCurrency(account.currentBalance)}
           </p>
 
-          {/* Proportion bar */}
-          <div className="space-y-1.5">
-            <div className="h-[3px] w-full rounded-full bg-muted overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${portfolioPct}%`, backgroundColor: color }}
-              />
+          {/* Actions + chevron */}
+          <div className="flex items-center gap-0.5 flex-none">
+            <div
+              className="flex items-center gap-0.5 opacity-100 md:opacity-40 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => onEdit(account)}
+                aria-label="Edit account"
+              >
+                <Pencil className="h-3 w-3" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                onClick={() => setDeleteOpen(true)}
+                aria-label="Delete account"
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-muted-foreground tabular-nums font-mono">
-                {portfolioPct.toFixed(1)}%
-              </span>
-              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                <span className="font-mono tabular-nums">+{formatCurrency(account.monthlyContribution)}/mo</span>
-                <span className="text-border">·</span>
-                <span className="font-mono tabular-nums">{netReturn.toFixed(1)}% net</span>
-              </div>
-            </div>
+            <ChevronDown
+              className={cn(
+                "h-3.5 w-3.5 text-muted-foreground/50 transition-transform duration-200 flex-none",
+                expanded && "rotate-180"
+              )}
+              aria-hidden
+            />
           </div>
-
         </div>
 
-        {/* Expanded detail panel */}
-        {expanded && (
-          <div className="border-t border-border/60 bg-muted/30 px-4 py-4 animate-in fade-in-0 duration-150">
-            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground mb-0.5">
-                  Expected return
-                </p>
-                <p className="font-mono text-sm tabular-nums">{account.expectedReturn.toFixed(1)}%</p>
+        {/* Expanded detail panel — grid-template-rows trick gives symmetric enter/exit */}
+        <div
+          className={cn(
+            "grid transition-[grid-template-rows] duration-200 motion-reduce:transition-none",
+            expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+          )}
+          aria-hidden={expanded ? undefined : true}
+        >
+          <div className="min-h-0 overflow-hidden">
+            <div
+              className={cn(
+                "px-6 pb-4 bg-muted/50 border-t border-border/40",
+                "transition-opacity duration-150 motion-reduce:transition-none",
+                expanded ? "opacity-100" : "opacity-0"
+              )}
+            >
+              <div className="pt-3 grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+                    Expected return
+                  </p>
+                  <p className="font-mono text-sm tabular-nums">{account.expectedReturn.toFixed(1)}%</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+                    Annual fees
+                  </p>
+                  <p className="font-mono text-sm tabular-nums">{account.annualFees.toFixed(2)}%</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+                    Net return
+                  </p>
+                  <p className="font-mono text-sm tabular-nums">{netReturn.toFixed(1)}%</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+                    Escalation
+                  </p>
+                  <p className="font-mono text-sm tabular-nums">
+                    {account.contributionEscalation.toFixed(1)}%/yr
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground mb-0.5">
-                  Annual fees
-                </p>
-                <p className="font-mono text-sm tabular-nums">{account.annualFees.toFixed(2)}%</p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground mb-0.5">
-                  Net return
-                </p>
-                <p
-                  className="font-mono text-sm tabular-nums"
-                  style={{ color: netReturn >= 7 ? typeColor("tfsa") : undefined }}
-                >
-                  {netReturn.toFixed(1)}%
-                </p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground mb-0.5">
-                  Escalation
-                </p>
-                <p className="font-mono text-sm tabular-nums">
-                  {account.contributionEscalation.toFixed(1)}%/yr
-                </p>
-              </div>
+              {account.type === "tfsa" && <TfsaLimitBars account={account} />}
             </div>
-
-            {account.type === "tfsa" && <TfsaLimitBars account={account} />}
           </div>
-        )}
+        </div>
       </div>
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
@@ -443,7 +453,10 @@ function AccountCardV3({ account, portfolioPct, onEdit, onDelete }: AccountCardV
             <AlertDialogCancel autoFocus>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => { onDelete(account.id); toast({ title: "Account deleted" }) }}
+              onClick={() => {
+                onDelete(account.id)
+                toast({ title: "Account deleted" })
+              }}
               aria-label={`Delete account ${account.name}`}
             >
               Delete
@@ -455,10 +468,9 @@ function AccountCardV3({ account, portfolioPct, onEdit, onDelete }: AccountCardV
   )
 }
 
-// ─── Group section ───────────────────────────────────────────────────────────────
-// Bold horizontal section header + 2-column card grid below.
+// ─── Account group card ──────────────────────────────────────────────────────────
 
-interface GroupSectionV3Props {
+interface AccountGroupCardProps {
   type: AccountType
   accounts: Account[]
   totalBalance: number
@@ -466,59 +478,53 @@ interface GroupSectionV3Props {
   onDelete: (id: string) => void
 }
 
-function GroupSectionV3({ type, accounts, totalBalance, onEdit, onDelete }: GroupSectionV3Props) {
+function AccountGroupCard({ type, accounts, totalBalance, onEdit, onDelete }: AccountGroupCardProps) {
   const groupBalance = accounts.reduce((s, a) => s + a.currentBalance, 0)
   const groupPct = totalBalance > 0 ? (groupBalance / totalBalance) * 100 : 0
   const color = typeColor(type)
+  const bg = typeBg(type)
 
   return (
-    <div className="space-y-3">
-      {/* Section header — bold, horizontal */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="h-[14px] w-[3px] rounded-full flex-none" style={{ backgroundColor: color }} />
-          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground">
-            {GROUP_LABELS[type]}
-          </span>
-          <span className="text-[11px] text-muted-foreground opacity-50">· {accounts.length}</span>
-        </div>
-        <div className="flex items-center gap-3">
+    <PageCard
+      label={GROUP_LABELS[type]}
+      trailing={
+        <div className="ml-auto flex items-center gap-2">
           <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
             {formatCurrency(groupBalance)}
           </span>
           {totalBalance > 0 && (
             <span
               className="text-[10px] font-medium font-mono tabular-nums rounded px-1.5 py-0.5"
-              style={{ backgroundColor: typeBg(type), color }}
+              style={{ backgroundColor: bg, color }}
             >
               {groupPct.toFixed(0)}%
             </span>
           )}
         </div>
-      </div>
-
-      {/* 2-column card grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
+      }
+      noContentPadX
+      contentClassName="pt-5"
+    >
+      <div className="mt-2 divide-y divide-border/40">
         {accounts.map((account) => (
-          <AccountCardV3
+          <AccountRow
             key={account.id}
             account={account}
-            portfolioPct={totalBalance > 0 ? (account.currentBalance / totalBalance) * 100 : 0}
             onEdit={onEdit}
             onDelete={onDelete}
           />
         ))}
       </div>
-    </div>
+    </PageCard>
   )
 }
 
-// ─── Empty state ──────────────────────────────────────────────────────────────────
+// ─── Empty state ─────────────────────────────────────────────────────────────────
 
-function EmptyStateV3({ onAdd, onSeed }: { onAdd: () => void; onSeed: () => void }) {
+function EmptyState({ onAdd, onSeed }: { onAdd: () => void; onSeed: () => void }) {
   return (
     <div className="pt-4">
-      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16 text-center gap-4">
+      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16 text-center gap-4">
         <div className="space-y-1.5">
           <p className="text-sm font-medium">No accounts yet</p>
           <p className="text-sm text-muted-foreground max-w-sm">
@@ -557,9 +563,14 @@ export function AccountsPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
 
-  const totalBalance = useMemo(() => accounts.reduce((s, a) => s + a.currentBalance, 0), [accounts])
-  const totalMonthly = useMemo(() => accounts.reduce((s, a) => s + a.monthlyContribution, 0), [accounts])
-
+  const totalBalance = useMemo(
+    () => accounts.reduce((s, a) => s + a.currentBalance, 0),
+    [accounts]
+  )
+  const totalMonthly = useMemo(
+    () => accounts.reduce((s, a) => s + a.monthlyContribution, 0),
+    [accounts]
+  )
   const weightedNetReturn = useMemo(() => {
     if (totalBalance === 0) return 0
     return accounts.reduce((sum, a) => {
@@ -618,7 +629,7 @@ export function AccountsPage() {
   if (!accounts.length) {
     return (
       <>
-        <EmptyStateV3 onAdd={handleAddClick} onSeed={handleSeedClick} />
+        <EmptyState onAdd={handleAddClick} onSeed={handleSeedClick} />
         <AccountFormDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
@@ -631,9 +642,8 @@ export function AccountsPage() {
 
   return (
     <>
-      <div className="space-y-7 pb-4 md:pb-16">
-        {/* Floating portfolio hero */}
-        <PortfolioHero
+      <div className="space-y-4 pb-4 md:pb-16">
+        <PortfolioSummaryCard
           totalBalance={totalBalance}
           totalMonthly={totalMonthly}
           weightedNetReturn={weightedNetReturn}
@@ -643,19 +653,16 @@ export function AccountsPage() {
           onSeedClick={handleSeedClick}
         />
 
-        {/* Type-grouped card grids */}
-        <div className="space-y-7">
-          {GROUP_ORDER.filter((type) => grouped[type]).map((type) => (
-            <GroupSectionV3
-              key={type}
-              type={type}
-              accounts={grouped[type]!}
-              totalBalance={totalBalance}
-              onEdit={handleEditClick}
-              onDelete={removeAccount}
-            />
-          ))}
-        </div>
+        {GROUP_ORDER.filter((type) => grouped[type]).map((type) => (
+          <AccountGroupCard
+            key={type}
+            type={type}
+            accounts={grouped[type]!}
+            totalBalance={totalBalance}
+            onEdit={handleEditClick}
+            onDelete={removeAccount}
+          />
+        ))}
 
         <AccountFormDialog
           open={dialogOpen}

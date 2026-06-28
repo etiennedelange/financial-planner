@@ -16,6 +16,7 @@
 - ✅ **Overcrowded right-side nav** — resolved by prior redesign; debug icon relocated, theme controls merged
 - ✅ **Welcome banner is redundant** — resolved by prior redesign; banner removed
 - ✅ **Duplicate CTAs in empty account state** (2026-06-28) — removed ghost "Add another account" from populated accounts list; removed "Add accounts" banner from metrics grid; overview shows GettingStarted exclusively when no projection
+- ✅ **Accounts page visual language mismatch** (2026-06-28) — full rebuild: replaced floating hero number + 2-col card grid + custom section headers with `PageCard` + `SectionLabel` structure; compact list rows with expand-in-place detail; type colors constrained to badge chip and allocation bar only; no colored top-bar stripes
 - **Empty chart placeholders dominate viewport** — two large blank cards push all useful content below the fold before any data is added; make them compact or hidden until populated
 
 ### High Priority

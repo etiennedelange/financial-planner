@@ -26,6 +26,12 @@ interface PageCardProps extends Omit<React.ComponentProps<"div">, "children"> {
    * Use space-y-* to control the gap between the label header and your content.
    */
   contentClassName?: string
+  /**
+   * Removes horizontal padding from CardContent so children can bleed edge-to-edge.
+   * The label row keeps its own px-6 so it stays visually aligned.
+   * Use for list/row sections where rows need to reach the card border.
+   */
+  noContentPadX?: boolean
   children?: ReactNode
 }
 
@@ -68,14 +74,16 @@ export function PageCard({
   trailing,
   className,
   contentClassName,
+  noContentPadX = false,
   children,
   ...props
 }: PageCardProps) {
   return (
     <Card className={cn("shadow-none", className)} {...props}>
-      <CardContent className={cn("pt-6", contentClassName)}>
+      <CardContent className={cn("pt-6", noContentPadX && "px-0", contentClassName)}>
         {/* w-full ensures left-alignment even inside flex-col/items-center parents */}
-        <div className="w-full">
+        {/* px-6 on the label row restores indent when the card has noContentPadX */}
+        <div className={cn("w-full", noContentPadX && "px-6")}>
           <div className="flex items-center gap-2">
             {leading}
             <SectionLabel variant={labelVariant}>{label}</SectionLabel>

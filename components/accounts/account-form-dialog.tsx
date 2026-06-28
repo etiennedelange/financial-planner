@@ -28,9 +28,9 @@ import {
 } from "@/components/ui/drawer"
 import type { Account, AccountType } from "@/types"
 import { ACCOUNT_TYPE_LABELS } from "@/types"
+import { InfoTooltip } from "@/components/ui/info-tooltip"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
-import { cn } from "@/lib/utils"
 
 // ─── Schema ─────────────────────────────────────────────────────────────────
 
@@ -57,7 +57,7 @@ type AccountFormData = z.infer<typeof accountSchema>
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false)
+  const [isMobile, setIsMobile] = useState<boolean | null>(null)
   useEffect(() => {
     setIsMobile(window.innerWidth < 640)
   }, [])
@@ -77,22 +77,14 @@ const getDefaultValues = (account?: Account | null): AccountFormData => ({
   tfsaContributionsToDate: account?.tfsaContributionsToDate,
 })
 
-// ─── Progress header ──────────────────────────────────────────────────────────
+// ─── Progress header (add flow only) ─────────────────────────────────────────
 
-interface StepHeaderProps {
-  step: 1 | 2
-  isEdit: boolean
-}
-
-function StepHeader({ step, isEdit }: StepHeaderProps) {
-  const title = isEdit ? "Edit Account" : "Add Account"
-  const stepLabel = step === 1 ? "Essentials" : "Performance"
-
+function StepHeader({ step }: { step: 1 | 2 }) {
   return (
     <div>
-      <p className="text-base font-semibold leading-none">{title}</p>
+      <p className="text-base font-semibold leading-none">Add Account</p>
       <p className="text-xs text-muted-foreground mt-1">
-        Step {step} of 2 — {stepLabel}
+        Step {step} of 2 — {step === 1 ? "Essentials" : "Performance"}
       </p>
       <div className="mt-3 h-[2px] w-full rounded-full bg-muted overflow-hidden">
         <div
@@ -104,22 +96,13 @@ function StepHeader({ step, isEdit }: StepHeaderProps) {
   )
 }
 
-// ─── Step 1: Essentials ───────────────────────────────────────────────────────
+// ─── Shared field sections ────────────────────────────────────────────────────
 
-interface Step1Props {
-  form: ReturnType<typeof useForm<AccountFormData>>
-  onContinue: () => void
-  onCancel: () => void
-}
+type FormRef = ReturnType<typeof useForm<AccountFormData>>
 
-function Step1({ form, onContinue, onCancel }: Step1Props) {
-  const { register, setValue, watch, trigger, formState: { errors } } = form
+function EssentialFields({ form }: { form: FormRef }) {
+  const { register, setValue, watch, formState: { errors } } = form
   const selectedType = watch("type")
-
-  const handleContinue = async () => {
-    const valid = await trigger(["name", "provider", "type", "currentBalance", "monthlyContribution"])
-    if (valid) onContinue()
-  }
 
   return (
     <div className="space-y-4">
@@ -182,28 +165,11 @@ function Step1({ form, onContinue, onCancel }: Step1Props) {
           />
         </div>
       </div>
-
-      <div className="flex justify-between items-center pt-2">
-        <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="button" onClick={handleContinue}>
-          Continue →
-        </Button>
-      </div>
     </div>
   )
 }
 
-// ─── Step 2: Performance ─────────────────────────────────────────────────────
-
-interface Step2Props {
-  form: ReturnType<typeof useForm<AccountFormData>>
-  isEdit: boolean
-  onBack: () => void
-}
-
-function Step2({ form, isEdit, onBack }: Step2Props) {
+function PerformanceFields({ form }: { form: FormRef }) {
   const { register, watch, formState: { errors } } = form
   const selectedType = watch("type")
 
@@ -211,7 +177,13 @@ function Step2({ form, isEdit, onBack }: Step2Props) {
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="af-return">Expected Return (%)</Label>
+          <div className="flex items-center gap-1.5">
+            <Label htmlFor="af-return">Expected Return (%)</Label>
+            <InfoTooltip
+              content="SA equity: 10–12% | Balanced: 7–10% | Bonds: 8–9% | Cash: 7–8%"
+              side="top"
+            />
+          </div>
           <Input
             id="af-return"
             type="number"
@@ -225,7 +197,13 @@ function Step2({ form, isEdit, onBack }: Step2Props) {
           )}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="af-fees">Annual Fees (%)</Label>
+          <div className="flex items-center gap-1.5">
+            <Label htmlFor="af-fees">Annual Fees (%)</Label>
+            <InfoTooltip
+              content="Index fund: 0.2–0.5% | Active fund: 1–2% | Wrap account: 2–3%"
+              side="top"
+            />
+          </div>
           <Input
             id="af-fees"
             type="number"
@@ -239,7 +217,13 @@ function Step2({ form, isEdit, onBack }: Step2Props) {
           )}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="af-escalation">Escalation (%)</Label>
+          <div className="flex items-center gap-1.5">
+            <Label htmlFor="af-escalation">Escalation (%)</Label>
+            <InfoTooltip
+              content="CPI-linked: 5–5.5% recommended. Use 0% if your contribution is a fixed rand amount."
+              side="top"
+            />
+          </div>
           <Input
             id="af-escalation"
             type="number"
@@ -278,14 +262,74 @@ function Step2({ form, isEdit, onBack }: Step2Props) {
           )}
         </div>
       )}
+    </div>
+  )
+}
 
+// ─── Add flow: 2-step wizard ──────────────────────────────────────────────────
+
+interface Step1Props {
+  form: FormRef
+  onContinue: () => void
+  onCancel: () => void
+}
+
+function Step1({ form, onContinue, onCancel }: Step1Props) {
+  const { trigger } = form
+
+  const handleContinue = async () => {
+    const valid = await trigger(["name", "provider", "type", "currentBalance", "monthlyContribution"])
+    if (valid) onContinue()
+  }
+
+  return (
+    <div className="space-y-4">
+      <EssentialFields form={form} />
+      <div className="flex justify-between items-center pt-2">
+        <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="button" onClick={handleContinue}>
+          Continue →
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+interface Step2Props {
+  form: FormRef
+  onBack: () => void
+}
+
+function Step2({ form, onBack }: Step2Props) {
+  return (
+    <div className="space-y-4">
+      <PerformanceFields form={form} />
       <div className="flex justify-between items-center pt-2">
         <Button type="button" variant="ghost" size="sm" onClick={onBack}>
           ← Back
         </Button>
-        <Button type="submit">
-          {isEdit ? "Update" : "Add"} Account
+        <Button type="submit">Add Account</Button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Edit form: all fields on one scrollable view ─────────────────────────────
+
+function EditForm({ form, onCancel }: { form: FormRef; onCancel: () => void }) {
+  return (
+    <div className="space-y-5">
+      <EssentialFields form={form} />
+      <div className="border-t border-border/50 pt-4">
+        <PerformanceFields form={form} />
+      </div>
+      <div className="flex justify-between items-center pt-2">
+        <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+          Cancel
         </Button>
+        <Button type="submit">Update Account</Button>
       </div>
     </div>
   )
@@ -313,13 +357,22 @@ function FormBody({ account, onSubmit, onClose }: FormBodyProps) {
     onClose()
   })
 
+  if (isEdit) {
+    return (
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <p className="text-base font-semibold leading-none">Edit Account</p>
+        <EditForm form={form} onCancel={onClose} />
+      </form>
+    )
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <StepHeader step={step} isEdit={isEdit} />
+      <StepHeader step={step} />
       {step === 1 ? (
         <Step1 form={form} onContinue={() => setStep(2)} onCancel={onClose} />
       ) : (
-        <Step2 form={form} isEdit={isEdit} onBack={() => setStep(1)} />
+        <Step2 form={form} onBack={() => setStep(1)} />
       )}
     </form>
   )
@@ -343,6 +396,8 @@ export function AccountFormDialog({
   const isMobile = useIsMobile()
 
   const handleClose = () => onOpenChange(false)
+
+  if (isMobile === null) return null
 
   if (isMobile) {
     return (

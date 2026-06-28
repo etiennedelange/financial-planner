@@ -24,7 +24,13 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-06-28) — UI Polish: floating action bar + CTA cleanup:**
+**Latest Update (2026-06-28) — Accounts page full rebuild to match app design language:**
+- ✅ **Accounts page rebuilt** — replaced floating hero number + 2-col card grid + custom section headers with `PageCard` + `SectionLabel` structure matching Overview/Expenses/Plan; compact horizontal list rows with inline expand-in-place detail accordion; type colors constrained to type badge chip and allocation bar (data encoding) only; no colored top-bar stripes; `rounded-lg` throughout
+- ✅ **Expand interaction** — click row to reveal `EXPECTED RETURN / ANNUAL FEES / NET RETURN / ESCALATION` + TFSA limit bars (where applicable); edit/delete actions appear on hover
+- ✅ **Portfolio summary card** — total balance, thin allocation bar, legend + stats (monthly, net return, account count) all in a single compact `PageCard`; `Add Account` + `Seed` in trailing slot; build clean, no TS errors
+- 🎯 **Next:** Empty chart placeholders still dominate viewport before any data is added
+
+**Previous Update (2026-06-28) — UI Polish: floating action bar + CTA cleanup:**
 - ✅ **`FloatingActionBar` component** — new `components/ui/floating-action-bar.tsx`; fixed-position bar with scroll-hide behavior (hides after 12px down-scroll past 80px, shows after 8px up-scroll); clears BottomNav on mobile (`bottom-14`), respects sidebar on desktop (`md:left-[220px]`)
 - ✅ **Accounts page** — FloatingActionBar with "Add Account" (primary) + "Seed" (secondary) actions; removed ghost "Add another account" button from populated list bottom
 - ✅ **Expenses page** — FloatingActionBar with "New Group" primary action and hint text
