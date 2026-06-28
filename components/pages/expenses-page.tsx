@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { PageCard } from "@/components/ui/page-card"
 import { Input } from "@/components/ui/input"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
+import { FloatingActionBar } from "@/components/ui/floating-action-bar"
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
@@ -545,7 +546,8 @@ export function ExpensesPage() {
   const handleAddGroup = () => setAddingGroup(true)
 
   return (
-    <div className="space-y-6">
+    <>
+    <div className="space-y-6 pb-4 md:pb-16">
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm text-muted-foreground">Track your monthly spending to determine how much you need in retirement.</p>
         <div className="flex items-center gap-2 shrink-0">
@@ -620,5 +622,16 @@ export function ExpensesPage() {
         </div>
       </div>
     </div>
+
+      <FloatingActionBar
+        primary={{
+          label: "New Group",
+          icon: <FolderPlus className="h-3.5 w-3.5" />,
+          onClick: handleAddGroup,
+          disabled: addingGroup,
+        }}
+        hint="Add a spending category to track"
+      />
+    </>
   )
 }

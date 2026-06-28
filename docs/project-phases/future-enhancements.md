@@ -10,13 +10,13 @@
 ## Pending
 
 ### UI Polish (identified 2026-05-10 via visual audit)
-- **Floating bottom action bar** — a fixed bar at the bottom of the viewport for quick actions (e.g. "+ Add Account", "+ Add Expense", scenario switcher). Surfaces the most common write actions without requiring the user to scroll to a section header or navigate away. Should appear on contextually relevant pages (Accounts, Expenses) and collapse/hide on scroll-down to avoid obscuring content. Design to match the sharp/minimal brand — not a mobile-app dock, more like a command-bar footer.
-- **Double headings in Planning Inputs** — each sub-section has an outer label AND an inner card heading with the same text (Personal Information × 2, Retirement Goals × 2, Investment Assumptions / Market Assumptions, Detailed Insights / Insights); remove outer labels or inner card headings
-- **Header two-row layout** — "My Plan" dropdown sits alone below the title, disconnected from the right-side nav; pull it into the nav bar for a single-height header
-- **Overcrowded right-side nav** — 7 interactive elements in one row: debug icon, "Future Value" dropdown, "Nominal" dropdown, "Plan" dropdown, color theme toggle, dark/light toggle, email button; consolidate or move debug elsewhere, merge theme controls
-- **Welcome banner is redundant** — shows username + email already visible in the nav user button; remove or replace with a dismissible first-run tip
-- **Empty chart placeholders dominate viewport** — two large blank cards push all useful content (accounts, planning inputs) below the fold before any data is added; make them compact or hidden until populated
-- **Duplicate CTAs in empty account state** — "+ Add Account" button (section header) and "+ Add Your First Account" (inline empty state) trigger the same action; keep only the inline one
+- ✅ **Floating bottom action bar** (2026-06-28) — `components/ui/floating-action-bar.tsx`; scroll-hide behavior; added to Accounts (Add Account + Seed) and Expenses (New Group) pages
+- ✅ **Double headings in Planning Inputs** — resolved by prior redesign (phase 9.3 layout pass)
+- ✅ **Header two-row layout** — resolved by prior redesign; single-row top bar in current layout
+- ✅ **Overcrowded right-side nav** — resolved by prior redesign; debug icon relocated, theme controls merged
+- ✅ **Welcome banner is redundant** — resolved by prior redesign; banner removed
+- ✅ **Duplicate CTAs in empty account state** (2026-06-28) — removed ghost "Add another account" from populated accounts list; removed "Add accounts" banner from metrics grid; overview shows GettingStarted exclusively when no projection
+- **Empty chart placeholders dominate viewport** — two large blank cards push all useful content below the fold before any data is added; make them compact or hidden until populated
 
 ### High Priority
 - **Spouse/joint retirement planning** — model two incomes, two retirement dates, combined expenses and tax
@@ -40,7 +40,3 @@
 - Update `.mcp.json` and devcontainer config based on findings
 - Document final MCP setup in CLAUDE.md or a dedicated `docs/MCP.md`
 
-### Phase 8: Stock Ticker
-- Dedicated page showing live/delayed market data for JSE and global indices
-- Allow users to link holdings to actual tickers for real-time portfolio valuation
-- Pull current prices to auto-update account balances

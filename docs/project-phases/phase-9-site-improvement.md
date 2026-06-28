@@ -63,6 +63,8 @@ _Identified 2026-06-07 via parallel agent audit (UI/UX, calculations, test cover
 - [x] **Accessibility: aria labels** (2026-06-27) — added `aria-label="Main navigation"` + `aria-current="page"` to sidebar; `aria-label` on icon buttons (rename/delete scenario, delete account); `role="img"` + `aria-label` on success gauge; `aria-label` on success rate badge; charts already had labels from prior implementation
 - [x] **Confirmation before delete** (2026-06-27) — AlertDialog added to `scenario-switcher.tsx`; accounts page already had it
 - [x] **Success feedback** (2026-06-27) — shadcn toast system added (`lib/hooks/use-toast.ts`, `components/ui/toaster.tsx`, mounted in calculator layout); wired to: add/edit/delete account, scenario rename/delete, export plan, reset to defaults
+- [x] **Floating bottom action bar** (2026-06-28) — new `components/ui/floating-action-bar.tsx` with scroll-hide behavior (hides on scroll-down >80px, shows on scroll-up); added to Accounts page (primary: Add Account, secondary: Seed) and Expenses page (primary: New Group); clears BottomNav on mobile (`bottom-14`) and sidebar on desktop (`md:left-[220px]`)
+- [x] **Redundant CTAs cleaned up** (2026-06-28) — removed ghost "Add another account" button from populated accounts list; removed "Add accounts" banner from `dashboard-metrics-grid.tsx`; overview now shows `GettingStarted` exclusively when no projection exists (no parallel empty key-insights card)
 
 ### Medium Priority
 - [ ] **Responsive gaps** — sidebar fixed `w-[220px]` with no mobile collapse; `dashboard-metrics-grid.tsx:145` has no breakpoint below `sm`; expenses page grid has no `md` fallback

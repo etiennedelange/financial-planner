@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { Plus, ChevronDown, AlertTriangle, Pencil, MoreHorizontal, Database } from "lucide-react"
+import { FloatingActionBar } from "@/components/ui/floating-action-bar"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -516,12 +517,7 @@ function GroupSectionV3({ type, accounts, totalBalance, onEdit, onDelete }: Grou
 
 function EmptyStateV3({ onAdd, onSeed }: { onAdd: () => void; onSeed: () => void }) {
   return (
-    <div className="space-y-4 pt-4">
-      <div className="flex items-center justify-between">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">
-          Accounts
-        </p>
-      </div>
+    <div className="pt-4">
       <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16 text-center gap-4">
         <div className="space-y-1.5">
           <p className="text-sm font-medium">No accounts yet</p>
@@ -634,47 +630,55 @@ export function AccountsPage() {
   }
 
   return (
-    <div className="space-y-7">
-      {/* Floating portfolio hero */}
-      <PortfolioHero
-        totalBalance={totalBalance}
-        totalMonthly={totalMonthly}
-        weightedNetReturn={weightedNetReturn}
-        accountCount={accounts.length}
-        segments={allocationSegments}
-        onAddClick={handleAddClick}
-        onSeedClick={handleSeedClick}
-      />
+    <>
+      <div className="space-y-7 pb-4 md:pb-16">
+        {/* Floating portfolio hero */}
+        <PortfolioHero
+          totalBalance={totalBalance}
+          totalMonthly={totalMonthly}
+          weightedNetReturn={weightedNetReturn}
+          accountCount={accounts.length}
+          segments={allocationSegments}
+          onAddClick={handleAddClick}
+          onSeedClick={handleSeedClick}
+        />
 
-      {/* Type-grouped card grids */}
-      <div className="space-y-7">
-        {GROUP_ORDER.filter((type) => grouped[type]).map((type) => (
-          <GroupSectionV3
-            key={type}
-            type={type}
-            accounts={grouped[type]!}
-            totalBalance={totalBalance}
-            onEdit={handleEditClick}
-            onDelete={removeAccount}
-          />
-        ))}
+        {/* Type-grouped card grids */}
+        <div className="space-y-7">
+          {GROUP_ORDER.filter((type) => grouped[type]).map((type) => (
+            <GroupSectionV3
+              key={type}
+              type={type}
+              accounts={grouped[type]!}
+              totalBalance={totalBalance}
+              onEdit={handleEditClick}
+              onDelete={removeAccount}
+            />
+          ))}
+        </div>
+
+        <AccountFormDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          account={editingAccount}
+          onSubmit={handleSubmit}
+        />
       </div>
 
-      {/* Ghost add card */}
-      <button
-        onClick={handleAddClick}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border py-4 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground hover:bg-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
-      >
-        <Plus className="h-3.5 w-3.5" />
-        Add another account
-      </button>
-
-      <AccountFormDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        account={editingAccount}
-        onSubmit={handleSubmit}
+      <FloatingActionBar
+        primary={{
+          label: "Add Account",
+          icon: <Plus className="h-3.5 w-3.5" />,
+          onClick: handleAddClick,
+        }}
+        secondary={{
+          label: "Seed",
+          icon: <Database className="h-3.5 w-3.5" />,
+          onClick: handleSeedClick,
+          variant: "outline",
+        }}
+        hint="Add your RA, TFSA, Pension, or Discretionary account"
       />
-    </div>
+    </>
   )
 }

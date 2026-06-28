@@ -24,7 +24,15 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-06-21) — Drawdown strategies now diverge after year 1:**
+**Latest Update (2026-06-28) — UI Polish: floating action bar + CTA cleanup:**
+- ✅ **`FloatingActionBar` component** — new `components/ui/floating-action-bar.tsx`; fixed-position bar with scroll-hide behavior (hides after 12px down-scroll past 80px, shows after 8px up-scroll); clears BottomNav on mobile (`bottom-14`), respects sidebar on desktop (`md:left-[220px]`)
+- ✅ **Accounts page** — FloatingActionBar with "Add Account" (primary) + "Seed" (secondary) actions; removed ghost "Add another account" button from populated list bottom
+- ✅ **Expenses page** — FloatingActionBar with "New Group" primary action and hint text
+- ✅ **Redundant CTAs removed** — "Add accounts" nudge banner removed from `dashboard-metrics-grid.tsx`; overview now shows `GettingStarted` exclusively when no projection exists (was showing both `GettingStarted` and an empty `KeyInsightsSummary` card in parallel)
+- ✅ **All prior Phase 9.3 high-priority items confirmed complete** — success rate color logic, semantic tokens, aria labels, delete confirmation, toast notifications (all done 2026-06-27, docs accidentally reverted; restored)
+- 🎯 **Next:** Empty chart placeholders still dominate viewport when no data; Phase 9.1 High Priority remaining items (TFSA re-contribution room, dividend withholding tax)
+
+**Previous Update (2026-06-21) — Drawdown strategies now diverge after year 1:**
 - ✅ **Per-year withdrawal recompute** — new shared `calculateNextWithdrawal()` (`lib/calculations/utils/drawdown-withdrawal.ts`) replaces the blind `annualWithdrawal *= 1 + inflationRate` that every strategy fell back to from year 1 onward; called from both `projection-engine.ts` and `simulation-engine.ts`
 - ✅ **Fixed Percentage** now recomputed against the live balance every year (Monte Carlo retains the existing "greater of % or desired income" floor); **Variable Percentage** redefined for year 1+ as percentage-of-portfolio clamped to the inflation-adjusted min/max band every year (not just t=0); **Guardrails** implements the Guyton-Klinger ±10% decision rule against configurable upper/lower bands (default 20%)
 - ✅ **Guardrail bands and min/max now editable in the main UI** — `drawdown-strategy-form.tsx` gained "Withdrawal Floor & Ceiling" inputs (Variable Percentage / Guardrails) and "Guardrail Bands" sliders (Guardrails only); previously debug-window-only

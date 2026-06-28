@@ -1,11 +1,9 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { formatCurrency } from "@/lib/utils/currency"
 import type { ProjectionResult, SimulationResult } from "@/types"
 import { Calendar, DollarSign, Gauge, Hourglass, Target, TrendingUp, Wallet } from "lucide-react"
-import Link from "next/link"
 import { useMemo } from "react"
 import { DashboardMetricCard } from "./dashboard-metric-card"
 
@@ -135,21 +133,8 @@ export function DashboardMetricsGrid({
     ] as const
   }, [projection, simulationResult, isSimulating, displayMode, yearsToRetirement, retirementAge, inflationRate, totalCurrentBalance, totalMonthlyContributions, currentAge])
 
-  const hasNoAccounts = !projection && totalCurrentBalance === 0 && totalMonthlyContributions === 0
-
   return (
     <div className="space-y-3">
-      {hasNoAccounts && (
-        <div className="flex items-center justify-between rounded-lg border border-dashed border-border bg-muted/20 px-4 py-3">
-          <div>
-            <p className="text-sm font-medium text-foreground">Add accounts to see your projections</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Configure your retirement accounts to generate personalised projections</p>
-          </div>
-          <Button asChild size="sm" variant="outline" className="ml-4 shrink-0">
-            <Link href="/calculator/accounts">Add accounts →</Link>
-          </Button>
-        </div>
-      )}
       {/* Fixed 7-column grid — never changes structure, only values update */}
       <div className="dashboard-grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
         {metrics.map((metric) => (

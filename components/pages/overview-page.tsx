@@ -61,18 +61,20 @@ export function OverviewPage({
         />
       </div>
 
-      <KeyInsightsSummary
-        projection={projection}
-        currentAge={currentAge}
-        retirementAge={retirementAge}
-        lifeExpectancy={lifeExpectancy}
-        currentMonthlyIncome={annualIncome / 12}
-        desiredMonthlyIncome={desiredMonthlyIncome}
-        inflationRate={inflationRate}
-        monteCarloSuccessRate={simulationResult?.successRate}
-      />
-
-      {!projection && <GettingStarted />}
+      {projection ? (
+        <KeyInsightsSummary
+          projection={projection}
+          currentAge={currentAge}
+          retirementAge={retirementAge}
+          lifeExpectancy={lifeExpectancy}
+          currentMonthlyIncome={annualIncome / 12}
+          desiredMonthlyIncome={desiredMonthlyIncome}
+          inflationRate={inflationRate}
+          monteCarloSuccessRate={simulationResult?.successRate}
+        />
+      ) : (
+        <GettingStarted />
+      )}
     </div>
   )
 }
