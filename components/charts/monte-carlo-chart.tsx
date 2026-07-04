@@ -134,7 +134,7 @@ export const MonteCarloChart = memo(function MonteCarloChart({
             <>
               <ParticleOverlay
                 isRunning={isRunning}
-                simulationRunCount={simulationResult?.runs.length || 0}
+                simulationRunCount={isRunning ? 5000 : simulationResult?.runs.length || 0}
                 currentAge={currentAge}
                 retirementAge={retirementAge}
               />
