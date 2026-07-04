@@ -29,6 +29,7 @@ import {
 import type { Account, AccountType } from "@/types"
 import { ACCOUNT_TYPE_LABELS } from "@/types"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
+import { PortfolioImpactStrip } from "@/components/accounts/portfolio-impact-strip"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 
@@ -272,9 +273,10 @@ interface Step1Props {
   form: FormRef
   onContinue: () => void
   onCancel: () => void
+  impactStrip: React.ReactNode
 }
 
-function Step1({ form, onContinue, onCancel }: Step1Props) {
+function Step1({ form, onContinue, onCancel, impactStrip }: Step1Props) {
   const { trigger } = form
 
   const handleContinue = async () => {
@@ -285,6 +287,7 @@ function Step1({ form, onContinue, onCancel }: Step1Props) {
   return (
     <div className="space-y-4">
       <EssentialFields form={form} />
+      {impactStrip}
       <div className="flex justify-between items-center pt-2">
         <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
           Cancel
@@ -300,12 +303,14 @@ function Step1({ form, onContinue, onCancel }: Step1Props) {
 interface Step2Props {
   form: FormRef
   onBack: () => void
+  impactStrip: React.ReactNode
 }
 
-function Step2({ form, onBack }: Step2Props) {
+function Step2({ form, onBack, impactStrip }: Step2Props) {
   return (
     <div className="space-y-4">
       <PerformanceFields form={form} />
+      {impactStrip}
       <div className="flex justify-between items-center pt-2">
         <Button type="button" variant="ghost" size="sm" onClick={onBack}>
           ← Back
@@ -318,13 +323,22 @@ function Step2({ form, onBack }: Step2Props) {
 
 // ─── Edit form: all fields on one scrollable view ─────────────────────────────
 
-function EditForm({ form, onCancel }: { form: FormRef; onCancel: () => void }) {
+function EditForm({
+  form,
+  onCancel,
+  impactStrip,
+}: {
+  form: FormRef
+  onCancel: () => void
+  impactStrip: React.ReactNode
+}) {
   return (
     <div className="space-y-5">
       <EssentialFields form={form} />
       <div className="border-t border-border/50 pt-4">
         <PerformanceFields form={form} />
       </div>
+      {impactStrip}
       <div className="flex justify-between items-center pt-2">
         <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
           Cancel
@@ -352,6 +366,23 @@ function FormBody({ account, onSubmit, onClose }: FormBodyProps) {
     defaultValues: getDefaultValues(account),
   })
 
+  const [currentBalance, monthlyContribution, expectedReturn, annualFees] = form.watch([
+    "currentBalance",
+    "monthlyContribution",
+    "expectedReturn",
+    "annualFees",
+  ])
+
+  const impactStrip = (
+    <PortfolioImpactStrip
+      account={account}
+      currentBalance={currentBalance}
+      monthlyContribution={monthlyContribution}
+      expectedReturn={expectedReturn}
+      annualFees={annualFees}
+    />
+  )
+
   const handleSubmit = form.handleSubmit((data) => {
     onSubmit(data)
     onClose()
@@ -361,7 +392,7 @@ function FormBody({ account, onSubmit, onClose }: FormBodyProps) {
     return (
       <form onSubmit={handleSubmit} className="space-y-5">
         <p className="text-base font-semibold leading-none">Edit Account</p>
-        <EditForm form={form} onCancel={onClose} />
+        <EditForm form={form} onCancel={onClose} impactStrip={impactStrip} />
       </form>
     )
   }
@@ -370,9 +401,9 @@ function FormBody({ account, onSubmit, onClose }: FormBodyProps) {
     <form onSubmit={handleSubmit} className="space-y-5">
       <StepHeader step={step} />
       {step === 1 ? (
-        <Step1 form={form} onContinue={() => setStep(2)} onCancel={onClose} />
+        <Step1 form={form} onContinue={() => setStep(2)} onCancel={onClose} impactStrip={impactStrip} />
       ) : (
-        <Step2 form={form} onBack={() => setStep(1)} />
+        <Step2 form={form} onBack={() => setStep(1)} impactStrip={impactStrip} />
       )}
     </form>
   )

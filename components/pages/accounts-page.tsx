@@ -27,39 +27,6 @@ import type { Account, AccountType } from "@/types"
 import { useShallow } from "zustand/react/shallow"
 import { toast } from "@/lib/hooks/use-toast"
 
-// ─── Animated numeric display with spring physics ─────────────────────────────
-
-function AnimatedNumber({
-  value,
-  className,
-}: {
-  value: number
-  className?: string
-}) {
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-
-  return (
-    <m.span
-      className={className}
-      animate={{ opacity: 1 }}
-      initial={{ opacity: 0.5 }}
-      transition={
-        prefersReducedMotion
-          ? { duration: 0.05 }
-          : {
-              type: "spring",
-              stiffness: 20,
-              damping: 10,
-              mass: 0.1,
-            }
-      }
-      key={value}
-    >
-      {value.toLocaleString("en-ZA", { maximumFractionDigits: 0 })}
-    </m.span>
-  )
-}
-
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
 const GROUP_ORDER: AccountType[] = [

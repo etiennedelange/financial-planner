@@ -24,7 +24,14 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-07-04 @ 20:30) — Plan page delight enhancement pass:**
+**Latest Update (2026-07-04 @ 21:10) — Accounts dialog: live portfolio impact preview:**
+- ✅ **New `components/ui/spring-number.tsx`** — Reusable critically-damped spring-physics number display (no overshoot/bounce), replacing the ad-hoc unused `AnimatedNumber` previously dead-coded in `accounts-page.tsx`
+- ✅ **New `components/accounts/portfolio-impact-strip.tsx`** — Add/Edit Account dialog now shows a live "Portfolio impact" panel: total balance, weighted net return, and monthly contribution recompute against the store's other accounts on every keystroke, with spring-animated ticking numbers and up/down arrows on changed rows
+- ✅ Wired into both the 2-step Add wizard (`Step1`/`Step2`) and the single-view Edit form in `account-form-dialog.tsx`, sharing one `form.watch()` across steps so the panel stays consistent as the user moves between steps
+- 🐛 **Bug caught during browser verification and fixed:** initial implementation flagged a row "changed" via a raw-value epsilon threshold, which could disagree with the rendered text (e.g. a return moving from 8.955% → 8.917% is a tiny raw delta but crosses a rounding boundary, rendering "9.0%" → "8.9%" while still labeled "(unchanged)"). Fixed by comparing the *formatted* strings instead of raw deltas
+- ✅ All 573 tests passing; `npm run build` clean; verified interactively via Chrome DevTools MCP in both light and dark themes
+
+**Previous Update (2026-07-04 @ 20:30) — Plan page delight enhancement pass:**
 - ✅ **New `components/ui/animated-value.tsx`** — Reusable component for smooth number value transitions with fade-in/fade-out animation; respects reduced-motion preferences; accepts format functions for currency, percentages, etc.
 - ✅ **Derived value animations across Plan page forms:**
   - Personal Info: Years to retirement, years in retirement, annual income display now animate on change (fade-in when value appears, fade-out when cleared)
