@@ -5,7 +5,7 @@ import { useMonteCarloWorker } from "@/lib/monte-carlo/use-monte-carlo-worker"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import type { ProjectionResult, SimulationResult } from "@/types"
 import { usePathname } from "next/navigation"
-import { createContext, useContext, useDeferredValue, useMemo } from "react"
+import { createContext, useContext, useDeferredValue, useMemo, useState, useCallback } from "react"
 import { useShallow } from "zustand/react/shallow"
 
 interface CalculatorContextValue {
@@ -13,6 +13,7 @@ interface CalculatorContextValue {
   simulationResult: SimulationResult | null
   isSimulating: boolean
   isDeferred: boolean
+  rerunSimulation: () => void
 }
 
 const CalculatorContext = createContext<CalculatorContextValue>({
@@ -20,10 +21,12 @@ const CalculatorContext = createContext<CalculatorContextValue>({
   simulationResult: null,
   isSimulating: false,
   isDeferred: false,
+  rerunSimulation: () => {},
 })
 
 export function CalculatorProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const [rerunTrigger, setRerunTrigger] = useState(0)
 
   const { accounts, personalInfo, retirementGoals, assumptions, drawdownConfig } =
     useCalculatorStore(
@@ -47,9 +50,10 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
     deferredPersonalInfo,
     deferredRetirementGoals,
     deferredDrawdownConfig,
-    1000,
+    5000,
     deferredAssumptions,
-    pathname === "/calculator/overview"
+    pathname === "/calculator/overview",
+    rerunTrigger
   )
 
   const isDeferred =
@@ -75,8 +79,12 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
     [deferredAccounts, deferredPersonalInfo, deferredRetirementGoals, deferredDrawdownConfig, deferredAssumptions]
   )
 
+  const rerunSimulation = useCallback(() => {
+    setRerunTrigger(prev => prev + 1)
+  }, [])
+
   return (
-    <CalculatorContext.Provider value={{ projection, simulationResult, isSimulating, isDeferred }}>
+    <CalculatorContext.Provider value={{ projection, simulationResult, isSimulating, isDeferred, rerunSimulation }}>
       {children}
     </CalculatorContext.Provider>
   )

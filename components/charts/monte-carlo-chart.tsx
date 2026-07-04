@@ -8,10 +8,12 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
+import { Button } from "@/components/ui/button"
 import { MonteCarloParticles } from "./monte-carlo-particles"
+import { useCalculator } from "@/lib/context/calculator-context"
 import { formatCurrency } from "@/lib/utils/formatters"
 import type { SimulationResult } from "@/types"
-import { Activity, Loader2 } from "lucide-react"
+import { Activity, Loader2, RotateCw } from "lucide-react"
 import { memo, useMemo, useRef, useEffect, useState } from "react"
 import {
   Area,
@@ -163,13 +165,27 @@ export const MonteCarloChart = memo(function MonteCarloChart({
     p90: percentiles.p90[index],
   })), [percentiles, currentAge])
 
+  const { rerunSimulation } = useCalculator()
+
   return (
     <Card className="dashboard-card shadow-none" role="figure" aria-label={`Monte Carlo simulation: ${simulationResult.runs.length.toLocaleString()} scenarios showing probability ranges from age ${currentAge} to life expectancy`}>
-      <div className="px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-3 space-y-1">
-        <SectionLabel>Monte Carlo Projection</SectionLabel>
-        <p className="text-sm text-muted-foreground pl-3">
-          Based on {simulationResult.runs.length.toLocaleString()} simulations
-        </p>
+      <div className="px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-3 space-y-1 flex items-start justify-between">
+        <div className="flex-1 space-y-1">
+          <SectionLabel>Monte Carlo Projection</SectionLabel>
+          <p className="text-sm text-muted-foreground pl-3">
+            Based on {simulationResult.runs.length.toLocaleString()} simulations
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={rerunSimulation}
+          className="ml-2 mt-0.5 gap-1"
+          title="Re-run simulation to see particle animation"
+        >
+          <RotateCw className="h-4 w-4" />
+          <span className="hidden sm:inline text-xs">Re-run</span>
+        </Button>
       </div>
       <CardContent className="relative w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
         <div className="animate-in fade-in duration-500">
