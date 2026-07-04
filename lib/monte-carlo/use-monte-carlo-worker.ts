@@ -36,8 +36,6 @@ function simReducer(state: SimState, action: SimAction): SimState {
  * dropped so the component never shows stale data.
  *
  * @param numberOfRuns - primitive so it doesn't cause spurious effect triggers
- * @param enabled - whether to run simulations
- * @param manualRerunTrigger - optional trigger to force re-run with same inputs
  */
 export function useMonteCarloWorker(
   accounts: Account[],
@@ -46,8 +44,7 @@ export function useMonteCarloWorker(
   drawdownConfig: DrawdownConfig,
   numberOfRuns: number,
   marketAssumptions?: MarketAssumptions,
-  enabled = true,
-  manualRerunTrigger = 0
+  enabled = true
 ): { simulationResult: SimulationResult | null; isRunning: boolean } {
   const [{ result, isRunning }, dispatch] = useReducer(simReducer, {
     result: null,
@@ -109,7 +106,6 @@ export function useMonteCarloWorker(
     drawdownConfig,
     numberOfRuns,
     marketAssumptions,
-    manualRerunTrigger,
   ])
 
   // When there are no accounts the result and running flag are always reset

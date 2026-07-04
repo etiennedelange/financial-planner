@@ -8,13 +8,10 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
-import { Button } from "@/components/ui/button"
-import { MonteCarloParticles } from "./monte-carlo-particles"
-import { useCalculator } from "@/lib/context/calculator-context"
 import { formatCurrency } from "@/lib/utils/formatters"
 import type { SimulationResult } from "@/types"
-import { Activity, Loader2, RotateCw } from "lucide-react"
-import { memo, useMemo, useRef, useEffect, useState } from "react"
+import { Activity, Loader2 } from "lucide-react"
+import { memo, useMemo } from "react"
 import {
   Area,
   AreaChart,
@@ -29,57 +26,6 @@ interface MonteCarloChartProps {
   currentAge: number
   retirementAge: number
   isRunning?: boolean
-}
-
-function ParticleOverlay({
-  isRunning,
-  simulationRunCount,
-  currentAge,
-  retirementAge,
-}: {
-  isRunning: boolean
-  simulationRunCount: number
-  currentAge: number
-  retirementAge: number
-}) {
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const [dimensions, setDimensions] = useState({ width: 400, height: 260 })
-
-  useEffect(() => {
-    const updateDimensions = () => {
-      if (containerRef.current?.parentElement) {
-        const rect = containerRef.current.parentElement.getBoundingClientRect()
-        setDimensions({
-          width: Math.max(rect.width, 100),
-          height: Math.max(rect.height, 100)
-        })
-      }
-    }
-
-    updateDimensions()
-    const timer = setTimeout(updateDimensions, 0)
-    window.addEventListener("resize", updateDimensions)
-    return () => {
-      clearTimeout(timer)
-      window.removeEventListener("resize", updateDimensions)
-    }
-  }, [])
-
-  return (
-    <div
-      ref={containerRef}
-      className="absolute inset-0 pointer-events-none"
-    >
-      <MonteCarloParticles
-        isRunning={isRunning}
-        simulationRunCount={simulationRunCount}
-        width={dimensions.width}
-        height={dimensions.height}
-        currentAge={currentAge}
-        maxAge={retirementAge + 35}
-      />
-    </div>
-  )
 }
 
 const chartConfig = {
@@ -131,18 +77,10 @@ export const MonteCarloChart = memo(function MonteCarloChart({
             />
           </svg>
           {isRunning ? (
-            <>
-              <ParticleOverlay
-                isRunning={isRunning}
-                simulationRunCount={isRunning ? 5000 : simulationResult?.runs.length || 0}
-                currentAge={currentAge}
-                retirementAge={retirementAge}
-              />
-              <div className="relative flex flex-col items-center gap-2">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground/50" />
-                <p className="text-sm text-muted-foreground">Running simulation…</p>
-              </div>
-            </>
+            <div className="relative flex flex-col items-center gap-2">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground/50" />
+              <p className="text-sm text-muted-foreground">Running simulation…</p>
+            </div>
           ) : (
             <div className="relative flex flex-col items-center gap-2 text-center">
               <Activity className="h-8 w-8 text-muted-foreground/30" />
@@ -165,117 +103,101 @@ export const MonteCarloChart = memo(function MonteCarloChart({
     p90: percentiles.p90[index],
   })), [percentiles, currentAge])
 
-  const { rerunSimulation } = useCalculator()
-
   return (
     <Card className="dashboard-card shadow-none" role="figure" aria-label={`Monte Carlo simulation: ${simulationResult.runs.length.toLocaleString()} scenarios showing probability ranges from age ${currentAge} to life expectancy`}>
-      <div className="px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-3 space-y-1 flex items-start justify-between">
-        <div className="flex-1 space-y-1">
-          <SectionLabel>Monte Carlo Projection</SectionLabel>
-          <p className="text-sm text-muted-foreground pl-3">
-            Based on {simulationResult.runs.length.toLocaleString()} simulations
-          </p>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={rerunSimulation}
-          className="ml-2 mt-0.5 gap-1"
-          title="Re-run simulation to see particle animation"
-        >
-          <RotateCw className="h-4 w-4" />
-          <span className="hidden sm:inline text-xs">Re-run</span>
-        </Button>
+      <div className="px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-3 space-y-1">
+        <SectionLabel>Monte Carlo Projection</SectionLabel>
+        <p className="text-sm text-muted-foreground pl-3">
+          Based on {simulationResult.runs.length.toLocaleString()} simulations
+        </p>
       </div>
-      <CardContent className="relative w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
-        <div className="animate-in fade-in duration-500">
-          <ChartContainer config={chartConfig} className="h-[180px] md:h-[260px] w-full">
-            <AreaChart
-              data={data}
-              margin={{ top: 16, right: 16, left: 0, bottom: 0 }}
-            >
-              <defs>
-                <linearGradient id="mcBand90" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.08} />
-                  <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.02} />
-                </linearGradient>
-                <linearGradient id="mcBand75" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.15} />
-                  <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.05} />
-                </linearGradient>
-                <linearGradient id="mcBand50" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.22} />
-                  <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.06} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
-              <XAxis
-                dataKey="age"
-                tickLine={false}
-                axisLine={false}
-                tick={{ fontSize: 11 }}
-              />
-              <YAxis
-                tickLine={false}
-                axisLine={false}
-                tick={{ fontSize: 11 }}
-                width={68}
-                tickFormatter={(value) => formatCurrency(value, { compact: true })}
-              />
-              <ChartTooltip
-                content={
-                  <ChartTooltipContent
-                    labelFormatter={(age) => `Age ${age}`}
-                    formatter={(value) => formatCurrency(Number(value) || 0)}
-                  />
-                }
-              />
-              <ReferenceLine
-                x={retirementAge}
-                stroke="hsl(var(--muted-foreground))"
-                strokeOpacity={0.4}
-                strokeDasharray="4 4"
-                label={{
-                  value: `Retire ${retirementAge}`,
-                  position: "insideTopLeft",
-                  fill: "hsl(var(--muted-foreground))",
-                  fontSize: 11,
-                  fontWeight: 500,
-                }}
-              />
-              {/* Outer band: 10th–90th percentile */}
-              <Area
-                type="monotone"
-                dataKey="p90"
-                stroke="none"
-                fill="url(#mcBand90)"
-                stackId="1"
-                dot={false}
-                isAnimationActive={false}
-              />
-              {/* Inner band: 25th–75th percentile */}
-              <Area
-                type="monotone"
-                dataKey="p75"
-                stroke="none"
-                fill="url(#mcBand75)"
-                stackId="2"
-                dot={false}
-                isAnimationActive={false}
-              />
-              {/* Median line */}
-              <Area
-                type="monotone"
-                dataKey="p50"
-                stroke="hsl(var(--chart-1))"
-                strokeWidth={2}
-                fill="url(#mcBand50)"
-                dot={false}
-                isAnimationActive={false}
-              />
-            </AreaChart>
-          </ChartContainer>
-        </div>
+      <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
+        <ChartContainer config={chartConfig} className="h-[180px] md:h-[260px] w-full">
+          <AreaChart
+            data={data}
+            margin={{ top: 16, right: 16, left: 0, bottom: 0 }}
+          >
+            <defs>
+              <linearGradient id="mcBand90" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.08} />
+                <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.02} />
+              </linearGradient>
+              <linearGradient id="mcBand75" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.15} />
+                <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.05} />
+              </linearGradient>
+              <linearGradient id="mcBand50" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.22} />
+                <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.06} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
+            <XAxis
+              dataKey="age"
+              tickLine={false}
+              axisLine={false}
+              tick={{ fontSize: 11 }}
+            />
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              tick={{ fontSize: 11 }}
+              width={68}
+              tickFormatter={(value) => formatCurrency(value, { compact: true })}
+            />
+            <ChartTooltip
+              content={
+                <ChartTooltipContent
+                  labelFormatter={(age) => `Age ${age}`}
+                  formatter={(value) => formatCurrency(Number(value) || 0)}
+                />
+              }
+            />
+            <ReferenceLine
+              x={retirementAge}
+              stroke="hsl(var(--muted-foreground))"
+              strokeOpacity={0.4}
+              strokeDasharray="4 4"
+              label={{
+                value: `Retire ${retirementAge}`,
+                position: "insideTopLeft",
+                fill: "hsl(var(--muted-foreground))",
+                fontSize: 11,
+                fontWeight: 500,
+              }}
+            />
+            {/* Outer band: 10th–90th percentile */}
+            <Area
+              type="monotone"
+              dataKey="p90"
+              stroke="none"
+              fill="url(#mcBand90)"
+              stackId="1"
+              dot={false}
+              isAnimationActive={false}
+            />
+            {/* Inner band: 25th–75th percentile */}
+            <Area
+              type="monotone"
+              dataKey="p75"
+              stroke="none"
+              fill="url(#mcBand75)"
+              stackId="2"
+              dot={false}
+              isAnimationActive={false}
+            />
+            {/* Median line */}
+            <Area
+              type="monotone"
+              dataKey="p50"
+              stroke="hsl(var(--chart-1))"
+              strokeWidth={2}
+              fill="url(#mcBand50)"
+              dot={false}
+              isAnimationActive={false}
+            />
+          </AreaChart>
+        </ChartContainer>
       </CardContent>
     </Card>
   )

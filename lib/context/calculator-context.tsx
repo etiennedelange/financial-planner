@@ -5,7 +5,7 @@ import { useMonteCarloWorker } from "@/lib/monte-carlo/use-monte-carlo-worker"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import type { ProjectionResult, SimulationResult } from "@/types"
 import { usePathname } from "next/navigation"
-import { createContext, useContext, useDeferredValue, useMemo, useState, useCallback, useEffect } from "react"
+import { createContext, useContext, useDeferredValue, useMemo } from "react"
 import { useShallow } from "zustand/react/shallow"
 
 interface CalculatorContextValue {
@@ -13,7 +13,6 @@ interface CalculatorContextValue {
   simulationResult: SimulationResult | null
   isSimulating: boolean
   isDeferred: boolean
-  rerunSimulation: () => void
 }
 
 const CalculatorContext = createContext<CalculatorContextValue>({
@@ -21,13 +20,10 @@ const CalculatorContext = createContext<CalculatorContextValue>({
   simulationResult: null,
   isSimulating: false,
   isDeferred: false,
-  rerunSimulation: () => {},
 })
 
 export function CalculatorProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const [rerunTrigger, setRerunTrigger] = useState(0)
-  const [isRerunning, setIsRerunning] = useState(false)
 
   const { accounts, personalInfo, retirementGoals, assumptions, drawdownConfig } =
     useCalculatorStore(
@@ -46,19 +42,15 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
   const deferredAssumptions = useDeferredValue(assumptions)
   const deferredDrawdownConfig = useDeferredValue(drawdownConfig)
 
-  const { simulationResult: workerResult, isRunning: isWorkerRunning } = useMonteCarloWorker(
+  const { simulationResult, isRunning: isWorkerRunning } = useMonteCarloWorker(
     deferredAccounts,
     deferredPersonalInfo,
     deferredRetirementGoals,
     deferredDrawdownConfig,
-    5000,
+    1000,
     deferredAssumptions,
-    pathname === "/calculator/overview",
-    rerunTrigger
+    pathname === "/calculator/overview"
   )
-
-  // Clear simulation result when rerunning to force loading state
-  const simulationResult = isRerunning ? null : workerResult
 
   const isDeferred =
     deferredAccounts !== accounts ||
@@ -83,20 +75,8 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
     [deferredAccounts, deferredPersonalInfo, deferredRetirementGoals, deferredDrawdownConfig, deferredAssumptions]
   )
 
-  // Stop showing loading state when simulation completes
-  useEffect(() => {
-    if (isRerunning && !isWorkerRunning) {
-      setIsRerunning(false)
-    }
-  }, [isRerunning, isWorkerRunning])
-
-  const rerunSimulation = useCallback(() => {
-    setIsRerunning(true)
-    setRerunTrigger(prev => prev + 1)
-  }, [])
-
   return (
-    <CalculatorContext.Provider value={{ projection, simulationResult, isSimulating, isDeferred, rerunSimulation }}>
+    <CalculatorContext.Provider value={{ projection, simulationResult, isSimulating, isDeferred }}>
       {children}
     </CalculatorContext.Provider>
   )
