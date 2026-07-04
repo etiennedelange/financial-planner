@@ -24,7 +24,21 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-06-28) — Accounts page full rebuild to match app design language:**
+**Latest Update (2026-07-04) — Plan page delight pass follow-up fixes:**
+- ✅ **NaN rendering guard** — Fixed console error "Received NaN for the `children` attribute" that occurred when clearing numeric input fields in Personal Info form. Added `Number.isFinite()` check to guard year calculations and conditionally render summary.
+- ✅ **Guardrail band slider spacing** — Added horizontal padding (`px-3`) and increased vertical spacing (`space-y-4`) around Upper/Lower Guardrail sliders in Drawdown Strategy form for improved visual breathing room.
+- 573/573 tests passing; all Phase 9.3 UI/UX delight animations verified working.
+
+**Previous Update (2026-07-02) — Plan page delight pass:**
+- ✅ **Drawdown strategy conditional fields** — Withdrawal Floor & Ceiling and Guardrail Bands now reveal/collapse with a `motion/react` height+opacity animation (reduced-motion aware) instead of an instant DOM show/hide
+- ✅ **Slider tactile feedback** — `components/ui/slider.tsx` thumb scales up with a gold ring glow on active drag
+- ✅ **Compounding Method selector** — replaced the hard color-swap button pair with a shared-`layoutId` sliding gold pill (Linear/Raycast-style segmented control)
+- ✅ **SA-defaults reset button** — `RotateCcw` icon spins on click as tactile confirmation
+- ✅ **New `components/ui/field-error.tsx`** — validation errors fade/slide in instead of popping in abruptly; adopted in personal-info-form and retirement-goals-form
+- ✅ **Select component focus ring fix** — Implemented `SelectOpenedByPointerContext` to suppress Radix's auto-refocus for pointer-driven selections, removing stray focus ring after mouse clicks while preserving keyboard navigation feedback
+- 🎯 **Found, not fixed:** Personal Info / Retirement Goals forms never actually trigger their Zod validation errors — `useForm` has no `mode` set and no submit handler, so RHF's default `onSubmit` trigger never runs. Tracked in Phase 9.3 Low Priority.
+
+**Previous Update (2026-06-28) — Accounts page full rebuild to match app design language:**
 - ✅ **Accounts page rebuilt** — replaced floating hero number + 2-col card grid + custom section headers with `PageCard` + `SectionLabel` structure matching Overview/Expenses/Plan; compact horizontal list rows with inline expand-in-place detail accordion; type colors constrained to type badge chip and allocation bar (data encoding) only; no colored top-bar stripes; `rounded-lg` throughout
 - ✅ **Expand interaction** — click row to reveal `EXPECTED RETURN / ANNUAL FEES / NET RETURN / ESCALATION` + TFSA limit bars (where applicable); edit/delete actions appear on hover
 - ✅ **Portfolio summary card** — total balance, thin allocation bar, legend + stats (monthly, net return, account count) all in a single compact `PageCard`; `Add Account` + `Seed` in trailing slot; build clean, no TS errors
