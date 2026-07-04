@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { PageCard } from "@/components/ui/page-card"
 import { SectionLabel } from "@/components/ui/section-label"
 import { Slider } from "@/components/ui/slider"
+import { AnimatedValue } from "@/components/ui/animated-value"
 import {
   Select,
   SelectContent,
@@ -131,16 +132,28 @@ export function DrawdownStrategyForm({
               </div>
               <div className="text-right">
                 <span className="text-sm font-medium">{localLumpSum.toFixed(0)}%</span>
-                {portfolioAtRetirement != null && localLumpSum > 0 && (
-                  <span className="ml-2 text-sm text-muted-foreground">
-                    ≈ {formatCurrency(
-                      portfolioAtRetirement * (localLumpSum / 100),
-                      displayMode,
-                      yearsToRetirement,
-                      inflationRate
-                    )}
-                  </span>
-                )}
+                <AnimatePresence initial={false}>
+                  {portfolioAtRetirement != null && localLumpSum > 0 && (
+                    <motion.span
+                      key={`lump-${portfolioAtRetirement * (localLumpSum / 100)}`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                      className="ml-2 text-sm text-muted-foreground"
+                    >
+                      ≈ <AnimatedValue
+                        value={portfolioAtRetirement * (localLumpSum / 100)}
+                        format={(val: number) => formatCurrency(
+                          val,
+                          displayMode,
+                          yearsToRetirement,
+                          inflationRate
+                        )}
+                      />
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
             <Slider

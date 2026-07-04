@@ -4,9 +4,11 @@ import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import { AnimatePresence, motion } from "motion/react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PageCard } from "@/components/ui/page-card"
+import { AnimatedValue } from "@/components/ui/animated-value"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useShallow } from "zustand/react/shallow"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
@@ -163,28 +165,52 @@ export function PersonalInfoForm() {
               step="10000"
               {...register("annualIncome", { valueAsNumber: true })}
             />
-            {watchedValues.annualIncome > 0 ? (
-              <p className="text-xs text-muted-foreground">
-                {formatCurrency(watchedValues.annualIncome)} / year
-              </p>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                R 0 / year — required for RA tax deduction calculations
-              </p>
-            )}
+            <AnimatePresence initial={false}>
+              {watchedValues.annualIncome > 0 ? (
+                <motion.p
+                  key="income-display"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                  className="text-xs text-muted-foreground"
+                >
+                  <AnimatedValue value={watchedValues.annualIncome} format={formatCurrency} /> / year
+                </motion.p>
+              ) : (
+                <motion.p
+                  key="income-default"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                  className="text-xs text-muted-foreground"
+                >
+                  R 0 / year — required for RA tax deduction calculations
+                </motion.p>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
-        {isValidYears && (
-          <div className="rounded-md bg-muted p-3 text-sm">
-            <p>
-              <span className="font-medium">{yearsToRetirement}</span> years until
-              retirement |{" "}
-              <span className="font-medium">{yearsInRetirement}</span> years in
-              retirement
-            </p>
-          </div>
-        )}
+        <AnimatePresence initial={false}>
+          {isValidYears && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              className="rounded-md bg-muted p-3 text-sm"
+            >
+              <p>
+                <span className="font-medium"><AnimatedValue value={yearsToRetirement} /></span> years until
+                retirement |{" "}
+                <span className="font-medium"><AnimatedValue value={yearsInRetirement} /></span> years in
+                retirement
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
     </PageCard>
   )
 }

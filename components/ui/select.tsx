@@ -6,18 +6,48 @@ import { Check, ChevronDown, ChevronUp } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-const Select = SelectPrimitive.Root
+/**
+ * Tracks whether the trigger was opened via pointer or keyboard so SelectContent's
+ * onCloseAutoFocus can skip refocusing the trigger for pointer selections — Radix's
+ * programmatic refocus otherwise gets flagged :focus-visible by the browser even when
+ * the whole interaction was mouse-driven, leaving a stray ring after clicking an option.
+ */
+const SelectOpenedByPointerContext = React.createContext<{ current: boolean } | null>(null)
+
+function Select(props: React.ComponentProps<typeof SelectPrimitive.Root>) {
+  const openedByPointerRef = React.useRef(false)
+  return (
+    <SelectOpenedByPointerContext.Provider value={openedByPointerRef}>
+      <SelectPrimitive.Root {...props} />
+    </SelectOpenedByPointerContext.Provider>
+  )
+}
 
 const SelectGroup = SelectPrimitive.Group
 
 const SelectValue = SelectPrimitive.Value
 
-function SelectTrigger({ className, children, ref, ...props }: React.ComponentProps<typeof SelectPrimitive.Trigger>) {
+function SelectTrigger({ className, children, ref, onPointerDown, onKeyDown, ...props }: React.ComponentProps<typeof SelectPrimitive.Trigger>) {
+  const openedByPointerRef = React.useContext(SelectOpenedByPointerContext)
+
   return (
     <SelectPrimitive.Trigger
       ref={ref}
+      onPointerDown={(event) => {
+        if (openedByPointerRef) openedByPointerRef.current = true
+        onPointerDown?.(event)
+      }}
+      onKeyDown={(event) => {
+        if (
+          openedByPointerRef &&
+          ["Enter", " ", "ArrowDown", "ArrowUp"].includes(event.key)
+        ) {
+          openedByPointerRef.current = false
+        }
+        onKeyDown?.(event)
+      }}
       className={cn(
-        "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+        "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
         className
       )}
       {...props}
@@ -63,11 +93,19 @@ function SelectScrollDownButton({ className, ref, ...props }: React.ComponentPro
 }
 SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayName
 
-function SelectContent({ className, children, position = "popper", ref, ...props }: React.ComponentProps<typeof SelectPrimitive.Content>) {
+function SelectContent({ className, children, position = "popper", ref, onCloseAutoFocus, ...props }: React.ComponentProps<typeof SelectPrimitive.Content>) {
+  const openedByPointerRef = React.useContext(SelectOpenedByPointerContext)
+
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         ref={ref}
+        onCloseAutoFocus={(event) => {
+          if (openedByPointerRef?.current) {
+            event.preventDefault()
+          }
+          onCloseAutoFocus?.(event)
+        }}
         className={cn(
           "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
           position === "popper" &&

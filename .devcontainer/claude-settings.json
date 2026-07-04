@@ -34,5 +34,6 @@
   },
   "tui": "default",
   "theme": "dark",
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "model": "haiku"
 }

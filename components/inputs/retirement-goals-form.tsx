@@ -4,13 +4,16 @@ import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import { AnimatePresence } from "motion/react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PageCard } from "@/components/ui/page-card"
+import { AnimatedValue } from "@/components/ui/animated-value"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useShallow } from "zustand/react/shallow"
 import { formatCurrency } from "@/lib/utils/currency"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
+import { FieldError } from "@/components/ui/field-error"
 
 const schema = z.object({
   desiredMonthlyIncome: z.number().min(0),
@@ -101,21 +104,19 @@ export function RetirementGoalsForm() {
             step="1000"
             {...register("desiredMonthlyIncome", { valueAsNumber: true })}
           />
-          {errors.desiredMonthlyIncome && (
-            <p className="text-sm text-destructive">
-              {errors.desiredMonthlyIncome.message}
-            </p>
-          )}
-          {watchedValues.desiredMonthlyIncome > 0 && (
-            <div className="space-y-0.5">
-              <p className="text-xs text-muted-foreground">
-                Today: {formatCurrency(watchedValues.desiredMonthlyIncome)} / month
-              </p>
-              <p className="text-xs text-muted-foreground">
-                At retirement ({yearsToRetirement} yrs): {formatCurrency(inflatedMonthlyIncome)} / month
-              </p>
-            </div>
-          )}
+          <FieldError message={errors.desiredMonthlyIncome?.message} />
+          <AnimatePresence initial={false}>
+            {watchedValues.desiredMonthlyIncome > 0 && (
+              <div className="space-y-0.5">
+                <p className="text-xs text-muted-foreground">
+                  Today: <AnimatedValue value={watchedValues.desiredMonthlyIncome} format={formatCurrency} /> / month
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  At retirement ({yearsToRetirement} yrs): <AnimatedValue value={inflatedMonthlyIncome} format={formatCurrency} /> / month
+                </p>
+              </div>
+            )}
+          </AnimatePresence>
         </div>
 
         <div className="space-y-2">
@@ -133,11 +134,13 @@ export function RetirementGoalsForm() {
             step="100000"
             {...register("legacyAmount", { valueAsNumber: true })}
           />
-          {watchedValues.legacyAmount > 0 && (
-            <p className="text-xs text-muted-foreground">
-              {formatCurrency(watchedValues.legacyAmount)} in today&apos;s Rands
-            </p>
-          )}
+          <AnimatePresence initial={false}>
+            {watchedValues.legacyAmount > 0 && (
+              <p className="text-xs text-muted-foreground">
+                <AnimatedValue value={watchedValues.legacyAmount} format={formatCurrency} /> in today&apos;s Rands
+              </p>
+            )}
+          </AnimatePresence>
         </div>
     </PageCard>
   )

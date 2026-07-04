@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useCallback } from "react"
+import { useEffect, useCallback, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import { motion, useReducedMotion } from "motion/react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PageCard } from "@/components/ui/page-card"
@@ -14,6 +15,7 @@ import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { SA_DEFAULTS_DISPLAY } from "@/lib/constants/defaults"
 import { useShallow } from "zustand/react/shallow"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
+import { cn } from "@/lib/utils"
 import { COMPOUNDING_METHOD_DESCRIPTIONS, COMPOUNDING_METHOD_LABELS } from "@/types"
 import type { CompoundingMethod } from "@/types"
 
@@ -65,9 +67,13 @@ export function AssumptionsForm() {
     inflationRate: SA_DEFAULTS_DISPLAY.inflation,
   }
 
+  const shouldReduceMotion = useReducedMotion()
+  const [resetSpins, setResetSpins] = useState(0)
+
   const handleReset = useCallback(() => {
     reset(saDefaults)
     setAssumptions({ compoundingMethod: "nominal" })
+    setResetSpins((n) => n + 1)
   }, [reset, setAssumptions]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -120,7 +126,13 @@ export function AssumptionsForm() {
       onClick={handleReset}
       className="h-6 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground"
     >
-      <RotateCcw className="h-3 w-3" />
+      <motion.span
+        className="inline-flex"
+        animate={{ rotate: resetSpins * -360 }}
+        transition={{ duration: shouldReduceMotion ? 0 : 0.4, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <RotateCcw className="h-3 w-3" />
+      </motion.span>
       SA defaults
     </Button>
   )
@@ -223,24 +235,41 @@ export function AssumptionsForm() {
             />
           </div>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {(["nominal", "compound"] as CompoundingMethod[]).map((method) => (
-              <Button
-                key={method}
-                type="button"
-                variant={assumptions.compoundingMethod === method ? "default" : "outline"}
-                className="h-auto min-h-16 justify-start whitespace-normal px-3 py-3 text-left"
-                onClick={() => setAssumptions({ compoundingMethod: method })}
-              >
-                <span className="space-y-1">
-                  <span className="block text-sm font-medium">
+            {(["nominal", "compound"] as CompoundingMethod[]).map((method) => {
+              const active = assumptions.compoundingMethod === method
+              return (
+                <button
+                  key={method}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setAssumptions({ compoundingMethod: method })}
+                  className={cn(
+                    "relative isolate flex h-auto min-h-16 flex-col items-start justify-start gap-1 overflow-hidden rounded-md border border-transparent px-3 py-3 text-left text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                    active
+                      ? "text-primary-foreground"
+                      : "border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="compounding-method-active"
+                      className="absolute inset-0 -z-10 bg-primary"
+                      transition={
+                        shouldReduceMotion
+                          ? { duration: 0 }
+                          : { type: "spring", stiffness: 500, damping: 38 }
+                      }
+                    />
+                  )}
+                  <span className="relative z-10 block text-sm font-medium">
                     {COMPOUNDING_METHOD_LABELS[method]}
                   </span>
-                  <span className="block text-xs font-normal leading-5 opacity-80">
+                  <span className="relative z-10 block text-xs font-normal leading-5 opacity-80">
                     {COMPOUNDING_METHOD_DESCRIPTIONS[method]}
                   </span>
-                </span>
-              </Button>
-            ))}
+                </button>
+              )
+            })}
           </div>
         </div>
 
