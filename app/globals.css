@@ -200,3 +200,20 @@
     -moz-appearance: textfield;
   }
 }
+
+/* ─── View Transitions API support for smooth morphing ──────────────────── */
+/* Allocation segments morph smoothly as account values change */
+@supports (view-transition-name: auto) {
+  ::view-transition-old(segment-root),
+  ::view-transition-new(segment-root) {
+    animation-duration: 0.2s;
+  }
+}
+
+/* Respect prefers-reduced-motion for all View Transitions */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

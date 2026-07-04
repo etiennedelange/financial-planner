@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useTransition } from "react"
 import { Plus, ChevronDown, AlertTriangle, Pencil, Trash2, Database, Wallet } from "lucide-react"
+import { m } from "motion/react"
 import { FloatingActionBar } from "@/components/ui/floating-action-bar"
 import { PageCard } from "@/components/ui/page-card"
 import {
@@ -25,6 +26,39 @@ import { cn } from "@/lib/utils"
 import type { Account, AccountType } from "@/types"
 import { useShallow } from "zustand/react/shallow"
 import { toast } from "@/lib/hooks/use-toast"
+
+// ─── Animated numeric display with spring physics ─────────────────────────────
+
+function AnimatedNumber({
+  value,
+  className,
+}: {
+  value: number
+  className?: string
+}) {
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+
+  return (
+    <m.span
+      className={className}
+      animate={{ opacity: 1 }}
+      initial={{ opacity: 0.5 }}
+      transition={
+        prefersReducedMotion
+          ? { duration: 0.05 }
+          : {
+              type: "spring",
+              stiffness: 20,
+              damping: 10,
+              mass: 0.1,
+            }
+      }
+      key={value}
+    >
+      {value.toLocaleString("en-ZA", { maximumFractionDigits: 0 })}
+    </m.span>
+  )
+}
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -104,6 +138,7 @@ function PortfolioSummaryCard({
   onSeedClick,
 }: PortfolioSummaryCardProps) {
   const nonZero = segments.filter((s) => s.pct > 0.5)
+  const prefersReducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
   return (
     <PageCard
@@ -129,38 +164,62 @@ function PortfolioSummaryCard({
       contentClassName="pt-5"
     >
       <div className="mt-3 space-y-3">
-        <p className="font-mono text-2xl font-semibold tabular-nums tracking-tight leading-none">
+        <m.p
+          className="font-mono text-2xl font-semibold tabular-nums tracking-tight leading-none"
+          layout={!prefersReducedMotion}
+        >
           {formatCurrency(totalBalance)}
-        </p>
+        </m.p>
 
         {nonZero.length > 0 && (
-          <div className="space-y-2">
-            {/* Allocation bar — type colors allowed here as data encoding */}
-            <div className="flex h-1.5 w-full overflow-hidden rounded-full gap-[2px]">
+          <m.div
+            className="space-y-2"
+            layout={!prefersReducedMotion}
+          >
+            {/* Allocation bar — morphs smoothly with spring physics */}
+            <m.div
+              className="flex h-1.5 w-full overflow-hidden rounded-full gap-[2px]"
+              layout={!prefersReducedMotion}
+            >
               {nonZero.map((seg) => (
-                <div
+                <m.div
                   key={seg.type}
-                  className="transition-all duration-700"
-                  style={{ width: `${seg.pct}%`, backgroundColor: typeColor(seg.type) }}
+                  layoutId={`segment-${seg.type}`}
+                  animate={{ width: `${seg.pct}%` }}
+                  transition={
+                    prefersReducedMotion
+                      ? { duration: 0.2 }
+                      : {
+                          type: "spring",
+                          stiffness: 25,
+                          damping: 15,
+                          mass: 1,
+                        }
+                  }
+                  style={{ backgroundColor: typeColor(seg.type) }}
                 />
               ))}
-            </div>
+            </m.div>
             <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
               <div className="flex flex-wrap gap-x-3 gap-y-1">
                 {nonZero.map((seg) => (
-                  <span
+                  <m.span
                     key={seg.type}
                     className="flex items-center gap-1.5 text-[11px] text-muted-foreground"
+                    layout={!prefersReducedMotion}
                   >
                     <span
                       className="inline-block h-1.5 w-1.5 rounded-full flex-none"
                       style={{ backgroundColor: typeColor(seg.type) }}
                     />
                     {GROUP_LABELS_SHORT[seg.type]} {seg.pct.toFixed(0)}%
-                  </span>
+                  </m.span>
                 ))}
               </div>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <m.div
+                className="flex flex-wrap items-center gap-x-3 gap-y-1"
+                layout={!prefersReducedMotion}
+              >
                 <span className="text-[11px] text-muted-foreground">
                   <span className="font-mono font-medium text-foreground tabular-nums">
                     {formatCurrency(totalMonthly)}
@@ -185,9 +244,9 @@ function PortfolioSummaryCard({
                   </span>{" "}
                   {accountCount === 1 ? "account" : "accounts"}
                 </span>
-              </div>
+              </m.div>
             </div>
-          </div>
+          </m.div>
         )}
       </div>
     </PageCard>
@@ -273,6 +332,7 @@ interface AccountRowProps {
 function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
   const [expanded, setExpanded] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [, startTransition] = useTransition()
 
   const netReturn = account.expectedReturn - account.annualFees
   const color = typeColor(account.type)
@@ -286,17 +346,44 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
     return null
   }, [account])
 
-  const toggle = () => setExpanded((v) => !v)
+  const toggle = () => {
+    // Use View Transitions API if available; falls back to instant state change
+    if (document.startViewTransition) {
+      document.startViewTransition(() => {
+        startTransition(() => {
+          setExpanded((v) => !v)
+        })
+      })
+    } else {
+      startTransition(() => {
+        setExpanded((v) => !v)
+      })
+    }
+  }
 
   return (
     <>
       <div>
-        {/* Main row — extends full-width via -mx-6 on parent container */}
-        <div
-          className={cn(
-            "group flex items-center gap-3 px-6 py-3 transition-colors cursor-pointer select-none",
-            expanded ? "bg-muted/50 hover:bg-muted/60" : "hover:bg-accent/30"
-          )}
+        {/* Main row — morphs background smoothly */}
+        <m.div
+          className="group flex items-center gap-3 px-6 py-3 cursor-pointer select-none"
+          animate={{
+            backgroundColor: expanded ? "hsl(var(--muted) / 0.5)" : "transparent",
+          }}
+          transition={{
+            duration: 0.2,
+            ease: "easeInOut",
+          }}
+          onMouseEnter={(e) => {
+            if (!expanded) {
+              e.currentTarget.style.backgroundColor = "hsl(var(--accent) / 0.3)"
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!expanded) {
+              e.currentTarget.style.backgroundColor = "transparent"
+            }
+          }}
           onClick={toggle}
           role="button"
           tabIndex={0}
@@ -388,23 +475,35 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
               aria-hidden
             />
           </div>
-        </div>
+        </m.div>
 
-        {/* Expanded detail panel — grid-template-rows trick gives symmetric enter/exit */}
-        <div
+        {/* Expanded detail panel — smooth morphing with motion library */}
+        <m.div
           className={cn(
-            "grid transition-[grid-template-rows] duration-200 motion-reduce:transition-none",
+            "grid overflow-hidden",
             expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
           )}
+          animate={{
+            gridTemplateRows: expanded ? "1fr" : "0fr",
+          }}
+          transition={{
+            duration: 0.2,
+            ease: "easeInOut",
+          }}
           aria-hidden={expanded ? undefined : true}
         >
-          <div className="min-h-0 overflow-hidden">
-            <div
+          <div className="min-h-0">
+            <m.div
               className={cn(
-                "px-6 pb-4 bg-muted/50 border-t border-border/40",
-                "transition-opacity duration-150 motion-reduce:transition-none",
-                expanded ? "opacity-100" : "opacity-0"
+                "px-6 pb-4 bg-muted/50 border-t border-border/40"
               )}
+              animate={{
+                opacity: expanded ? 1 : 0,
+              }}
+              transition={{
+                duration: 0.15,
+                delay: expanded ? 0.05 : 0,
+              }}
             >
               <div className="pt-3 grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
                 <div>
@@ -435,9 +534,9 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
                 </div>
               </div>
               {account.type === "tfsa" && <TfsaLimitBars account={account} />}
-            </div>
+            </m.div>
           </div>
-        </div>
+        </m.div>
       </div>
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
