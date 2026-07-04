@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PageCard } from "@/components/ui/page-card"
@@ -53,6 +54,9 @@ export function DrawdownStrategyForm({
 
   const showMinMax = drawdownConfig.strategy === "variable_percentage" || drawdownConfig.strategy === "guardrails"
   const showGuardrailBands = drawdownConfig.strategy === "guardrails"
+
+  const shouldReduceMotion = useReducedMotion()
+  const revealTransition = { duration: shouldReduceMotion ? 0 : 0.2, ease: [0.16, 1, 0.3, 1] as const }
 
   return (
     <PageCard
@@ -153,99 +157,123 @@ export function DrawdownStrategyForm({
           </div>
         </div>
 
-        {showMinMax && (
-          <div className="space-y-4">
-            <SectionLabel>Withdrawal Floor &amp; Ceiling</SectionLabel>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="minimumWithdrawal">Minimum Withdrawal (R/month, today&apos;s value)</Label>
-                  <InfoTooltip
-                    content="The lowest monthly amount you'll withdraw, even if your portfolio percentage falls below it. Escalated with inflation each year."
-                    side="left"
-                  />
-                </div>
-                <Input
-                  id="minimumWithdrawal"
-                  type="number"
-                  min="0"
-                  step="1000"
-                  value={drawdownConfig.minimumWithdrawal}
-                  onChange={(e) =>
-                    setDrawdownConfig({ minimumWithdrawal: Number(e.target.value) })
-                  }
-                />
-              </div>
+        <AnimatePresence initial={false}>
+          {showMinMax && (
+            <motion.div
+              key="min-max"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={revealTransition}
+              className="overflow-hidden"
+            >
+              <div className="space-y-4 pb-0.5">
+                <SectionLabel>Withdrawal Floor &amp; Ceiling</SectionLabel>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="minimumWithdrawal">Minimum Withdrawal (R/month, today&apos;s value)</Label>
+                      <InfoTooltip
+                        content="The lowest monthly amount you'll withdraw, even if your portfolio percentage falls below it. Escalated with inflation each year."
+                        side="left"
+                      />
+                    </div>
+                    <Input
+                      id="minimumWithdrawal"
+                      type="number"
+                      min="0"
+                      step="1000"
+                      value={drawdownConfig.minimumWithdrawal}
+                      onChange={(e) =>
+                        setDrawdownConfig({ minimumWithdrawal: Number(e.target.value) })
+                      }
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="maximumWithdrawal">Maximum Withdrawal (R/month, today&apos;s value)</Label>
-                  <InfoTooltip
-                    content="The highest monthly amount you'll withdraw, even if your portfolio percentage rises above it. Escalated with inflation each year."
-                    side="left"
-                  />
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="maximumWithdrawal">Maximum Withdrawal (R/month, today&apos;s value)</Label>
+                      <InfoTooltip
+                        content="The highest monthly amount you'll withdraw, even if your portfolio percentage rises above it. Escalated with inflation each year."
+                        side="left"
+                      />
+                    </div>
+                    <Input
+                      id="maximumWithdrawal"
+                      type="number"
+                      min="0"
+                      step="1000"
+                      value={drawdownConfig.maximumWithdrawal}
+                      onChange={(e) =>
+                        setDrawdownConfig({ maximumWithdrawal: Number(e.target.value) })
+                      }
+                    />
+                  </div>
                 </div>
-                <Input
-                  id="maximumWithdrawal"
-                  type="number"
-                  min="0"
-                  step="1000"
-                  value={drawdownConfig.maximumWithdrawal}
-                  onChange={(e) =>
-                    setDrawdownConfig({ maximumWithdrawal: Number(e.target.value) })
-                  }
-                />
               </div>
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {showGuardrailBands && (
-          <div className="space-y-4">
-            <SectionLabel>Guardrail Bands</SectionLabel>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Label>Upper Guardrail</Label>
-                  <InfoTooltip
-                    content="If your withdrawal rate rises this far above your target rate (portfolio underperforming), withdrawals are cut by 10% (capital preservation rule)."
-                    side="left"
-                  />
-                </div>
-                <span className="text-sm font-medium">{localUpperGuardrail.toFixed(0)}%</span>
-              </div>
-              <Slider
-                value={[localUpperGuardrail]}
-                onValueChange={([value]) => setLocalUpperGuardrail(value)}
-                onValueCommit={([value]) => setDrawdownConfig({ upperGuardrail: value })}
-                min={5}
-                max={50}
-                step={5}
-              />
-            </div>
+        <AnimatePresence initial={false}>
+          {showGuardrailBands && (
+            <motion.div
+              key="guardrail-bands"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={revealTransition}
+              className="overflow-hidden"
+            >
+              <div className="space-y-4 px-3 pb-0.5">
+                <SectionLabel>Guardrail Bands</SectionLabel>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Label>Upper Guardrail</Label>
+                        <InfoTooltip
+                          content="If your withdrawal rate rises this far above your target rate (portfolio underperforming), withdrawals are cut by 10% (capital preservation rule)."
+                          side="left"
+                        />
+                      </div>
+                      <span className="text-sm font-medium">{localUpperGuardrail.toFixed(0)}%</span>
+                    </div>
+                    <Slider
+                      value={[localUpperGuardrail]}
+                      onValueChange={([value]) => setLocalUpperGuardrail(value)}
+                      onValueCommit={([value]) => setDrawdownConfig({ upperGuardrail: value })}
+                      min={5}
+                      max={50}
+                      step={5}
+                    />
+                  </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Label>Lower Guardrail</Label>
-                  <InfoTooltip
-                    content="If your withdrawal rate falls this far below your target rate (portfolio outperforming), withdrawals are raised by 10% (prosperity rule)."
-                    side="left"
-                  />
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Label>Lower Guardrail</Label>
+                        <InfoTooltip
+                          content="If your withdrawal rate falls this far below your target rate (portfolio outperforming), withdrawals are raised by 10% (prosperity rule)."
+                          side="left"
+                        />
+                      </div>
+                      <span className="text-sm font-medium">{localLowerGuardrail.toFixed(0)}%</span>
+                    </div>
+                    <Slider
+                      value={[localLowerGuardrail]}
+                      onValueChange={([value]) => setLocalLowerGuardrail(value)}
+                      onValueCommit={([value]) => setDrawdownConfig({ lowerGuardrail: value })}
+                      min={5}
+                      max={50}
+                      step={5}
+                    />
+                  </div>
                 </div>
-                <span className="text-sm font-medium">{localLowerGuardrail.toFixed(0)}%</span>
               </div>
-              <Slider
-                value={[localLowerGuardrail]}
-                onValueChange={([value]) => setLocalLowerGuardrail(value)}
-                onValueCommit={([value]) => setDrawdownConfig({ lowerGuardrail: value })}
-                min={5}
-                max={50}
-                step={5}
-              />
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="space-y-4">
           <SectionLabel>Medical Aid &amp; Tax Credits</SectionLabel>

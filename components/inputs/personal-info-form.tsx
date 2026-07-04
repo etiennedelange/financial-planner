@@ -10,6 +10,7 @@ import { PageCard } from "@/components/ui/page-card"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useShallow } from "zustand/react/shallow"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
+import { FieldError } from "@/components/ui/field-error"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import { formatCurrency } from "@/lib/utils/currency"
 
@@ -92,6 +93,7 @@ export function PersonalInfoForm() {
   const yearsToRetirement = watchedValues.retirementAge - watchedValues.currentAge
   const yearsInRetirement =
     watchedValues.lifeExpectancy - watchedValues.retirementAge
+  const isValidYears = Number.isFinite(yearsToRetirement) && Number.isFinite(yearsInRetirement)
 
   return (
     <PageCard label="Personal Information" contentClassName="space-y-4">
@@ -105,11 +107,7 @@ export function PersonalInfoForm() {
               max="100"
               {...register("currentAge", { valueAsNumber: true })}
             />
-            {errors.currentAge && (
-              <p className="text-sm text-destructive">
-                {errors.currentAge.message}
-              </p>
-            )}
+            <FieldError message={errors.currentAge?.message} />
           </div>
 
           <div className="space-y-2">
@@ -127,11 +125,7 @@ export function PersonalInfoForm() {
               max="100"
               {...register("retirementAge", { valueAsNumber: true })}
             />
-            {errors.retirementAge && (
-              <p className="text-sm text-destructive">
-                {errors.retirementAge.message}
-              </p>
-            )}
+            <FieldError message={errors.retirementAge?.message} />
           </div>
         </div>
 
@@ -151,11 +145,7 @@ export function PersonalInfoForm() {
               max="120"
               {...register("lifeExpectancy", { valueAsNumber: true })}
             />
-            {errors.lifeExpectancy && (
-              <p className="text-sm text-destructive">
-                {errors.lifeExpectancy.message}
-              </p>
-            )}
+            <FieldError message={errors.lifeExpectancy?.message} />
           </div>
 
           <div className="space-y-2">
@@ -185,14 +175,16 @@ export function PersonalInfoForm() {
           </div>
         </div>
 
-        <div className="rounded-md bg-muted p-3 text-sm">
-          <p>
-            <span className="font-medium">{yearsToRetirement}</span> years until
-            retirement |{" "}
-            <span className="font-medium">{yearsInRetirement}</span> years in
-            retirement
-          </p>
-        </div>
+        {isValidYears && (
+          <div className="rounded-md bg-muted p-3 text-sm">
+            <p>
+              <span className="font-medium">{yearsToRetirement}</span> years until
+              retirement |{" "}
+              <span className="font-medium">{yearsInRetirement}</span> years in
+              retirement
+            </p>
+          </div>
+        )}
     </PageCard>
   )
 }
