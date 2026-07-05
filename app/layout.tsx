@@ -1,5 +1,6 @@
 import { SupabaseProvider } from "@/components/supabase-provider";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ColorThemeProvider } from "@/components/color-theme-context";
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
@@ -43,11 +44,13 @@ export default function RootLayout({
           enableSystem={true}
           disableTransitionOnChange
         >
+          <ColorThemeProvider>
             <SupabaseProvider>
               <main className="bg-background h-full">
                 {children}
               </main>
             </SupabaseProvider>
+          </ColorThemeProvider>
         </ThemeProvider>
         <Analytics />
 </body>

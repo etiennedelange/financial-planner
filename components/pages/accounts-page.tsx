@@ -61,7 +61,7 @@ const TYPE_SHORT: Record<AccountType, string> = {
   discretionary: "Disc",
 }
 
-// Type colors: used only in the small type badge chip and the allocation bar (data encoding).
+// Type colors: reserved for the allocation bar + legend, the only genuine data-encoding use.
 const TYPE_COLOR: Record<AccountType, string> = {
   retirement_annuity: "#818cf8",
   pension_fund: "#60a5fa",
@@ -72,10 +72,6 @@ const TYPE_COLOR: Record<AccountType, string> = {
 
 function typeColor(type: AccountType): string {
   return TYPE_COLOR[type]
-}
-
-function typeBg(type: AccountType): string {
-  return `${TYPE_COLOR[type]}22`
 }
 
 // ─── Portfolio summary card ─────────────────────────────────────────────────────
@@ -91,8 +87,6 @@ interface PortfolioSummaryCardProps {
   weightedNetReturn: number
   accountCount: number
   segments: AllocationSegment[]
-  onAddClick: () => void
-  onSeedClick: () => void
 }
 
 function PortfolioSummaryCard({
@@ -101,8 +95,6 @@ function PortfolioSummaryCard({
   weightedNetReturn,
   accountCount,
   segments,
-  onAddClick,
-  onSeedClick,
 }: PortfolioSummaryCardProps) {
   const nonZero = segments.filter((s) => s.pct > 0.5)
   const prefersReducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -111,23 +103,6 @@ function PortfolioSummaryCard({
     <PageCard
       label="Portfolio"
       leading={<Wallet className="h-3.5 w-3.5 text-muted-foreground" />}
-      trailing={
-        <div className="ml-auto flex items-center gap-1.5">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={onSeedClick}
-            className="h-7 gap-1.5 px-2.5 text-xs text-muted-foreground"
-          >
-            <Database className="h-3 w-3" />
-            Seed
-          </Button>
-          <Button size="sm" onClick={onAddClick} className="h-7 gap-1.5 px-2.5 text-xs">
-            <Plus className="h-3 w-3" />
-            Add Account
-          </Button>
-        </div>
-      }
       contentClassName="pt-5"
     >
       <div className="mt-3 space-y-3">
@@ -293,7 +268,7 @@ function TfsaLimitBars({ account }: { account: Account }) {
 interface AccountRowProps {
   account: Account
   onEdit: (account: Account) => void
-  onDelete: (id: string) => void
+  onDelete: (account: Account) => void
 }
 
 function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
@@ -302,8 +277,6 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
   const [, startTransition] = useTransition()
 
   const netReturn = account.expectedReturn - account.annualFees
-  const color = typeColor(account.type)
-  const bg = typeBg(account.type)
 
   const tfsaWarning = useMemo((): "lifetime" | "annual" | null => {
     if (account.type !== "tfsa") return null
@@ -352,21 +325,9 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
             }
           }}
           onClick={toggle}
-          role="button"
-          tabIndex={0}
-          aria-expanded={expanded}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault()
-              toggle()
-            }
-          }}
         >
-          {/* Type badge — only constrained use of type color */}
-          <span
-            className="inline-flex items-center justify-center flex-none rounded px-1.5 py-0.5 text-[10px] font-medium"
-            style={{ backgroundColor: bg, color }}
-          >
+          {/* Type badge — muted; color is reserved for the allocation bar's data encoding */}
+          <span className="inline-flex items-center justify-center flex-none rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
             {TYPE_SHORT[account.type]}
           </span>
 
@@ -434,13 +395,28 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
                 <Trash2 className="h-3 w-3" />
               </Button>
             </div>
-            <ChevronDown
-              className={cn(
-                "h-3.5 w-3.5 text-muted-foreground/50 transition-transform duration-200 flex-none",
-                expanded && "rotate-180"
-              )}
-              aria-hidden
-            />
+            <button
+              type="button"
+              className="flex items-center justify-center h-6 w-6 flex-none rounded hover:bg-accent/50 focus:outline-none focus:ring-2 focus:ring-ring"
+              onClick={(e) => {
+                e.stopPropagation()
+                toggle()
+              }}
+              aria-expanded={expanded}
+              aria-label={
+                expanded
+                  ? `Collapse details for ${account.name}`
+                  : `Expand details for ${account.name}`
+              }
+            >
+              <ChevronDown
+                className={cn(
+                  "h-3.5 w-3.5 text-muted-foreground/50 transition-transform duration-200",
+                  expanded && "rotate-180"
+                )}
+                aria-hidden
+              />
+            </button>
           </div>
         </m.div>
 
@@ -509,20 +485,19 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete {account.name}?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Delete {account.name} — {formatCurrency(account.currentBalance)}?
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This removes the account and its settings from all projections. This action cannot be
-              undone.
+              This removes the account and its settings from all projections. You can undo this
+              from the confirmation toast right after.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel autoFocus>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
-                onDelete(account.id)
-                toast({ title: "Account deleted" })
-              }}
+              onClick={() => onDelete(account)}
               aria-label={`Delete account ${account.name}`}
             >
               Delete
@@ -541,14 +516,12 @@ interface AccountGroupCardProps {
   accounts: Account[]
   totalBalance: number
   onEdit: (account: Account) => void
-  onDelete: (id: string) => void
+  onDelete: (account: Account) => void
 }
 
 function AccountGroupCard({ type, accounts, totalBalance, onEdit, onDelete }: AccountGroupCardProps) {
   const groupBalance = accounts.reduce((s, a) => s + a.currentBalance, 0)
   const groupPct = totalBalance > 0 ? (groupBalance / totalBalance) * 100 : 0
-  const color = typeColor(type)
-  const bg = typeBg(type)
 
   return (
     <PageCard
@@ -559,10 +532,7 @@ function AccountGroupCard({ type, accounts, totalBalance, onEdit, onDelete }: Ac
             {formatCurrency(groupBalance)}
           </span>
           {totalBalance > 0 && (
-            <span
-              className="text-[10px] font-medium font-mono tabular-nums rounded px-1.5 py-0.5"
-              style={{ backgroundColor: bg, color }}
-            >
+            <span className="text-[10px] font-medium font-mono tabular-nums rounded bg-muted px-1.5 py-0.5 text-muted-foreground">
               {groupPct.toFixed(0)}%
             </span>
           )}
@@ -692,6 +662,18 @@ export function AccountsPage() {
     seedAccounts(SEED_ACCOUNTS)
   }
 
+  const handleDeleteAccount = (account: Account) => {
+    removeAccount(account.id)
+    toast({
+      title: "Account deleted",
+      description: `${account.name} — ${formatCurrency(account.currentBalance)}`,
+      action: {
+        label: "Undo",
+        onClick: () => addAccount(account),
+      },
+    })
+  }
+
   if (!accounts.length) {
     return (
       <>
@@ -715,8 +697,6 @@ export function AccountsPage() {
           weightedNetReturn={weightedNetReturn}
           accountCount={accounts.length}
           segments={allocationSegments}
-          onAddClick={handleAddClick}
-          onSeedClick={handleSeedClick}
         />
 
         {GROUP_ORDER.filter((type) => grouped[type]).map((type) => (
@@ -726,7 +706,7 @@ export function AccountsPage() {
             accounts={grouped[type]!}
             totalBalance={totalBalance}
             onEdit={handleEditClick}
-            onDelete={removeAccount}
+            onDelete={handleDeleteAccount}
           />
         ))}
 

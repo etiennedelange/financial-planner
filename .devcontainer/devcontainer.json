@@ -66,6 +66,9 @@
   "containerEnv": {
     "CLAUDE_CONFIG_DIR": "/home/node/.claude",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+    // "ANTHROPIC_BASE_URL": "http://host.docker.internal:11434/v1",
+    // "ANTHROPIC_BASE_URL": "http://host.docker.internal:12434",
+    // "ANTHROPIC_AUTH_TOKEN": "docker"
   },
 
   "postCreateCommand": "bash .devcontainer/post-create.sh",

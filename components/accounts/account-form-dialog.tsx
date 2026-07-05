@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useForm } from "react-hook-form"
+import { useForm, useFormState } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Button } from "@/components/ui/button"
@@ -17,12 +17,14 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer"
@@ -60,7 +62,11 @@ type AccountFormData = z.infer<typeof accountSchema>
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState<boolean | null>(null)
   useEffect(() => {
-    setIsMobile(window.innerWidth < 640)
+    const mql = window.matchMedia("(max-width: 639px)")
+    const update = () => setIsMobile(mql.matches)
+    update()
+    mql.addEventListener("change", update)
+    return () => mql.removeEventListener("change", update)
   }, [])
   return isMobile
 }
@@ -102,7 +108,8 @@ function StepHeader({ step }: { step: 1 | 2 }) {
 type FormRef = ReturnType<typeof useForm<AccountFormData>>
 
 function EssentialFields({ form }: { form: FormRef }) {
-  const { register, setValue, watch, formState: { errors } } = form
+  const { register, setValue, watch, control } = form
+  const { errors } = useFormState({ control })
   const selectedType = watch("type")
 
   return (
@@ -171,12 +178,13 @@ function EssentialFields({ form }: { form: FormRef }) {
 }
 
 function PerformanceFields({ form }: { form: FormRef }) {
-  const { register, watch, formState: { errors } } = form
+  const { register, watch, control } = form
+  const { errors } = useFormState({ control })
   const selectedType = watch("type")
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <div className="flex items-center gap-1.5">
             <Label htmlFor="af-return">Expected Return (%)</Label>
@@ -277,11 +285,17 @@ interface Step1Props {
 }
 
 function Step1({ form, onContinue, onCancel, impactStrip }: Step1Props) {
-  const { trigger } = form
+  const { trigger, setFocus } = form
 
   const handleContinue = async () => {
-    const valid = await trigger(["name", "provider", "type", "currentBalance", "monthlyContribution"])
-    if (valid) onContinue()
+    const fields = ["name", "provider", "type", "currentBalance", "monthlyContribution"] as const
+    const valid = await trigger(fields)
+    if (valid) {
+      onContinue()
+      return
+    }
+    const firstInvalid = fields.find((field) => form.getFieldState(field).invalid)
+    if (firstInvalid) setFocus(firstInvalid)
   }
 
   return (
@@ -436,6 +450,11 @@ export function AccountFormDialog({
         <DrawerContent>
           <DrawerHeader className="sr-only">
             <DrawerTitle>{account ? "Edit Account" : "Add Account"}</DrawerTitle>
+            <DrawerDescription>
+              {account
+                ? "Edit this account's balance, contributions, and performance assumptions."
+                : "Add a new account and its performance assumptions to your portfolio."}
+            </DrawerDescription>
           </DrawerHeader>
           <div className="px-4 pb-6 pt-2 overflow-y-auto">
             <FormBody account={account} onSubmit={onSubmit} onClose={handleClose} />
@@ -450,6 +469,11 @@ export function AccountFormDialog({
       <DialogContent className="max-w-md">
         <DialogHeader className="sr-only">
           <DialogTitle>{account ? "Edit Account" : "Add Account"}</DialogTitle>
+          <DialogDescription>
+            {account
+              ? "Edit this account's balance, contributions, and performance assumptions."
+              : "Add a new account and its performance assumptions to your portfolio."}
+          </DialogDescription>
         </DialogHeader>
         <FormBody account={account} onSubmit={onSubmit} onClose={handleClose} />
       </DialogContent>

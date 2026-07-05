@@ -73,23 +73,23 @@ export function PortfolioImpactStrip({
     { label: "Monthly total", baseline: baselineMonthly, value: newMonthly, format: formatCurrency },
   ]
 
+  // Compare formatted strings, not raw deltas — a raw diff can be
+  // "insignificant" yet still cross a display-rounding boundary
+  // (e.g. 8.95% -> 8.92% renders as "9.0%" -> "8.9%").
+  const changedRows = rows.filter((row) => row.format(row.value) !== row.format(row.baseline))
+
   return (
     <div className="rounded-md border border-border/60 bg-muted/30 px-3 py-2.5 space-y-1.5">
       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
         Portfolio impact
       </p>
-      <div className="space-y-1">
-        {rows.map((row) => {
-          const delta = row.value - row.baseline
-          // Compare formatted strings, not raw deltas — a raw diff can be
-          // "insignificant" yet still cross a display-rounding boundary
-          // (e.g. 8.95% -> 8.92% renders as "9.0%" -> "8.9%").
-          const changed = row.format(row.value) !== row.format(row.baseline)
-
-          return (
-            <div key={row.label} className="flex items-center justify-between gap-3">
-              <span className="text-[11px] text-muted-foreground">{row.label}</span>
-              {changed ? (
+      {changedRows.length > 0 ? (
+        <div className="space-y-1">
+          {changedRows.map((row) => {
+            const delta = row.value - row.baseline
+            return (
+              <div key={row.label} className="flex items-center justify-between gap-3">
+                <span className="text-[11px] text-muted-foreground">{row.label}</span>
                 <span className="flex items-center gap-1 font-mono text-[11px] tabular-nums font-medium text-foreground">
                   {delta > 0 ? (
                     <ArrowUp className="h-2.5 w-2.5 text-muted-foreground" aria-hidden />
@@ -98,16 +98,15 @@ export function PortfolioImpactStrip({
                   )}
                   <SpringNumber value={row.value} format={row.format} />
                 </span>
-              ) : (
-                <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
-                  {row.format(row.value)}{" "}
-                  <span className="text-muted-foreground/70">(unchanged)</span>
-                </span>
-              )}
-            </div>
-          )
-        })}
-      </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <p className="text-[11px] text-muted-foreground">
+          No changes yet — enter values to preview portfolio impact.
+        </p>
+      )}
     </div>
   )
 }
