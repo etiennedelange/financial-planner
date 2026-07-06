@@ -12,19 +12,15 @@ interface ColorThemeContextType {
 const ColorThemeContext = createContext<ColorThemeContextType | undefined>(undefined)
 
 export function ColorThemeProvider({ children }: { children: React.ReactNode }) {
-  const [colorTheme, setColorTheme] = useState<ColorTheme>("gold")
-  const [mounted, setMounted] = useState(false)
+  const [colorTheme, setColorTheme] = useState<ColorTheme>(() => {
+    if (typeof window === "undefined") return "gold"
+    const stored = localStorage.getItem("color-theme") as ColorTheme | null
+    return (stored === "gold" || stored === "teal-yellow") ? stored : "gold"
+  })
 
   useEffect(() => {
-    setMounted(true)
-    const stored = localStorage.getItem("color-theme") as ColorTheme | null
-    if (stored && (stored === "gold" || stored === "teal-yellow")) {
-      setColorTheme(stored)
-      applyColorTheme(stored)
-    } else {
-      applyColorTheme("gold")
-    }
-  }, [])
+    applyColorTheme(colorTheme)
+  }, [colorTheme])
 
   const handleSetColorTheme = (theme: ColorTheme) => {
     setColorTheme(theme)
@@ -35,7 +31,7 @@ export function ColorThemeProvider({ children }: { children: React.ReactNode }) 
   return (
     <ColorThemeContext.Provider
       value={{
-        colorTheme: mounted ? colorTheme : "gold",
+        colorTheme,
         setColorTheme: handleSetColorTheme,
       }}
     >
