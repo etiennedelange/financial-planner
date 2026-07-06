@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useEffect, useState } from "react"
+import React, { createContext, useContext, useState } from "react"
 
 type ColorTheme = "gold" | "teal-yellow"
 
@@ -17,10 +17,6 @@ export function ColorThemeProvider({ children }: { children: React.ReactNode }) 
     const stored = localStorage.getItem("color-theme") as ColorTheme | null
     return (stored === "gold" || stored === "teal-yellow") ? stored : "gold"
   })
-
-  useEffect(() => {
-    applyColorTheme(colorTheme)
-  }, [colorTheme])
 
   const handleSetColorTheme = (theme: ColorTheme) => {
     setColorTheme(theme)

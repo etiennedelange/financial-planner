@@ -35,7 +35,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${ibmPlexSans.variable} ${ibmPlexMono.variable} h-full`}>
-      <head />
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              const theme = localStorage.getItem('color-theme');
+              if (theme && (theme === 'gold' || theme === 'teal-yellow')) {
+                document.documentElement.classList.add('theme-' + theme);
+              } else {
+                document.documentElement.classList.add('theme-gold');
+              }
+            `,
+          }}
+        />
+      </head>
 
       <body className={`${ibmPlexSans.className} h-full`}>
         <ThemeProvider
