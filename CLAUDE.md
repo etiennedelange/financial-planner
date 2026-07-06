@@ -109,7 +109,7 @@ Every new card section must use these two components (never write the raw Tailwi
 
 Design rules:
 - `shadow-none` on all cards (PageCard applies it automatically; add it manually to chart Cards)
-- Gold left-border label: `border-l-2 border-primary` (default variant)
+- Teal left-border label: `border-l-2 border-primary` (default variant)
 - Danger zone: `border-l-2 border-destructive` via `labelVariant="destructive"`
 - `dashboard-card` utility class has `shadow-sm` baked in — always pair with `shadow-none`
 
@@ -127,7 +127,7 @@ Design rules:
 
 ## Theming
 
-Locked gold accent + light/dark mode (no color-theme switching). Full details: `docs/THEMING.md`.
+Locked teal accent + light/dark mode (no color-theme switching). Full details: `docs/THEMING.md`.
 
 ## Phase Docs (update after every meaningful change)
 

@@ -78,7 +78,7 @@ _Identified 2026-06-07 via parallel agent audit (UI/UX, calculations, test cover
 ### Low Priority
 - [ ] **Chart accessibility** — add `role="img"` + descriptive `aria-label` to `monte-carlo-chart.tsx`, `portfolio-growth-chart.tsx`, `success-gauge.tsx`
 - [ ] **`<div>` as button** — `expenses-page.tsx:169` uses `className="cursor-pointer"` on a `<div>` for group collapse; replace with `<button>`
-- [ ] **Color theme parity** — toggle has "Gold" option but settings page doesn't; reconcile
+- [x] **Color theme parity** (resolved 2026-07-06) — the gold/teal-yellow dual-theme switcher this item referred to has been retired entirely; the system is back to a single locked accent (now teal), so there's no second theme to reconcile against. See `docs/docs/history/2026-07-06-teal-accent-migration.md`.
 - [ ] **Form error messages** — Zod defaults ("must be positive") lack SA context; improve to e.g. "Age must be between 18 and 100"
 - [ ] **Empty states** — expenses page has no empty state when no groups exist; insights panel shows nothing if no accounts
 - [x] **NaN console error when clearing numeric inputs** (fixed 2026-07-04) — `personal-info-form.tsx` rendered year calculations directly without guarding against NaN values; when numeric inputs were cleared, `valueAsNumber` converted empty string to NaN, causing "Received NaN for the `children` attribute" error. Added `isValidYears` guard using `Number.isFinite()` to conditionally render the year summary only when values are valid.

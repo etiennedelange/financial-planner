@@ -75,8 +75,8 @@
     --card-foreground: 222 40% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 40% 10%;
-    --primary: 43 85% 45%;
-    --primary-foreground: 222 40% 10%;
+    --primary: 162 70% 34%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 210 20% 94%;
     --secondary-foreground: 222 40% 15%;
     --muted: 210 20% 94%;
@@ -89,16 +89,16 @@
     --warning-foreground: 0 0% 100%;
     --border: 214 20% 88%;
     --input: 214 20% 88%;
-    --ring: 43 85% 45%;
+    --ring: 162 70% 34%;
     --radius: 0.5rem;
-    --chart-1: 43 85% 45%;
-    --chart-2: 162 72% 38%;
-    --chart-3: 43 80% 62%;
+    --chart-1: 162 70% 34%;
+    --chart-2: 195 70% 22%;
+    --chart-3: 133 47% 68%;
     --chart-4: 220 75% 58%;
     --chart-5: 0 65% 52%;
   }
 
-  /* ── Dark theme: deep navy + gold ── */
+  /* ── Dark theme: deep navy + teal ── */
   .dark {
     --background: 222 47% 5%;
     --foreground: 210 20% 92%;
@@ -106,7 +106,7 @@
     --card-foreground: 210 20% 92%;
     --popover: 222 40% 10%;
     --popover-foreground: 210 20% 92%;
-    --primary: 43 90% 52%;
+    --primary: 162 70% 55%;
     --primary-foreground: 222 47% 5%;
     --secondary: 222 30% 13%;
     --secondary-foreground: 210 15% 80%;
@@ -120,64 +120,13 @@
     --warning-foreground: 222 47% 5%;
     --border: 222 25% 18%;
     --input: 222 30% 13%;
-    --ring: 43 90% 52%;
-    --chart-1: 43 90% 52%;
-    --chart-2: 162 72% 42%;
-    --chart-3: 43 85% 70%;
-    --chart-4: 220 80% 62%;
-    --chart-5: 0 65% 55%;
-  }
-
-  /* ── Gold Theme (default) ── */
-  .theme-gold {
-    --primary: 43 85% 45%;
-    --ring: 43 85% 45%;
-    --chart-1: 43 85% 45%;
-    --chart-2: 162 72% 38%;
-    --chart-3: 43 80% 62%;
-    --chart-4: 220 75% 58%;
-    --chart-5: 0 65% 52%;
-  }
-  .theme-gold.dark {
-    --primary: 43 90% 52%;
-    --ring: 43 90% 52%;
-    --chart-1: 43 90% 52%;
-    --chart-2: 162 72% 42%;
-    --chart-3: 43 85% 70%;
-    --chart-4: 220 80% 62%;
-    --chart-5: 0 65% 55%;
-  }
-
-  /* ── Teal & Yellow Theme ── */
-  .theme-teal-yellow {
-    --primary: 162 65% 42%;
-    --primary-foreground: 0 0% 100%;
-    --ring: 162 65% 42%;
-    --accent: 45 95% 50%;
-    --accent-foreground: 222 40% 10%;
-    --secondary: 162 30% 85%;
-    --secondary-foreground: 222 40% 15%;
-    --chart-1: 162 65% 42%;
-    --chart-2: 45 95% 50%;
-    --chart-3: 162 50% 60%;
-    --chart-4: 220 75% 58%;
-    --chart-5: 0 65% 52%;
-  }
-  .theme-teal-yellow.dark {
-    --primary: 162 70% 55%;
-    --primary-foreground: 222 47% 5%;
     --ring: 162 70% 55%;
-    --accent: 45 100% 60%;
-    --accent-foreground: 222 47% 5%;
-    --secondary: 162 40% 20%;
-    --secondary-foreground: 210 15% 80%;
     --chart-1: 162 70% 55%;
-    --chart-2: 45 100% 60%;
-    --chart-3: 162 60% 70%;
+    --chart-2: 195 65% 42%;
+    --chart-3: 133 50% 70%;
     --chart-4: 220 80% 62%;
     --chart-5: 0 65% 55%;
   }
-
 }
 
 /* ─── Dark mode scrollbar ────────────────────────────────────────────────── */

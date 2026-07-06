@@ -24,7 +24,15 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-07-04 @ 21:10) — Accounts dialog: live portfolio impact preview:**
+**Latest Update (2026-07-06) — Locked accent migrated from gold to teal:**
+- ✅ **Retired the gold/teal-yellow color-theme switcher** — the dual-theme experiment (`ColorThemeProvider`, `theme-gold`/`theme-teal-yellow` classes) is gone; the system is back to the original "one locked accent" philosophy, now with teal instead of gold
+- ✅ **`app/globals.css`** — `--primary`, `--ring`, `--chart-1/2/3` recolored to a teal palette (`162 70% 34%` light / `162 70% 55%` dark primary; chart-2/3 use complementary deep-teal and mint tones); `--chart-4` (blue) and `--chart-5` (red) left unchanged
+- ✅ **Deleted dead code** — `components/color-theme-context.tsx`, `color-theme-provider.tsx`, `color-theme-toggle.tsx` (the latter two were an unused earlier 6-color-picker experiment, never wired into the app)
+- ✅ **`components/theme-toggle.tsx`** simplified back to a 2-state Light/Dark toggle; `app/layout.tsx` no longer needs a custom pre-hydration `<script>` (`next-themes` handles dark-mode flash prevention on its own)
+- ✅ **`docs/THEMING.md`, `DESIGN.md`, `.impeccable/design.json`, `CLAUDE.md`** all updated to describe the single locked teal accent
+- 🎯 See `docs/docs/history/2026-07-06-teal-accent-migration.md` for full rationale and color mapping
+
+**Previous Update (2026-07-04 @ 21:10) — Accounts dialog: live portfolio impact preview:**
 - ✅ **New `components/ui/spring-number.tsx`** — Reusable critically-damped spring-physics number display (no overshoot/bounce), replacing the ad-hoc unused `AnimatedNumber` previously dead-coded in `accounts-page.tsx`
 - ✅ **New `components/accounts/portfolio-impact-strip.tsx`** — Add/Edit Account dialog now shows a live "Portfolio impact" panel: total balance, weighted net return, and monthly contribution recompute against the store's other accounts on every keystroke, with spring-animated ticking numbers and up/down arrows on changed rows
 - ✅ Wired into both the 2-step Add wizard (`Step1`/`Step2`) and the single-view Edit form in `account-form-dialog.tsx`, sharing one `form.watch()` across steps so the panel stays consistent as the user moves between steps

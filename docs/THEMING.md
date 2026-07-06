@@ -1,29 +1,23 @@
 # Theming System
 
-This document explains the theming architecture for the SA Retirement Calculator: a single locked **gold accent** combined with a **light/dark mode** toggle, built on Tailwind CSS v4.
+This document explains the theming architecture for the SA Retirement Calculator: a single locked **teal accent** combined with a **light/dark mode** toggle, built on Tailwind CSS v4.
 
 ## Architecture Overview
 
-The theming system consists of **two interconnected layers**:
+The theming system consists of **two layers**:
 
 1. **CSS Custom Properties** (`app/globals.css`) — design tokens, including the `@theme inline` block that replaces `tailwind.config.ts`
 2. **`next-themes` Provider** (`components/theme-provider.tsx`) — manages light/dark mode state
 
 > Tailwind v4 has no `tailwind.config.ts` in this project — token-to-utility mapping lives directly in `app/globals.css` via the `@theme inline` directive.
 
-## Design Decision: Gold + Teal/Yellow Themes
+## Design Decision: One Locked Accent
 
-The app supports **two color theme options** alongside light/dark mode:
+The app has **exactly one accent color** — teal — across light and dark mode. There is no user-facing color-theme switcher (an earlier gold/teal-yellow dual-theme experiment was retired in favor of this single locked accent, matching the "Precision Instrument" philosophy: authority through restraint, not choice paralysis).
 
-1. **Gold Theme** (default) — Original design with gold accent
-2. **Teal & Yellow Theme** — New vibrant teal primary with warm yellow accents
-
-Theme selection is managed by `ColorThemeProvider` (`components/color-theme-context.tsx`), which applies a `theme-gold` or `theme-teal-yellow` class to `<html>`. This layers on top of the light/dark mode system (`next-themes`).
-
-- `:root` and `.dark` define the base backgrounds and foregrounds
-- `.theme-gold` and `.theme-teal-yellow` override the primary and accent colors
-- `ThemeToggle` cycles through 4 combinations: Light Gold → Dark Gold → Light Teal → Dark Teal
-- User preference is persisted to `localStorage` key `color-theme` (separate from `next-themes` storage)
+- `:root` and `.dark` define backgrounds, foregrounds, and the teal accent tokens directly — no theme-name classes on `<html>`
+- `ThemeToggle` only cycles Light ↔ Dark (`next-themes`); it does not touch color
+- `next-themes` already ships its own pre-hydration script, so there is no flash-of-wrong-theme on reload
 
 ## Layer 1: CSS Custom Properties (Design Tokens)
 
@@ -33,34 +27,34 @@ Theme selection is managed by `ColorThemeProvider` (`components/color-theme-cont
 :root {
   --background: 210 25% 98%;
   --foreground: 222 40% 10%;
-  --primary: 43 85% 45%;      /* Gold */
-  --ring: 43 85% 45%;
+  --primary: 162 70% 34%;      /* Teal */
+  --ring: 162 70% 34%;
   --border: 214 20% 88%;
   /* ... more tokens */
 }
 ```
 
 **Why HSL values without `hsl()`?**
-- Values are stored as `H S% L%` triplets (e.g., `43 85% 45%`)
+- Values are stored as `H S% L%` triplets (e.g., `162 70% 34%`)
 - Wrapped in `hsl()` function when used: `hsl(var(--primary))`
 - This allows Tailwind to manipulate opacity: `hsl(var(--primary) / 0.5)`
 
 ### Dark Mode Override
 
-`.dark` overrides the same token set with a deep-navy + gold palette:
+`.dark` overrides the same token set with a deep-navy + brighter-teal palette:
 
 ```css
 .dark {
   --background: 222 47% 5%;
   --foreground: 210 20% 92%;
-  --primary: 43 90% 52%;      /* Slightly brighter gold for contrast */
-  --ring: 43 90% 52%;
+  --primary: 162 70% 55%;      /* Brighter teal for contrast on dark bg */
+  --ring: 162 70% 55%;
   --border: 222 25% 18%;
   /* ... */
 }
 ```
 
-`--primary` itself doesn't change hue between light and dark (it's gold in both) — only lightness shifts slightly for contrast on the dark background.
+`--primary` keeps the same hue (162°) between light and dark — only lightness/saturation shift for contrast on the darker background.
 
 ## Layer 2: Tailwind v4 Token Mapping
 
@@ -88,9 +82,9 @@ Tailwind v4 maps CSS variables to utility classes directly in CSS, no `tailwind.
 
 | Tailwind Class | CSS Output | Final Value (Light) |
 |----------------|------------|----------------------|
-| `bg-primary` | `background-color: hsl(var(--primary))` | `hsl(43 85% 45%)` (gold) |
-| `text-primary` | `color: hsl(var(--primary))` | `hsl(43 85% 45%)` |
-| `border-primary` | `border-color: hsl(var(--primary))` | `hsl(43 85% 45%)` |
+| `bg-primary` | `background-color: hsl(var(--primary))` | `hsl(162 70% 34%)` (teal) |
+| `text-primary` | `color: hsl(var(--primary))` | `hsl(162 70% 34%)` |
+| `border-primary` | `border-color: hsl(var(--primary))` | `hsl(162 70% 34%)` |
 
 **Opacity Support:**
 
@@ -113,7 +107,7 @@ background-color: hsl(var(--primary) / 0.5);
 - `.dark` class is applied to `<html>` by `next-themes`
 - Enables the `dark:` prefix: `dark:bg-background`
 
-## Layer 3: React Context Providers
+## Layer 3: React Context Provider
 
 ### Light/Dark Mode Provider
 
@@ -128,47 +122,11 @@ background-color: hsl(var(--primary) / 0.5);
 - Thin wrapper around `next-themes`
 - Adds/removes `.dark` class on `<html>`
 - Persists to localStorage as `theme: "light" | "dark" | "system"`
-
-### Color Theme Provider
-
-**File:** `components/color-theme-context.tsx`
-
-```tsx
-<ColorThemeProvider>
-  {children}
-</ColorThemeProvider>
-```
-
-- Manages color theme selection (gold vs teal-yellow)
-- Adds `theme-gold` or `theme-teal-yellow` class to `<html>`
-- Persists to localStorage as `color-theme: "gold" | "teal-yellow"`
-- Mounted in `app/layout.tsx` inside `ThemeProvider`
-
-**Usage:**
-
-```tsx
-import { useColorTheme } from "@/components/color-theme-context"
-
-export function MyComponent() {
-  const { colorTheme, setColorTheme } = useColorTheme()
-  
-  return (
-    <button onClick={() => setColorTheme("teal-yellow")}>
-      Switch to Teal Theme
-    </button>
-  )
-}
-```
+- Handles its own pre-hydration script — no custom `<script>` needed in `app/layout.tsx`
 
 ### Toggle UI
 
-**File:** `components/theme-toggle.tsx` — cycles through four combinations:
-- Light Gold (Sun icon)
-- Dark Gold (Moon icon)  
-- Light Teal (Palette icon)
-- Dark Teal (Palette icon)
-
-Each click advances to the next theme combination. The title shows the current and next theme.
+**File:** `components/theme-toggle.tsx` — a single button that flips between Light (Sun icon) and Dark (Moon icon).
 
 ## Layer 4: Component Usage
 
@@ -179,7 +137,7 @@ import { Button } from "@/components/ui/button"
 
 export function MyComponent() {
   return (
-    <Button>Click Me</Button> // Uses bg-primary internally → gold
+    <Button>Click Me</Button> // Uses bg-primary internally → teal
   )
 }
 ```
@@ -193,13 +151,13 @@ export function MyComponent() {
 
 ### Chart Theming
 
-Charts use the same system via `--chart-1` through `--chart-5`. Only `--chart-1` aliases `--primary` (gold); `--chart-2..5` are fixed accent colors (teal, light gold, blue, red) that stay consistent regardless of mode:
+Charts use the same system via `--chart-1` through `--chart-5`. `--chart-1` aliases `--primary` (teal); `--chart-2` and `--chart-3` are drawn from the same palette family (a deeper blue-teal and a lighter mint) so the chart reads as a cohesive extension of the accent; `--chart-4` (blue) and `--chart-5` (red) stay fixed, unrelated hues reserved for projection bands and negative/error values respectively:
 
 ```tsx
 const chartConfig = {
   balance: {
     label: "Portfolio Balance",
-    color: "hsl(var(--chart-1))", // Gold, matches --primary
+    color: "hsl(var(--chart-1))", // Teal, matches --primary
   },
 }
 ```
@@ -228,11 +186,11 @@ setTheme("dark")
 ### 4. CSS Cascade
 ```css
 /* Before (:root) */
---primary: 43 85% 45%;
+--primary: 162 70% 34%;
 --background: 210 25% 98%;
 
 /* After (.dark) */
---primary: 43 90% 52%;
+--primary: 162 70% 55%;
 --background: 222 47% 5%;
 ```
 
@@ -243,7 +201,7 @@ setTheme("dark")
 
 // CSS output updates automatically:
 // background-color: hsl(var(--primary))
-// → hsl(43 90% 52%) — slightly brighter gold on dark background
+// → hsl(162 70% 55%) — brighter teal on dark background
 ```
 
 ### 6. Persistence
@@ -253,28 +211,16 @@ localStorage.setItem('theme', 'dark') // next-themes storage key
 
 ## Design Tokens Reference
 
-### Core Tokens (Gold Theme)
+### Core Tokens
 
 | Token | Purpose | Light | Dark |
 |-------|---------|-------|------|
 | `--background` | Page background | Near-white | Deep navy |
 | `--foreground` | Primary text | Near-black | Near-white |
-| `--primary` | Accent (gold, locked) | `43 85% 45%` | `43 90% 52%` |
+| `--primary` | Accent (teal, locked) | `162 70% 34%` | `162 70% 55%` |
 | `--primary-foreground` | Text on primary | White | Deep navy |
 | `--border` | Border color | Light gray | Dark navy-gray |
 | `--ring` | Focus ring | Matches primary | Matches primary |
-
-### Core Tokens (Teal & Yellow Theme)
-
-| Token | Purpose | Light | Dark |
-|-------|---------|-------|------|
-| `--background` | Page background | Near-white | Deep navy (inherited) |
-| `--foreground` | Primary text | Near-black | Near-white (inherited) |
-| `--primary` | Accent (teal) | `162 65% 42%` | `162 70% 55%` |
-| `--primary-foreground` | Text on primary | White | Deep navy |
-| `--accent` | Secondary accent (yellow) | `45 95% 50%` | `45 100% 60%` |
-| `--border` | Border color | Inherited | Inherited |
-| `--ring` | Focus ring | Teal | Teal |
 
 ### Semantic Tokens
 
@@ -284,7 +230,7 @@ localStorage.setItem('theme', 'dark') // next-themes storage key
 | `--popover` | Popover/dropdown background | Menus, tooltips |
 | `--secondary` | Secondary surfaces | Subdued backgrounds |
 | `--muted` | Muted background | Disabled states |
-| `--accent` | Hover/highlight background | Hover states |
+| `--accent` | Hover/highlight background | Hover states (neutral — not a second brand color) |
 | `--destructive` | Danger/error | Delete buttons |
 | `--warning` | Caution | Warning banners/badges |
 
@@ -292,9 +238,9 @@ localStorage.setItem('theme', 'dark') // next-themes storage key
 
 | Token | Purpose | Changes with mode? |
 |-------|---------|---------------------|
-| `--chart-1` | Primary chart color (aliases gold) | ✅ Lightness shifts |
-| `--chart-2` | Teal accent | ✅ Lightness shifts |
-| `--chart-3` | Light gold | ✅ Lightness shifts |
+| `--chart-1` | Primary chart color (aliases teal) | ✅ Lightness shifts |
+| `--chart-2` | Deep teal-blue accent | ✅ Lightness shifts |
+| `--chart-3` | Mint accent | ✅ Lightness shifts |
 | `--chart-4` | Blue accent | ✅ Lightness shifts |
 | `--chart-5` | Red accent | ✅ Lightness shifts |
 
@@ -304,16 +250,16 @@ localStorage.setItem('theme', 'dark') // next-themes storage key
 
 - Use Tailwind classes: `bg-primary`, `text-foreground`
 - Let CSS variables cascade naturally
-- Test every change in both light/dark **and** both color themes (gold & teal)
+- Test every change in both light/dark mode
 - Use semantic tokens (`primary`, `destructive`) over raw colors (`amber-500`)
-- For theme-aware components, use `useColorTheme()` if you need to react to theme changes
 
 ### ❌ Don't
 
-- Hardcode colors: `bg-amber-500` (bypasses theming)
-- Inline styles with colors: `style={{ color: '#d4a017' }}`
+- Hardcode colors: `bg-emerald-500` (bypasses theming)
+- Inline styles with colors: `style={{ color: '#1a936f' }}`
 - Override `--primary` or `--accent` outside `app/globals.css` (defeats the design system)
-- Add new theme tokens without updating `app/globals.css` CSS blocks for all theme variations
+- Reintroduce a color-theme switcher — this system is intentionally single-accent
+- Add new theme tokens without updating `app/globals.css` CSS blocks for both light and dark
 
 ## Debugging Themes
 
@@ -331,7 +277,7 @@ document.documentElement.className
 // Get computed value of --primary
 getComputedStyle(document.documentElement)
   .getPropertyValue('--primary')
-// → "43 90% 52%"
+// → "162 70% 55%"
 ```
 
 ### View Applied Colors
@@ -339,7 +285,7 @@ getComputedStyle(document.documentElement)
 ```javascript
 // Get final computed color
 getComputedStyle(element).backgroundColor
-// → "hsl(43, 90%, 52%)"
+// → "hsl(162, 70%, 55%)"
 ```
 
 ## Performance Considerations

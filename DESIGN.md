@@ -2,8 +2,8 @@
 name: SA Retirement Calculator
 description: Sharp financial planning tool for South African retirement modelling
 colors:
-  primary-gold-dark: "#F3B416"
-  primary-gold-light: "#C49D0A"
+  primary-teal-dark: "#3CDDAC"
+  primary-teal-light: "#1A936F"
   vault-black: "#070A13"
   surface-dark: "#0C111D"
   surface-raised: "#171D2B"
@@ -13,10 +13,10 @@ colors:
   ghost-text: "#6C7589"
   subtle-border: "#222939"
   signal-red: "#DC2828"
-  chart-teal: "#1BA84D"
-  chart-blue: "#5184EC"
-  chart-gold-light: "#E8D86B"
   signal-red-dark: "#D63030"
+  chart-fjord: "#114B5F"
+  chart-mint: "#88D498"
+  chart-blue: "#5184EC"
 typography:
   display:
     fontFamily: "IBM Plex Sans, system-ui, sans-serif"
@@ -61,12 +61,12 @@ spacing:
   2xl: "48px"
 components:
   button-primary:
-    backgroundColor: "{colors.primary-gold-dark}"
+    backgroundColor: "{colors.primary-teal-dark}"
     textColor: "{colors.vault-black}"
     rounded: "{rounded.md}"
     padding: "8px 16px"
   button-primary-hover:
-    backgroundColor: "#F0AA1B"
+    backgroundColor: "#25D09D"
     textColor: "{colors.vault-black}"
     rounded: "{rounded.md}"
     padding: "8px 16px"
@@ -81,8 +81,8 @@ components:
     rounded: "{rounded.md}"
     padding: "8px 12px"
   nav-item-active:
-    backgroundColor: "#F3B41619"
-    textColor: "{colors.primary-gold-dark}"
+    backgroundColor: "#3CDDAC19"
+    textColor: "{colors.primary-teal-dark}"
     rounded: "{rounded.sm}"
     padding: "8px 12px"
   nav-item-default:
@@ -115,24 +115,25 @@ components:
 
 This is a calibrated tool, not a dashboard. The SA Retirement Calculator surfaces exact financial projections for users who understand what they're looking at — RA contribution limits, TFSA tax treatment, Monte Carlo success rates, compounding methods. Every element exists to reduce the distance between the user and their number. Nothing decorates; everything informs.
 
-The default theme is dark (deep navy that recedes so the data leads), with a single warm gold accent that marks the thing that matters — the primary value, the active state, the number you came here for. Both light and dark themes are fully supported and independently meet WCAG AA contrast requirements. IBM Plex Sans and IBM Plex Mono carry the voice: technical, neutral, precise. The monospace logotype sets the register immediately — this is a calculation environment, not a consumer app.
+The default theme is dark (deep navy that recedes so the data leads), with a single locked **teal accent** that marks the thing that matters — the primary value, the active state, the number you came here for. Teal replaces the system's original gold accent: same restraint, same one-signal discipline, a cooler and more clinical register that leans further into "instrument" than "vault." Both light and dark themes are fully supported and independently meet WCAG AA contrast requirements. IBM Plex Sans and IBM Plex Mono carry the voice: technical, neutral, precise. The monospace logotype sets the register immediately — this is a calculation environment, not a consumer app.
 
-This system explicitly rejects: the cheerful nudge-culture of consumer fintech (Mint, PocketSmith); the navy-and-gold SaaS cliché with hero metric gradients and identical icon-card grids; the corporate beige stiffness of bank and insurance portals. It also rejects the opposite failure — terminal-for-its-own-sake density, or brutalism that sacrifices readability for aesthetic posture. The system earns its precision through restraint and correctness, not through decorative austerity.
+This system explicitly rejects: the cheerful nudge-culture of consumer fintech (Mint, PocketSmith); the navy-and-gold SaaS cliché with hero metric gradients and identical icon-card grids; the corporate beige stiffness of bank and insurance portals. It also rejects the opposite failure — terminal-for-its-own-sake density, or brutalism that sacrifices readability for aesthetic posture. The system earns its precision through restraint and correctness, not through decorative austerity. There is intentionally no color-theme picker: a single locked accent removes a decision the user never asked to make.
 
 **Key Characteristics:**
 - Dark-first (Vault Black `222 47% 5%`) and light (`210 25% 98%`) themes, tonal surface layering (no shadows as structure)
-- Single accent: Warm gold, used sparingly (`#F3B416` dark / `#C49D0A` light) — active states, primary values, key CTAs only
+- Single accent: Teal, used sparingly (`#1A936F` light / `#3CDDAC` dark) — active states, primary values, key CTAs only
 - IBM Plex Sans body + IBM Plex Mono for logotype, metric values, code-adjacent labels (financial numbers in monospace)
 - Component chrome is minimal (borders over fills, ghost hover states, no nested cards)
 - Data visualization carries the visual weight; UI elements step back
-- Theme toggle to light mode preserves all semantics: gold becomes muted, navy becomes light cream
+- Theme toggle only switches light/dark — color is locked, not user-selectable
+- Theme toggle to light mode preserves all semantics: teal stays teal (just less saturated), navy becomes light cream
 
-## 2. Colors: The Vault and the Signal
+## 2. Colors: The Instrument Panel
 
 One accent, used precisely. Everything else is depth and separation through tonal steps — never decoration for its own sake.
 
 ### Primary
-- **Gold** (`#F3B416` dark / `#C49D0A` light, HSL `43 90% 52%` / `43 85% 45%`): The signal color. Used on active navigation states, primary action buttons, the ring on focused inputs, and the primary chart series. Appears in exactly one place per screen; its scarcity is its authority. The dark variant is brighter and more saturated to read clearly against Vault Black; the light variant is more muted for white/cream backgrounds.
+- **Signal Teal** (`#1A936F` light / `#3CDDAC` dark, HSL `162 70% 34%` / `162 70% 55%`): The signal color. Used on active navigation states, primary action buttons, the ring on focused inputs, and the primary chart series. Appears in exactly one place per screen; its scarcity is its authority. The light variant is deeper and more saturated to read on near-white; the dark variant is brighter to clear Vault Black. Replaces the system's original locked gold — same role, same discipline, cooler register.
 
 ### Neutral — Dark Theme
 - **Vault Black** (`#070A13`): Body background in dark mode. Not pure black — a 5% lightness navy that prevents eye fatigue during long sessions. Forms the deepest layer of the tonal stack.
@@ -148,11 +149,15 @@ One accent, used precisely. Everything else is depth and separation through tona
 
 ### Status & Chart Series
 - **Signal Red** (`#DC2828` light / `#D63030` dark): Destructive actions, error states, negative deltas.
-- **Chart Teal** (`#1BA84D` light / `#1EB88A` dark, HSL `162 72% 38%` / `162 72% 42%`): Positive scenarios, success rate visualisation, the second chart series.
-- **Chart Blue** (`#5184EC` light / `#5B8FEE` dark, HSL `220 75% 58%` / `220 80% 62%`): The fourth chart series; projections, Monte Carlo percentile bands.
-- **Chart Gold** (`#E8D86B` light / `#F5D96B` dark): The lighter gold series, used for compound account values or secondary gold metrics.
+- **Fjord Teal** (`#114B5F` light / `#258EB1` dark, HSL `195 70% 22%` / `195 65% 42%`): A deeper, blue-leaning teal — the second chart series, distinct enough from Signal Teal to separate at a glance while staying inside the same cool family.
+- **Glacier Mint** (`#88D498` light / `#8CD99D` dark, HSL `133 47% 68%` / `133 50% 70%`): A lighter, warmer green — the third chart series, used for compound account values or secondary teal-adjacent metrics.
+- **Chart Blue** (`#5184EC` light / `#5B8FEE` dark): The fourth chart series; projections, Monte Carlo percentile bands. Kept as a deliberately unrelated hue — the one place the chart palette steps outside the teal family, for maximum separation on comparison charts.
 
-**The One Signal Rule.** Gold is used on ≤1 active element per view at a time. Applying it to multiple concurrent elements — two active nav items, a highlighted card plus a CTA — breaks the signal. If more than one element needs to assert priority, the hierarchy is wrong; fix the hierarchy, not the accent budget.
+**The One Signal Rule.** Teal is used on ≤1 active element per view at a time. Applying it to multiple concurrent elements — two active nav items, a highlighted card plus a CTA — breaks the signal. If more than one element needs to assert priority, the hierarchy is wrong; fix the hierarchy, not the accent budget.
+
+**The Locked Accent Rule.** There is one brand color, not a palette of switchable options. No theme picker, no per-user accent preference. Consistency across every session is the point — a user should never wonder "which color scheme am I looking at."
+
+**Reserved tones.** The source palette this system draws from also included a pale sage (`#C6DABF`) and a warm cream (`#F3E9D2`). Neither is wired to a token today — they read as too low-contrast for chart series and weren't needed for the current component set. They're recorded here, not fabricated into use, so future light-mode surface work draws from the same anchor points rather than inventing new hues.
 
 ## 3. Typography
 
@@ -187,11 +192,11 @@ This system is flat by default. Depth is expressed through tonal layering (Vault
 The chrome disappears; the action leads.
 
 - **Shape:** Gently rounded (6px / `rounded-md`). Not pill, not sharp — a contained, precise gesture.
-- **Primary (`bg-primary`):** Gold background, Vault Black text. `px-4 py-2` (16px/8px). Hover: `/90` opacity tint (`bg-primary/90`). Used for save, confirm, and calculate actions — one per view.
+- **Primary (`bg-primary`):** Teal background, dark ink text (dark mode) / white text (light mode). `px-4 py-2` (16px/8px). Hover: `/90` opacity tint (`bg-primary/90`). Used for save, confirm, and calculate actions — one per view.
 - **Outline:** Transparent background, `border-input` stroke, `bg-accent` on hover. For secondary actions where the primary is already occupied.
 - **Ghost:** No border, no background. `bg-accent` on hover. Navigation triggers, icon buttons, sidebar settings link. The lightest presence.
 - **Destructive:** `bg-destructive` (Signal Red) background. Sign out, delete account. Never used in a group with primary — too much assertion.
-- **Focus ring:** 2px `ring-ring` (Gold) with 2px offset. Visible on all variants; WCAG AA keyboard target.
+- **Focus ring:** 2px `ring-ring` (Teal) with 2px offset. Visible on all variants; WCAG AA keyboard target.
 
 ### Cards / Containers
 
@@ -205,28 +210,28 @@ The chrome disappears; the action leads.
 ### Inputs / Fields
 
 - **Style:** `border-input` stroke, `bg-background` (transparent on dark), `rounded-md` (6px), `px-3 py-2`.
-- **Focus:** 2px `ring-ring` (Analyst Gold), 2px offset. No border-color change — the ring does the work.
+- **Focus:** 2px `ring-ring` (Teal), 2px offset. No border-color change — the ring does the work.
 - **Placeholder:** `text-muted-foreground` (Ghost Text, #6C7589). Must pass 4.5:1 against the input background; verify in both themes.
-- **Error:** `border-destructive` (Signal Red). Focus ring remains gold — the border communicates the error, the ring communicates the focus state.
+- **Error:** `border-destructive` (Signal Red). Focus ring remains teal — the border communicates the error, the ring communicates the focus state.
 - **Disabled:** `opacity-50`, `cursor-not-allowed`. No structural change needed.
 
 ### Navigation (Sidebar)
 
 - **Structure:** Fixed 220px left sidebar. `bg-background`, `border-r border-border`. Three zones: wordmark header, nav items, bottom utility.
 - **Nav item default:** `text-muted-foreground`, transparent background. `hover:bg-accent hover:text-foreground`.
-- **Nav item active:** `bg-primary/10` (Gold at 6% opacity), `text-primary`. A 2px `bg-primary` left-edge indicator (`absolute left-0 inset-y-1 w-[2px]`). The indicator is the only solid gold use in the sidebar.
+- **Nav item active:** `bg-primary/10` (Teal at ~10% opacity), `text-primary`. A 2px `bg-primary` left-edge indicator (`absolute left-0 inset-y-1 w-[2px]`). The indicator is the only solid teal use in the sidebar.
 - **Typography:** `text-sm font-medium`, `tracking-wide`. Not uppercase; not tracked aggressively. Calm, readable.
 - **Wordmark:** IBM Plex Mono logotype — "Retirement" in 10px semibold uppercase with 0.18em tracking, "Calculator" in 8px regular uppercase with 0.14em tracking. The only place where heavy tracking is intentional.
 
 ### Charts (Recharts)
 
-- **Series colors:** Gold (primary series: `#F3B416` dark / `#C49D0A` light), Chart Teal (`#1BA84D` light / `#1EB88A` dark), Chart Gold (`#E8D86B` light / `#F5D96B` dark), Chart Blue (`#5184EC` light / `#5B8FEE` dark), Signal Red (`#DC2828` light / `#D63030` dark). Ordered by importance, not by hue distance.
+- **Series colors:** Signal Teal (primary series: `#1A936F` light / `#3CDDAC` dark), Fjord Teal (`#114B5F` light / `#258EB1` dark), Glacier Mint (`#88D498` light / `#8CD99D` dark), Chart Blue (`#5184EC` light / `#5B8FEE` dark), Signal Red (`#DC2828` light / `#D63030` dark). Ordered by importance, not by hue distance.
 - **The Accessibility Rule.** Color alone never encodes data series. Each series must also differ by shape (solid vs. dashed line), pattern, or direct label. Monte Carlo confidence bands use opacity layering (10%/50%/90%) — the opacity step, not just the color, encodes the confidence level.
 
 ## 6. Do's and Don'ts
 
 ### Do:
-- **Do** use Gold on exactly one active element per view, not counting `SectionLabel`'s structural left-border accent (a fixed, repeating chrome element, not a per-view signal). Rarity is authority for the signal use; the structural use is a constant.
+- **Do** use Teal on exactly one active element per view, not counting `SectionLabel`'s structural left-border accent (a fixed, repeating chrome element, not a per-view signal). Rarity is authority for the signal use; the structural use is a constant.
 - **Do** use IBM Plex Mono for formatted financial values (currency, percentages) and the wordmark. Mono = calculation context.
 - **Do** layer depth tonally: Vault Black → Surface Dark → Surface Raised. Three steps maximum.
 - **Do** use `ghost` or `outline` button variants for secondary actions when a `primary` is already present in the view.
@@ -234,13 +239,15 @@ The chrome disappears; the action leads.
 - **Do** verify muted foreground text (Ghost Text #6C7589) at 4.5:1 contrast against its background before shipping any new surface.
 - **Do** label every chart series with a text label or legend entry — color alone does not carry information.
 - **Do** respect SA-specific account type labels (RA, TFSA, Pension Fund, Preservation Fund) exactly — these are not interchangeable and their specificity is a feature.
+- **Do** keep the accent locked. If a future request calls for a second brand color, replace teal deliberately — don't add a second concurrent accent or a switcher.
 
 ### Don't:
 - **Don't** nest `bg-card` inside `bg-card` — use `bg-muted` or `bg-accent` for inner surfaces. Nested cards are always wrong.
-- **Don't** use `border-left` or `border-right` greater than 1px as a colored accent stripe on cards, list items, or callouts. This is the absolute ban. Rewrite with full borders, background tints, or nothing. **Exception:** the canonical `SectionLabel` component (mono-uppercase section headers) keeps a 2px gold (or red, for `destructive`) left-border accent — this is the one sanctioned use of the pattern, a deliberate identity choice for section eyebrows specifically. Don't extend the exception to any other component.
+- **Don't** use `border-left` or `border-right` greater than 1px as a colored accent stripe on cards, list items, or callouts. This is the absolute ban. Rewrite with full borders, background tints, or nothing. **Exception:** the canonical `SectionLabel` component (mono-uppercase section headers) keeps a 2px teal (or red, for `destructive`) left-border accent — this is the one sanctioned use of the pattern, a deliberate identity choice for section eyebrows specifically. Don't extend the exception to any other component.
 - **Don't** apply gradient text (`background-clip: text` with a gradient). Financial values must read with the same weight as the rest of the text.
 - **Don't** use IBM Plex Mono for UI labels, navigation, or prose copy. Mono is reserved for financial output and the wordmark — it signals "this is a number," not "this is interesting."
-- **Don't** use Gold on more than one concurrent element. Two gold nav items, a gold card border, and a gold CTA button in the same view collapse the accent hierarchy.
+- **Don't** use Teal on more than one concurrent element. Two teal nav items, a teal card border, and a teal CTA button in the same view collapse the accent hierarchy.
+- **Don't** reintroduce a user-facing color-theme switcher (gold/teal/other). This system tried a dual-theme picker and retired it — one locked accent is the deliberate, final answer.
 - **Don't** add glassmorphism (backdrop-filter blur) decoratively. This system's surfaces are opaque; glass effects introduce visual noise on a data-dense layout.
 - **Don't** create a fourth tonal depth step. If you need a new surface level, consolidate the hierarchy rather than adding another `bg-*` layer.
 - **Don't** use consumer-fintech UI patterns: no gamified progress bars with cheerful copy, no pastel metric cards, no rounded pill buttons with emoji-adjacent icons. See PRODUCT.md anti-references.
