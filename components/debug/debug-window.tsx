@@ -487,8 +487,8 @@ Single Source of Truth:
           <Bug className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden !flex !flex-col !gap-4 !p-6">
+        <DialogHeader className="flex-shrink-0">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <DialogTitle>Debug: Calculation Parameters</DialogTitle>
