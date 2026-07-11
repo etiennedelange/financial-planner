@@ -24,7 +24,31 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
-**Latest Update (2026-07-06) — Locked accent migrated from gold to teal:**
+## 2026-07-11 (later)
+
+✅ **Debug Window Redesigned** — Migrated from side Sheet to centered Dialog, implemented 4 color-coded section categories (Critical Metrics, Calculation Inputs, Calculated Results, Reference Data). Improved visual hierarchy and "stats for nerds" aesthetic with monospace values and teal/gray palette. All 100+ metrics preserved, copy-all functionality maintained. 585 tests passing.
+
+**Latest Update (2026-07-11 22:06) — P0 & P1 audit complete: 7 bugs fixed via TDD, 585/585 tests passing, 97.01% coverage:**
+- 🐛 **P0: Fixed `inflationAdjustedWithdrawal` deflation bug** (`projection-engine.ts:506`) — divided by `(1+inflation)^year` instead of `(1+inflation)^(yearsToRetirement+year)`, overstating "today's Rands" retirement income ~5x; RED test → GREEN code → all passing
+- 🐛 **P0: Fixed `shortfallAmount` structurally-zero bug** (`projection-engine.ts:548-551`) — for 3 of 4 withdrawal strategies compared desired to actual income for single year (always zero); now sums per-year shortfall across full drawdown phase
+- 🐛 **P0: Medical aid escalation bug** (`projection-engine.ts:483`) — escalated at general inflation (5.5%) not medical inflation (9%), understating year-25+ medical costs ~2.2x; fixed via `SA_DEFAULTS.medicalInflation`
+- 🐛 **P1: Box-Muller log(0) infinity** (`random-returns.ts:7`) — `Math.random() === 0` causes `Math.log(0) = -Infinity`, poisoning MC draws; guarded with `Math.random() || Number.MIN_VALUE`
+- 🐛 **P1: Monte Carlo 0-runs NaN** (`simulation-engine.ts:277`) — `aggregateResults` divided by empty array; now returns safe defaults when `runs.length === 0`
+- 🐛 **P1: cost-of-delay negative costs** (`cost-of-delay.ts:53`) — delay scenarios passed negative years to `projectFinalSavings`; refactored with `Math.min(delayYears, Math.max(0, yearsToRetirement))`
+- 🐛 **P1: cost-of-delay NaN percentages** (`cost-of-delay.ts:114`) — division by zero when `baselineNestEgg === 0`; guarded with ternary
+- 🐛 **P1: TFSA excess-contribution penalty** (`projection-engine.ts:255-267, 296, 405, 530`) — contributions over annual R46k limit incur 40% penalty tax; now tracked and displayed in `YearlyProjection.tfsaExcessContributionPenalty` to educate users about over-contribution risk
+- ✅ **Tax constants verified** against SARS Budget 2026 Tax Guide PDF — all values correct; no changes
+- 🎯 See `docs/docs/history/2026-07-11-p0-p1-fixes.md` for full P0 detail; P1 additions: 3 new RED tests (40% penalty, within-limit, accumulation)
+- ✅ All P0 & P1 fixes tested with unit + integration tests; `npm run build` clean; debug-window audited and up-to-date
+
+**Previous Update (2026-07-11 earlier) — Multi-agent calculation audit: 2 critical bugs fixed, tax config verified against primary source:**
+- 🐛 **Fixed `inflationAdjustedWithdrawal` deflation bug** (`projection-engine.ts`) — divided by `(1+inflation)^year` (drawdown-loop index) instead of `(1+inflation)^(yearsToRetirement+year)`, overstating the "today's Rands" retirement income figure ~5x for a 30-year horizon. Also corrected the same formula in `docs/FINANCIAL_LOGIC_REFERENCE.md`
+- 🐛 **Fixed `shortfallAmount` structurally-zero bug** (`projection-engine.ts`) — for 3 of 4 withdrawal strategies the metric compared desired income to itself and always read 0, even when the portfolio fully depleted before life expectancy. Now sums the per-year gap between desired and actually-withdrawn income across the whole drawdown phase
+- ✅ **Resolved disputed tax-year constants** — fetched the actual SARS Budget 2026 Tax Guide PDF cited in `tax-year.config.ts:9` and confirmed every value (brackets, rebates, thresholds, both lump-sum tables, R430,000 RA deduction cap, R46,000 TFSA annual limit, R50,000 CGT exclusion, R376/R376/R254 medical credits) is correct as configured — no changes needed
+- 🎯 See `docs/docs/history/2026-07-11-multiagent-audit-p0-fixes-and-tax-config-verification.md` for full detail, including the audit methodology (8 specialist subagents) and why the "revert to older values" consensus from 3 auditors was wrong (training-data anchoring bias, caught by a devil's-advocate pass)
+- ✅ 576/577 tests passing (1 pre-existing flaky/unseeded-RNG test, unrelated); `npm run build` clean
+
+**Previous Update (2026-07-06) — Locked accent migrated from gold to teal:**
 - ✅ **Retired the gold/teal-yellow color-theme switcher** — the dual-theme experiment (`ColorThemeProvider`, `theme-gold`/`theme-teal-yellow` classes) is gone; the system is back to the original "one locked accent" philosophy, now with teal instead of gold
 - ✅ **`app/globals.css`** — `--primary`, `--ring`, `--chart-1/2/3` recolored to a teal palette (`162 70% 34%` light / `162 70% 55%` dark primary; chart-2/3 use complementary deep-teal and mint tones); `--chart-4` (blue) and `--chart-5` (red) left unchanged
 - ✅ **Deleted dead code** — `components/color-theme-context.tsx`, `color-theme-provider.tsx`, `color-theme-toggle.tsx` (the latter two were an unused earlier 6-color-picker experiment, never wired into the app)
