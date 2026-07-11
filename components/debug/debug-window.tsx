@@ -512,7 +512,7 @@ Single Source of Truth:
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4">
+        <ScrollArea className="h-[calc(100vh-280px)] pr-4">
           <div className="space-y-6 pb-6">
             {/* CRITICAL METRICS */}
             <CategorySection title="Critical Metrics" category="critical">
