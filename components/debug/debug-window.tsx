@@ -660,132 +660,208 @@ Single Source of Truth:
               )}
             </CategorySection>
 
-            {/* Portfolio Aggregates */}
-            <Section title="Portfolio Aggregates (Calculated)">
-              <Param
-                label="Weighting Method"
-                value={weightingMethod}
-                highlight
-              />
-              <Param
-                label="Total Balance"
-                value={formatCurrency(totalBalance)}
-                highlight
-              />
-              <Param
-                label="Total Monthly Contribution"
-                value={formatCurrency(totalMonthlyContribution)}
-                highlight
-              />
-              <Param
-                label="Total Annual Contribution"
-                value={formatCurrency(totalMonthlyContribution * 12)}
-                highlight
-              />
-              <Param
-                label="Weighted Return"
-                value={formatPercent(weightedReturn)}
-                highlight
-              />
-              <Param
-                label="Weighted Fees"
-                value={formatPercent(weightedFees)}
-                highlight
-              />
-              <Param
-                label="Average Escalation"
-                value={formatPercent(avgEscalation)}
-                highlight
-              />
-              <Param
-                label="Net Return (Return - Fees)"
-                value={formatPercent(netReturn)}
-                highlight
-              />
-              <Param
-                label="Monthly Return Rate"
-                value={formatPercent(monthlyReturn)}
-                highlight
-              />
-              <Param
-                label="Monthly Fee Rate"
-                value={formatPercent(monthlyFeeRate)}
-                highlight
-              />
-            </Section>
+            {/* CALCULATED RESULTS */}
+            <CategorySection title="Calculated Results" category="results">
+              <Section title="Portfolio Aggregates (Calculated)">
+                <Param
+                  label="Weighting Method"
+                  value={weightingMethod}
+                  highlight
+                />
+                <Param
+                  label="Total Balance"
+                  value={formatCurrency(totalBalance)}
+                  highlight
+                />
+                <Param
+                  label="Total Monthly Contribution"
+                  value={formatCurrency(totalMonthlyContribution)}
+                  highlight
+                />
+                <Param
+                  label="Total Annual Contribution"
+                  value={formatCurrency(totalMonthlyContribution * 12)}
+                  highlight
+                />
+                <Param
+                  label="Weighted Return"
+                  value={formatPercent(weightedReturn)}
+                  highlight
+                />
+                <Param
+                  label="Weighted Fees"
+                  value={formatPercent(weightedFees)}
+                  highlight
+                />
+                <Param
+                  label="Average Escalation"
+                  value={formatPercent(avgEscalation)}
+                  highlight
+                />
+                <Param
+                  label="Net Return (Return - Fees)"
+                  value={formatPercent(netReturn)}
+                  highlight
+                />
+                <Param
+                  label="Monthly Return Rate"
+                  value={formatPercent(monthlyReturn)}
+                  highlight
+                />
+                <Param
+                  label="Monthly Fee Rate"
+                  value={formatPercent(monthlyFeeRate)}
+                  highlight
+                />
+              </Section>
 
-            {/* Withdrawal Details - Priority 1 */}
-            <Section title="Withdrawal Details (At Retirement)">
-              <Param
-                label="Desired Monthly Income (Today)"
-                value={formatCurrency(retirementGoals.desiredMonthlyIncome)}
-              />
-              <Param
-                label="Inflated to Retirement"
-                value={formatCurrency(desiredMonthlyAtRetirement)}
-                highlight
-              />
-              <Param
-                label="Initial Withdrawal (Annual)"
-                value={formatCurrency(initialWithdrawalAnnual)}
-                highlight
-              />
-              <Param
-                label="Initial Withdrawal (Monthly)"
-                value={formatCurrency(initialWithdrawalMonthly)}
-                highlight
-              />
-              <Param
-                label="Withdrawal Strategy"
-                value={drawdownConfig.strategy}
-              />
-              <Param
-                label="Replacement Ratio"
-                value={`${replacementRatio.toFixed(1)}%`}
-                highlight
-              />
-            </Section>
+              <Section title="Withdrawal Details (At Retirement)">
+                <Param
+                  label="Desired Monthly Income (Today)"
+                  value={formatCurrency(retirementGoals.desiredMonthlyIncome)}
+                />
+                <Param
+                  label="Inflated to Retirement"
+                  value={formatCurrency(desiredMonthlyAtRetirement)}
+                  highlight
+                />
+                <Param
+                  label="Initial Withdrawal (Annual)"
+                  value={formatCurrency(initialWithdrawalAnnual)}
+                  highlight
+                />
+                <Param
+                  label="Initial Withdrawal (Monthly)"
+                  value={formatCurrency(initialWithdrawalMonthly)}
+                  highlight
+                />
+                <Param
+                  label="Withdrawal Strategy"
+                  value={drawdownConfig.strategy}
+                />
+                <Param
+                  label="Replacement Ratio"
+                  value={`${replacementRatio.toFixed(1)}%`}
+                  highlight
+                />
+              </Section>
 
-            {/* Tax Calculations - Priority 1 */}
-            <Section title="Tax Calculations (Retirement Phase)">
-              <Param
-                label="Annual Income Tax (Year 1)"
-                value={formatCurrency(taxAtRetirement.incomeTax)}
-                highlight
-              />
-              <Param
-                label="Effective Tax Rate (Year 1)"
-                value={`${taxAtRetirement.effectiveTaxRate.toFixed(2)}%`}
-                highlight
-              />
-              <Param
-                label="Average Effective Rate (Lifetime)"
-                value={`${effectiveTaxRate.toFixed(2)}%`}
-                highlight
-              />
-              <Param
-                label="Lifetime Income Tax"
-                value={formatCurrency(lifetimeIncomeTax)}
-              />
-              <Param
-                label="Age-Based Rebate"
-                value={formatCurrency(taxAtRetirement.applicableRebate)}
-              />
-              <Param
-                label="Tax-Free Threshold"
-                value={formatCurrency(taxThreshold)}
-              />
-              <Param
-                label="Below Tax Threshold?"
-                value={isBelowThreshold ? 'YES' : 'NO'}
-                highlight={isBelowThreshold}
-              />
-              <Param
-                label="Net Monthly Income (Year 1)"
-                value={formatCurrency(taxAtRetirement.netIncome / 12)}
-                highlight
-              />
-            </Section>
+              <Section title="Tax Calculations (Retirement Phase)">
+                <Param
+                  label="Annual Income Tax (Year 1)"
+                  value={formatCurrency(taxAtRetirement.incomeTax)}
+                  highlight
+                />
+                <Param
+                  label="Effective Tax Rate (Year 1)"
+                  value={`${taxAtRetirement.effectiveTaxRate.toFixed(2)}%`}
+                  highlight
+                />
+                <Param
+                  label="Average Effective Rate (Lifetime)"
+                  value={`${effectiveTaxRate.toFixed(2)}%`}
+                  highlight
+                />
+                <Param
+                  label="Lifetime Income Tax"
+                  value={formatCurrency(lifetimeIncomeTax)}
+                />
+                <Param
+                  label="Age-Based Rebate"
+                  value={formatCurrency(taxAtRetirement.applicableRebate)}
+                />
+                <Param
+                  label="Tax-Free Threshold"
+                  value={formatCurrency(taxThreshold)}
+                />
+                <Param
+                  label="Below Tax Threshold?"
+                  value={isBelowThreshold ? 'YES' : 'NO'}
+                  highlight={isBelowThreshold}
+                />
+                <Param
+                  label="Net Monthly Income (Year 1)"
+                  value={formatCurrency(taxAtRetirement.netIncome / 12)}
+                  highlight
+                />
+              </Section>
+
+              {projection && (
+                <Section title="Projection Results (Deterministic)">
+                  <Param
+                    label="Portfolio at Retirement"
+                    value={formatCurrency(projection.portfolioAtRetirement)}
+                    highlight
+                  />
+                  <Param
+                    label="Monthly Income at Retirement"
+                    value={formatCurrency(projection.monthlyIncomeAtRetirement)}
+                    highlight
+                  />
+                  <Param
+                    label="Portfolio Depletion Age"
+                    value={projection.portfolioDepletionAge || 'Never (survives to life expectancy)'}
+                    highlight={!projection.portfolioDepletionAge}
+                  />
+                  <Param
+                    label="Surplus at Life Expectancy"
+                    value={formatCurrency(projection.surplusAmount)}
+                  />
+                  <Param
+                    label="Shortfall Amount"
+                    value={formatCurrency(projection.shortfallAmount)}
+                  />
+                  <Param label="Total Projection Years" value={projection.yearlyProjections.length} />
+                </Section>
+              )}
+
+              {simulationResult && (
+                <Section title="Monte Carlo Simulation Results">
+                  <Param
+                    label="Success Rate"
+                    value={`${simulationResult.successRate.toFixed(2)}%`}
+                    highlight
+                  />
+                  <Param label="Number of Runs" value={simulationResult.runs.length.toLocaleString()} />
+                  <Param
+                    label="Median Depletion Age"
+                    value={simulationResult.medianDepletionAge || 'N/A (most runs succeed)'}
+                  />
+                  <Param
+                    label="Average Final Balance"
+                    value={formatCurrency(simulationResult.averageFinalBalance)}
+                  />
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-xs font-semibold mb-2">PERCENTILE ANALYSIS (Final Year):</p>
+                    <Param
+                      label="P10 (10th percentile)"
+                      value={formatCurrency(simulationResult.percentiles.p10[simulationResult.percentiles.p10.length - 1] || 0)}
+                      small
+                    />
+                    <Param
+                      label="P25 (25th percentile)"
+                      value={formatCurrency(simulationResult.percentiles.p25[simulationResult.percentiles.p25.length - 1] || 0)}
+                      small
+                    />
+                    <Param
+                      label="P50 (Median)"
+                      value={formatCurrency(simulationResult.percentiles.p50[simulationResult.percentiles.p50.length - 1] || 0)}
+                      small
+                    />
+                    <Param
+                      label="P75 (75th percentile)"
+                      value={formatCurrency(simulationResult.percentiles.p75[simulationResult.percentiles.p75.length - 1] || 0)}
+                      small
+                    />
+                    <Param
+                      label="P90 (90th percentile)"
+                      value={formatCurrency(simulationResult.percentiles.p90[simulationResult.percentiles.p90.length - 1] || 0)}
+                      small
+                    />
+                  </div>
+                </Section>
+              )}
+            </CategorySection>
 
             {/* Monte Carlo Configuration */}
             <Section title="Monte Carlo Simulation">
@@ -807,84 +883,6 @@ Single Source of Truth:
                 Medical premium: +15% per 10 years after year 25
               </div>
             </Section>
-
-            {/* Projection Results */}
-            {projection && (
-              <Section title="Projection Results (Deterministic)">
-                <Param
-                  label="Portfolio at Retirement"
-                  value={formatCurrency(projection.portfolioAtRetirement)}
-                  highlight
-                />
-                <Param
-                  label="Monthly Income at Retirement"
-                  value={formatCurrency(projection.monthlyIncomeAtRetirement)}
-                  highlight
-                />
-                <Param
-                  label="Portfolio Depletion Age"
-                  value={projection.portfolioDepletionAge || 'Never (survives to life expectancy)'}
-                  highlight={!projection.portfolioDepletionAge}
-                />
-                <Param
-                  label="Surplus at Life Expectancy"
-                  value={formatCurrency(projection.surplusAmount)}
-                />
-                <Param
-                  label="Shortfall Amount"
-                  value={formatCurrency(projection.shortfallAmount)}
-                />
-                <Param label="Total Projection Years" value={projection.yearlyProjections.length} />
-              </Section>
-            )}
-
-            {/* Monte Carlo Results */}
-            {simulationResult && (
-              <Section title="Monte Carlo Simulation Results">
-                <Param
-                  label="Success Rate"
-                  value={`${simulationResult.successRate.toFixed(2)}%`}
-                  highlight
-                />
-                <Param label="Number of Runs" value={simulationResult.runs.length.toLocaleString()} />
-                <Param
-                  label="Median Depletion Age"
-                  value={simulationResult.medianDepletionAge || 'N/A (most runs succeed)'}
-                />
-                <Param
-                  label="Average Final Balance"
-                  value={formatCurrency(simulationResult.averageFinalBalance)}
-                />
-                <div className="mt-4 pt-4 border-t">
-                  <p className="text-xs font-semibold mb-2">PERCENTILE ANALYSIS (Final Year):</p>
-                  <Param
-                    label="P10 (10th percentile)"
-                    value={formatCurrency(simulationResult.percentiles.p10[simulationResult.percentiles.p10.length - 1] || 0)}
-                    small
-                  />
-                  <Param
-                    label="P25 (25th percentile)"
-                    value={formatCurrency(simulationResult.percentiles.p25[simulationResult.percentiles.p25.length - 1] || 0)}
-                    small
-                  />
-                  <Param
-                    label="P50 (Median)"
-                    value={formatCurrency(simulationResult.percentiles.p50[simulationResult.percentiles.p50.length - 1] || 0)}
-                    small
-                  />
-                  <Param
-                    label="P75 (75th percentile)"
-                    value={formatCurrency(simulationResult.percentiles.p75[simulationResult.percentiles.p75.length - 1] || 0)}
-                    small
-                  />
-                  <Param
-                    label="P90 (90th percentile)"
-                    value={formatCurrency(simulationResult.percentiles.p90[simulationResult.percentiles.p90.length - 1] || 0)}
-                    small
-                  />
-                </div>
-              </Section>
-            )}
 
             {/* SA Defaults */}
             <Section title="SA Default Constants">
