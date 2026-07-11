@@ -863,38 +863,58 @@ Single Source of Truth:
               )}
             </CategorySection>
 
-            {/* Monte Carlo Configuration */}
-            <Section title="Monte Carlo Simulation">
-              <Param label="Number of Runs" value="1,000" />
-              <Param label="Volatility Used" value={`${volatility}%`} highlight />
-              <Param
-                label="Volatility (Decimal)"
-                value={(volatility / 100).toFixed(4)}
-                highlight
-              />
-            </Section>
+            {/* REFERENCE DATA */}
+            <CategorySection title="Reference Data" category="reference">
+              <Section title="Monte Carlo Simulation">
+                <Param label="Number of Runs" value="1,000" />
+                <Param label="Volatility Used" value={`${volatility}%`} highlight />
+                <Param
+                  label="Volatility (Decimal)"
+                  value={(volatility / 100).toFixed(4)}
+                  highlight
+                />
+              </Section>
 
-            {/* Spending Phase Multipliers */}
-            <Section title="Spending Phase Multipliers">
-              <Param label="Go-Go Phase (Years 0-15)" value="100%" />
-              <Param label="Slow-Go Phase (Years 15-25)" value="80%" />
-              <Param label="No-Go Phase (Years 25+)" value="70% + Medical (cap 120%)" />
-              <div className="text-xs text-muted-foreground mt-2 italic">
-                Medical premium: +15% per 10 years after year 25
-              </div>
-            </Section>
+              <Section title="Spending Phase Multipliers">
+                <Param label="Go-Go Phase (Years 0-15)" value="100%" />
+                <Param label="Slow-Go Phase (Years 15-25)" value="80%" />
+                <Param label="No-Go Phase (Years 25+)" value="70% + Medical (cap 120%)" />
+                <div className="text-xs text-muted-foreground mt-2 italic">
+                  Medical premium: +15% per 10 years after year 25
+                </div>
+              </Section>
 
-            {/* SA Defaults */}
-            <Section title="SA Default Constants">
-              <Param label="Default Inflation" value={`${SA_DEFAULTS.inflation * 100}%`} />
-              <Param label="Medical Inflation" value={`${SA_DEFAULTS.medicalInflation * 100}%`} />
-              <Param label="Default Equity Return" value={`${SA_DEFAULTS.equityReturn * 100}%`} />
-              <Param label="Default Bond Return" value={`${SA_DEFAULTS.bondReturn * 100}%`} />
-              <Param label="Default Cash Return" value={`${SA_DEFAULTS.cashReturn * 100}%`} />
-              <Param label="Default Equity Volatility" value={`${SA_DEFAULTS.equityVolatility * 100}%`} />
-              <Param label="Safe Withdrawal Rate" value={`${SA_DEFAULTS.safeWithdrawalRate * 100}%`} />
-              <Param label="Base Medical Cost (Monthly)" value={formatCurrency(SA_DEFAULTS.baseMedicalCostMonthly)} />
-            </Section>
+              <Section title="SA Default Constants">
+                <Param label="Default Inflation" value={`${SA_DEFAULTS.inflation * 100}%`} />
+                <Param label="Medical Inflation" value={`${SA_DEFAULTS.medicalInflation * 100}%`} />
+                <Param label="Default Equity Return" value={`${SA_DEFAULTS.equityReturn * 100}%`} />
+                <Param label="Default Bond Return" value={`${SA_DEFAULTS.bondReturn * 100}%`} />
+                <Param label="Default Cash Return" value={`${SA_DEFAULTS.cashReturn * 100}%`} />
+                <Param label="Default Equity Volatility" value={`${SA_DEFAULTS.equityVolatility * 100}%`} />
+                <Param label="Safe Withdrawal Rate" value={`${SA_DEFAULTS.safeWithdrawalRate * 100}%`} />
+                <Param label="Base Medical Cost (Monthly)" value={formatCurrency(SA_DEFAULTS.baseMedicalCostMonthly)} />
+              </Section>
+
+              {/* Accuracy Notes */}
+              <Section title="Accuracy Notes">
+                <div className="text-xs text-muted-foreground space-y-2">
+                  <p>This data can be used to verify calculations independently.</p>
+                  <p className="font-semibold">Compounding Method: {compoundingMethod.toUpperCase()}</p>
+                  <p>- {COMPOUNDING_METHOD_DESCRIPTIONS[compoundingMethod]}</p>
+                  <p>- Formula used: {monthlyReturnFormula}</p>
+                  <p className="font-semibold mt-2">Key calculation details:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>Weighted metrics use contribution weights when balance = 0</li>
+                    <li>Monte Carlo uses log-normal distribution with volatility adjustment</li>
+                    <li>Spending phases: Go-Go (100%), Slow-Go (80%), No-Go (70%+medical)</li>
+                    <li>Display mode: {displayModeLabel}</li>
+                  </ul>
+                  <p className="font-semibold mt-2">Single Source of Truth:</p>
+                  <p>- All projections use lib/calculations/utils/projection.ts::projectFinalSavings</p>
+                  <p>- Ensures consistency across all tabs (Projection, Insights, Scenarios)</p>
+                </div>
+              </Section>
+            </CategorySection>
           </div>
         </ScrollArea>
       </DialogContent>
