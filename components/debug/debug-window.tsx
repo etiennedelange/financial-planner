@@ -4,13 +4,13 @@ import { useState } from "react"
 import { Bug, Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
@@ -405,8 +405,8 @@ Single Source of Truth:
   }
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
         <Button
           variant="outline"
           size="icon"
@@ -415,21 +415,21 @@ Single Source of Truth:
         >
           <Bug className="h-4 w-4" />
         </Button>
-      </SheetTrigger>
-      <SheetContent className="w-full sm:max-w-2xl">
-        <SheetHeader>
-          <div className="flex items-start justify-between">
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
-              <SheetTitle>Debug: Calculation Parameters</SheetTitle>
-              <SheetDescription>
-                All parameters used in retirement calculations
-              </SheetDescription>
+              <DialogTitle>Debug: Calculation Parameters</DialogTitle>
+              <DialogDescription>
+                Verify all calculation inputs, assumptions, and results
+              </DialogDescription>
             </div>
             <Button
               variant="outline"
               size="icon"
               onClick={copyDebugInfo}
-              className="ml-4"
+              className="shrink-0"
               title={copied ? "Copied!" : "Copy all debug parameters"}
             >
               {copied ? (
@@ -439,10 +439,10 @@ Single Source of Truth:
               )}
             </Button>
           </div>
-        </SheetHeader>
+        </DialogHeader>
 
-        <ScrollArea className="h-[calc(100vh-120px)] mt-6 pr-4">
-          <div className="space-y-6">
+        <ScrollArea className="flex-1 pr-4">
+          <div className="space-y-6 pb-6">
             {/* Calculation Method - Prominent Display */}
             <div className="rounded-lg border-2 border-primary/50 bg-primary/5 p-4">
               <h3 className="font-semibold text-sm mb-3 text-primary flex items-center gap-2">
@@ -876,8 +876,8 @@ Single Source of Truth:
             </Section>
           </div>
         </ScrollArea>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }
 
