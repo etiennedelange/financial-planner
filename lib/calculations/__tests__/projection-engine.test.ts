@@ -2,6 +2,7 @@ import type { Account, DrawdownConfig, PersonalInfo, RetirementGoals } from '@/t
 import { describe, expect, it } from 'vitest'
 import { calculateProjection } from '../projection-engine'
 import { SA_TAX_LIMITS } from '@/lib/constants/limits'
+import { SA_DEFAULTS } from '@/lib/constants/defaults'
 
 describe('calculateProjection', () => {
   const baseAccount: Account = {
@@ -490,6 +491,40 @@ describe('calculateProjection', () => {
         }
       }
     })
+
+    it("deflates withdrawals to today's Rands from today, not from the retirement date", () => {
+      // Bug: inflationAdjustedWithdrawal divided by (1+inflation)^drawdownYear instead
+      // of (1+inflation)^(yearsToRetirement+drawdownYear), so it only stripped
+      // in-retirement inflation and left 30 years of pre-retirement inflation baked in.
+      const result = calculateProjection(
+        [baseAccount],
+        basePersonalInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig
+      )
+
+      const inflationRate = baseRetirementGoals.inflationRate / 100
+      const yearsToRetirement = basePersonalInfo.retirementAge - basePersonalInfo.currentAge // 30
+
+      // Each yearlyProjections index i is exactly i years from today, so the
+      // correct "today's Rands" divisor is (1+inflation)^i for every entry —
+      // accumulation and drawdown alike.
+      for (let i = yearsToRetirement; i < Math.min(yearsToRetirement + 5, result.yearlyProjections.length); i++) {
+        const yp = result.yearlyProjections[i]
+        if (yp.withdrawals > 0) {
+          const expected = yp.withdrawals / Math.pow(1 + inflationRate, i)
+          expect(yp.inflationAdjustedWithdrawal).toBeCloseTo(expected, 6)
+        }
+      }
+
+      // The first drawdown year is 30 years of inflation removed from today —
+      // the real (today's-Rands) figure must be meaningfully smaller than the
+      // nominal withdrawal, not (almost) equal to it.
+      const firstDrawdownYear = result.yearlyProjections[yearsToRetirement]
+      expect(firstDrawdownYear.inflationAdjustedWithdrawal).toBeLessThan(
+        firstDrawdownYear.withdrawals / 2
+      )
+    })
   })
 
   describe('Growth and fees calculation', () => {
@@ -596,6 +631,65 @@ describe('calculateProjection', () => {
       expect(result.surplusAmount).toBeGreaterThan(0)
       expect(result.shortfallAmount).toBe(0)
     })
+
+    it('should enforce logical consistency: depletion incompatible with surplus', () => {
+      // Critical constraint: if portfolio depletes, surplus must be 0
+      // (You can have surplus + shortfall if portfolio survives but withdrew less than desired)
+      const insufficientAccount: Account = {
+        ...baseAccount,
+        currentBalance: 10000,
+        monthlyContribution: 50,
+      }
+
+      const result = calculateProjection(
+        [insufficientAccount],
+        basePersonalInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig
+      )
+
+      // If portfolio depleted, no surplus possible
+      if (result.portfolioDepletionAge) {
+        expect(result.surplusAmount).toBe(0)
+      }
+      // If there's a surplus, portfolio didn't deplete
+      if (result.surplusAmount > 0) {
+        expect(result.portfolioDepletionAge).toBeFalsy()
+      }
+    })
+
+    it.each([
+      'fixed_amount_inflation_adjusted',
+      'variable_percentage',
+      'guardrails',
+    ] as const)(
+      'should calculate shortfall when portfolio insufficient under %s strategy',
+      (strategy) => {
+        // Bug: calculateInitialWithdrawal returns the desired income verbatim
+        // (mod min/max clamp) for these three strategies, so comparing it back
+        // to the same desired income always produced shortfallAmount === 0 —
+        // even when the portfolio depletes years before life expectancy and
+        // real withdrawals drop to R0.
+        const insufficientAccount: Account = {
+          ...baseAccount,
+          currentBalance: 10000,
+          monthlyContribution: 50,
+        }
+
+        const result = calculateProjection(
+          [insufficientAccount],
+          basePersonalInfo,
+          baseRetirementGoals,
+          { ...baseDrawdownConfig, strategy }
+        )
+
+        // The portfolio can't possibly sustain R30k/month for 25 years off a
+        // starting balance this small — it must deplete, and the metric must
+        // reflect that as a real shortfall.
+        expect(result.portfolioDepletionAge).not.toBeNull()
+        expect(result.shortfallAmount).toBeGreaterThan(0)
+      }
+    )
   })
 
   describe('Tax-optimized withdrawal sequencing', () => {
@@ -1067,6 +1161,72 @@ describe('calculateProjection', () => {
       expect(result.yearlyProjections[0].contributions).toBeLessThanOrEqual(46000 + 1)
     })
 
+    it('should calculate 40% penalty on TFSA contributions exceeding annual limit', () => {
+      // User tries to contribute R60k/year to TFSA (R46k limit)
+      // Excess = R60k - R46k = R14k
+      // Penalty = R14k × 40% = R5.6k per year
+      const overContributingAccount: Account = {
+        ...tfsaAccount,
+        monthlyContribution: 5000, // R60k/year
+        tfsaContributionsToDate: 0,
+        contributionEscalation: 0,
+      }
+
+      const result = calculateProjection(
+        [overContributingAccount],
+        shortPersonalInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig
+      )
+
+      // Year 1: R60k attempted - R46k allowed = R14k excess × 40% = R5,600 penalty
+      expect(result.yearlyProjections[0].tfsaExcessContributionPenalty).toBeCloseTo(5600, 0)
+    })
+
+    it('should not charge penalty when contributions are within annual limit', () => {
+      // User contributes R36k/year (under R46k limit)
+      const withinLimitAccount: Account = {
+        ...tfsaAccount,
+        monthlyContribution: 3000, // R36k/year
+        tfsaContributionsToDate: 0,
+        contributionEscalation: 0,
+      }
+
+      const result = calculateProjection(
+        [withinLimitAccount],
+        shortPersonalInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig
+      )
+
+      // No excess contribution, penalty should be 0
+      expect(result.yearlyProjections[0].tfsaExcessContributionPenalty ?? 0).toBe(0)
+    })
+
+    it('should accumulate penalty across years when over-contributing consistently', () => {
+      // User contributes R50k/year consistently (R4k excess per year)
+      const overContributingAccount: Account = {
+        ...tfsaAccount,
+        monthlyContribution: 4166.67, // R50k/year ≈ 4166.67/month
+        tfsaContributionsToDate: 0,
+        contributionEscalation: 0,
+      }
+
+      const result = calculateProjection(
+        [overContributingAccount],
+        shortPersonalInfo, // 10 years to retirement
+        baseRetirementGoals,
+        baseDrawdownConfig
+      )
+
+      // Each year: R50k - R46k = R4k excess × 40% = R1,600 penalty
+      const year0Penalty = result.yearlyProjections[0].tfsaExcessContributionPenalty ?? 0
+      const year1Penalty = result.yearlyProjections[1].tfsaExcessContributionPenalty ?? 0
+
+      expect(year0Penalty).toBeCloseTo(1600, 0)
+      expect(year1Penalty).toBeCloseTo(1600, 0)
+    })
+
     it('should not apply TFSA limits to non-TFSA accounts', () => {
       const raAccount: Account = {
         ...tfsaAccount,
@@ -1207,7 +1367,7 @@ describe('calculateProjection', () => {
       }
     })
 
-    it('first retirement year medical aid equals today value escalated to retirement', () => {
+    it('first retirement year medical aid equals today value escalated to retirement using medical inflation', () => {
       const result = calculateProjection(
         [baseAccount],
         shortInfo,
@@ -1216,11 +1376,33 @@ describe('calculateProjection', () => {
       )
 
       const yearsToRetirement = shortInfo.retirementAge - shortInfo.currentAge // 5
-      const inflationDecimal = inflationRate / 100
-      const expectedAnnual = monthlyMedicalAid * Math.pow(1 + inflationDecimal, yearsToRetirement) * 12
+      // Medical costs escalate at medical inflation (9%), not general inflation (5.5%)
+      const medicalInflation = SA_DEFAULTS.medicalInflation
+      const expectedAnnual = monthlyMedicalAid * Math.pow(1 + medicalInflation, yearsToRetirement) * 12
 
       const firstRetirementRow = result.yearlyProjections.find(r => r.age === shortInfo.retirementAge)!
       expect(firstRetirementRow.medicalAidContribution).toBeCloseTo(expectedAnnual, 0)
+    })
+
+    it('medical aid drawdown escalates at medical inflation rate (9%), not general inflation (5.5%)', () => {
+      // The bug: drawdown-phase medical aid was escalated per year using
+      // general inflation (5.5%), not medical inflation (9%), understating
+      // the fastest-growing retirement cost ~2.2x over 25 years.
+      const result = calculateProjection(
+        [baseAccount],
+        shortInfo,
+        goals,
+        { ...baseDrawdownConfig, monthlyMedicalAid }
+      )
+
+      const retirementRows = result.yearlyProjections.filter(r => r.age >= shortInfo.retirementAge)
+      if (retirementRows.length >= 2) {
+        const year0 = retirementRows[0].medicalAidContribution
+        const year1 = retirementRows[1].medicalAidContribution
+        // Year-to-year growth should be ~9%, not ~5.5%
+        const yoyGrowth = (year1 / year0 - 1) * 100
+        expect(yoyGrowth).toBeCloseTo(SA_DEFAULTS.medicalInflation * 100, 1)
+      }
     })
 
     it('without medical aid, medicalAidContribution is zero in all retirement rows', () => {

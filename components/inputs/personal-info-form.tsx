@@ -57,6 +57,7 @@ export function PersonalInfoForm() {
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: personalInfo,
+    mode: 'onChange', // Validate as user types for immediate feedback
   })
 
   // Watch all fields and update store on change
@@ -162,7 +163,7 @@ export function PersonalInfoForm() {
               id="annualIncome"
               type="number"
               min="0"
-              step="10000"
+              step="any"
               {...register("annualIncome", { valueAsNumber: true })}
             />
             <AnimatePresence initial={false}>

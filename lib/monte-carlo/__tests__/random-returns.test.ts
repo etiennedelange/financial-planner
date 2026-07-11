@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { randomNormal, generateReturnSequence, getPercentile } from '../random-returns'
 
 describe('randomNormal', () => {
@@ -28,6 +28,18 @@ describe('randomNormal', () => {
     const val2 = randomNormal(0, 1)
     // Extremely unlikely to be the same
     expect(val1).not.toBe(val2)
+  })
+
+  it('should stay finite when Math.random() returns exactly 0', () => {
+    // Box-Muller's u1 feeds Math.log(u1); Math.random() can return exactly 0,
+    // giving Math.log(0) = -Infinity and poisoning the whole draw with ±Infinity.
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValueOnce(0.5)
+    try {
+      const result = randomNormal(0.1, 0.15)
+      expect(Number.isFinite(result)).toBe(true)
+    } finally {
+      randomSpy.mockRestore()
+    }
   })
 })
 

@@ -320,6 +320,27 @@ describe('runMonteCarloSimulation', () => {
     })
   })
 
+  describe('Zero runs handling', () => {
+    it('should not divide by zero when numberOfRuns is 0', () => {
+      // aggregateResults divided by runs.length unconditionally, so an empty
+      // runs array (numberOfRuns: 0, with real accounts present) produced
+      // NaN for successRate/averageFinalBalance/averageLifetimeIncomeTax/
+      // averageLumpSumTax instead of a safe degenerate result.
+      const result = runMonteCarloSimulation(
+        [baseAccount],
+        basePersonalInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig,
+        { numberOfRuns: 0 }
+      )
+
+      expect(result.runs.length).toBe(0)
+      expect(Number.isFinite(result.successRate)).toBe(true)
+      expect(result.successRate).toBe(0)
+      expect(Number.isFinite(result.averageFinalBalance)).toBe(true)
+    })
+  })
+
   describe('Compounding methods', () => {
     it('should use nominal compounding by default', () => {
       const resultNoMethod = runMonteCarloSimulation(

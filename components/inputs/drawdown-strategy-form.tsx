@@ -195,7 +195,7 @@ export function DrawdownStrategyForm({
                       id="minimumWithdrawal"
                       type="number"
                       min="0"
-                      step="1000"
+                      step="any"
                       value={drawdownConfig.minimumWithdrawal}
                       onChange={(e) =>
                         setDrawdownConfig({ minimumWithdrawal: Number(e.target.value) })
@@ -215,7 +215,7 @@ export function DrawdownStrategyForm({
                       id="maximumWithdrawal"
                       type="number"
                       min="0"
-                      step="1000"
+                      step="any"
                       value={drawdownConfig.maximumWithdrawal}
                       onChange={(e) =>
                         setDrawdownConfig({ maximumWithdrawal: Number(e.target.value) })

@@ -56,6 +56,7 @@ export function AssumptionsForm() {
       bondVolatility: assumptions.bondVolatility,
       inflationRate: retirementGoals.inflationRate,
     },
+    mode: 'onChange', // Validate as user types for immediate feedback
   })
 
   const saDefaults = {

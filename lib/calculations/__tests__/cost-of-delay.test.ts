@@ -107,12 +107,9 @@ describe("calculateCostOfDelay", () => {
         contributionEscalation: 0,
       })
 
-      // With 0 contributions, there's still a small difference because:
-      // - The delay period uses annual compounding: savings * (1 + return)^years
-      // - The accumulation uses monthly compounding in projectFinalSavings
-      // This creates a slight compounding difference
-
-      // The difference should be relatively small (< 1% of baseline)
+      // With 0 contributions, growing for 1 year then the remaining years via
+      // projectFinalSavings is mathematically equivalent to growing for the
+      // full period straight through — so the cost of delay should be ~0.
       const percentDiff = (result.costOfOneYearDelay / result.baselineNestEgg) * 100
       expect(percentDiff).toBeLessThan(1)
     })
@@ -201,6 +198,47 @@ describe("calculateCostOfDelay", () => {
 
       // With 0 years to retirement, all nest eggs should equal current savings
       expect(result.baselineNestEgg).toBeCloseTo(baseParams.currentSavings, 0)
+    })
+
+    it("should never report a negative cost of delay when retirement is imminent", () => {
+      // Bug: the 1- and 2-year delay branches applied Math.pow(1+netReturn, N)
+      // pre-growth unconditionally, then passed yearsToRetirement-N (which can
+      // go negative) straight to projectFinalSavings. With 0 years to
+      // retirement, the "delay" scenario ended up simulating growth for
+      // longer than the baseline (which correctly stops at 0 years), making
+      // waiting look *better* than not waiting.
+      const result = calculateCostOfDelay({
+        ...baseParams,
+        personalInfo: {
+          ...basePersonalInfo,
+          currentAge: 65,
+          retirementAge: 65, // 0 years to retirement
+        },
+      })
+
+      expect(result.costOfOneYearDelay).toBeGreaterThanOrEqual(0)
+      expect(result.costOfTwoYearDelay).toBeGreaterThanOrEqual(0)
+      expect(result.costOfFiveYearDelay).toBeGreaterThanOrEqual(0)
+    })
+
+    it("should not produce NaN percentages when baseline nest egg is zero", () => {
+      // Bug: percentageLostOneYear/TwoYear/FiveYear divide by baselineNestEgg
+      // with no guard. Zero current savings + zero contribution means
+      // baselineNestEgg is legitimately 0, so the division was 0/0 = NaN.
+      const result = calculateCostOfDelay({
+        ...baseParams,
+        currentSavings: 0,
+        monthlyContribution: 0,
+        contributionEscalation: 0,
+      })
+
+      expect(result.baselineNestEgg).toBe(0)
+      expect(Number.isFinite(result.percentageLostOneYear)).toBe(true)
+      expect(Number.isFinite(result.percentageLostTwoYear)).toBe(true)
+      expect(Number.isFinite(result.percentageLostFiveYear)).toBe(true)
+      expect(result.percentageLostOneYear).toBe(0)
+      expect(result.percentageLostTwoYear).toBe(0)
+      expect(result.percentageLostFiveYear).toBe(0)
     })
 
     it("should handle very short time horizons", () => {
@@ -344,9 +382,8 @@ describe("calculateCostOfDelay", () => {
         compoundingMethod: "nominal",
       })
 
-      // With no contributions, the cost is minimal (only compounding methodology difference)
-      // The delay period uses annual compounding, accumulation uses monthly
-      // So there's a small but non-zero cost
+      // With no contributions, delaying costs ~nothing — the money grows at
+      // the same rate either way, just shifted by a year.
       const percentLost = (result.costOfOneYearDelay / result.baselineNestEgg) * 100
       expect(percentLost).toBeLessThan(1) // Less than 1% difference
     })

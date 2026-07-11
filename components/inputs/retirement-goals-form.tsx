@@ -42,6 +42,7 @@ export function RetirementGoalsForm() {
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: retirementGoals,
+    mode: 'onChange', // Validate as user types for immediate feedback
   })
 
   const watchedValues = watch()
@@ -101,7 +102,7 @@ export function RetirementGoalsForm() {
             id="desiredMonthlyIncome"
             type="number"
             min="0"
-            step="1000"
+            step="any"
             {...register("desiredMonthlyIncome", { valueAsNumber: true })}
           />
           <FieldError message={errors.desiredMonthlyIncome?.message} />
@@ -131,7 +132,7 @@ export function RetirementGoalsForm() {
             id="legacyAmount"
             type="number"
             min="0"
-            step="100000"
+            step="any"
             {...register("legacyAmount", { valueAsNumber: true })}
           />
           <AnimatePresence initial={false}>

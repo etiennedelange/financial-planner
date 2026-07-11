@@ -274,6 +274,18 @@ function aggregateResults(
   runs: SimulationRun[],
   totalYears: number
 ): SimulationResult {
+  if (runs.length === 0) {
+    return {
+      runs: [],
+      successRate: 0,
+      percentiles: { p10: [], p25: [], p50: [], p75: [], p90: [] },
+      medianDepletionAge: null,
+      averageFinalBalance: 0,
+      averageLifetimeIncomeTax: 0,
+      averageLumpSumTax: 0,
+    }
+  }
+
   const successCount = runs.filter((r) => r.success).length
   const successRate = (successCount / runs.length) * 100
 

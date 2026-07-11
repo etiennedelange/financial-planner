@@ -690,7 +690,7 @@ const medicalAidContribution =
 
 ```typescript
 const netIncome = totalWithdrawal - incomeTax - medicalAidContribution
-const inflationAdjustedWithdrawal = totalWithdrawal / Math.pow(1 + inflationRate, year)
+const inflationAdjustedWithdrawal = totalWithdrawal / Math.pow(1 + inflationRate, yearsToRetirement + year)
 ```
 
 #### 3g. Next Year's Withdrawal (end of each drawdown year)

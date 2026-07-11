@@ -31,6 +31,8 @@ export interface YearlyProjection {
   // Section 11F excess contribution credit applied this drawdown year
   excessCreditApplied?: number
   excessCreditRemaining?: number
+  // TFSA excess contribution penalty (40% tax on contributions over annual R46k limit)
+  tfsaExcessContributionPenalty?: number
 }
 
 export interface LumpSumCommutationResult {

@@ -1,4 +1,5 @@
 {
+  "model": "haiku",
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline-command.sh",
@@ -34,6 +35,5 @@
   },
   "tui": "default",
   "theme": "dark",
-  "agentPushNotifEnabled": true,
-  "model": "haiku"
+  "agentPushNotifEnabled": true
 }

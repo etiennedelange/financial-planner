@@ -233,6 +233,7 @@ export function calculateProjection(
     let yearlyFees = 0
     let yearlyContributions = 0
     let yearlyPensionContributions = 0
+    let tfsaExcessContribution = 0 // Track excess TFSA contributions for penalty calculation
 
     // Reset annual TFSA contribution tracker each year
     const tfsaYearlyUsed = accounts.map(() => 0)
@@ -251,11 +252,18 @@ export function calculateProjection(
         let monthlyContribution =
           accountMonthlyContributions[accIdx] * Math.pow(1 + accEscalation, year + month / 12)
 
-        // Enforce TFSA annual (R36k) and lifetime (R500k) contribution limits
+        // Enforce TFSA annual (R46k) and lifetime (R500k) contribution limits
+        // Track excess for penalty calculation (40% tax on contributions over R46k/year)
         if (acc.type === 'tfsa') {
+          const intendedContribution = monthlyContribution
           const remainingLifetime = Math.max(0, TFSA_LIMITS_CONFIG.lifetimeLimit - tfsaLifetimeUsed[accIdx])
           const remainingAnnual = Math.max(0, TFSA_LIMITS_CONFIG.annualLimit - tfsaYearlyUsed[accIdx])
-          monthlyContribution = Math.min(monthlyContribution, remainingLifetime, remainingAnnual)
+          monthlyContribution = Math.min(intendedContribution, remainingLifetime, remainingAnnual)
+
+          // Track excess contribution in the annual amount (not individual months) for penalty
+          const monthlyExcess = Math.max(0, intendedContribution - monthlyContribution)
+          tfsaExcessContribution += monthlyExcess
+
           tfsaLifetimeUsed[accIdx] += monthlyContribution
           tfsaYearlyUsed[accIdx] += monthlyContribution
         }
@@ -283,6 +291,9 @@ export function calculateProjection(
     const effectiveIncome = personalInfo.annualIncome * Math.pow(1 + inflationRate, year)
     accumulatedExcessCredit += calculateExcessContributionCredit(yearlyPensionContributions, effectiveIncome)
 
+    // Calculate TFSA excess contribution penalty (40% tax on contributions over R46k/year)
+    const tfsaExcessContributionPenalty = tfsaExcessContribution * 0.4
+
     yearlyProjections.push({
       year: year + 1,
       age,
@@ -297,6 +308,7 @@ export function calculateProjection(
       netIncome: 0,
       endingBalance: totalBalance,
       inflationAdjustedWithdrawal: 0,
+      tfsaExcessContributionPenalty: tfsaExcessContributionPenalty > 0 ? tfsaExcessContributionPenalty : 0,
     })
   }
 
@@ -370,6 +382,8 @@ export function calculateProjection(
 
     if (currentTotal <= 0) {
       if (!portfolioDepletionAge) portfolioDepletionAge = age
+      // Zero out all account balances when portfolio depletes so finalBalance calculation is correct
+      drawdownAccounts.forEach(acc => { acc.balance = 0 })
       yearlyProjections.push({
         year: yearsToRetirement + year + 1,
         age,
@@ -390,6 +404,7 @@ export function calculateProjection(
         cgtTaxableAmount: 0,
         taxableIncome: 0,
         accountBalances: Object.fromEntries(drawdownAccounts.map(a => [a.id, 0])),
+        tfsaExcessContributionPenalty: 0,
       })
       continue
     }
@@ -478,9 +493,11 @@ export function calculateProjection(
       drawdownConfig.monthlyMedicalAid ? drawdownConfig.medicalAidDependants ?? 0 : undefined
     )
     // monthlyMedicalAid is entered in today's Rands; escalate to retirement-year value
+    // using medical inflation (9%) not general inflation (5.5%), since SA medical costs
+    // grow faster than CPI
     const medicalAidContribution =
       (drawdownConfig.monthlyMedicalAid ?? 0) *
-      Math.pow(1 + inflationRate, yearsToRetirement + year) *
+      Math.pow(1 + SA_DEFAULTS.medicalInflation, yearsToRetirement + year) *
       12
     const netIncome = totalWithdrawal - incomeTax - medicalAidContribution
 
@@ -503,7 +520,7 @@ export function calculateProjection(
       medicalAidContribution,
       netIncome,
       endingBalance: Math.max(0, currentTotal),
-      inflationAdjustedWithdrawal: totalWithdrawal / Math.pow(1 + inflationRate, year),
+      inflationAdjustedWithdrawal: totalWithdrawal / Math.pow(1 + inflationRate, yearsToRetirement + year),
       tfsaWithdrawal,
       discretionaryWithdrawal,
       pensionWithdrawal,
@@ -512,6 +529,7 @@ export function calculateProjection(
       accountBalances: Object.fromEntries(drawdownAccounts.map(a => [a.id, Math.max(0, a.balance)])),
       excessCreditApplied: creditAppliedThisYear,
       excessCreditRemaining: creditRemaining,
+      tfsaExcessContributionPenalty: 0,
     })
   }
 
@@ -542,13 +560,24 @@ export function calculateProjection(
       ? (totalLifetimeIncomeTax / totalGrossWithdrawals) * 100
       : 0
 
-  // Calculate shortfall based on inflation-adjusted desired income at retirement
+  // Calculate shortfall by comparing the inflation-adjusted desired income against
+  // what was actually withdrawn each drawdown year, not just the year-0 target.
+  // Comparing only the initial target (as before) was structurally always 0 for
+  // every strategy except fixed_percentage, because calculateInitialWithdrawal
+  // returns the desired amount verbatim for the other three strategies — so a
+  // portfolio that fully depletes years before life expectancy (withdrawals
+  // dropping to R0) never registered as a shortfall. Summing the per-year gap
+  // against actual withdrawals captures both depletion and guardrail/variable
+  // cuts below the desired income.
   const desiredMonthlyAtRetirement =
     retirementGoals.desiredMonthlyIncome * Math.pow(1 + inflationRate, yearsToRetirement)
-  const shortfallAmount =
-    Math.max(0, desiredMonthlyAtRetirement - monthlyIncomeAtRetirement) *
-    12 *
-    yearsInRetirement
+  const shortfallAmount = yearlyProjections
+    .slice(yearsToRetirement)
+    .reduce((sum, yp, drawdownYear) => {
+      const desiredAnnualThisYear =
+        desiredMonthlyAtRetirement * 12 * Math.pow(1 + inflationRate, drawdownYear)
+      return sum + Math.max(0, desiredAnnualThisYear - yp.withdrawals)
+    }, 0)
 
   return {
     yearlyProjections,

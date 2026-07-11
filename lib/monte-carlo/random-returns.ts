@@ -2,7 +2,9 @@
  * Box-Muller transform for generating normally distributed random numbers
  */
 export function randomNormal(mean: number, stdDev: number): number {
-  const u1 = Math.random()
+  // Math.random() can return exactly 0; Math.log(0) = -Infinity would poison
+  // the whole draw. Number.MIN_VALUE is indistinguishable from 0 for this purpose.
+  const u1 = Math.random() || Number.MIN_VALUE
   const u2 = Math.random()
   const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2)
   return mean + stdDev * z0

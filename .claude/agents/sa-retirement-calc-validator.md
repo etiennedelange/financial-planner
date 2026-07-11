@@ -26,12 +26,13 @@ When validating calculations, you MUST check:
 - Real returns: Verify nominal - inflation calculations are correct
 - Volatility: 15-18% standard deviation for equities is appropriate
 
-### 2. Tax Calculations (2024/2025 Tax Year)
-- RA/Pension contributions: 27.5% of greater of remuneration or taxable income, capped at R350,000 p.a.
-- TFSA limits: R36,000 annual contribution, R500,000 lifetime limit
-- Retirement lump sum tax tables (first R550,000 tax-free for retirement)
+### 2. Tax Calculations
+- Do NOT hardcode tax year figures from memory — always read current limits from `lib/constants/tax-year.config.ts` (single source of truth, per CLAUDE.md) and cross-check calculation code against it
+- RA/Pension contributions: 27.5% of greater of remuneration or taxable income, capped at `RETIREMENT_CONTRIBUTION_LIMITS_CONFIG.pensionRaMaxDeduction`
+- TFSA limits: `TFSA_LIMITS_CONFIG.annualLimit` annual contribution, `TFSA_LIMITS_CONFIG.lifetimeLimit` lifetime limit
+- Retirement lump sum tax tables: `RETIREMENT_LUMP_SUM_CONFIG` (tax-free threshold, tiered rates)
 - Living annuity taxation (taxed as income)
-- Capital gains tax on discretionary investments (40% inclusion rate for individuals)
+- Capital gains tax on discretionary investments: `SA_TAX_LIMITS.cgtInclusionRateIndividual` inclusion rate, `CGT_ANNUAL_EXCLUSION_CONFIG` annual exclusion
 
 ### 3. Withdrawal Rules
 - Pension/RA: One-third lump sum at retirement, two-thirds must purchase annuity

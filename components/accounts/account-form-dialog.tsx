@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useForm, useFormState } from "react-hook-form"
+import { useForm, useFormState, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Button } from "@/components/ui/button"
@@ -108,9 +108,8 @@ function StepHeader({ step }: { step: 1 | 2 }) {
 type FormRef = ReturnType<typeof useForm<AccountFormData>>
 
 function EssentialFields({ form }: { form: FormRef }) {
-  const { register, setValue, watch, control } = form
+  const { register, control } = form
   const { errors } = useFormState({ control })
-  const selectedType = watch("type")
 
   return (
     <div className="space-y-4">
@@ -133,19 +132,22 @@ function EssentialFields({ form }: { form: FormRef }) {
 
       <div className="space-y-2">
         <Label htmlFor="af-type">Account Type</Label>
-        <Select
-          value={selectedType}
-          onValueChange={(v) => setValue("type", v as AccountType)}
-        >
-          <SelectTrigger id="af-type">
-            <SelectValue placeholder="Select account type" />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(ACCOUNT_TYPE_LABELS).map(([value, label]) => (
-              <SelectItem key={value} value={value}>{label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Controller
+          name="type"
+          control={control}
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger id="af-type">
+                <SelectValue placeholder="Select account type" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(ACCOUNT_TYPE_LABELS).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -155,7 +157,7 @@ function EssentialFields({ form }: { form: FormRef }) {
             id="af-balance"
             type="number"
             min="0"
-            step="1000"
+            step="any"
             {...register("currentBalance", { valueAsNumber: true })}
           />
           {errors.currentBalance && (
@@ -168,7 +170,7 @@ function EssentialFields({ form }: { form: FormRef }) {
             id="af-monthly"
             type="number"
             min="0"
-            step="100"
+            step="any"
             {...register("monthlyContribution", { valueAsNumber: true })}
           />
         </div>
@@ -378,6 +380,7 @@ function FormBody({ account, onSubmit, onClose }: FormBodyProps) {
   const form = useForm<AccountFormData>({
     resolver: zodResolver(accountSchema),
     defaultValues: getDefaultValues(account),
+    mode: 'onChange', // Validate as user types for immediate feedback
   })
 
   const [currentBalance, monthlyContribution, expectedReturn, annualFees] = form.watch([
