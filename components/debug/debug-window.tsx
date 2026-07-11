@@ -913,3 +913,34 @@ function Param({ label, value, highlight, small }: ParamProps) {
     </div>
   )
 }
+
+interface CategorySectionProps {
+  title: string
+  category: 'critical' | 'inputs' | 'results' | 'reference'
+  children: React.ReactNode
+}
+
+function CategorySection({ title, category, children }: CategorySectionProps) {
+  const bgColor = {
+    critical: 'bg-primary/15',
+    inputs: 'bg-primary/5',
+    results: 'bg-primary/10',
+    reference: 'bg-muted/30',
+  }[category]
+
+  const borderColor = {
+    critical: 'border-primary',
+    inputs: 'border-primary/40',
+    results: 'border-primary',
+    reference: 'border-muted-foreground/40',
+  }[category]
+
+  return (
+    <div className={`rounded-lg border-l-4 ${borderColor} ${bgColor} p-4`}>
+      <h3 className="font-semibold text-sm mb-3 text-primary">{title}</h3>
+      <div className="space-y-2">
+        {children}
+      </div>
+    </div>
+  )
+}
