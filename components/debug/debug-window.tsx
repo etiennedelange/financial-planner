@@ -443,11 +443,8 @@ Single Source of Truth:
 
         <ScrollArea className="flex-1 pr-4">
           <div className="space-y-6 pb-6">
-            {/* Calculation Method - Prominent Display */}
-            <div className="rounded-lg border-2 border-primary/50 bg-primary/5 p-4">
-              <h3 className="font-semibold text-sm mb-3 text-primary flex items-center gap-2">
-                ⚙️ Calculation Method
-              </h3>
+            {/* CRITICAL METRICS */}
+            <CategorySection title="Critical Metrics" category="critical">
               <div className="space-y-3">
                 <div>
                   <div className="text-xs text-muted-foreground mb-1">Compounding Method:</div>
@@ -487,8 +484,37 @@ Single Source of Truth:
                     <Param label="Net Return" value={formatPercent(netReturn)} small />
                   </div>
                 </div>
+
+                <Separator className="my-2" />
+
+                <div className="grid grid-cols-2 gap-4 mt-3">
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-1">Portfolio at Retirement:</div>
+                    <div className="font-semibold text-primary">
+                      {projection ? formatCurrency(projection.portfolioAtRetirement) : 'Calculating...'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-1">Success Rate:</div>
+                    <div className="font-semibold text-primary">
+                      {simulationResult ? `${simulationResult.successRate.toFixed(2)}%` : 'Simulating...'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-1">Years to Depletion:</div>
+                    <div className="font-semibold text-primary">
+                      {projection?.portfolioDepletionAge ? `Age ${projection.portfolioDepletionAge}` : 'Never'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-1">Replacement Ratio:</div>
+                    <div className="font-semibold text-primary">
+                      {replacementRatio.toFixed(1)}%
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
+            </CategorySection>
 
             {/* Personal Information */}
             <Section title="Personal Information">
