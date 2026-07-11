@@ -579,14 +579,19 @@ export function calculateProjection(
       return sum + Math.max(0, desiredAnnualThisYear - yp.withdrawals)
     }, 0)
 
+  // Critical constraint: if portfolio survives with surplus, there's no shortfall
+  // (any gap is due to spending phase strategy, not insufficient funds)
+  const finalSurplus = Math.max(0, finalBalance)
+  const correctedShortfall = finalSurplus > 0 ? 0 : shortfallAmount
+
   return {
     yearlyProjections,
     portfolioAtRetirement,
     monthlyIncomeAtRetirement,
     monthlyNetIncomeAtRetirement,
     portfolioDepletionAge,
-    shortfallAmount,
-    surplusAmount: Math.max(0, finalBalance),
+    shortfallAmount: correctedShortfall,
+    surplusAmount: finalSurplus,
     totalLifetimeIncomeTax,
     totalLumpSumTax,
     totalMedicalAidContributions,

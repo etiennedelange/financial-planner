@@ -220,13 +220,9 @@ export function calculateReplacementRatio(
 ): number {
   if (preRetirementIncome <= 0) return 0
 
-  // For fair comparison, we should compare after-tax amounts
-  // But if we only have before-tax pre-retirement income, we estimate
-  // Assume average 25% tax rate on pre-retirement income
-  const estimatedPreRetirementNetIncome = preRetirementIncome * 0.75
-
-  const replacementRatio =
-    (annualRetirementIncome / estimatedPreRetirementNetIncome) * 100
+  // Simple gross-to-gross comparison: retirement income / pre-retirement income
+  // Both figures are gross annual amounts, making the ratio directly comparable
+  const replacementRatio = (annualRetirementIncome / preRetirementIncome) * 100
 
   return replacementRatio
 }

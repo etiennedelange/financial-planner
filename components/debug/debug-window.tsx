@@ -209,9 +209,10 @@ export function DebugWindow({
     preRetirementIncome: personalInfo.annualIncome,
   });
 
-  // Replacement ratio
+  // Replacement ratio: gross retirement income / (pre-retirement income after estimated tax)
+  // Use initialWithdrawalAnnual (displayed value) not after-tax for consistency with display
   const replacementRatio = calculateReplacementRatio(
-    taxAtRetirement.netIncome,
+    initialWithdrawalAnnual,
     personalInfo.annualIncome,
   );
 

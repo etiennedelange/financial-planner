@@ -457,24 +457,21 @@ describe('retirement-tax', () => {
 
   describe('calculateReplacementRatio', () => {
     it('should calculate 100% replacement for equal incomes', () => {
-      // R300k pre-retirement (est. R225k after tax at 25%)
-      // R225k retirement income
-      const result = calculateReplacementRatio(225000, 300000)
+      // Simple gross-to-gross: R300k retirement / R300k pre-retirement = 100%
+      const result = calculateReplacementRatio(300000, 300000)
       expect(result).toBe(100)
     })
 
-    it('should calculate 80% replacement ratio', () => {
-      // R400k pre-retirement (est. R300k after tax)
-      // R240k retirement income
+    it('should calculate 60% replacement ratio', () => {
+      // R240k retirement / R400k pre-retirement = 60%
       const result = calculateReplacementRatio(240000, 400000)
-      expect(result).toBe(80)
+      expect(result).toBe(60)
     })
 
-    it('should calculate 70% replacement ratio', () => {
-      // R500k pre-retirement (est. R375k after tax)
-      // R262.5k retirement income
+    it('should calculate 52.5% replacement ratio', () => {
+      // R262.5k retirement / R500k pre-retirement = 52.5%
       const result = calculateReplacementRatio(262500, 500000)
-      expect(result).toBe(70)
+      expect(result).toBeCloseTo(52.5, 1)
     })
 
     it('should handle zero pre-retirement income', () => {
@@ -483,10 +480,9 @@ describe('retirement-tax', () => {
     })
 
     it('should handle higher retirement income (>100% replacement)', () => {
-      // R300k pre-retirement (est. R225k after tax)
-      // R270k retirement income (120% replacement)
-      const result = calculateReplacementRatio(270000, 300000)
-      expect(result).toBe(120)
+      // R400k retirement / R300k pre-retirement = 133.3%
+      const result = calculateReplacementRatio(400000, 300000)
+      expect(result).toBeCloseTo(133.3, 1)
     })
   })
 
