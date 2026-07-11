@@ -516,95 +516,149 @@ Single Source of Truth:
               </div>
             </CategorySection>
 
-            {/* Personal Information */}
-            <Section title="Personal Information">
-              <Param label="Current Age" value={personalInfo.currentAge} />
-              <Param label="Retirement Age" value={personalInfo.retirementAge} />
-              <Param label="Life Expectancy" value={personalInfo.lifeExpectancy} />
-              <Param label="Annual Income" value={formatCurrency(personalInfo.annualIncome)} />
-              <Param label="Years to Retirement" value={yearsToRetirement} highlight />
-              <Param label="Years in Retirement" value={yearsInRetirement} highlight />
-            </Section>
+            {/* CALCULATION INPUTS */}
+            <CategorySection title="Calculation Inputs" category="inputs">
+              <Section title="Personal Information">
+                <Param label="Current Age" value={personalInfo.currentAge} />
+                <Param label="Retirement Age" value={personalInfo.retirementAge} />
+                <Param label="Life Expectancy" value={personalInfo.lifeExpectancy} />
+                <Param label="Annual Income" value={formatCurrency(personalInfo.annualIncome)} />
+                <Param label="Years to Retirement" value={yearsToRetirement} highlight />
+                <Param label="Years in Retirement" value={yearsInRetirement} highlight />
+              </Section>
 
-            {/* Retirement Goals */}
-            <Section title="Retirement Goals">
-              <Param
-                label="Desired Monthly Income (Today)"
-                value={formatCurrency(retirementGoals.desiredMonthlyIncome)}
-              />
-              <Param
-                label="Inflation Rate"
-                value={`${retirementGoals.inflationRate}%`}
-              />
-              <Param
-                label="Inflation Rate (Decimal)"
-                value={inflationRate.toFixed(4)}
-                highlight
-              />
-              <Param
-                label="Legacy Amount"
-                value={formatCurrency(retirementGoals.legacyAmount)}
-              />
-            </Section>
-
-            {/* Retirement Eligibility */}
-            <Section title="Retirement Eligibility (SA Tax Rules)">
-              <Param
-                label="Can Access RA"
-                value={canAccessRA ? 'YES (Age 55+)' : 'NO (Must be 55+)'}
-                highlight={canAccessRA}
-              />
-              <Param
-                label="Can Access Preservation Fund"
-                value={canAccessPreservation ? 'YES (1/3 lump sum)' : 'NO'}
-              />
-              <Param
-                label="Retirement Eligible"
-                value={retirementEligible ? 'YES' : 'NO'}
-                highlight={retirementEligible}
-              />
-              <div className="mt-4 pt-4 border-t">
-                <p className="text-xs font-semibold mb-2">TAX DEDUCTIONS (2026/2027):</p>
-                <Param label="Annual Contribution" value={formatCurrency(annualContribution)} />
+              <Section title="Retirement Goals">
                 <Param
-                  label="Max RA Deduction"
-                  value={`${formatCurrency(maxRADeduction)} (27.5% of income, max R430k)`}
+                  label="Desired Monthly Income (Today)"
+                  value={formatCurrency(retirementGoals.desiredMonthlyIncome)}
+                />
+                <Param
+                  label="Inflation Rate"
+                  value={`${retirementGoals.inflationRate}%`}
+                />
+                <Param
+                  label="Inflation Rate (Decimal)"
+                  value={inflationRate.toFixed(4)}
                   highlight
                 />
                 <Param
-                  label="Estimated Tax Savings"
-                  value={`${formatCurrency(taxSavings)} (45% marginal rate)`}
-                  highlight
+                  label="Legacy Amount"
+                  value={formatCurrency(retirementGoals.legacyAmount)}
+                />
+              </Section>
+
+              <Section title="Retirement Eligibility (SA Tax Rules)">
+                <Param
+                  label="Can Access RA"
+                  value={canAccessRA ? 'YES (Age 55+)' : 'NO (Must be 55+)'}
+                  highlight={canAccessRA}
                 />
                 <Param
-                  label="Effective Cost After Tax"
-                  value={formatCurrency(annualContribution - taxSavings)}
+                  label="Can Access Preservation Fund"
+                  value={canAccessPreservation ? 'YES (1/3 lump sum)' : 'NO'}
                 />
-              </div>
-            </Section>
+                <Param
+                  label="Retirement Eligible"
+                  value={retirementEligible ? 'YES' : 'NO'}
+                  highlight={retirementEligible}
+                />
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-xs font-semibold mb-2">TAX DEDUCTIONS (2026/2027):</p>
+                  <Param label="Annual Contribution" value={formatCurrency(annualContribution)} />
+                  <Param
+                    label="Max RA Deduction"
+                    value={`${formatCurrency(maxRADeduction)} (27.5% of income, max R430k)`}
+                    highlight
+                  />
+                  <Param
+                    label="Estimated Tax Savings"
+                    value={`${formatCurrency(taxSavings)} (45% marginal rate)`}
+                    highlight
+                  />
+                  <Param
+                    label="Effective Cost After Tax"
+                    value={formatCurrency(annualContribution - taxSavings)}
+                  />
+                </div>
+              </Section>
 
-            {/* Accounts */}
-            <Section title={`Accounts (${accounts.length})`}>
-              {accounts.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic">No accounts configured</p>
-              ) : (
-                accounts.map((account, index) => (
-                  <div key={account.id} className="mb-4 p-3 bg-muted/50 rounded-md">
-                    <h4 className="font-semibold text-sm mb-2">
-                      {index + 1}. {account.name} ({account.type})
-                    </h4>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <Param label="Provider" value={account.provider} small />
-                      <Param label="Balance" value={formatCurrency(account.currentBalance)} small />
-                      <Param label="Monthly Contribution" value={formatCurrency(account.monthlyContribution)} small />
-                      <Param label="Expected Return" value={`${account.expectedReturn}%`} small />
-                      <Param label="Annual Fees" value={`${account.annualFees}%`} small />
-                      <Param label="Escalation" value={`${account.contributionEscalation}%`} small />
+              <Section title={`Accounts (${accounts.length})`}>
+                {accounts.length === 0 ? (
+                  <p className="text-sm text-muted-foreground italic">No accounts configured</p>
+                ) : (
+                  accounts.map((account, index) => (
+                    <div key={account.id} className="mb-4 p-3 bg-muted/50 rounded-md">
+                      <h4 className="font-semibold text-sm mb-2">
+                        {index + 1}. {account.name} ({account.type})
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <Param label="Provider" value={account.provider} small />
+                        <Param label="Balance" value={formatCurrency(account.currentBalance)} small />
+                        <Param label="Monthly Contribution" value={formatCurrency(account.monthlyContribution)} small />
+                        <Param label="Expected Return" value={`${account.expectedReturn}%`} small />
+                        <Param label="Annual Fees" value={`${account.annualFees}%`} small />
+                        <Param label="Escalation" value={`${account.contributionEscalation}%`} small />
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))
+                )}
+              </Section>
+
+              <Section title="Drawdown Configuration">
+                <Param label="Strategy" value={drawdownConfig.strategy} />
+                <Param
+                  label="Initial Withdrawal Rate"
+                  value={`${drawdownConfig.initialWithdrawalRate}%`}
+                />
+                <Param
+                  label="Minimum Withdrawal (Monthly)"
+                  value={formatCurrency(drawdownConfig.minimumWithdrawal)}
+                />
+                <Param
+                  label="Maximum Withdrawal (Monthly)"
+                  value={formatCurrency(drawdownConfig.maximumWithdrawal)}
+                />
+                <Param
+                  label="Lump Sum at Retirement"
+                  value={`${drawdownConfig.lumpSumPercentage}%`}
+                />
+                {drawdownConfig.upperGuardrail && (
+                  <Param
+                    label="Upper Guardrail"
+                    value={`${drawdownConfig.upperGuardrail}%`}
+                  />
+                )}
+                {drawdownConfig.lowerGuardrail && (
+                  <Param
+                    label="Lower Guardrail"
+                    value={`${drawdownConfig.lowerGuardrail}%`}
+                  />
+                )}
+                {drawdownConfig.monthlyMedicalAid && (
+                  <Param
+                    label="Monthly Medical Aid"
+                    value={formatCurrency(drawdownConfig.monthlyMedicalAid)}
+                  />
+                )}
+                {drawdownConfig.medicalAidDependants !== undefined && (
+                  <Param
+                    label="Medical Aid Dependants"
+                    value={drawdownConfig.medicalAidDependants}
+                  />
+                )}
+              </Section>
+
+              {assumptions && (
+                <Section title="Market Assumptions">
+                  <Param label="Equity Return" value={`${assumptions.equityReturn}%`} />
+                  <Param label="Bond Return" value={`${assumptions.bondReturn}%`} />
+                  <Param label="Cash Return" value={`${assumptions.cashReturn}%`} />
+                  <Param label="Equity Volatility" value={`${assumptions.equityVolatility}%`} />
+                  <Param label="Bond Volatility" value={`${assumptions.bondVolatility}%`} />
+                  <Param label="Inflation Rate" value={`${assumptions.inflationRate}%`} />
+                </Section>
               )}
-            </Section>
+            </CategorySection>
 
             {/* Portfolio Aggregates */}
             <Section title="Portfolio Aggregates (Calculated)">
@@ -732,63 +786,6 @@ Single Source of Truth:
                 highlight
               />
             </Section>
-
-            {/* Drawdown Configuration */}
-            <Section title="Drawdown Configuration">
-              <Param label="Strategy" value={drawdownConfig.strategy} />
-              <Param
-                label="Initial Withdrawal Rate"
-                value={`${drawdownConfig.initialWithdrawalRate}%`}
-              />
-              <Param
-                label="Minimum Withdrawal (Monthly)"
-                value={formatCurrency(drawdownConfig.minimumWithdrawal)}
-              />
-              <Param
-                label="Maximum Withdrawal (Monthly)"
-                value={formatCurrency(drawdownConfig.maximumWithdrawal)}
-              />
-              <Param
-                label="Lump Sum at Retirement"
-                value={`${drawdownConfig.lumpSumPercentage}%`}
-              />
-              {drawdownConfig.upperGuardrail && (
-                <Param
-                  label="Upper Guardrail"
-                  value={`${drawdownConfig.upperGuardrail}%`}
-                />
-              )}
-              {drawdownConfig.lowerGuardrail && (
-                <Param
-                  label="Lower Guardrail"
-                  value={`${drawdownConfig.lowerGuardrail}%`}
-                />
-              )}
-              {drawdownConfig.monthlyMedicalAid && (
-                <Param
-                  label="Monthly Medical Aid"
-                  value={formatCurrency(drawdownConfig.monthlyMedicalAid)}
-                />
-              )}
-              {drawdownConfig.medicalAidDependants !== undefined && (
-                <Param
-                  label="Medical Aid Dependants"
-                  value={drawdownConfig.medicalAidDependants}
-                />
-              )}
-            </Section>
-
-            {/* Market Assumptions */}
-            {assumptions && (
-              <Section title="Market Assumptions">
-                <Param label="Equity Return" value={`${assumptions.equityReturn}%`} />
-                <Param label="Bond Return" value={`${assumptions.bondReturn}%`} />
-                <Param label="Cash Return" value={`${assumptions.cashReturn}%`} />
-                <Param label="Equity Volatility" value={`${assumptions.equityVolatility}%`} />
-                <Param label="Bond Volatility" value={`${assumptions.bondVolatility}%`} />
-                <Param label="Inflation Rate" value={`${assumptions.inflationRate}%`} />
-              </Section>
-            )}
 
             {/* Monte Carlo Configuration */}
             <Section title="Monte Carlo Simulation">
