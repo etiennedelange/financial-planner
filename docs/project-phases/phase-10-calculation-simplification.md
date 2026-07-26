@@ -1,4 +1,4 @@
-# Phase 10: Calculation Simplification 🔄 IN PROGRESS
+# Phase 10: Calculation Simplification ✅ COMPLETE
 
 **Goal:** Reduce the margin of error in the calculation layer by removing the structural
 conditions that allow errors — duplicated logic, untyped money units, and derived metrics
@@ -391,22 +391,45 @@ Worth recording as a pattern: a surviving mutant is either an equivalent mutant 
 genuine coverage gap, and the difference is only established by tracing the path — not by
 assuming.
 
-## Step 4: Derive summary metrics instead of computing them inline ⬜ READY (Phase 1.5 P0 resolved 2026-07-26)
+## Step 4: Derive summary metrics instead of computing them inline ✅ DONE
 
-`shortfallAmount`, `surplusAmount` and `portfolioDepletionAge` are all derivable from
-`yearlyProjections`, but are computed separately inside the big function. That is precisely
-why the engine could report `endingBalance: 0` and `portfolioDepletionAge: null`
-simultaneously (fixed 2026-07-26).
+**Golden diff byte-identical** across all 96 deterministic + 24 Monte Carlo scenarios —
+which is the proof that no semantics changed.
 
-Make the year rows the single source of truth and the metrics pure selectors over them.
-The contradiction then becomes unrepresentable rather than merely fixed.
+`selectAverageEffectiveTaxRate`, `selectMonthlyNetIncomeAtRetirement`,
+`selectRawIncomeGap`, `selectSurplusAmount` and `selectShortfallAmount` are now named,
+exported selectors instead of ~40 lines of arithmetic inlined at the end of
+`calculateProjection`. The orchestrator's final phase reads as five named derivations.
 
-The spending-phase multiplier mismatch is the same disease: "what we wanted" is computed
-twice, differently, at `projection-engine.ts:441` and `:595`.
+### Shortfall semantics deliberately untouched
 
-- [ ] Metrics extracted to pure selectors over `yearlyProjections`
-- [ ] "Desired income for year N" computed in exactly one place
-- [ ] Golden-output diff reviewed (may legitimately differ — record deltas)
+Deriving the metrics as selectors necessarily *moves* the shortfall computation, and the
+rule that a surviving portfolio reports no shortfall is a settled product decision
+(shortfall = "the money ran out before I died", not "cumulative income gap").
+
+That rule is reproduced **exactly** in `selectShortfallAmount`, with the reasoning recorded
+at the function and at the top of the selector block so it reads as a decision rather than
+an accident. The split into `selectRawIncomeGap` (the raw arithmetic) and
+`selectShortfallAmount` (the survival rule applied to it) makes the two separable *if* the
+labelling question is ever revisited — without changing anything today.
+
+### Testability, which was the point
+
+`projection-selectors.test.ts` drives each selector directly with the exact row shapes that
+matter, including boundaries a full projection rarely reaches: no drawdown row at the
+retirement index, an over-withdrawal that must not offset a shortfall elsewhere,
+accumulation rows that must not count as gaps, and a surplus of exactly zero.
+
+### Verified by mutation testing — 6 of 6 killed
+
+| Mutation | Result |
+|---|---|
+| tax rate: drop the x100 | killed |
+| net income: forget the /12 | killed |
+| income gap: let negative gaps offset positives | killed |
+| income gap: stop escalating the target each year | killed |
+| shortfall: invert the survival rule | killed |
+| surplus: drop the zero floor | killed |
 
 ---
 

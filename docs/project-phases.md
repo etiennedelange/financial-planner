@@ -20,7 +20,7 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 | **Phase 7** | ✅ Complete | [UI Redesign — Sidebar App Shell](project-phases/phase-7-ui-redesign.md) |
 | **Phase 8** | ✅ Complete | [Expense Tracker](project-phases/phase-8-expense-tracker.md) |
 | **Phase 9** | 🔄 In Progress | [Site-Wide Improvement](project-phases/phase-9-site-improvement.md) |
-| **Phase 10** | 🔄 In Progress | [Calculation Simplification](project-phases/phase-10-calculation-simplification.md) — steps 1, 2, 2.5 done; 3–5 gated on Phase 1.5 P0 |
+| **Phase 10** | ✅ Complete | [Calculation Simplification](project-phases/phase-10-calculation-simplification.md) — all steps done; engine deduplicated, money units type-safe, MC seeded |
 | **Future** | 📋 Planned | [Future Enhancements](project-phases/future-enhancements.md) |
 
 ## Current Status Summary

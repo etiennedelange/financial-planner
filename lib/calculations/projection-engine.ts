@@ -456,6 +456,99 @@ export function runDrawdownPhase(
   }
 }
 
+
+// ---------------------------------------------------------------------------
+// Summary-metric selectors (Phase 10 Step 4)
+//
+// These were computed inline at the end of `calculateProjection`, mixed in with
+// orchestration. Pulling them out as named functions over `yearlyProjections` makes the
+// derivation reviewable in one place and independently testable, and stops the same
+// quantity being derived twice in slightly different ways.
+//
+// NOTE ON SHORTFALL SEMANTICS: `selectShortfallAmount` reproduces the existing behaviour
+// EXACTLY, including the rule that a surviving portfolio reports no shortfall. That rule
+// is a settled product decision (shortfall means "the money ran out before I died", not
+// "cumulative income gap") and is deliberately NOT revisited here. The golden harness
+// proves this refactor changed nothing.
+// ---------------------------------------------------------------------------
+
+/**
+ * Average effective tax rate across the whole drawdown phase, as a percentage.
+ */
+export function selectAverageEffectiveTaxRate(
+  totalLifetimeIncomeTax: number,
+  totalGrossWithdrawals: number
+): number {
+  return totalGrossWithdrawals > 0
+    ? (totalLifetimeIncomeTax / totalGrossWithdrawals) * 100
+    : 0
+}
+
+/**
+ * Net (after-tax) monthly income in the first drawdown year.
+ *
+ * Sourced from the projected row rather than re-taxing the gross withdrawal, so it
+ * reflects the actual account-mix treatment: TFSA tax-free, CGT on discretionary, full
+ * income tax on pension/RA/preservation, less medical aid.
+ */
+export function selectMonthlyNetIncomeAtRetirement(
+  rows: YearlyProjection[],
+  yearsToRetirement: number
+): number {
+  const firstDrawdownYear = rows[yearsToRetirement]
+  return firstDrawdownYear ? firstDrawdownYear.netIncome / 12 : 0
+}
+
+/**
+ * Cumulative gap between the inflation-adjusted desired income and what was actually
+ * withdrawn, summed across every drawdown year.
+ *
+ * Comparing only the year-0 target (as an earlier version did) was structurally always 0
+ * for every strategy except `fixed_percentage`, because `calculateInitialWithdrawal`
+ * returns the desired amount verbatim for the other three — so a portfolio that fully
+ * depleted years before life expectancy never registered a shortfall.
+ */
+export function selectRawIncomeGap(
+  rows: YearlyProjection[],
+  yearsToRetirement: number,
+  desiredMonthlyIncomeToday: number,
+  inflationRate: number
+): number {
+  const desiredMonthlyAtRetirement = escalate(
+    desiredMonthlyIncomeToday,
+    yearsToRetirement,
+    inflationRate
+  )
+  return rows.slice(yearsToRetirement).reduce((sum, yp, drawdownYear) => {
+    const desiredAnnualThisYear = escalate(
+      desiredMonthlyAtRetirement * 12,
+      drawdownYear,
+      inflationRate
+    )
+    return sum + Math.max(0, desiredAnnualThisYear - yp.withdrawals)
+  }, 0)
+}
+
+/**
+ * Surplus left at life expectancy. Never negative — a depleted portfolio reports 0.
+ */
+export function selectSurplusAmount(finalBalance: number): number {
+  return Math.max(0, finalBalance)
+}
+
+/**
+ * Reported shortfall.
+ *
+ * A portfolio that survives to life expectancy reports NO shortfall, regardless of any
+ * income gap along the way: "shortfall" here means the money ran out before death. Any
+ * gap on a surviving plan is a consequence of the chosen drawdown strategy, not of
+ * insufficient funds. See the note at the top of this section — this is settled and is
+ * reproduced here unchanged.
+ */
+export function selectShortfallAmount(rawIncomeGap: number, surplusAmount: number): number {
+  return surplusAmount > 0 ? 0 : rawIncomeGap
+}
+
 export function calculateProjection(
   accounts: Account[],
   personalInfo: PersonalInfo,
@@ -581,44 +674,23 @@ export function calculateProjection(
       "strategy"
     ) / 12
 
-  // Net income after tax — sourced from the first drawdown year's projection so it
-  // reflects the actual account-mix tax treatment (TFSA tax-free, CGT on discretionary,
-  // full income tax on pension/RA/preservation) and medical aid, instead of re-taxing
-  // the gross withdrawal as if it were all ordinary income.
-  const firstDrawdownYear = yearlyProjections[yearsToRetirement]
-  const monthlyNetIncomeAtRetirement = firstDrawdownYear
-    ? firstDrawdownYear.netIncome / 12
-    : 0
-
-  // Calculate average effective tax rate
-  const averageEffectiveTaxRate =
-    totalGrossWithdrawals > 0
-      ? (totalLifetimeIncomeTax / totalGrossWithdrawals) * 100
-      : 0
-
-  // Calculate shortfall by comparing the inflation-adjusted desired income against
-  // what was actually withdrawn each drawdown year, not just the year-0 target.
-  // Comparing only the initial target (as before) was structurally always 0 for
-  // every strategy except fixed_percentage, because calculateInitialWithdrawal
-  // returns the desired amount verbatim for the other three strategies — so a
-  // portfolio that fully depletes years before life expectancy (withdrawals
-  // dropping to R0) never registered as a shortfall. Summing the per-year gap
-  // against actual withdrawals captures both depletion and guardrail/variable
-  // cuts below the desired income.
-  const desiredMonthlyAtRetirement =
-    escalate(retirementGoals.desiredMonthlyIncome, yearsToRetirement, inflationRate)
-  const shortfallAmount = yearlyProjections
-    .slice(yearsToRetirement)
-    .reduce((sum, yp, drawdownYear) => {
-      const desiredAnnualThisYear =
-        escalate(desiredMonthlyAtRetirement * 12, drawdownYear, inflationRate)
-      return sum + Math.max(0, desiredAnnualThisYear - yp.withdrawals)
-    }, 0)
-
-  // Critical constraint: if portfolio survives with surplus, there's no shortfall
-  // (any gap is due to spending phase strategy, not insufficient funds)
-  const finalSurplus = Math.max(0, finalBalance)
-  const correctedShortfall = finalSurplus > 0 ? 0 : shortfallAmount
+  // ---- Phase 3: derive the summary metrics from the projected rows ----
+  const monthlyNetIncomeAtRetirement = selectMonthlyNetIncomeAtRetirement(
+    yearlyProjections,
+    yearsToRetirement
+  )
+  const averageEffectiveTaxRate = selectAverageEffectiveTaxRate(
+    totalLifetimeIncomeTax,
+    totalGrossWithdrawals
+  )
+  const rawIncomeGap = selectRawIncomeGap(
+    yearlyProjections,
+    yearsToRetirement,
+    retirementGoals.desiredMonthlyIncome,
+    inflationRate
+  )
+  const finalSurplus = selectSurplusAmount(finalBalance)
+  const correctedShortfall = selectShortfallAmount(rawIncomeGap, finalSurplus)
 
   return {
     yearlyProjections,
