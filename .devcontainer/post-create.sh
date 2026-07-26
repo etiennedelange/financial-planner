@@ -105,10 +105,17 @@ if [ ! -f ".env.local" ] && [ -f ".env.example" ]; then
   echo "    .env.local created. Edit it if you need to point at a different Supabase project."
 fi
 
+# # ─── Claude Code user settings ────────────────────────────────────────────────
+# # Symlink ~/.claude/settings.json to the repo file so changes are always committed
+# echo "--> Linking Claude Code user settings..."
+# ln -sf /workspaces/retirement-calculator-claude/.devcontainer/claude-settings.json "$HOME/.claude/settings.json"
 # ─── Claude Code user settings ────────────────────────────────────────────────
-# Symlink ~/.claude/settings.json to the repo file so changes are always committed
+
+# Symlink ~/.claude/settings.json to the repo file so changes are always committed.
+# postCreateCommand runs with cwd = workspace folder, so $(pwd) resolves correctly
+# regardless of what the repo/workspace folder is named.
 echo "--> Linking Claude Code user settings..."
-ln -sf /workspaces/retirement-calculator-claude/.devcontainer/claude-settings.json "$HOME/.claude/settings.json"
+ln -sf "$(pwd)/.devcontainer/claude-settings.json" "$HOME/.claude/settings.json"
 
 # Ensure the node user owns the Claude config directory for credential storage
 sudo chown node:node /home/node/.claude

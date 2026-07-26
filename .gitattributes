@@ -1,0 +1,7 @@
+# Force LF everywhere, regardless of core.autocrlf on the checkout machine.
+# Shell scripts under .devcontainer/ run inside a Linux container — a CRLF
+# checkout (common on Windows with core.autocrlf=true) breaks bash with
+# "$'\r': command not found" and similar syntax errors.
+* text=auto eol=lf
+
+*.sh text eol=lf
