@@ -333,17 +333,63 @@ unclamped and therefore measures independence rather than the clamp — 100 of 1
 
 ---
 
-## Step 3: Split `calculateProjection` into `accumulate()` and `drawdown()` ⬜ READY (Phase 1.5 P0 resolved 2026-07-26)
+## Step 3: Split `calculateProjection` into two phases ✅ DONE
 
-630 lines, two loops sharing mutable state (`currentTotal`, `annualWithdrawal`,
-`portfolioDepletionAge`). Two pure functions are independently testable and remove the
-class of bug where accumulation-phase state leaks into the drawdown phase.
+**Was:** one 630-line function with two loops sharing mutable locals (`totalBalance`,
+`annualWithdrawal`, `portfolioDepletionAge`), so accumulation-phase state could leak into
+drawdown.
 
-- [ ] `accumulate(accounts, personal, assumptions) → { balances, portfolioAtRetirement, rows }`
-- [ ] `drawdown(portfolioAtRetirement, …) → { rows, depletionAge, … }`
-- [ ] Golden-output diff byte-identical
+**Now:** `runAccumulationPhase()` and `runDrawdownPhase()`, each returning an explicit
+typed result (`AccumulationResult` / `DrawdownResult`). `calculateProjection` orchestrates:
+accumulate → commute the lump sum → draw down → aggregate. Both phases are exported so
+they can be tested directly.
 
----
+**Golden diff byte-identical** across all 96 deterministic + 24 Monte Carlo scenarios.
+Done in three verified stages (dead code → accumulation → drawdown), checking the golden
+harness after each so any breakage was localised.
+
+### Dead code removed
+
+The `netReturn` local flagged during Step 2 turned out to be the tip of a larger block.
+`totalContribution`, `weightedReturn`, `weightedFees`, `avgEscalation` and `netReturn` were
+all computed and never read — leftovers from an earlier design that averaged the portfolio
+before the engine began projecting each account individually. Their only consumers were
+each other, which in turn orphaned three helper functions (`calculateWeightedReturn`,
+`calculateWeightedFees`, `calculateAverageEscalation`). **71 lines deleted**, golden
+byte-identical.
+
+### Phase-boundary contract tests
+
+`projection-phases.test.ts` pins the boundary directly — impossible before the split:
+
+- accumulation never records a withdrawal, income tax or net income (the single strongest
+  guard against the phases bleeding into each other)
+- accumulation is pure: two calls are equal, and it does not mutate the caller's accounts
+- `portfolioAtRetirement` equals the sum of the per-account balances it returns
+- drawdown never records a contribution, and its totals reconcile with its own rows
+
+### Coverage
+
+`projection-engine.ts`: **100% statements, 100% branches, 100% functions** (was
+96.72 / 96.05 / 88.57).
+
+### Mutation testing found a real, untested code path
+
+Five mutations were injected at the phase boundary; four were killed immediately. The
+survivor was instructive: deleting the **start-of-year** depletion-age assignment left the
+entire 673-test suite green, while deleting the post-withdrawal one (added 2026-07-26) was
+caught at once.
+
+Investigation showed this was **not** an equivalent mutant. Exhausting a portfolio mid-year
+always clamps that year's withdrawal, so the post-withdrawal check fires first — except in
+one case it structurally cannot: a portfolio that arrives at retirement already empty. That
+year opens at zero, the loop emits a zeroed row and `continue`s, and the post-withdrawal
+check never runs. Verified reachable (a zero-balance account correctly reports
+`depletionAge: 65`), then covered. The mutant now dies.
+
+Worth recording as a pattern: a surviving mutant is either an equivalent mutant or a
+genuine coverage gap, and the difference is only established by tracing the path — not by
+assuming.
 
 ## Step 4: Derive summary metrics instead of computing them inline ⬜ READY (Phase 1.5 P0 resolved 2026-07-26)
 

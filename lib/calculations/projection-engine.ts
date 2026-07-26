@@ -20,7 +20,7 @@ import type {
 // Account types subject to full income tax on withdrawal
 const PENSION_TYPES: AccountType[] = ['pension_fund', 'retirement_annuity', 'preservation_fund']
 
-interface DrawdownAccount {
+export interface DrawdownAccount {
   id: string
   name: string
   type: AccountType
@@ -28,67 +28,6 @@ interface DrawdownAccount {
   costBasis: number // For discretionary: tracks original value (contributions + initial balance); used for CGT gain calculation
   netReturn: number // (expectedReturn - annualFees) / 100
   feeRate: number   // annualFees / 100 (for display only)
-}
-
-/**
- * Calculate weighted average return from accounts
- * When balance is 0, weight by contributions instead of balance
- */
-function calculateWeightedReturn(accounts: Account[]): number {
-  const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
-
-  // If balance is 0, weight by monthly contributions
-  if (totalBalance === 0) {
-    const totalContribution = accounts.reduce((sum, acc) => sum + acc.monthlyContribution, 0)
-    if (totalContribution === 0) return SA_DEFAULTS.equityReturn
-    return accounts.reduce(
-      (sum, acc) =>
-        sum + (acc.expectedReturn / 100) * (acc.monthlyContribution / totalContribution),
-      0
-    )
-  }
-
-  return accounts.reduce(
-    (sum, acc) =>
-      sum + (acc.expectedReturn / 100) * (acc.currentBalance / totalBalance),
-    0
-  )
-}
-
-/**
- * Calculate weighted average fees from accounts
- * When balance is 0, weight by contributions instead of balance
- */
-function calculateWeightedFees(accounts: Account[]): number {
-  const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
-
-  // If balance is 0, weight by monthly contributions
-  if (totalBalance === 0) {
-    const totalContribution = accounts.reduce((sum, acc) => sum + acc.monthlyContribution, 0)
-    if (totalContribution === 0) return 0.01
-    return accounts.reduce(
-      (sum, acc) =>
-        sum + (acc.annualFees / 100) * (acc.monthlyContribution / totalContribution),
-      0
-    )
-  }
-
-  return accounts.reduce(
-    (sum, acc) =>
-      sum + (acc.annualFees / 100) * (acc.currentBalance / totalBalance),
-    0
-  )
-}
-
-/**
- * Calculate average contribution escalation rate
- */
-function calculateAverageEscalation(accounts: Account[]): number {
-  if (accounts.length === 0) return SA_DEFAULTS.contributionEscalation
-  return (
-    accounts.reduce((sum, acc) => sum + acc.contributionEscalation / 100, 0) /
-    accounts.length
-  )
 }
 
 /**
@@ -132,46 +71,41 @@ function buildEmptyProjectionResult(
   }
 }
 
-export function calculateProjection(
+
+/**
+ * Result of the accumulation phase — everything the drawdown phase needs, and nothing else.
+ *
+ * Phase 10 Step 3 split `calculateProjection` into two phases. Previously both loops ran
+ * inside one 630-line function sharing mutable locals (`totalBalance`, `annualWithdrawal`,
+ * `portfolioDepletionAge`), which made it possible for accumulation-phase state to leak
+ * into drawdown. Making the hand-off an explicit value removes that class of bug.
+ */
+export interface AccumulationResult {
+  /** One row per accumulation year. */
+  rows: YearlyProjection[]
+  /** Per-account balances at the retirement date, index-aligned with `accounts`. */
+  accountBalances: number[]
+  /** Per-account cost bases (contributions + opening balance), for CGT on discretionary. */
+  accountCostBases: number[]
+  /** Section 11F contributions disallowed during accumulation, carried into commutation. */
+  accumulatedExcessCredit: number
+  /** Total portfolio value at the retirement date, before any lump-sum commutation. */
+  portfolioAtRetirement: number
+}
+
+/**
+ * Accumulation phase: monthly compounding per account, up to the retirement date.
+ *
+ * Pure — reads its inputs, mutates only its own locals, and returns everything it produced.
+ */
+export function runAccumulationPhase(
   accounts: Account[],
   personalInfo: PersonalInfo,
-  retirementGoals: RetirementGoals,
-  drawdownConfig: DrawdownConfig,
-  assumptions?: MarketAssumptions
-): ProjectionResult {
-  const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
-  const yearsInRetirement = personalInfo.lifeExpectancy - personalInfo.retirementAge
-  const inflationRate = retirementGoals.inflationRate / 100
-
-  // Invalid/inverted ages (retirementAge before currentAge, or lifeExpectancy
-  // before retirementAge) — the input forms guard against this with Zod, but
-  // calculateProjection can be called directly (tests, debug tools, imports).
-  if (yearsToRetirement < 0 || yearsInRetirement < 0) {
-    return buildEmptyProjectionResult(personalInfo, retirementGoals, yearsInRetirement)
-  }
-
-  const yearlyProjections: YearlyProjection[] = []
-
-  // Aggregate account data
-  let totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
-  let totalContribution = accounts.reduce(
-    (sum, acc) => sum + acc.monthlyContribution * 12,
-    0
-  )
-  const weightedReturn = calculateWeightedReturn(accounts)
-  const weightedFees = calculateWeightedFees(accounts)
-  const avgEscalation = calculateAverageEscalation(accounts)
-
-  const netReturn = weightedReturn - weightedFees
-
-  // Handle case with no accounts
-  if (accounts.length === 0) {
-    return buildEmptyProjectionResult(personalInfo, retirementGoals, yearsInRetirement)
-  }
-
-  // Accumulation phase with monthly compounding
-  // Project each account separately to handle different return rates correctly
-  const compoundingMethod = assumptions?.compoundingMethod || 'nominal'
+  yearsToRetirement: number,
+  inflationRate: number,
+  compoundingMethod: 'nominal' | 'compound'
+): AccumulationResult {
+  const rows: YearlyProjection[] = []
 
   // Track each account's balance and cost basis separately
   const accountBalances = accounts.map(acc => acc.currentBalance)
@@ -188,6 +122,7 @@ export function calculateProjection(
   // Income is escalated with inflation each year so the deduction limit grows in line
   // with contributions (both expressed in nominal terms).
   let accumulatedExcessCredit = 0
+  let totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
 
   for (let year = 0; year < yearsToRetirement; year++) {
     const age = personalInfo.currentAge + year
@@ -257,7 +192,7 @@ export function calculateProjection(
     // Calculate TFSA excess contribution penalty (40% tax on contributions over R46k/year)
     const tfsaExcessContributionPenalty = tfsaExcessContribution * 0.4
 
-    yearlyProjections.push({
+    rows.push({
       year: year + 1,
       age,
       startingBalance,
@@ -275,67 +210,57 @@ export function calculateProjection(
     })
   }
 
-  const portfolioAtRetirement = totalBalance
-
-  // Lump sum commutation is only available on pension/RA/preservation fund balances —
-  // TFSA and discretionary money is not subject to the retirement lump-sum tax table.
-  // SA law also caps commutation at one-third of the retirement-fund interest; the UI
-  // slider enforces this too, but the engine must clamp independently since it can be
-  // called directly (tests, debug tools, saved plans).
-  const pensionBalanceAtRetirement = accounts.reduce(
-    (sum, acc, i) => (PENSION_TYPES.includes(acc.type) ? sum + accountBalances[i] : sum),
-    0
-  )
-  const cappedLumpSumPercentage = Math.min(
-    drawdownConfig.lumpSumPercentage ?? 0,
-    SA_TAX_LIMITS.maxLumpSumCommutationPercentage
-  )
-  const lumpSumCommutation = calculateLumpSumCommutation(
-    pensionBalanceAtRetirement,
-    cappedLumpSumPercentage,
+  return {
+    rows,
+    accountBalances,
+    accountCostBases,
     accumulatedExcessCredit,
-  )
-  const lumpSumFraction = pensionBalanceAtRetirement > 0
-    ? lumpSumCommutation.lumpSumAmount / pensionBalanceAtRetirement
-    : 0
+    portfolioAtRetirement: totalBalance,
+  }
+}
 
-  // Build per-account drawdown state with post-lump-sum balances (lump sum fraction
-  // only applies to pension/RA/preservation accounts)
-  const drawdownAccounts: DrawdownAccount[] = accounts.map((acc, i) => {
-    const fraction = PENSION_TYPES.includes(acc.type) ? lumpSumFraction : 0
-    return {
-      id: acc.id,
-      name: acc.name,
-      type: acc.type,
-      balance: accountBalances[i] * (1 - fraction),
-      costBasis: accountCostBases[i] * (1 - fraction),
-      netReturn: (acc.expectedReturn - acc.annualFees) / 100,
-      feeRate: acc.annualFees / 100,
-    }
-  })
 
-  const remainingPortfolio = drawdownAccounts.reduce((s, a) => s + a.balance, 0)
+/**
+ * Result of the drawdown phase.
+ *
+ * Phase 10 Step 3: the drawdown loop previously shared mutable locals with the
+ * accumulation loop inside one 630-line function. Returning an explicit value makes the
+ * boundary checkable and each phase independently testable.
+ */
+export interface DrawdownResult {
+  /** One row per drawdown year. */
+  rows: YearlyProjection[]
+  /** Portfolio value at life expectancy (may be 0 if exhausted). */
+  finalBalance: number
+  /** Age at which the portfolio ran out, or null if it survived. */
+  portfolioDepletionAge: number | null
+  totalLifetimeIncomeTax: number
+  totalMedicalAidContributions: number
+  totalGrossWithdrawals: number
+}
 
-  // Snapshot per-account balances at start of drawdown (before loop mutates them)
-  const accountBalancesAtRetirement = Object.fromEntries(
-    drawdownAccounts.map(a => [a.id, a.balance])
-  )
-
-  // Calculate initial withdrawal based on remaining portfolio after lump sum
-  let annualWithdrawal = calculateInitialWithdrawal(
-    remainingPortfolio,
-    retirementGoals.desiredMonthlyIncome,
-    drawdownConfig,
-    yearsToRetirement,
-    inflationRate,
-    "strategy"
-  )
-
-  // Drawdown phase — tax-optimized sequential withdrawal: TFSA → Discretionary → Pension/RA
-  let creditRemaining = lumpSumCommutation.creditCarriedIntoDrawdown
+/**
+ * Drawdown phase: tax-optimised sequential withdrawal (TFSA → Discretionary → Pension/RA).
+ *
+ * Mutates the `drawdownAccounts` it is given — they carry per-account balances through the
+ * loop — but touches no state outside them.
+ */
+export function runDrawdownPhase(
+  drawdownAccounts: DrawdownAccount[],
+  personalInfo: PersonalInfo,
+  retirementGoals: RetirementGoals,
+  drawdownConfig: DrawdownConfig,
+  yearsToRetirement: number,
+  yearsInRetirement: number,
+  inflationRate: number,
+  initialAnnualWithdrawal: number,
+  creditCarriedIntoDrawdown: number
+): DrawdownResult {
+  const rows: YearlyProjection[] = []
+  let annualWithdrawal = initialAnnualWithdrawal
+  let creditRemaining = creditCarriedIntoDrawdown
   let portfolioDepletionAge: number | null = null
   let totalLifetimeIncomeTax = 0
-  const totalLumpSumTax = lumpSumCommutation.lumpSumTax
   let totalMedicalAidContributions = 0
   let totalGrossWithdrawals = 0
 
@@ -348,7 +273,7 @@ export function calculateProjection(
       if (!portfolioDepletionAge) portfolioDepletionAge = age
       // Zero out all account balances when portfolio depletes so finalBalance calculation is correct
       drawdownAccounts.forEach(acc => { acc.balance = 0 })
-      yearlyProjections.push({
+      rows.push({
         year: yearsToRetirement + year + 1,
         age,
         startingBalance: 0,
@@ -488,7 +413,7 @@ export function calculateProjection(
     totalLifetimeIncomeTax += incomeTax
     totalMedicalAidContributions += medicalAidContribution
 
-    yearlyProjections.push({
+    rows.push({
       year: yearsToRetirement + year + 1,
       age,
       startingBalance,
@@ -514,8 +439,130 @@ export function calculateProjection(
     })
   }
 
-  // Use remaining balance from per-account tracking for surplus
-  const finalBalance = drawdownAccounts.reduce((s, a) => s + a.balance, 0)
+  return {
+    rows,
+    finalBalance: drawdownAccounts.reduce((s, a) => s + a.balance, 0),
+    portfolioDepletionAge,
+    totalLifetimeIncomeTax,
+    totalMedicalAidContributions,
+    totalGrossWithdrawals,
+  }
+}
+
+export function calculateProjection(
+  accounts: Account[],
+  personalInfo: PersonalInfo,
+  retirementGoals: RetirementGoals,
+  drawdownConfig: DrawdownConfig,
+  assumptions?: MarketAssumptions
+): ProjectionResult {
+  const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
+  const yearsInRetirement = personalInfo.lifeExpectancy - personalInfo.retirementAge
+  const inflationRate = retirementGoals.inflationRate / 100
+
+  // Invalid/inverted ages (retirementAge before currentAge, or lifeExpectancy
+  // before retirementAge) — the input forms guard against this with Zod, but
+  // calculateProjection can be called directly (tests, debug tools, imports).
+  if (yearsToRetirement < 0 || yearsInRetirement < 0) {
+    return buildEmptyProjectionResult(personalInfo, retirementGoals, yearsInRetirement)
+  }
+
+  // Handle case with no accounts
+  if (accounts.length === 0) {
+    return buildEmptyProjectionResult(personalInfo, retirementGoals, yearsInRetirement)
+  }
+
+  const compoundingMethod = assumptions?.compoundingMethod || 'nominal'
+
+  // ---- Phase 1: accumulation ----
+  const accumulation = runAccumulationPhase(
+    accounts,
+    personalInfo,
+    yearsToRetirement,
+    inflationRate,
+    compoundingMethod
+  )
+  const { accountBalances, accountCostBases, accumulatedExcessCredit } = accumulation
+  const yearlyProjections: YearlyProjection[] = [...accumulation.rows]
+  const portfolioAtRetirement = accumulation.portfolioAtRetirement
+
+  // ---- Phase boundary: lump-sum commutation ----
+  // Lump sum commutation is only available on pension/RA/preservation fund balances —
+  // TFSA and discretionary money is not subject to the retirement lump-sum tax table.
+  // SA law also caps commutation at one-third of the retirement-fund interest; the UI
+  // slider enforces this too, but the engine must clamp independently since it can be
+  // called directly (tests, debug tools, saved plans).
+  const pensionBalanceAtRetirement = accounts.reduce(
+    (sum, acc, i) => (PENSION_TYPES.includes(acc.type) ? sum + accountBalances[i] : sum),
+    0
+  )
+  const cappedLumpSumPercentage = Math.min(
+    drawdownConfig.lumpSumPercentage ?? 0,
+    SA_TAX_LIMITS.maxLumpSumCommutationPercentage
+  )
+  const lumpSumCommutation = calculateLumpSumCommutation(
+    pensionBalanceAtRetirement,
+    cappedLumpSumPercentage,
+    accumulatedExcessCredit,
+  )
+  const lumpSumFraction = pensionBalanceAtRetirement > 0
+    ? lumpSumCommutation.lumpSumAmount / pensionBalanceAtRetirement
+    : 0
+
+  // Build per-account drawdown state with post-lump-sum balances (lump sum fraction
+  // only applies to pension/RA/preservation accounts)
+  const drawdownAccounts: DrawdownAccount[] = accounts.map((acc, i) => {
+    const fraction = PENSION_TYPES.includes(acc.type) ? lumpSumFraction : 0
+    return {
+      id: acc.id,
+      name: acc.name,
+      type: acc.type,
+      balance: accountBalances[i] * (1 - fraction),
+      costBasis: accountCostBases[i] * (1 - fraction),
+      netReturn: (acc.expectedReturn - acc.annualFees) / 100,
+      feeRate: acc.annualFees / 100,
+    }
+  })
+
+  const remainingPortfolio = drawdownAccounts.reduce((s, a) => s + a.balance, 0)
+
+  // Snapshot per-account balances at start of drawdown (before loop mutates them)
+  const accountBalancesAtRetirement = Object.fromEntries(
+    drawdownAccounts.map(a => [a.id, a.balance])
+  )
+
+  // ---- Phase 2: drawdown ----
+  // Calculate initial withdrawal based on remaining portfolio after lump sum
+  const initialAnnualWithdrawal = calculateInitialWithdrawal(
+    remainingPortfolio,
+    retirementGoals.desiredMonthlyIncome,
+    drawdownConfig,
+    yearsToRetirement,
+    inflationRate,
+    "strategy"
+  )
+
+  const drawdown = runDrawdownPhase(
+    drawdownAccounts,
+    personalInfo,
+    retirementGoals,
+    drawdownConfig,
+    yearsToRetirement,
+    yearsInRetirement,
+    inflationRate,
+    initialAnnualWithdrawal,
+    lumpSumCommutation.creditCarriedIntoDrawdown
+  )
+  yearlyProjections.push(...drawdown.rows)
+
+  const {
+    portfolioDepletionAge,
+    totalLifetimeIncomeTax,
+    totalMedicalAidContributions,
+    totalGrossWithdrawals,
+  } = drawdown
+  const totalLumpSumTax = lumpSumCommutation.lumpSumTax
+  const finalBalance = drawdown.finalBalance
 
   const monthlyIncomeAtRetirement =
     calculateInitialWithdrawal(
