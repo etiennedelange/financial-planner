@@ -407,7 +407,7 @@ describe('runMonteCarloSimulation', () => {
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        { strategy: 'fixed_percentage', initialWithdrawalRate: 4, minimumWithdrawal: 10000, maximumWithdrawal: 50000 },
+        { strategy: 'fixed_percentage', initialWithdrawalRate: 4, minimumWithdrawal: 10000, maximumWithdrawal: 50000, lumpSumPercentage: 0 },
         baseSimulationConfig
       )
 
@@ -419,7 +419,7 @@ describe('runMonteCarloSimulation', () => {
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        { strategy: 'fixed_amount_inflation_adjusted', initialWithdrawalRate: 4, minimumWithdrawal: 10000, maximumWithdrawal: 50000 },
+        { strategy: 'fixed_amount_inflation_adjusted', initialWithdrawalRate: 4, minimumWithdrawal: 10000, maximumWithdrawal: 50000, lumpSumPercentage: 0 },
         baseSimulationConfig
       )
 
@@ -431,7 +431,7 @@ describe('runMonteCarloSimulation', () => {
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        { strategy: 'variable_percentage', initialWithdrawalRate: 4, minimumWithdrawal: 10000, maximumWithdrawal: 50000 },
+        { strategy: 'variable_percentage', initialWithdrawalRate: 4, minimumWithdrawal: 10000, maximumWithdrawal: 50000, lumpSumPercentage: 0 },
         baseSimulationConfig
       )
 
@@ -659,6 +659,7 @@ describe('runMonteCarloSimulation', () => {
           initialWithdrawalRate: 3.5,
           minimumWithdrawal: 15000,
           maximumWithdrawal: 60000,
+          lumpSumPercentage: 0,
         },
         { numberOfRuns: 100, randomSeed: 20260726 }
       )
@@ -710,6 +711,7 @@ describe('runMonteCarloSimulation', () => {
           initialWithdrawalRate: 4,
           minimumWithdrawal: 15000,
           maximumWithdrawal: 60000,
+          lumpSumPercentage: 0,
         },
         { numberOfRuns: 100, randomSeed: 20260726 }
       )
@@ -757,6 +759,7 @@ describe('runMonteCarloSimulation', () => {
         initialWithdrawalRate: 4,
         minimumWithdrawal: 10000,
         maximumWithdrawal: 80000,
+        lumpSumPercentage: 0,
       }
 
       const lowIncomeResult = runMonteCarloSimulation(

@@ -37,6 +37,7 @@ describe('Cross-tab consistency', () => {
     initialWithdrawalRate: 4,
     minimumWithdrawal: 15000,
     maximumWithdrawal: 60000,
+    lumpSumPercentage: 0,
   }
 
   const testAssumptions = {
@@ -304,6 +305,7 @@ describe('Cross-tab consistency', () => {
           initialWithdrawalRate: 4,
           minimumWithdrawal: 10000,
           maximumWithdrawal: 60000,
+          lumpSumPercentage: 0,
         }
       )
 
@@ -316,6 +318,7 @@ describe('Cross-tab consistency', () => {
           initialWithdrawalRate: 4,
           minimumWithdrawal: 10000,
           maximumWithdrawal: 60000,
+          lumpSumPercentage: 0,
         },
         { numberOfRuns: 50, randomSeed: 20260726 },
         testAssumptions

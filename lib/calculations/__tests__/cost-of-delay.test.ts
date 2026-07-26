@@ -7,13 +7,13 @@ describe("calculateCostOfDelay", () => {
     currentAge: 35,
     retirementAge: 65,
     lifeExpectancy: 90,
-    grossAnnualIncome: 900000,
-    currentTaxRate: 36,
+    annualIncome: 900000,
   }
 
   const baseRetirementGoals: RetirementGoals = {
     desiredMonthlyIncome: 45000,
     inflationRate: 5.5,
+    legacyAmount: 0,
   }
 
   const baseParams = {

@@ -198,7 +198,10 @@ describe('calculateOptimalContribution', () => {
       })
 
       expect(result.yearsToRetirement).toBe(0)
-      expect(result.projectedNestEgg).toBe(result.currentSavings || 1000000)
+      // `currentSavings` is an input, not a field on OptimalContributionResult. The
+      // previous assertion read `result.currentSavings || 1000000`, which was always
+      // undefined and therefore always compared against the 1000000 fallback.
+      expect(result.projectedNestEgg).toBe(1000000)
     })
 
     it('should handle very high desired income', () => {

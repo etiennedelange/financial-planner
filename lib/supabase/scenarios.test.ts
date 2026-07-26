@@ -16,7 +16,7 @@ function makeChain(resolveWith: { data?: unknown; error?: unknown }) {
     chain[m] = vi.fn(() => chain)
   })
   // Terminal resolution
-  ;(chain as Promise<unknown> & Record<string, unknown>)[Symbol.iterator] = undefined
+  ;(chain as unknown as Record<symbol, unknown>)[Symbol.iterator] = undefined
   Object.assign(chain, Promise.resolve(resolveWith))
   // Make it thenable
   ;(chain as Record<string, unknown>).then = (resolve: (v: unknown) => unknown) =>

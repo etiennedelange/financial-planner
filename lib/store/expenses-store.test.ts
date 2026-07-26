@@ -212,7 +212,10 @@ describe("useExpensesStore", () => {
         expenses: [mockExpense],
       })
       vi.spyOn(expensesApi, "clearAllExpenses").mockResolvedValue(undefined)
-      vi.spyOn(expensesApi, "seedExpenses").mockResolvedValue(undefined)
+      vi.spyOn(expensesApi, "seedExpenses").mockResolvedValue({
+        groups: [mockGroup],
+        expenses: [mockExpense],
+      })
 
       useExpensesStore.getState().loadSampleData()
 

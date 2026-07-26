@@ -3,19 +3,26 @@ import { useCalculatorStore } from "./calculator-store"
 import * as accountsApi from "@/lib/supabase/accounts"
 import * as scenariosApi from "@/lib/supabase/scenarios"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
+import type { Account } from "@/types"
 
 vi.mock("@/lib/supabase/accounts")
 vi.mock("@/lib/supabase/scenarios")
 
-const mockAccount = {
+// Must satisfy the real `Account` type. The previous fixture used `balance` (the field
+// is `currentBalance`), `type: "TFSA"` (the union is lowercase `'tfsa'`), and omitted
+// provider/expectedReturn/annualFees entirely — so these tests were exercising a shape
+// that cannot occur in production. Notably any code branching on `acc.type === 'tfsa'`
+// would have taken the wrong path. Typed explicitly so drift fails the build, not silently.
+const mockAccount: Account = {
   id: "acc-1",
-  scenarioId: "scenario-1",
-  type: "TFSA" as const,
   name: "My TFSA",
-  balance: 100000,
+  provider: "Test Provider",
+  type: "tfsa",
+  currentBalance: 100000,
   monthlyContribution: 500,
+  expectedReturn: 10,
+  annualFees: 0.75,
   contributionEscalation: 0,
-  color: "#818cf8",
 }
 
 const mockScenarioMeta = {
@@ -120,10 +127,10 @@ describe("useCalculatorStore", () => {
       useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
       useCalculatorStore.getState().addAccount(mockAccount)
 
-      useCalculatorStore.getState().updateAccount("acc-1", { balance: 150000 })
+      useCalculatorStore.getState().updateAccount("acc-1", { currentBalance: 150000 })
 
       const state = useCalculatorStore.getState()
-      expect(state.accounts[0].balance).toBe(150000)
+      expect(state.accounts[0].currentBalance).toBe(150000)
     })
 
     it("should remove account from state and DB", () => {

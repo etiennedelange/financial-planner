@@ -15,7 +15,8 @@ SA retirement planning calculator — Monte Carlo simulations, multi-account por
 
 ```bash
 npm run dev              # port 3000
-npm run build            # production build + type check
+npm run build            # production build
+npm run typecheck        # tsc --noEmit — REQUIRED: next build does NOT typecheck test files
 npm run lint
 npm run test             # Vitest
 npm run test:coverage    # must stay >90% on calculation files
@@ -45,6 +46,9 @@ Pension Funds, Retirement Annuities (RAs), Preservation Funds, TFSA, Discretiona
 - `npm run test` — all pass
 - `npm run test:coverage` — >90% on modified files
 - `npm run build` — no TS errors
+- `npm run typecheck` — no TS errors. `next build` skips test files, so 44 errors once
+  accumulated there unnoticed; test fixtures had drifted from the real types and were
+  exercising shapes that could not occur in production
 - Check Debug Window (`components/debug/debug-window.tsx`) — correct compounding method + consistent values across tabs
 
 **Test structure** (see `projection.test.ts` as reference):
@@ -132,7 +136,8 @@ Design rules:
 - ❌ Don't tie expenses to a scenario — `expenses-store.ts` is intentionally global
 - ❌ Don't write raw `<p className="text-[10px] font-mono uppercase...">` — use `<SectionLabel>` or `<PageCard>`
 - ❌ Don't use `Card + CardHeader + CardTitle` for section cards — `CardTitle` renders `text-2xl font-semibold` which violates the design system
-- ⚠️ `calculator-store.ts` and `expenses-store.ts` have **zero tests** — Phase 9 critical gap
+- ⚠️ `calculator-store.ts` / `expenses-store.ts` branch coverage is ~72-76%, below the 85%
+  threshold (they DO have tests — 52 of them; the old "zero tests" note here was stale)
 
 ## Theming
 

@@ -50,7 +50,7 @@ function mockMigrateClient({
         }
         // group insert — capture rows
         const c = makeResolvable({ data: null, error: groupInsertError })
-        const origInsert = c.insert as ReturnType<typeof vi.fn>
+        const origInsert = c.insert as unknown as (rows: unknown) => unknown
         c.insert = vi.fn((rows: unknown) => {
           insertedGroupRows.push(...(rows as unknown[]))
           return origInsert(rows)
@@ -59,7 +59,7 @@ function mockMigrateClient({
       }
       // expense insert — capture rows
       const c = makeResolvable({ data: null, error: expenseInsertError })
-      const origInsert = c.insert as ReturnType<typeof vi.fn>
+      const origInsert = c.insert as unknown as (rows: unknown) => unknown
       c.insert = vi.fn((rows: unknown) => {
         insertedExpenseRows.push(...(rows as unknown[]))
         return origInsert(rows)

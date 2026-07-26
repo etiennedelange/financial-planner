@@ -118,30 +118,34 @@
     off-by-one, withdrawals leaking into accumulation, and others.
   - **Status:** Complete — Phase 10 steps 3-5 are unblocked
 
-- [ ] **P1: Zero tests on Zustand stores** (High Priority)
-  - `calculator-store.ts` and `expenses-store.ts` — long-standing gap, also noted in CLAUDE.md
-  - `lib/store/calculator-store.test.ts` currently has ~10 pre-existing type errors
+- [ ] **P1: Store branch coverage below threshold** (High Priority)
+  - **Correction (2026-07-26):** this was logged as "zero tests on Zustand stores", taken
+    from a stale note in CLAUDE.md without verifying. Both stores DO have tests —
+    `calculator-store.test.ts` and `expenses-store.test.ts`, 52 passing between them.
+  - The real gap is branch coverage: `calculator-store.ts` 72.5%, `expenses-store.ts`
+    76.31%, against the project's 85% threshold.
   - **Status:** Open
 
-- [ ] **P2: Pre-existing type errors in test files** (Medium Priority)
-  - `npx tsc --noEmit` reports 44 errors, all in `.test.ts` files
-    (`calculator-store.test.ts`, `expenses-store.test.ts`, `expenses.test.ts`,
-    `scenarios.test.ts`, `cross-tab-consistency.test.ts`)
-  - Production build is clean, so these are invisible to CI — fixtures have drifted from
-    the `Account` / `DrawdownConfig` types (e.g. `balance` vs `currentBalance`, missing
-    `lumpSumPercentage`)
-  - **Status:** Open
-
-**Testing Strategy:**
-1. **Unit Tests:** Individual calculation functions with known inputs/outputs
-2. **Integration Tests:** Cross-tab consistency and state management
-3. **Visual Regression:** Snapshot tests for display mode toggles
-4. **Property-Based:** Mathematical invariants and edge cases
-5. **Manual Validation:** SA retirement validator agent for complex scenarios
-
-**Test Coverage Goals:**
-- Core calculations: 100%
-- UI components: 80%
-- Integration flows: 90%
-
-**Documentation:** See `docs/history/testing-and-validation-plan.md`
+- [x] **P2: Type errors in test files** (Medium Priority) ✅ **DONE 2026-07-26**
+  - **44 errors -> 0.** All were in `.test.ts` / `.bench.ts` files, so `next build` stayed
+    clean and CI never saw them.
+  - **These were not cosmetic.** The fixtures had drifted far enough from the real types
+    that several tests were exercising shapes which cannot occur in production:
+    - `calculator-store.test.ts` built `Account` objects with `balance` (the field is
+      `currentBalance`), `type: "TFSA"` (the union is lowercase `'tfsa'`), and no
+      `provider` / `expectedReturn` / `annualFees`. Any code branching on
+      `acc.type === 'tfsa'` would have taken the wrong path in all 27 of those tests.
+    - `scenario-comparison.test.ts` and `cost-of-delay.test.ts` passed `grossAnnualIncome`,
+      so `PersonalInfo.annualIncome` was `undefined` — the s11F deduction ran on nothing.
+      Correcting it changed no assertion, which tells you those tests were never sensitive
+      to income at all.
+    - `optimal-contribution.test.ts:201` asserted against `result.currentSavings`, which
+      does not exist on `OptimalContributionResult`. The expression was
+      `result.currentSavings || 1000000` — always `undefined`, so always the fallback.
+    - `expenses-store.test.ts` mocked `seedExpenses` as resolving `undefined` when it
+      resolves `{ groups, expenses }`.
+    - Several `DrawdownConfig` literals omitted `lumpSumPercentage`, a required field.
+  - **Prevention:** added `npm run typecheck` (`tsc --noEmit`) and made it a required
+    pre-commit step in CLAUDE.md. `next build` does not typecheck test files, which is
+    precisely how 44 errors accumulated unnoticed.
+  - **Status:** Complete — all 678 tests still pass against the corrected fixtures
