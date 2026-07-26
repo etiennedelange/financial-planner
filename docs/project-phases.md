@@ -27,21 +27,62 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## 2026-07-26
 
-🔍 **Multi-agent audit of `75f68f7` + Batch 1 fixes** — full write-up: [2026-07-26-audit-batch-1-fixes.md](history/2026-07-26-audit-batch-1-fixes.md). 609/609 tests passing, build clean.
+Session began with a multi-agent audit of `75f68f7` and ran through to **Phase 10 complete**.
+Nine commits. **698 tests passing and deterministic** (from 585), typecheck clean (from 44
+errors), both golden harnesses byte-identical. Full write-ups:
+[audit + batch 1](history/2026-07-26-audit-batch-1-fixes.md),
+[Phase 10](project-phases/phase-10-calculation-simplification.md),
+[Phase 1.5](project-phases/phase-1-5-testing-validation.md).
 
-**Fixed (TDD):**
-- 🐛 **Replacement ratio divided future rands by today's rands** (`debug-window.tsx`) — displayed **150.4%** where the true ratio was **30.2%**, overstated by exactly `(1+inflation)^yearsToRetirement`. Salary is now escalated to the retirement date before dividing.
-- 🐛 **Debug window promised income from already-commuted capital** (`debug-window.tsx`) — used a duplicated local helper reading the *pre*-commutation portfolio; now prefers the engine's post-commutation `monthlyIncomeAtRetirement`.
-- 🐛 **`calculateReplacementRatio` leaked NaN to the UI** (`retirement-tax.ts`) — `NaN <= 0` is `false`, so NaN bypassed the guard and rendered as `"NaN%"`. Now guarded with `Number.isFinite` on both arguments. Coverage 92.85% stmts / 93.87% branch.
+**Bugs fixed**
+- 🐛 **Replacement ratio divided future rands by today's rands** (`debug-window.tsx`) —
+  displayed **150.4%** where the truth was **30.2%**; overstated by exactly
+  `(1+inflation)^yearsToRetirement`. Confirmed dead in the live app (123.4% vs 614.9%).
+- 🐛 **Debug window promised income from already-commuted capital** — used a duplicated
+  local helper reading the *pre*-commutation portfolio.
+- 🐛 **`calculateReplacementRatio` leaked NaN to the UI** — `NaN <= 0` is `false`, so NaN
+  bypassed the guard and rendered as `"NaN%"`.
+- 🐛 **Depletion in the final year was never recorded** — the engine could report
+  `endingBalance: 0` and `portfolioDepletionAge: null` simultaneously.
+- 🐛 **Float artefact in application state** — `0.035 * 100 = 3.5000000000000004` reached
+  `drawdownConfig.initialWithdrawalRate` via `SA_DEFAULTS_DISPLAY`, so it was in saved
+  plans and share links, not just on screen.
 
-- 🐛 **Depletion during the final year was never recorded** (`projection-engine.ts`) — the guard runs at the *start* of each year, so a portfolio emptying in the final year reported `endingBalance: 0`, `surplusAmount: 0`, `shortfallAmount: R6,009,722` **and** `portfolioDepletionAge: null` at the same time. Now caught by a post-withdrawal check gated on the withdrawal having been clamped, so a plan that draws full income and lands on exactly R0 at life expectancy is correctly *not* flagged. Verified: depletion age `null` → **89**, shortfall and surplus byte-identical.
+**✅ Product decision — `shortfallAmount` semantics settled, WON'T FIX**
+- Shortfall means **the portfolio depletes before death**, not cumulative income gap. The
+  audit's C1 magnitudes measure a different metric than this project wants.
+- Knowingly accepted: `fixed_percentage` / `variable_percentage` / `guardrails` ignore the
+  entered desired income after year 0, so they rarely deplete and correctly report no
+  shortfall while paying less than asked (measured: R93,948/mth desired vs R52,657/mth
+  actual). Open as a **labelling/UX** question, not a calculation defect.
 
-**✅ Decision taken — `shortfallAmount` semantics settled, logic not to be changed:**
-- Shortfall means **the portfolio depletes before death** given the desired income, not cumulative income gap. Under that definition the guard at `:585` implements the intent, and the audit's C1 magnitudes (R91.2m etc.) measure a different metric than this project wants. **WON'T FIX.**
-- Knowingly accepted: `fixed_percentage` / `variable_percentage` / `guardrails` withdraw a percentage of the live balance and ignore the desired income after year 0 (`:429-436` omits `desiredMonthlyIncomeToday`). They rarely deplete, so they correctly report no shortfall while paying less than the entered figure (measured: R93,948/mth desired vs R52,657/mth actual → shortfall R0, surplus R63.0m). Open as a **labelling/UX** question, not a calculation defect.
+**Phase 1.5 P0 resolved** — invariant suite rewritten from 19 unfalsifiable checks to 21
+that can fail, verified by mutation testing (12 injected bugs, 12 killed). The test that
+would have caught the original regression had been rewritten into a tautology *by the same
+commit that introduced the regression*.
 
-**⚠️ Outstanding — test quality:**
-- **The test that would have caught the shortfall regression was retired by the same commit.** `projection-engine.test.ts` previously asserted `shortfallAmount > 0` and passed; it was rewritten into a tautology restating line 585. Several new invariants are non-functional (INV-001/003 assert the guard against itself; INV-002/006 bodies are unreachable; INV-005/008 masked by `Math.max(0, …)`; INV-017 tests an identically-zero field) and should be **deleted rather than repaired** — 19 tests currently amount to roughly 4 real checks.
+**Phase 1.5 P2 resolved** — 44 type errors in test fixtures fixed. Not cosmetic: store
+tests built `Account` objects with `balance`/`type: "TFSA"` (real fields are
+`currentBalance`/`'tfsa'`), so 27 tests exercised a shape that cannot exist. Added
+`npm run typecheck`, since `next build` does not typecheck test files.
+
+**Phase 10 complete** — engine deduplicated (3 copies of the withdrawal function → 1, with
+the deterministic/Monte Carlo difference now named rather than an omitted argument); money
+units type-safe via branded `Rands<B>` so the replacement-ratio bug is a compile error;
+Monte Carlo seeded (flakiness 1-in-12 → 0-in-20); `calculateProjection` split into
+accumulation and drawdown phases (now 100% covered); negative-balance guard; summary
+metrics extracted as selectors.
+
+**Tooling added** — committed golden-output harnesses for both engines (96 + 24 scenarios,
+each verified to fail on a 0.01% perturbation), an ESLint rule banning hand-rolled
+inflation exponentiation, and `npm run typecheck`.
+
+**⚠️ Outstanding**
+- Store branch coverage 72.5% / 76.31% against the 85% threshold (Phase 1.5 P1).
+- The desired-income **labelling** question — a UX decision, not a calculation one.
+- One unexplained full-suite failure during Step 4, not reproduced in 24 subsequent runs
+  and never captured; most plausibly a transient from the dev server watching files during
+  a rewrite.
 
 ## 2026-07-11 (later)
 
