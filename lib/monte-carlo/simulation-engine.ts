@@ -9,7 +9,8 @@ import type {
   SimulationRun,
   SimulationResult,
 } from "@/types"
-import { generateReturnSequence, getPercentile } from "./random-returns"
+import { createSeededRandom, generateReturnSequence, getPercentile } from "./random-returns"
+import type { RandomSource } from "./random-returns"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import { getSpendingPhaseMultiplier } from "@/lib/calculations/utils/spending-phase"
@@ -42,7 +43,8 @@ function simulateSingleRun(
   drawdownConfig: DrawdownConfig,
   currentAge: number,
   compoundingMethod: 'nominal' | 'compound',
-  lumpSumPercentage: number = 0
+  lumpSumPercentage: number = 0,
+  rng: RandomSource = Math.random
 ): SimulationRun {
   const totalYears = yearsToRetirement + yearsInRetirement
 
@@ -58,7 +60,7 @@ function simulateSingleRun(
     const netReturn = (acc.expectedReturn - acc.annualFees) / 100
     // Use per-account volatility (0 for cash/fixed accounts, or proportional to return)
     const accVolatility = acc.expectedReturn === 0 ? 0 : volatility
-    return generateReturnSequence(netReturn, accVolatility, totalYears)
+    return generateReturnSequence(netReturn, accVolatility, totalYears, rng)
   })
 
   const yearlyBalances: number[] = []
@@ -324,6 +326,13 @@ export function runMonteCarloSimulation(
   // Use compounding method from market assumptions, default to nominal for backward compatibility
   const compoundingMethod = marketAssumptions?.compoundingMethod || 'nominal'
 
+  // A seeded source makes the whole simulation reproducible: same seed and inputs =>
+  // identical output. Callers that omit randomSeed keep the previous non-deterministic
+  // behaviour. Note the SAME generator is threaded through every run, so runs remain
+  // independent of one another while the sequence as a whole is reproducible.
+  const rng: RandomSource =
+    config.randomSeed !== undefined ? createSeededRandom(config.randomSeed) : Math.random
+
   const runs: SimulationRun[] = []
 
   for (let runId = 0; runId < config.numberOfRuns; runId++) {
@@ -338,7 +347,8 @@ export function runMonteCarloSimulation(
       drawdownConfig,
       personalInfo.currentAge,
       compoundingMethod,
-      drawdownConfig.lumpSumPercentage ?? 0
+      drawdownConfig.lumpSumPercentage ?? 0,
+      rng
     )
     runs.push(run)
   }

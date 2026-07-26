@@ -1,10 +1,16 @@
-import { describe, it, expect, vi } from 'vitest'
+import { afterEach, describe, it, expect, vi } from 'vitest'
 import { runMonteCarloSimulation } from '../simulation-engine'
 import { calculateIncomeTaxWithRebates, calculateLumpSumCommutation } from '@/lib/calculations/retirement-tax'
 import { SA_TAX_LIMITS } from '@/lib/constants/limits'
 import type { Account, PersonalInfo, RetirementGoals, DrawdownConfig, SimulationConfig } from '@/types'
 
 describe('runMonteCarloSimulation', () => {
+  // Guarantees no test can leak a mocked Math.random into its successors, even if it
+  // fails before reaching its own cleanup.
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   const baseAccount: Account = {
     id: '1',
     name: 'Test RA',
@@ -40,6 +46,9 @@ describe('runMonteCarloSimulation', () => {
 
   const baseSimulationConfig: SimulationConfig = {
     numberOfRuns: 100, // Smaller for testing
+    // Fixed seed: several assertions here compare success rates across configurations,
+    // which is only meaningful when the draws are identical.
+    randomSeed: 20260726,
   }
 
   describe('Basic simulation functionality', () => {
@@ -49,7 +58,7 @@ describe('runMonteCarloSimulation', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 50 }
+        { numberOfRuns: 50, randomSeed: 20260726 }
       )
 
       expect(result.runs.length).toBe(50)
@@ -202,7 +211,7 @@ describe('runMonteCarloSimulation', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 50 }
+        { numberOfRuns: 50, randomSeed: 20260726 }
       )
 
       // Well-funded should have good success rate
@@ -331,7 +340,7 @@ describe('runMonteCarloSimulation', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 0 }
+        { numberOfRuns: 0, randomSeed: 20260726 }
       )
 
       expect(result.runs.length).toBe(0)
@@ -370,7 +379,7 @@ describe('runMonteCarloSimulation', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 100 },
+        { numberOfRuns: 100, randomSeed: 20260726 },
         { compoundingMethod: 'nominal', equityReturn: 12, bondReturn: 8, cashReturn: 6, equityVolatility: 16, bondVolatility: 8, inflationRate: 5.5 }
       )
 
@@ -379,7 +388,7 @@ describe('runMonteCarloSimulation', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 100 },
+        { numberOfRuns: 100, randomSeed: 20260726 },
         { compoundingMethod: 'compound', equityReturn: 12, bondReturn: 8, cashReturn: 6, equityVolatility: 16, bondVolatility: 8, inflationRate: 5.5 }
       )
 
@@ -437,7 +446,7 @@ describe('runMonteCarloSimulation', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 100 },
+        { numberOfRuns: 100, randomSeed: 20260726 },
         { compoundingMethod: 'nominal', equityReturn: 12, bondReturn: 8, cashReturn: 6, equityVolatility: 8, bondVolatility: 4, inflationRate: 5.5 }
       )
 
@@ -446,7 +455,7 @@ describe('runMonteCarloSimulation', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 100 },
+        { numberOfRuns: 100, randomSeed: 20260726 },
         { compoundingMethod: 'nominal', equityReturn: 12, bondReturn: 8, cashReturn: 6, equityVolatility: 20, bondVolatility: 12, inflationRate: 5.5 }
       )
 
@@ -465,7 +474,7 @@ describe('runMonteCarloSimulation', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 10 }
+        { numberOfRuns: 10, randomSeed: 20260726 }
       )
 
       for (const run of result.runs) {
@@ -480,7 +489,7 @@ describe('runMonteCarloSimulation', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 20 }
+        { numberOfRuns: 20, randomSeed: 20260726 }
       )
 
       const successfulRuns = result.runs.filter((r) => r.success)
@@ -493,7 +502,7 @@ describe('runMonteCarloSimulation', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 20 }
+        { numberOfRuns: 20, randomSeed: 20260726 }
       )
 
       const ids = result.runs.map((r) => r.runId)
@@ -531,7 +540,7 @@ describe('runMonteCarloSimulation', () => {
           legacyAmount: 0,
         },
         baseDrawdownConfig,
-        { numberOfRuns: 100 }
+        { numberOfRuns: 100, randomSeed: 20260726 }
       )
 
       // Professional with decent savings and modest goals should have reasonable success rate
@@ -566,7 +575,7 @@ describe('runMonteCarloSimulation', () => {
           legacyAmount: 0,
         },
         baseDrawdownConfig,
-        { numberOfRuns: 100 }
+        { numberOfRuns: 100, randomSeed: 20260726 }
       )
 
       // Underfunded scenario — success rate will be low but non-zero
@@ -603,7 +612,7 @@ describe('runMonteCarloSimulation', () => {
           legacyAmount: 0,
         },
         baseDrawdownConfig,
-        { numberOfRuns: 100 }
+        { numberOfRuns: 100, randomSeed: 20260726 }
       )
 
       // Pre-retiree with substantial balance and reasonable goals should succeed in many scenarios
@@ -651,7 +660,7 @@ describe('runMonteCarloSimulation', () => {
           minimumWithdrawal: 15000,
           maximumWithdrawal: 60000,
         },
-        { numberOfRuns: 100 }
+        { numberOfRuns: 100, randomSeed: 20260726 }
       )
 
       // With R4k/month contributions for 27 years, portfolio will be ~R9M
@@ -702,7 +711,7 @@ describe('runMonteCarloSimulation', () => {
           minimumWithdrawal: 15000,
           maximumWithdrawal: 60000,
         },
-        { numberOfRuns: 100 }
+        { numberOfRuns: 100, randomSeed: 20260726 }
       )
 
       // Well-funded portfolio with modest goals should have good success rate
@@ -755,7 +764,7 @@ describe('runMonteCarloSimulation', () => {
         personalInfo,
         lowIncome,
         drawdownConfig,
-        { numberOfRuns: 100 }
+        { numberOfRuns: 100, randomSeed: 20260726 }
       )
 
       const highIncomeResult = runMonteCarloSimulation(
@@ -763,7 +772,7 @@ describe('runMonteCarloSimulation', () => {
         personalInfo,
         highIncome,
         drawdownConfig,
-        { numberOfRuns: 100 }
+        { numberOfRuns: 100, randomSeed: 20260726 }
       )
 
       // Higher desired income should result in lower success rate
@@ -814,7 +823,7 @@ describe('runMonteCarloSimulation', () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 30 },
-        { numberOfRuns: 1 }
+        { numberOfRuns: 1, randomSeed: 20260726 }
       )
 
       // No pension-type balance exists, so the 30% lump sum request must not reduce
@@ -829,7 +838,7 @@ describe('runMonteCarloSimulation', () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 30 },
-        { numberOfRuns: 1 }
+        { numberOfRuns: 1, randomSeed: 20260726 }
       )
 
       expect(result.runs[0].yearlyBalances[flatPersonalInfo.retirementAge - flatPersonalInfo.currentAge]).toBeCloseTo(1_000_000, 5)
@@ -841,7 +850,7 @@ describe('runMonteCarloSimulation', () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 20 },
-        { numberOfRuns: 1 }
+        { numberOfRuns: 1, randomSeed: 20260726 }
       )
 
       // 20% commuted, no growth, no withdrawal -> balance should be exactly 80% of the original
@@ -854,7 +863,7 @@ describe('runMonteCarloSimulation', () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 90 },
-        { numberOfRuns: 1 }
+        { numberOfRuns: 1, randomSeed: 20260726 }
       )
 
       const atCap = runMonteCarloSimulation(
@@ -862,7 +871,7 @@ describe('runMonteCarloSimulation', () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: SA_TAX_LIMITS.maxLumpSumCommutationPercentage },
-        { numberOfRuns: 1 }
+        { numberOfRuns: 1, randomSeed: 20260726 }
       )
 
       const idx = flatPersonalInfo.retirementAge - flatPersonalInfo.currentAge
@@ -876,7 +885,7 @@ describe('runMonteCarloSimulation', () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         zeroWithdrawalDrawdownConfig,
-        { numberOfRuns: 1 }
+        { numberOfRuns: 1, randomSeed: 20260726 }
       )
 
       expect(result.runs[0].lumpSumTax).toBe(0)
@@ -892,7 +901,7 @@ describe('runMonteCarloSimulation', () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 20 },
-        { numberOfRuns: 1 }
+        { numberOfRuns: 1, randomSeed: 20260726 }
       )
 
       // No growth before retirement (expectedReturn: 0), so the pension balance at
@@ -909,7 +918,7 @@ describe('runMonteCarloSimulation', () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 30 },
-        { numberOfRuns: 1 }
+        { numberOfRuns: 1, randomSeed: 20260726 }
       )
 
       expect(result.runs[0].lumpSumTax).toBe(0)
@@ -949,7 +958,7 @@ describe('runMonteCarloSimulation', () => {
           maximumWithdrawal: 0,
           lumpSumPercentage: 0,
         },
-        { numberOfRuns: 1 }
+        { numberOfRuns: 1, randomSeed: 20260726 }
       )
 
       expect(result.averageLifetimeIncomeTax).toBe(0)
@@ -961,6 +970,9 @@ describe('runMonteCarloSimulation', () => {
       // fully deterministic and reproducible by replicating the engine's own formulas below.
       let callCount = 0
       const randomSpy = vi.spyOn(Math, 'random').mockImplementation(() => (callCount++ % 2 === 0 ? 0.5 : 0.25))
+      // NOTE: restored via afterEach below as well — an inline mockRestore() at the end
+      // of this test is skipped when an assertion throws, which silently leaves
+      // Math.random mocked for every test that runs afterwards.
 
       // Under-65 so only the primary rebate applies (keeps the tax-threshold math simple)
       const personalInfo: PersonalInfo = { currentAge: 49, retirementAge: 50, lifeExpectancy: 51, annualIncome: 0 }
@@ -1079,7 +1091,7 @@ describe('runMonteCarloSimulation', () => {
     }
 
     function run(account: Account, config: DrawdownConfig) {
-      return runMonteCarloSimulation([account], personalInfo, goals, config, { numberOfRuns: 1 }, zeroVolatility)
+      return runMonteCarloSimulation([account], personalInfo, goals, config, { numberOfRuns: 1, randomSeed: 20260726 }, zeroVolatility)
     }
 
     it('a harsh negative return: guardrails cuts withdrawal by 10% when the rate breaches the upper band', () => {
@@ -1139,5 +1151,68 @@ describe('runMonteCarloSimulation', () => {
       expect(fixedPctResult.runs[0].yearlyBalances[1]).toBeCloseTo(1187700 - 47508, 2)
       expect(fixedPctResult.runs[0].yearlyBalances[1]).not.toBeCloseTo(fixedAmountResult.runs[0].yearlyBalances[1], 2)
     })
+  })
+})
+
+describe('Reproducibility via randomSeed', () => {
+  const seedAccount: Account = {
+    id: '1', name: 'RA', type: 'retirement_annuity', provider: 'P',
+    currentBalance: 900000, monthlyContribution: 6000,
+    expectedReturn: 11, annualFees: 1.2, contributionEscalation: 6,
+  }
+  const seedPersonal: PersonalInfo = {
+    currentAge: 40, retirementAge: 65, lifeExpectancy: 90, annualIncome: 750000,
+  }
+  const seedGoals: RetirementGoals = {
+    desiredMonthlyIncome: 35000, inflationRate: 5.5, legacyAmount: 0,
+  }
+  const seedConfig: DrawdownConfig = {
+    strategy: 'fixed_percentage', initialWithdrawalRate: 4,
+    minimumWithdrawal: 10000, maximumWithdrawal: 200000, lumpSumPercentage: 0,
+  }
+
+  const run = (randomSeed?: number) =>
+    runMonteCarloSimulation(
+      [seedAccount], seedPersonal, seedGoals, seedConfig,
+      { numberOfRuns: 100, randomSeed }
+    )
+
+  it('produces identical results for the same seed', () => {
+    const a = run(4242)
+    const b = run(4242)
+
+    expect(a.successRate).toBe(b.successRate)
+    expect(a.averageFinalBalance).toBe(b.averageFinalBalance)
+    expect(a.medianDepletionAge).toBe(b.medianDepletionAge)
+    expect(a.percentiles.p50).toEqual(b.percentiles.p50)
+    expect(a.percentiles.p10).toEqual(b.percentiles.p10)
+    expect(a.percentiles.p90).toEqual(b.percentiles.p90)
+  })
+
+  it('produces different results for a different seed', () => {
+    // Guards against the seed being accepted but ignored — which is exactly what
+    // happened before: SimulationConfig.randomSeed existed but was never read.
+    const a = run(1)
+    const b = run(2)
+    expect(a.percentiles.p50).not.toEqual(b.percentiles.p50)
+  })
+
+  it('remains non-deterministic when no seed is supplied', () => {
+    const a = run()
+    const b = run()
+    expect(a.percentiles.p50).not.toEqual(b.percentiles.p50)
+  })
+
+  it('keeps individual runs independent within a seeded simulation', () => {
+    // A shared generator must not make every run identical.
+    //
+    // Asserted on an accumulation-phase balance, NOT finalBalance: depleted runs are
+    // clamped to exactly 0 by `Math.max(0, …)`, so they collapse into a single value
+    // and finalBalance under-reports variety (63 of 100 runs deplete on this fixture).
+    // Year-10 balances are unclamped and therefore measure independence rather than
+    // the clamp.
+    const result = run(777)
+    const atYear10 = new Set(result.runs.map((r) => Math.round(r.yearlyBalances[10])))
+    expect(atYear10.size).toBe(result.runs.length)
   })
 })

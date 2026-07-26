@@ -167,7 +167,7 @@ describe('Cross-tab consistency', () => {
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        { numberOfRuns: 200 },
+        { numberOfRuns: 200, randomSeed: 20260726 },
         testAssumptions
       )
 
@@ -190,7 +190,7 @@ describe('Cross-tab consistency', () => {
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        { numberOfRuns: 100 },
+        { numberOfRuns: 100, randomSeed: 20260726 },
         testAssumptions
       )
 
@@ -225,7 +225,7 @@ describe('Cross-tab consistency', () => {
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        { numberOfRuns: 50 },
+        { numberOfRuns: 50, randomSeed: 20260726 },
         { ...testAssumptions, compoundingMethod: 'nominal' }
       )
 
@@ -243,7 +243,7 @@ describe('Cross-tab consistency', () => {
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        { numberOfRuns: 50 },
+        { numberOfRuns: 50, randomSeed: 20260726 },
         { ...testAssumptions, compoundingMethod: 'compound' }
       )
 
@@ -317,7 +317,7 @@ describe('Cross-tab consistency', () => {
           minimumWithdrawal: 10000,
           maximumWithdrawal: 60000,
         },
-        { numberOfRuns: 50 },
+        { numberOfRuns: 50, randomSeed: 20260726 },
         testAssumptions
       )
 
@@ -369,7 +369,7 @@ describe('Cross-tab consistency', () => {
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        { numberOfRuns: 50 },
+        { numberOfRuns: 50, randomSeed: 20260726 },
         testAssumptions
       )
 
@@ -405,7 +405,7 @@ describe('Cross-tab consistency', () => {
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        { numberOfRuns: 50 },
+        { numberOfRuns: 50, randomSeed: 20260726 },
         testAssumptions
       )
 
@@ -433,7 +433,7 @@ describe('Cross-tab consistency', () => {
         testPersonalInfo,
         highIncomeGoals,
         testDrawdownConfig,
-        { numberOfRuns: 50 },
+        { numberOfRuns: 50, randomSeed: 20260726 },
         testAssumptions
       )
 
@@ -474,7 +474,7 @@ describe('Cross-tab consistency', () => {
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        { numberOfRuns: 50 },
+        { numberOfRuns: 50, randomSeed: 20260726 },
         testAssumptions
       )
 
@@ -508,7 +508,7 @@ describe('Cross-tab consistency', () => {
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        { numberOfRuns: 50 },
+        { numberOfRuns: 50, randomSeed: 20260726 },
         testAssumptions
       )
 
