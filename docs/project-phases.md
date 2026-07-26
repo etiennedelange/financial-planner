@@ -9,7 +9,7 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 | Phase | Status | Documentation |
 |-------|--------|---------------|
 | **Phase 1** | ✅ Complete | [Calculation Accuracy](project-phases/phase-1-calculation-accuracy.md) |
-| **Phase 1.5** | 🔄 Reopened | [Testing & Validation](project-phases/phase-1-5-testing-validation.md) — P0: suite cannot catch tautological regressions |
+| **Phase 1.5** | ✅ P0 resolved | [Testing & Validation](project-phases/phase-1-5-testing-validation.md) — invariants rewritten, 12/12 mutations killed |
 | **Phase 1.6** | ✅ Complete | [Performance Optimization](project-phases/phase-1-6-performance-optimization.md) |
 | **Phase 1.7** | ✅ Complete | [Next 16 / React 19 / Tailwind v4 Modernization](project-phases/phase-1-7-modernization.md) |
 | **Phase 2** | 🔄 In Progress | [Supabase Integration](project-phases/phase-2-supabase.md) |
@@ -20,7 +20,7 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 | **Phase 7** | ✅ Complete | [UI Redesign — Sidebar App Shell](project-phases/phase-7-ui-redesign.md) |
 | **Phase 8** | ✅ Complete | [Expense Tracker](project-phases/phase-8-expense-tracker.md) |
 | **Phase 9** | 🔄 In Progress | [Site-Wide Improvement](project-phases/phase-9-site-improvement.md) |
-| **Phase 10** | 🔄 In Progress | [Calculation Simplification](project-phases/phase-10-calculation-simplification.md) — reduce margin of error structurally |
+| **Phase 10** | 🔄 In Progress | [Calculation Simplification](project-phases/phase-10-calculation-simplification.md) — steps 1, 2, 2.5 done; 3–5 gated on Phase 1.5 P0 |
 | **Future** | 📋 Planned | [Future Enhancements](project-phases/future-enhancements.md) |
 
 ## Current Status Summary

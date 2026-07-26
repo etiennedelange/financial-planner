@@ -21,16 +21,16 @@ is settled and is **not** reopened here.
 
 ## Sequencing constraint (read before starting)
 
-Steps 3–5 are refactors of a 630-line engine whose test suite currently **cannot tell you
-if you broke it** — see Phase 1.5 P0 ("suite cannot catch tautological-regression bugs").
-Roughly 19 invariants amount to about 4 real checks.
+**RESOLVED 2026-07-26.** Steps 3–5 were gated on Phase 1.5 P0, because they refactor a
+630-line engine whose suite could not tell you if you broke it. That gate is now lifted:
 
-Therefore:
+- Steps 1, 2 and 2.5 are complete.
+- Phase 1.5 P0 is complete — the invariant suite was rewritten and verified falsifiable by
+  mutation testing (12 injected bugs, 12 killed).
+- Both engines are pinned by golden harnesses (96 deterministic + 24 Monte Carlo
+  scenarios), each verified to fail on a 0.01% perturbation.
 
-- **Steps 1 and 2 first.** They map directly onto bugs already shipped twice, and each is
-  verifiable by output equality rather than by trusting the suite.
-- **Phase 1.5 P0 before steps 3–5.** Restructuring behind tests that pass either way is
-  how the `75f68f7` regression happened in the first place.
+Steps 3–5 may now proceed.
 
 Every step below must be verified with a **golden-output diff**: capture
 `calculateProjection` and `runMonteCarloSimulation` output for a fixed matrix of scenarios
@@ -273,7 +273,67 @@ arithmetic in a test is an independent oracle, not a smell.
 
 ---
 
-## Step 3: Split `calculateProjection` into `accumulate()` and `drawdown()` ⬜ BLOCKED ON PHASE 1.5 P0
+## Step 2.5: Seed Monte Carlo ✅ DONE
+
+**Why:** `SimulationConfig.randomSeed` was declared in `types/simulation.ts` but never read
+by the engine. That single gap caused three separate problems — a flaky integration test, a
+Monte Carlo engine that could not be pinned by the golden harness, and a Step 1 verification
+that had to tease a real semantic change out of ~1-3pp of sampling noise across 2000-run
+repeats.
+
+**Implementation.** Monte Carlo had exactly one randomness entry point
+(`simulation-engine.ts`, the `generateReturnSequence` call), which made this clean:
+
+- `createSeededRandom(seed)` in `random-returns.ts` — mulberry32; tiny, dependency-free,
+  period 2^32. Explicitly **not** cryptographically secure.
+- `randomNormal` and `generateReturnSequence` take an optional `RandomSource`, defaulting
+  to `Math.random`, so unseeded behaviour is byte-for-byte unchanged.
+- `runMonteCarloSimulation` builds a seeded source when `config.randomSeed` is supplied and
+  threads it through every run. One generator across all runs, so runs stay independent of
+  one another while the sequence as a whole is reproducible.
+
+**Results:**
+
+| | Before | After |
+|---|---|---|
+| Full-suite flakiness | 1 failure in 12 runs | **0 in 20** |
+| Monte Carlo in golden harness | impossible | **24 scenarios pinned** |
+| MC verification method | statistical, 3 repeats × 2000 runs | exact equality |
+
+`lib/calculations/__tests__/golden-monte-carlo.test.ts` pins 24 scenarios against
+`__golden__/monte-carlo.json`, and asserts reproducibility as a precondition before
+comparing — a golden file is meaningless if the generator is not deterministic. Verified
+sensitive: perturbing volatility by 0.01% fails it.
+
+**Two latent test bugs found and fixed while doing this:**
+
+1. `simulation-engine.test.ts` had a `vi.spyOn(Math, 'random')` restored by an **inline**
+   `mockRestore()` at the end of the test body. When that test failed, cleanup was skipped
+   and `Math.random` stayed mocked for every subsequent test in the file — which is exactly
+   how it presented: one genuine failure cascaded into a second, unrelated one. Now
+   restored via `afterEach(() => vi.restoreAllMocks())`.
+2. The CGT-exclusion test drives `Math.random` itself via that spy to build a hand-computed
+   oracle, so it is deliberately left **unseeded** — seeding it would make the engine bypass
+   the spy and invalidate the oracle. Same principle as the lint-rule exemption in Step 2:
+   a test's independent arithmetic is an oracle, not a smell.
+
+**Note on assertion design.** An initial reproducibility test asserted that a seeded run
+produced ~100 distinct final balances; it saw 38 and failed. The code was right and the
+assertion was wrong: 63 of 100 runs deplete and are clamped to exactly 0 by `Math.max(0, …)`,
+collapsing into a single value. It now asserts on an accumulation-phase balance, which is
+unclamped and therefore measures independence rather than the clamp — 100 of 100 distinct.
+
+### Success criteria
+
+- [x] `randomSeed` wired through and honoured
+- [x] Same seed ⇒ identical output; different seed ⇒ different output; no seed ⇒ unchanged
+- [x] Flaky integration test fixed (0 failures in 20 full-suite runs)
+- [x] Monte Carlo covered by a committed golden harness, verified sensitive
+- [x] Runs remain independent within a seeded simulation
+
+---
+
+## Step 3: Split `calculateProjection` into `accumulate()` and `drawdown()` ⬜ READY (Phase 1.5 P0 resolved 2026-07-26)
 
 630 lines, two loops sharing mutable state (`currentTotal`, `annualWithdrawal`,
 `portfolioDepletionAge`). Two pure functions are independently testable and remove the
@@ -285,7 +345,7 @@ class of bug where accumulation-phase state leaks into the drawdown phase.
 
 ---
 
-## Step 4: Derive summary metrics instead of computing them inline ⬜ BLOCKED ON PHASE 1.5 P0
+## Step 4: Derive summary metrics instead of computing them inline ⬜ READY (Phase 1.5 P0 resolved 2026-07-26)
 
 `shortfallAmount`, `surplusAmount` and `portfolioDepletionAge` are all derivable from
 `yearlyProjections`, but are computed separately inside the big function. That is precisely
@@ -304,7 +364,7 @@ twice, differently, at `projection-engine.ts:441` and `:595`.
 
 ---
 
-## Step 5: Stop clamping errors away ⬜ BLOCKED ON PHASE 1.5 P0
+## Step 5: Stop clamping errors away ⬜ READY (Phase 1.5 P0 resolved 2026-07-26)
 
 `Math.max(0, currentTotal)` at `projection-engine.ts:522` and `Math.max(0, finalBalance)`
 silently swallow negative balances. A negative balance is a bug; clamping means it is never
@@ -316,22 +376,6 @@ guarantees they pass.
 - [ ] INV-005 / INV-008 rewritten against the pre-clamp value (or deleted per Phase 1.5 P0)
 
 ---
-
----
-
-## Known issue found during Step 2 (not introduced by it)
-
-**`tests/integration/cross-tab-consistency.test.ts` — "should handle zero contribution
-consistently" is flaky.** It asserts `simulation.percentiles.p50[30] > 100000` against a
-Monte Carlo run of only 50 draws, so stochastic variation occasionally fails it.
-
-Measured: **1 failure in 12 runs on original code, 0 in 12 on current code** — the
-flakiness is pre-existing and unrelated to Phase 10.
-
-Root cause is the same gap that keeps Monte Carlo out of the golden harness:
-`SimulationConfig.randomSeed` is declared in `types/simulation.ts` but never read by
-`simulation-engine.ts`. Wiring that seed through would fix the flake *and* let the golden
-harness cover Monte Carlo. Recommended as **Step 2.5**, before steps 3–5.
 
 ---
 

@@ -614,12 +614,27 @@ describe('calculateProjection', () => {
         baseDrawdownConfig
       )
 
-      // Key constraint: surplus and shortfall are mutually exclusive
-      if (result.surplusAmount > 0) {
-        expect(result.shortfallAmount).toBe(0)
-      } else if (result.portfolioDepletionAge) {
-        expect(result.shortfallAmount).toBeGreaterThan(0)
-      }
+      // Asserted unconditionally with absolute values. This test previously read
+      // `if (surplus > 0) expect(shortfall).toBe(0)`, a verbatim restatement of
+      // projection-engine.ts's own guard that could not fail while that line existed —
+      // it was the assertion that should have caught the 75f68f7 regression.
+      //
+      // fixed_percentage withdraws a share of the live balance, which decays
+      // geometrically and never reaches zero, so this portfolio survives despite being
+      // wholly inadequate: it pays a tiny fraction of the R30k/month goal.
+      expect(result.portfolioDepletionAge).toBeNull()
+      expect(result.surplusAmount).toBeGreaterThan(500_000)
+      expect(result.shortfallAmount).toBe(0)
+
+      // The inadequacy is real and must remain visible somewhere: year-one income is a
+      // rounding error against the inflation-adjusted goal.
+      const retirementIdx = basePersonalInfo.retirementAge - basePersonalInfo.currentAge
+      const firstYearWithdrawal = result.yearlyProjections[retirementIdx].withdrawals
+      const desiredFirstYear =
+        baseRetirementGoals.desiredMonthlyIncome *
+        Math.pow(1 + baseRetirementGoals.inflationRate / 100, retirementIdx) *
+        12
+      expect(firstYearWithdrawal).toBeLessThan(desiredFirstYear * 0.02)
     })
 
     it('should calculate surplus when portfolio exceeds needs', () => {
@@ -656,14 +671,10 @@ describe('calculateProjection', () => {
         baseDrawdownConfig
       )
 
-      // If portfolio depleted, no surplus possible
-      if (result.portfolioDepletionAge) {
-        expect(result.surplusAmount).toBe(0)
-      }
-      // If there's a surplus, portfolio didn't deplete
-      if (result.surplusAmount > 0) {
-        expect(result.portfolioDepletionAge).toBeFalsy()
-      }
+      // This fixture survives (fixed_percentage cannot deplete — see above), so assert
+      // that arm directly instead of guarding both arms and possibly asserting neither.
+      expect(result.portfolioDepletionAge).toBeNull()
+      expect(result.surplusAmount).toBeGreaterThan(0)
     })
 
     it.each([
@@ -755,13 +766,11 @@ describe('calculateProjection', () => {
       const { account, personal, goals, config } = depletesInFinalYear
       const result = calculateProjection([account], personal, goals, config)
 
-      // The two fields must agree: money left means no depletion, and vice versa.
-      if (result.surplusAmount > 0) {
-        expect(result.portfolioDepletionAge).toBeNull()
-      } else {
-        expect(result.portfolioDepletionAge).toBeGreaterThanOrEqual(personal.retirementAge)
-        expect(result.portfolioDepletionAge).toBeLessThanOrEqual(personal.lifeExpectancy)
-      }
+      // This fixture exhausts the portfolio, so assert that branch outright. Guarding
+      // it behind `if (surplusAmount > 0)` would silently assert nothing the day the
+      // fixture stops depleting.
+      expect(result.surplusAmount).toBe(0)
+      expect(result.portfolioDepletionAge).toBe(89)
     })
   })
 
