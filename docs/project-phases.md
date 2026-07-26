@@ -9,7 +9,7 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 | Phase | Status | Documentation |
 |-------|--------|---------------|
 | **Phase 1** | ✅ Complete | [Calculation Accuracy](project-phases/phase-1-calculation-accuracy.md) |
-| **Phase 1.5** | ✅ Complete | [Testing & Validation](project-phases/phase-1-5-testing-validation.md) |
+| **Phase 1.5** | 🔄 Reopened | [Testing & Validation](project-phases/phase-1-5-testing-validation.md) — P0: suite cannot catch tautological regressions |
 | **Phase 1.6** | ✅ Complete | [Performance Optimization](project-phases/phase-1-6-performance-optimization.md) |
 | **Phase 1.7** | ✅ Complete | [Next 16 / React 19 / Tailwind v4 Modernization](project-phases/phase-1-7-modernization.md) |
 | **Phase 2** | 🔄 In Progress | [Supabase Integration](project-phases/phase-2-supabase.md) |
@@ -20,9 +20,28 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 | **Phase 7** | ✅ Complete | [UI Redesign — Sidebar App Shell](project-phases/phase-7-ui-redesign.md) |
 | **Phase 8** | ✅ Complete | [Expense Tracker](project-phases/phase-8-expense-tracker.md) |
 | **Phase 9** | 🔄 In Progress | [Site-Wide Improvement](project-phases/phase-9-site-improvement.md) |
+| **Phase 10** | 🔄 In Progress | [Calculation Simplification](project-phases/phase-10-calculation-simplification.md) — reduce margin of error structurally |
 | **Future** | 📋 Planned | [Future Enhancements](project-phases/future-enhancements.md) |
 
 ## Current Status Summary
+
+## 2026-07-26
+
+🔍 **Multi-agent audit of `75f68f7` + Batch 1 fixes** — full write-up: [2026-07-26-audit-batch-1-fixes.md](history/2026-07-26-audit-batch-1-fixes.md). 609/609 tests passing, build clean.
+
+**Fixed (TDD):**
+- 🐛 **Replacement ratio divided future rands by today's rands** (`debug-window.tsx`) — displayed **150.4%** where the true ratio was **30.2%**, overstated by exactly `(1+inflation)^yearsToRetirement`. Salary is now escalated to the retirement date before dividing.
+- 🐛 **Debug window promised income from already-commuted capital** (`debug-window.tsx`) — used a duplicated local helper reading the *pre*-commutation portfolio; now prefers the engine's post-commutation `monthlyIncomeAtRetirement`.
+- 🐛 **`calculateReplacementRatio` leaked NaN to the UI** (`retirement-tax.ts`) — `NaN <= 0` is `false`, so NaN bypassed the guard and rendered as `"NaN%"`. Now guarded with `Number.isFinite` on both arguments. Coverage 92.85% stmts / 93.87% branch.
+
+- 🐛 **Depletion during the final year was never recorded** (`projection-engine.ts`) — the guard runs at the *start* of each year, so a portfolio emptying in the final year reported `endingBalance: 0`, `surplusAmount: 0`, `shortfallAmount: R6,009,722` **and** `portfolioDepletionAge: null` at the same time. Now caught by a post-withdrawal check gated on the withdrawal having been clamped, so a plan that draws full income and lands on exactly R0 at life expectancy is correctly *not* flagged. Verified: depletion age `null` → **89**, shortfall and surplus byte-identical.
+
+**✅ Decision taken — `shortfallAmount` semantics settled, logic not to be changed:**
+- Shortfall means **the portfolio depletes before death** given the desired income, not cumulative income gap. Under that definition the guard at `:585` implements the intent, and the audit's C1 magnitudes (R91.2m etc.) measure a different metric than this project wants. **WON'T FIX.**
+- Knowingly accepted: `fixed_percentage` / `variable_percentage` / `guardrails` withdraw a percentage of the live balance and ignore the desired income after year 0 (`:429-436` omits `desiredMonthlyIncomeToday`). They rarely deplete, so they correctly report no shortfall while paying less than the entered figure (measured: R93,948/mth desired vs R52,657/mth actual → shortfall R0, surplus R63.0m). Open as a **labelling/UX** question, not a calculation defect.
+
+**⚠️ Outstanding — test quality:**
+- **The test that would have caught the shortfall regression was retired by the same commit.** `projection-engine.test.ts` previously asserted `shortfallAmount > 0` and passed; it was rewritten into a tautology restating line 585. Several new invariants are non-functional (INV-001/003 assert the guard against itself; INV-002/006 bodies are unreachable; INV-005/008 masked by `Math.max(0, …)`; INV-017 tests an identically-zero field) and should be **deleted rather than repaired** — 19 tests currently amount to roughly 4 real checks.
 
 ## 2026-07-11 (later)
 

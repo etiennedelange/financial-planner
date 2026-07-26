@@ -34,6 +34,7 @@ import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import { getSpendingPhaseMultiplier } from "@/lib/calculations/utils/spending-phase"
 import { calculateMonthlyReturn, formatMonthlyReturnFormula } from "@/lib/calculations/utils/projection"
+import { escalate } from "@/lib/calculations/utils/money-time"
 import { calculateRAOptimization } from "@/lib/calculations/utils/ra-optimization"
 import { formatCurrency } from "@/lib/utils/currency"
 import type { ProjectionResult } from "@/types"
@@ -132,8 +133,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
     const yearsInRetirement = personalInfo.lifeExpectancy - personalInfo.retirementAge
     const monthlyReturn = calculateMonthlyReturn(netReturn, assumptions.compoundingMethod)
     const desiredMonthlyAtRetirement =
-      retirementGoals.desiredMonthlyIncome *
-      Math.pow(1 + inflationRate, yearsToRetirement)
+      escalate(retirementGoals.desiredMonthlyIncome, yearsToRetirement, inflationRate)
 
     let applicableRebate: number = SA_TAX_LIMITS.primaryRebate
     let taxThreshold: number = SA_TAX_LIMITS.taxThresholdUnder65

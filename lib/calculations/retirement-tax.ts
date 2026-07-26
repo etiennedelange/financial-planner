@@ -1,6 +1,7 @@
 import { calculateIncomeTax, calculateLumpSumTax } from '../constants/tax-tables'
 import { SA_TAX_LIMITS } from '../constants/limits'
 import { MEDICAL_AID_CREDITS_CONFIG } from '../constants/tax-year.config'
+import type { MoneyBasis, Rands } from "./utils/money-time"
 
 /**
  * Configuration for retirement tax calculations
@@ -210,15 +211,25 @@ export function calculateLumpSumCommutation(
 
 /**
  * Calculate replacement ratio (retirement income vs pre-retirement income)
- * @param annualRetirementIncome Annual retirement income (after tax)
- * @param preRetirementIncome Annual pre-retirement income (before tax)
- * @returns Replacement ratio as percentage
+ *
+ * Both arguments must be GROSS (pre-tax) annual amounts expressed in the same
+ * money — either both in today's rands or both inflated to the retirement date.
+ * Callers projecting forward must escalate the pre-retirement income themselves;
+ * dividing a nominal at-retirement figure by a present-day salary overstates the
+ * ratio by (1 + inflation)^yearsToRetirement.
+ *
+ * @param annualRetirementIncome Gross annual retirement income
+ * @param preRetirementIncome Gross annual pre-retirement income, same money basis
+ * @returns Replacement ratio as percentage, or 0 if either input is unusable
  */
-export function calculateReplacementRatio(
-  annualRetirementIncome: number,
-  preRetirementIncome: number
+export function calculateReplacementRatio<B extends MoneyBasis>(
+  annualRetirementIncome: Rands<B>,
+  preRetirementIncome: Rands<B>
 ): number {
-  if (preRetirementIncome <= 0) return 0
+  // `NaN <= 0` is false, so a bare `<= 0` guard would let NaN reach the UI and
+  // render as the literal string "NaN%". Check finiteness on both arguments.
+  if (!Number.isFinite(annualRetirementIncome)) return 0
+  if (!Number.isFinite(preRetirementIncome) || preRetirementIncome <= 0) return 0
 
   // Simple gross-to-gross comparison: retirement income / pre-retirement income
   // Both figures are gross annual amounts, making the ratio directly comparable

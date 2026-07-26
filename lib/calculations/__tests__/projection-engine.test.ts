@@ -700,6 +700,71 @@ describe('calculateProjection', () => {
     )
   })
 
+  describe('Depletion detection', () => {
+    // The depletion check runs at the START of each drawdown year, so a portfolio
+    // that empties DURING the final year was never recorded — there is no
+    // subsequent iteration to observe the zero balance. The engine then reported
+    // "you ran out" (surplus R0, ending balance R0) and "you never ran out"
+    // (portfolioDepletionAge null) at the same time.
+    const depletesInFinalYear = {
+      account: {
+        id: '1',
+        name: 'Preservation',
+        type: 'preservation_fund',
+        provider: 'Test Provider',
+        currentBalance: 4500000,
+        monthlyContribution: 15000,
+        expectedReturn: 11,
+        annualFees: 1.25,
+        contributionEscalation: 6,
+      } as Account,
+      personal: {
+        currentAge: 55,
+        retirementAge: 65,
+        lifeExpectancy: 90,
+        annualIncome: 900000,
+      } as PersonalInfo,
+      goals: {
+        desiredMonthlyIncome: 55000,
+        inflationRate: 5.5,
+        legacyAmount: 0,
+      } as RetirementGoals,
+      config: {
+        strategy: 'fixed_amount_inflation_adjusted',
+        initialWithdrawalRate: 4,
+        minimumWithdrawal: 10000,
+        maximumWithdrawal: 200000,
+        lumpSumPercentage: 0,
+      } as DrawdownConfig,
+    }
+
+    it('should record a depletion age when the portfolio empties in the final year', () => {
+      const { account, personal, goals, config } = depletesInFinalYear
+      const result = calculateProjection([account], personal, goals, config)
+
+      const finalYear = result.yearlyProjections[result.yearlyProjections.length - 1]
+      // Precondition: this fixture really does exhaust the portfolio.
+      expect(finalYear.endingBalance).toBe(0)
+      expect(result.surplusAmount).toBe(0)
+
+      expect(result.portfolioDepletionAge).not.toBeNull()
+      expect(typeof result.portfolioDepletionAge).toBe('number')
+    })
+
+    it('should never report a depletion age alongside a surviving balance', () => {
+      const { account, personal, goals, config } = depletesInFinalYear
+      const result = calculateProjection([account], personal, goals, config)
+
+      // The two fields must agree: money left means no depletion, and vice versa.
+      if (result.surplusAmount > 0) {
+        expect(result.portfolioDepletionAge).toBeNull()
+      } else {
+        expect(result.portfolioDepletionAge).toBeGreaterThanOrEqual(personal.retirementAge)
+        expect(result.portfolioDepletionAge).toBeLessThanOrEqual(personal.lifeExpectancy)
+      }
+    })
+  })
+
   describe('Tax-optimized withdrawal sequencing', () => {
     const shortHorizonInfo: PersonalInfo = {
       currentAge: 63,

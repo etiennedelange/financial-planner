@@ -13,6 +13,7 @@ import { describe, it, expect } from 'vitest'
 import { calculateProjection } from '../projection-engine'
 import { calculateReplacementRatio } from '../retirement-tax'
 import type { Account, DrawdownConfig, PersonalInfo, RetirementGoals } from '@/types'
+import { todayRands } from '../utils/money-time'
 
 const baseAccount: Account = {
   id: '1',
@@ -195,7 +196,7 @@ describe('Projection Invariants', () => {
       const retirement = 1601625
       const preRetirement = 1275000
 
-      const ratio = calculateReplacementRatio(retirement, preRetirement)
+      const ratio = calculateReplacementRatio(todayRands(retirement), todayRands(preRetirement))
       const expectedRatio = (retirement / preRetirement) * 100
 
       expect(ratio).toBeCloseTo(expectedRatio, 1)
@@ -207,21 +208,21 @@ describe('Projection Invariants', () => {
       const preRetirement = 1275000
       const displayedRatio = 125.6 // Approximately 1,601,625 / 1,275,000
 
-      const calculatedRatio = calculateReplacementRatio(retirement, preRetirement)
+      const calculatedRatio = calculateReplacementRatio(todayRands(retirement), todayRands(preRetirement))
 
       expect(calculatedRatio).toBeCloseTo(displayedRatio, 0)
     })
 
     it('INV-011: Replacement ratio is always non-negative', () => {
-      const result = calculateReplacementRatio(500000, 600000)
+      const result = calculateReplacementRatio(todayRands(500000), todayRands(600000))
       expect(result).toBeGreaterThanOrEqual(0)
     })
 
     it('INV-012: Replacement ratio of 0 only when pre-retirement income is 0', () => {
-      const resultZero = calculateReplacementRatio(100000, 0)
+      const resultZero = calculateReplacementRatio(todayRands(100000), todayRands(0))
       expect(resultZero).toBe(0)
 
-      const resultNonZero = calculateReplacementRatio(100000, 1)
+      const resultNonZero = calculateReplacementRatio(todayRands(100000), todayRands(1))
       expect(resultNonZero).toBeGreaterThan(0)
     })
   })

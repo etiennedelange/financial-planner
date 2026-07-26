@@ -1,3 +1,5 @@
+import { deflate } from "@/lib/calculations/utils/money-time"
+
 /**
  * Convert nominal (future) value to real (today's) value
  * @param nominalValue - Value in future Rands
@@ -11,7 +13,7 @@ export function toRealValue(
   inflationRate: number
 ): number {
   if (yearsFromNow === 0) return nominalValue
-  return nominalValue / Math.pow(1 + inflationRate, yearsFromNow)
+  return deflate(nominalValue, yearsFromNow, inflationRate)
 }
 
 /**

@@ -1,4 +1,8 @@
-# Phase 1.5: Testing & Validation Framework ✅ COMPLETED
+# Phase 1.5: Testing & Validation Framework 🔄 REOPENED
+
+> **Reopened 2026-07-26.** The original framework was delivered and remains in place, but
+> the 2026-07-26 audit showed the suite cannot catch a regression when the same commit
+> rewrites the test that guards it. See "Open Tasks" at the end of this document — P0.
 
 **Goal:** Establish comprehensive testing to maintain calculation accuracy and cross-tab consistency.
 
@@ -59,6 +63,61 @@
   - Mathematical property tests (e.g., delay composition)
   - Fuzzing with random valid inputs
   - **Status:** Deferred - optional enhancement
+
+**Open Tasks (added 2026-07-26 from multi-agent audit of `75f68f7`):**
+
+- [ ] **P0: The suite cannot catch tautological-regression bugs** (Critical)
+  - **The problem:** a calculation regression shipped with 100% line coverage and every
+    test green, because the commit that introduced it also rewrote the test that would
+    have caught it. `projection-engine.test.ts` previously asserted
+    `expect(result.shortfallAmount).toBeGreaterThan(0)` on the R10,000-balance fixture
+    and passed; it became `if (surplus > 0) expect(shortfall).toBe(0)` — a verbatim
+    restatement of `projection-engine.ts:585` that cannot fail while that line exists.
+  - **Why coverage did not help:** these tests execute the code (line coverage 100%)
+    without constraining its output. Coverage measures reach, not falsifiability.
+  - **Delete rather than repair** — each of these is unfalsifiable as written, and
+    deleting them is more honest than making them pass. Roughly 19 invariants amount to
+    about 4 real checks:
+    - `INV-001` / `INV-003` — assert `projection-engine.ts:585` against itself
+    - `INV-002` / `INV-006` — guarded bodies never execute on their fixture (0 assertions
+      run); `expect(null).toBeDefined()` also passes on the no-depletion sentinel
+    - `INV-005` / `INV-008` — masked by `Math.max(0, …)` at `projection-engine.ts:522`;
+      negative arithmetic would be hidden by the clamp and still pass
+    - `INV-009` — recomputes the implementation formula in the test body
+    - `INV-017` — asserts on `yearlyProjections[].lumpSumTax`, which is identically 0
+      for every year; both branches pass on the constant
+    - `INV-004` — `totalWithdrawals <= portfolioAtRetirement * 2` is an invented
+      constant, not an invariant; fails on a sound projection at `lifeExpectancy: 110`
+    - `cross-tab-consistency.test.ts:440-447` — every assertion inside a conditional,
+      plus `expect(shortfallAmount).toBeGreaterThanOrEqual(0)` (tautology)
+  - **Replace with falsifiable checks:**
+    - Assert **absolute magnitudes**, not relationships between two outputs of the same
+      function (e.g. `expect(shortfallAmount).toBeGreaterThan(50_000_000)` for a fixture
+      known to fail catastrophically)
+    - Assert the **conservation identity**:
+      `sum(withdrawals) + finalBalance + sum(fees) + sum(tax) === portfolioAtRetirement + sum(growth)`
+      — this is a real invariant and cannot be satisfied by a wrong formula
+    - Assert **preconditions inside the test** so a fixture that stops exercising the
+      scenario fails loudly instead of silently passing (see the `Depletion detection`
+      block added 2026-07-26 for the pattern)
+    - Never write `if (x) expect(...)` — a guard that does not hold means 0 assertions
+  - **Add a lint rule or review check** for assertions nested inside conditionals in
+    test files; that single pattern accounts for most of the above.
+  - **Status:** Open — highest-value testing work outstanding
+
+- [ ] **P1: Zero tests on Zustand stores** (High Priority)
+  - `calculator-store.ts` and `expenses-store.ts` — long-standing gap, also noted in CLAUDE.md
+  - `lib/store/calculator-store.test.ts` currently has ~10 pre-existing type errors
+  - **Status:** Open
+
+- [ ] **P2: Pre-existing type errors in test files** (Medium Priority)
+  - `npx tsc --noEmit` reports 44 errors, all in `.test.ts` files
+    (`calculator-store.test.ts`, `expenses-store.test.ts`, `expenses.test.ts`,
+    `scenarios.test.ts`, `cross-tab-consistency.test.ts`)
+  - Production build is clean, so these are invisible to CI — fixtures have drifted from
+    the `Account` / `DrawdownConfig` types (e.g. `balance` vs `currentBalance`, missing
+    `lumpSumPercentage`)
+  - **Status:** Open
 
 **Testing Strategy:**
 1. **Unit Tests:** Individual calculation functions with known inputs/outputs

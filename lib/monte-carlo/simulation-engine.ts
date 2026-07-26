@@ -15,7 +15,7 @@ import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import { getSpendingPhaseMultiplier } from "@/lib/calculations/utils/spending-phase"
 import { calculateMonthlyReturn } from "@/lib/calculations/utils/projection"
 import { calculateIncomeTaxWithRebates, calculateLumpSumCommutation } from "@/lib/calculations/retirement-tax"
-import { calculateNextWithdrawal } from "@/lib/calculations/utils/drawdown-withdrawal"
+import { calculateInitialWithdrawal, calculateNextWithdrawal } from "@/lib/calculations/utils/drawdown-withdrawal"
 
 // Account types subject to full income tax on withdrawal — mirrors projection-engine.ts
 const PENSION_TYPES: AccountType[] = ['pension_fund', 'retirement_annuity', 'preservation_fund']
@@ -25,49 +25,6 @@ interface DrawdownAccount {
   balance: number
   costBasis: number // For discretionary: tracks original value + contributions, for CGT gain calc
   returns: number[] // Full totalYears stochastic return sequence (accumulation + drawdown years)
-}
-
-/**
- * Calculate initial withdrawal for simulation based on strategy
- *
- * IMPORTANT: The success rate should reflect whether the user can achieve their
- * desired retirement income goal. For all strategies, we use the desired income
- * as the baseline withdrawal to test if the plan meets the user's actual needs.
- *
- * The strategy affects HOW withdrawals are adjusted over time, but the baseline
- * must reflect the user's income goal for the success rate to be meaningful.
- */
-function calculateSimulationWithdrawal(
-  portfolioAtRetirement: number,
-  desiredMonthlyIncomeToday: number,
-  strategy: string,
-  withdrawalRate: number,
-  yearsToRetirement: number,
-  inflationRate: number
-): number {
-  // Inflate desired income to retirement date
-  const desiredMonthlyAtRetirement =
-    desiredMonthlyIncomeToday * Math.pow(1 + inflationRate, yearsToRetirement)
-
-  // Annual desired income at retirement
-  const desiredAnnualAtRetirement = desiredMonthlyAtRetirement * 12
-
-  switch (strategy) {
-    case "fixed_percentage":
-      // Use the GREATER of percentage-based withdrawal or desired income
-      // This ensures success rate reflects whether the user can achieve their goal
-      // If percentage > desired, we test the more conservative scenario
-      // If percentage < desired, we test the actual income need
-      const percentageWithdrawal = portfolioAtRetirement * withdrawalRate
-      return Math.max(percentageWithdrawal, desiredAnnualAtRetirement)
-    case "fixed_amount_inflation_adjusted":
-      return desiredAnnualAtRetirement
-    case "variable_percentage":
-    case "guardrails":
-      return desiredAnnualAtRetirement
-    default:
-      return Math.max(portfolioAtRetirement * withdrawalRate, desiredAnnualAtRetirement)
-  }
 }
 
 /**
@@ -170,13 +127,15 @@ function simulateSingleRun(
   let balance = drawdownAccounts.reduce((sum, a) => sum + a.balance, 0)
 
   // Drawdown phase - calculate withdrawal based on strategy
-  let withdrawal = calculateSimulationWithdrawal(
+  let withdrawal = calculateInitialWithdrawal(
     balance,
     desiredMonthlyIncome,
-    drawdownConfig.strategy,
-    drawdownConfig.initialWithdrawalRate / 100,
+    drawdownConfig,
     yearsToRetirement,
-    inflationRate
+    inflationRate,
+    // Success rate must measure whether the user reaches their income goal, so the
+    // desired income acts as a floor here. See WithdrawalBaseline.
+    "desiredIncomeFloor"
   )
 
   let lifetimeIncomeTax = 0

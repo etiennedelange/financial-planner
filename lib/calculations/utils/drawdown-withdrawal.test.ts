@@ -1,6 +1,6 @@
 import type { DrawdownConfig } from "@/types"
 import { describe, expect, it } from "vitest"
-import { calculateNextWithdrawal } from "./drawdown-withdrawal"
+import { calculateInitialWithdrawal, calculateNextWithdrawal } from "./drawdown-withdrawal"
 
 describe("calculateNextWithdrawal", () => {
   const baseConfig: DrawdownConfig = {
@@ -129,6 +129,116 @@ describe("calculateNextWithdrawal", () => {
       const result = calculateNextWithdrawal(400000, 4000000, tightConfig, 1, 0.055)
       const minAtYear1 = tightConfig.minimumWithdrawal * 1.055 * 12
       expect(result).toBeCloseTo(minAtYear1, 5)
+    })
+  })
+})
+
+describe("calculateInitialWithdrawal (unified year-0 entry point)", () => {
+  const cfg: DrawdownConfig = {
+    strategy: "fixed_percentage",
+    initialWithdrawalRate: 4,
+    minimumWithdrawal: 10000,
+    maximumWithdrawal: 200000,
+    lumpSumPercentage: 0,
+  }
+  const PORTFOLIO = 5_000_000
+  const DESIRED_MONTHLY_TODAY = 30_000
+  const YEARS = 10
+  const INFLATION = 0.055
+  // R30k/month escalated 10 years at 5.5% => annual figure at the retirement date
+  const desiredAnnualAtRetirement =
+    DESIRED_MONTHLY_TODAY * Math.pow(1 + INFLATION, YEARS) * 12
+
+  describe("baseline: 'strategy' (deterministic projection)", () => {
+    it("fixed_percentage returns a pure percentage of the portfolio", () => {
+      const r = calculateInitialWithdrawal(
+        PORTFOLIO, DESIRED_MONTHLY_TODAY, cfg, YEARS, INFLATION, "strategy"
+      )
+      expect(r).toBeCloseTo(PORTFOLIO * 0.04, 5)
+    })
+
+    it("fixed_percentage ignores the desired income even when far higher", () => {
+      const r = calculateInitialWithdrawal(
+        1_000_000, 80_000, cfg, YEARS, INFLATION, "strategy"
+      )
+      expect(r).toBeCloseTo(1_000_000 * 0.04, 5)
+    })
+
+    it("fixed_amount_inflation_adjusted returns the escalated desired income", () => {
+      const r = calculateInitialWithdrawal(
+        PORTFOLIO, DESIRED_MONTHLY_TODAY,
+        { ...cfg, strategy: "fixed_amount_inflation_adjusted" },
+        YEARS, INFLATION, "strategy"
+      )
+      expect(r).toBeCloseTo(desiredAnnualAtRetirement, 5)
+    })
+
+    it("variable_percentage clamps the desired income to the inflated min/max band", () => {
+      // Band 5000..20000/month sits entirely below a R30k/month desire
+      const r = calculateInitialWithdrawal(
+        PORTFOLIO, DESIRED_MONTHLY_TODAY,
+        { ...cfg, strategy: "variable_percentage", minimumWithdrawal: 5000, maximumWithdrawal: 20000 },
+        YEARS, INFLATION, "strategy"
+      )
+      const maxAtRetirement = 20000 * Math.pow(1 + INFLATION, YEARS) * 12
+      expect(r).toBeCloseTo(maxAtRetirement, 5)
+    })
+  })
+
+  describe("baseline: 'desiredIncomeFloor' (Monte Carlo success rate)", () => {
+    it("fixed_percentage never returns less than the desired income", () => {
+      // 4% of R1m is R40k/yr, far below a R80k/month goal
+      const r = calculateInitialWithdrawal(
+        1_000_000, 80_000, cfg, YEARS, INFLATION, "desiredIncomeFloor"
+      )
+      const desired = 80_000 * Math.pow(1 + INFLATION, YEARS) * 12
+      expect(r).toBeCloseTo(desired, 5)
+    })
+
+    it("fixed_percentage still uses the percentage when it exceeds the desired income", () => {
+      const r = calculateInitialWithdrawal(
+        50_000_000, 10_000, cfg, YEARS, INFLATION, "desiredIncomeFloor"
+      )
+      expect(r).toBeCloseTo(50_000_000 * 0.04, 5)
+    })
+
+    it("applies the same min/max band at year 0 as calculateNextWithdrawal does at year 1", () => {
+      // Regression guard: Monte Carlo previously ignored the band at year 0 while
+      // clamping it from year 1 onward, so it disagreed with itself across the boundary.
+      const bandCfg: DrawdownConfig = {
+        ...cfg, strategy: "variable_percentage",
+        minimumWithdrawal: 5000, maximumWithdrawal: 20000,
+      }
+      const year0 = calculateInitialWithdrawal(
+        PORTFOLIO, DESIRED_MONTHLY_TODAY, bandCfg, YEARS, INFLATION, "desiredIncomeFloor"
+      )
+      const maxAtRetirement = 20000 * Math.pow(1 + INFLATION, YEARS) * 12
+      expect(year0).toBeLessThanOrEqual(maxAtRetirement + 1e-6)
+    })
+  })
+
+  describe("Edge cases", () => {
+    it("returns 0 for a zero portfolio on a percentage strategy", () => {
+      const r = calculateInitialWithdrawal(0, 0, cfg, YEARS, INFLATION, "strategy")
+      expect(r).toBe(0)
+    })
+
+    it("handles zero years to retirement (retiring today)", () => {
+      const r = calculateInitialWithdrawal(
+        PORTFOLIO, DESIRED_MONTHLY_TODAY,
+        { ...cfg, strategy: "fixed_amount_inflation_adjusted" },
+        0, INFLATION, "strategy"
+      )
+      expect(r).toBeCloseTo(DESIRED_MONTHLY_TODAY * 12, 5)
+    })
+
+    it("handles zero inflation", () => {
+      const r = calculateInitialWithdrawal(
+        PORTFOLIO, DESIRED_MONTHLY_TODAY,
+        { ...cfg, strategy: "fixed_amount_inflation_adjusted" },
+        YEARS, 0, "strategy"
+      )
+      expect(r).toBeCloseTo(DESIRED_MONTHLY_TODAY * 12, 5)
     })
   })
 })

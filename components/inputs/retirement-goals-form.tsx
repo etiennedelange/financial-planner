@@ -12,6 +12,7 @@ import { AnimatedValue } from "@/components/ui/animated-value"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useShallow } from "zustand/react/shallow"
 import { formatCurrency } from "@/lib/utils/currency"
+import { escalate, percentToRate } from "@/lib/calculations/utils/money-time"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 import { FieldError } from "@/components/ui/field-error"
 
@@ -78,9 +79,11 @@ export function RetirementGoalsForm() {
 
   // Calculate inflation-adjusted income at retirement (uses inflation from Market Assumptions)
   const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
-  const inflatedMonthlyIncome =
-    watchedValues.desiredMonthlyIncome *
-    Math.pow(1 + inflationRate / 100, yearsToRetirement)
+  const inflatedMonthlyIncome = escalate(
+    watchedValues.desiredMonthlyIncome,
+    yearsToRetirement,
+    percentToRate(inflationRate)
+  )
 
   return (
     <PageCard

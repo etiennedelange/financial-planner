@@ -10,6 +10,7 @@ import {
   calculateLifetimeTaxBurden,
 } from './retirement-tax'
 import { SA_TAX_LIMITS } from '../constants/limits'
+import { todayRands } from './utils/money-time'
 
 describe('retirement-tax', () => {
   describe('calculateIncomeTaxWithRebates', () => {
@@ -458,31 +459,54 @@ describe('retirement-tax', () => {
   describe('calculateReplacementRatio', () => {
     it('should calculate 100% replacement for equal incomes', () => {
       // Simple gross-to-gross: R300k retirement / R300k pre-retirement = 100%
-      const result = calculateReplacementRatio(300000, 300000)
+      const result = calculateReplacementRatio(todayRands(300000), todayRands(300000))
       expect(result).toBe(100)
     })
 
     it('should calculate 60% replacement ratio', () => {
       // R240k retirement / R400k pre-retirement = 60%
-      const result = calculateReplacementRatio(240000, 400000)
+      const result = calculateReplacementRatio(todayRands(240000), todayRands(400000))
       expect(result).toBe(60)
     })
 
     it('should calculate 52.5% replacement ratio', () => {
       // R262.5k retirement / R500k pre-retirement = 52.5%
-      const result = calculateReplacementRatio(262500, 500000)
+      const result = calculateReplacementRatio(todayRands(262500), todayRands(500000))
       expect(result).toBeCloseTo(52.5, 1)
     })
 
     it('should handle zero pre-retirement income', () => {
-      const result = calculateReplacementRatio(200000, 0)
+      const result = calculateReplacementRatio(todayRands(200000), todayRands(0))
       expect(result).toBe(0)
     })
 
     it('should handle higher retirement income (>100% replacement)', () => {
       // R400k retirement / R300k pre-retirement = 133.3%
-      const result = calculateReplacementRatio(400000, 300000)
+      const result = calculateReplacementRatio(todayRands(400000), todayRands(300000))
       expect(result).toBeCloseTo(133.3, 1)
+    })
+
+    describe('Non-finite inputs', () => {
+      // `NaN <= 0` is false, so a bare `<= 0` guard lets NaN through and the
+      // ratio renders in the UI as the literal string "NaN%".
+      it('should return 0 when pre-retirement income is NaN', () => {
+        expect(calculateReplacementRatio(todayRands(300000), todayRands(NaN))).toBe(0)
+      })
+
+      it('should return 0 when retirement income is NaN', () => {
+        expect(calculateReplacementRatio(todayRands(NaN), todayRands(300000))).toBe(0)
+      })
+
+      it('should return 0 when retirement income is Infinity', () => {
+        expect(calculateReplacementRatio(todayRands(Infinity), todayRands(300000))).toBe(0)
+      })
+
+      it('should never return a non-finite ratio for non-finite inputs', () => {
+        for (const bad of [NaN, Infinity, -Infinity]) {
+          expect(Number.isFinite(calculateReplacementRatio(todayRands(bad), todayRands(300000)))).toBe(true)
+          expect(Number.isFinite(calculateReplacementRatio(todayRands(300000), todayRands(bad)))).toBe(true)
+        }
+      })
     })
   })
 

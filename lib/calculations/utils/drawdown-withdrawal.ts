@@ -1,4 +1,5 @@
 import type { DrawdownConfig } from "@/types"
+import { escalate } from "./money-time"
 
 /**
  * Guyton-Klinger-style decision rules: when the actual withdrawal rate drifts
@@ -10,6 +11,80 @@ const GUARDRAIL_ADJUSTMENT_FACTOR = 0.1
 
 /** Default guardrail band (%) when the user hasn't set upper/lowerGuardrail. */
 const DEFAULT_GUARDRAIL_BAND = 20
+
+/**
+ * Which baseline a caller wants the withdrawal measured against.
+ *
+ * The deterministic projection and the Monte Carlo simulation legitimately ask
+ * different questions, and this argument names that difference instead of leaving
+ * it implicit in an omitted parameter:
+ *
+ * - `'strategy'` — pure strategy mathematics: "what does this strategy actually pay?"
+ *   Used by the deterministic projection engine.
+ * - `'desiredIncomeFloor'` — strategy mathematics, but never below the user's desired
+ *   income: "can the user achieve their goal?" Used by Monte Carlo, because a success
+ *   rate measured against a percentage-of-portfolio withdrawal would approach 100% for
+ *   `fixed_percentage` in all cases (a percentage of a shrinking balance never depletes)
+ *   and the metric would be meaningless.
+ */
+export type WithdrawalBaseline = "strategy" | "desiredIncomeFloor"
+
+/**
+ * Compute the year-0 (first drawdown year) annual withdrawal, per strategy.
+ *
+ * This is the single source of truth for the initial withdrawal. It previously existed
+ * three times — privately in `projection-engine.ts`, again in `simulation-engine.ts`
+ * with different semantics, and copied verbatim into `components/debug/debug-window.tsx`
+ * — which let the deterministic projection and the Monte Carlo success rate model
+ * different plans from identical inputs.
+ *
+ * @param portfolioValue - Portfolio at retirement, AFTER any lump-sum commutation
+ * @param desiredMonthlyIncomeToday - Desired monthly income in TODAY's rands
+ * @param config - Drawdown configuration (strategy, rate, min/max)
+ * @param yearsToRetirement - Years from today to the retirement date, for escalating
+ *   today's-rand inputs to their nominal value at retirement
+ * @param inflationRate - Annual inflation rate (decimal, e.g. 0.055)
+ * @param baseline - See {@link WithdrawalBaseline}. Required: callers must state intent.
+ */
+export function calculateInitialWithdrawal(
+  portfolioValue: number,
+  desiredMonthlyIncomeToday: number,
+  config: DrawdownConfig,
+  yearsToRetirement: number,
+  inflationRate: number,
+  baseline: WithdrawalBaseline
+): number {
+  const desiredAnnualAtRetirement =
+    escalate(desiredMonthlyIncomeToday * 12, yearsToRetirement, inflationRate)
+
+  switch (config.strategy) {
+    case "fixed_percentage": {
+      const target = portfolioValue * (config.initialWithdrawalRate / 100)
+      return baseline === "desiredIncomeFloor"
+        ? Math.max(target, desiredAnnualAtRetirement)
+        : target
+    }
+
+    case "fixed_amount_inflation_adjusted":
+      // Both baselines agree: this strategy IS the desired income.
+      return desiredAnnualAtRetirement
+
+    case "variable_percentage":
+    case "guardrails":
+      // The min/max band is a user input and applies to both baselines. Monte Carlo
+      // previously skipped it at year 0 while `calculateNextWithdrawal` applied it from
+      // year 1 onward, so the simulation disagreed with itself across that boundary.
+      return clampToInflatedBounds(
+        desiredAnnualAtRetirement,
+        config,
+        yearsToRetirement,
+        inflationRate
+      )
+
+    default:
+      return portfolioValue * (config.initialWithdrawalRate / 100)
+  }
+}
 
 /**
  * Recompute next year's annual withdrawal during drawdown, per strategy.
@@ -45,7 +120,7 @@ export function calculateNextWithdrawal(
       const target = currentBalance * (config.initialWithdrawalRate / 100)
       if (desiredMonthlyIncomeToday === undefined) return target
       const desiredAnnualAtYear =
-        desiredMonthlyIncomeToday * 12 * Math.pow(1 + inflationRate, yearsSinceToday)
+        escalate(desiredMonthlyIncomeToday * 12, yearsSinceToday, inflationRate)
       return Math.max(target, desiredAnnualAtYear)
     }
 
@@ -88,8 +163,7 @@ function clampToInflatedBounds(
   yearsSinceToday: number,
   inflationRate: number
 ): number {
-  const inflationFactor = Math.pow(1 + inflationRate, yearsSinceToday)
-  const minAtYear = config.minimumWithdrawal * inflationFactor * 12
-  const maxAtYear = config.maximumWithdrawal * inflationFactor * 12
+  const minAtYear = escalate(config.minimumWithdrawal * 12, yearsSinceToday, inflationRate)
+  const maxAtYear = escalate(config.maximumWithdrawal * 12, yearsSinceToday, inflationRate)
   return Math.min(Math.max(amount, minAtYear), maxAtYear)
 }

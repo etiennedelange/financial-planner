@@ -115,7 +115,16 @@ Design rules:
 
 ## Common Pitfalls
 
-- ❌ Don't duplicate `projectFinalSavings` — import from shared utility
+- ❌ **Never copy calculation logic — export it.** Any engine internal needed by a second
+  caller must be exported from `lib/calculations/utils/`, never duplicated. This has now
+  bitten twice: `projectFinalSavings` (3 copies, Phase 1.5) and `calculateInitialWithdrawal`
+  (3 copies, Phase 10 — the deterministic engine and Monte Carlo silently modelled
+  different plans). If a private function is tempting to copy, that is the signal to export it.
+- ❌ Don't let debug/UI components own calculation logic — they must call the same shared
+  function the engine calls, so they cannot drift out of step with it
+- ❌ Don't express a genuine behavioural difference between callers as an *omitted optional
+  parameter* — make it a required, named argument (see `WithdrawalBaseline`), so the
+  difference is visible at every call site
 - ❌ Don't hardcode `monthlyReturn = annualReturn / 12` — use compounding method
 - ❌ Don't omit `assumptions` from useMemo deps
 - ❌ Don't use local formatCurrency — import from `lib/utils/currency`

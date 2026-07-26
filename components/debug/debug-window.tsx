@@ -25,6 +25,13 @@ import {
   calculateReplacementRatio,
 } from "@/lib/calculations/retirement-tax";
 import { SA_TAX_LIMITS } from "@/lib/constants/limits";
+import { calculateInitialWithdrawal } from "@/lib/calculations/utils/drawdown-withdrawal";
+import {
+  escalate,
+  escalateToRetirement,
+  retirementRands,
+  todayRands,
+} from "@/lib/calculations/utils/money-time";
 import {
   COMPOUNDING_METHOD_LABELS,
   COMPOUNDING_METHOD_DESCRIPTIONS,
@@ -151,55 +158,35 @@ export function DebugWindow({
       : "BALANCE weights";
 
   // 2. Initial withdrawal calculation (at retirement)
-  // Calculate initial withdrawal based on strategy
-  const calculateInitialWithdrawal = (
-    portfolioValue: number,
-    desiredMonthlyIncomeToday: number,
-    yearsToRetirement: number,
-    inflationRate: number,
-  ): number => {
-    const desiredMonthlyAtRetirement =
-      desiredMonthlyIncomeToday *
-      Math.pow(1 + inflationRate, yearsToRetirement);
-
-    switch (drawdownConfig.strategy) {
-      case "fixed_percentage":
-        return portfolioValue * (drawdownConfig.initialWithdrawalRate / 100);
-      case "fixed_amount_inflation_adjusted":
-        return desiredMonthlyAtRetirement * 12;
-      case "variable_percentage":
-      case "guardrails":
-        const minAtRetirement =
-          drawdownConfig.minimumWithdrawal *
-          Math.pow(1 + inflationRate, yearsToRetirement);
-        const maxAtRetirement =
-          drawdownConfig.maximumWithdrawal *
-          Math.pow(1 + inflationRate, yearsToRetirement);
-        return Math.min(
-          Math.max(desiredMonthlyAtRetirement * 12, minAtRetirement * 12),
-          maxAtRetirement * 12,
-        );
-      default:
-        return portfolioValue * SA_DEFAULTS.safeWithdrawalRate;
-    }
-  };
-
   // Use projection result if available, otherwise estimate
   const portfolioAtRetirementEstimate =
     projection?.portfolioAtRetirement ||
     totalBalance * Math.pow(1 + netReturn, yearsToRetirement);
-  const initialWithdrawalAnnual = calculateInitialWithdrawal(
-    portfolioAtRetirementEstimate,
+  // Prefer the engine's own figure: it is derived from the post-commutation
+  // `remainingPortfolio`, so it does not promise income out of capital the
+  // retiree already withdrew (and paid lump-sum tax on) as a lump sum.
+  //
+  // The fallback calls the SAME shared function the engine uses — this window used to
+  // carry a verbatim copy of the strategy switch, which is exactly how it drifted out
+  // of step with the engine. Debug tooling must never own calculation logic.
+  const initialWithdrawalAnnual = projection
+    ? projection.monthlyIncomeAtRetirement * 12
+    : calculateInitialWithdrawal(
+        portfolioAtRetirementEstimate,
+        retirementGoals.desiredMonthlyIncome,
+        drawdownConfig,
+        yearsToRetirement,
+        inflationRate,
+        "strategy",
+      );
+  const initialWithdrawalMonthly = initialWithdrawalAnnual / 12;
+
+  // Desired monthly income inflated to retirement
+  const desiredMonthlyAtRetirement = escalate(
     retirementGoals.desiredMonthlyIncome,
     yearsToRetirement,
     inflationRate,
   );
-  const initialWithdrawalMonthly = initialWithdrawalAnnual / 12;
-
-  // Desired monthly income inflated to retirement
-  const desiredMonthlyAtRetirement =
-    retirementGoals.desiredMonthlyIncome *
-    Math.pow(1 + inflationRate, yearsToRetirement);
 
   // 3. Tax calculations at retirement (first year)
   const retirementAge = personalInfo.retirementAge;
@@ -209,11 +196,21 @@ export function DebugWindow({
     preRetirementIncome: personalInfo.annualIncome,
   });
 
-  // Replacement ratio: gross retirement income / (pre-retirement income after estimated tax)
-  // Use initialWithdrawalAnnual (displayed value) not after-tax for consistency with display
+  // Replacement ratio: gross retirement income / gross pre-retirement income.
+  // Both sides must be in the same money. `initialWithdrawalAnnual` is nominal at
+  // the retirement date, so the present-day salary is escalated to that date
+  // before dividing — otherwise the ratio is overstated by (1+i)^yearsToRetirement
+  // (a 5x error over 30 years at 5.5%). The engine applies the same escalation to
+  // this field for the s11F deduction (projection-engine.ts).
+  // Both arguments are tagged with their money basis, so the compiler rejects the
+  // mismatch rather than letting it reach the screen as a wrong percentage.
   const replacementRatio = calculateReplacementRatio(
-    initialWithdrawalAnnual,
-    personalInfo.annualIncome,
+    retirementRands(initialWithdrawalAnnual),
+    escalateToRetirement(
+      todayRands(personalInfo.annualIncome),
+      yearsToRetirement,
+      inflationRate,
+    ),
   );
 
   // Tax threshold for retirement age

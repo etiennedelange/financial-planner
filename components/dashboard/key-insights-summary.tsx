@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { PageCard } from "@/components/ui/page-card"
 import { formatCurrency } from "@/lib/utils/currency"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
+import { escalate, percentToRate } from "@/lib/calculations/utils/money-time"
 import type { ProjectionResult } from "@/types"
 import { AlertCircle, Target, TrendingUp } from "lucide-react"
 import Link from "next/link"
@@ -40,8 +41,11 @@ export function KeyInsightsSummary({
     const maxRaContribution = Math.min(annualIncome * SA_TAX_LIMITS.pensionRaDeductionRate, SA_TAX_LIMITS.pensionRaMaxDeduction)
     const monthlyRaContribution = maxRaContribution / 12
 
-    const inflationMultiplier = Math.pow(1 + inflationRate / 100, yearsToRetirement)
-    const desiredIncomeAtRetirement = desiredMonthlyIncome * inflationMultiplier
+    const desiredIncomeAtRetirement = escalate(
+      desiredMonthlyIncome,
+      yearsToRetirement,
+      percentToRate(inflationRate)
+    )
 
     const hasSuccessRate = monteCarloSuccessRate !== null && monteCarloSuccessRate !== undefined
     const portfolioLastsUntilLifeExpectancy =

@@ -1,6 +1,7 @@
 import type { Account, PersonalInfo, RetirementGoals, DrawdownConfig, CompoundingMethod, MarketAssumptions } from "@/types"
 import { runMonteCarloSimulation } from "@/lib/monte-carlo/simulation-engine"
 import { projectFinalSavings } from "./utils/projection"
+import { escalate } from "./utils/money-time"
 import { getSpendingPhaseMultiplier } from "./utils/spending-phase"
 
 // SA-specific investment scenarios (nominal returns)
@@ -199,8 +200,7 @@ export function compareScenarios(
 
     // Calculate annual withdrawal at retirement
     const desiredMonthlyAtRetirement =
-      retirementGoals.desiredMonthlyIncome *
-      Math.pow(1 + inflationRate, yearsToRetirement)
+      escalate(retirementGoals.desiredMonthlyIncome, yearsToRetirement, inflationRate)
     const annualWithdrawal = desiredMonthlyAtRetirement * 12
 
     // How many years the savings will last (using nominal return, withdrawals inflate)

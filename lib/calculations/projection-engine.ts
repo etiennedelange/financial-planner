@@ -4,7 +4,8 @@ import { TFSA_LIMITS_CONFIG } from "@/lib/constants/tax-year.config"
 import { calculateIncomeTaxWithRebates, calculateLumpSumCommutation, calculateExcessContributionCredit } from "./retirement-tax"
 import { getSpendingPhaseMultiplier } from "./utils/spending-phase"
 import { calculateMonthlyReturn } from "./utils/projection"
-import { calculateNextWithdrawal } from "./utils/drawdown-withdrawal"
+import { deflate, escalate } from "./utils/money-time"
+import { calculateInitialWithdrawal, calculateNextWithdrawal } from "./utils/drawdown-withdrawal"
 import type {
   Account,
   AccountType,
@@ -88,44 +89,6 @@ function calculateAverageEscalation(accounts: Account[]): number {
     accounts.reduce((sum, acc) => sum + acc.contributionEscalation / 100, 0) /
     accounts.length
   )
-}
-
-/**
- * Calculate initial annual withdrawal based on strategy
- * @param portfolioValue - Portfolio value at retirement
- * @param desiredMonthlyIncomeToday - Desired monthly income in today's Rands
- * @param config - Drawdown configuration
- * @param yearsToRetirement - Years until retirement (for inflation adjustment)
- * @param inflationRate - Annual inflation rate (decimal)
- */
-function calculateInitialWithdrawal(
-  portfolioValue: number,
-  desiredMonthlyIncomeToday: number,
-  config: DrawdownConfig,
-  yearsToRetirement: number,
-  inflationRate: number
-): number {
-  // Inflate desired income to retirement date (nominal value at retirement)
-  const desiredMonthlyAtRetirement =
-    desiredMonthlyIncomeToday * Math.pow(1 + inflationRate, yearsToRetirement)
-
-  switch (config.strategy) {
-    case "fixed_percentage":
-      return portfolioValue * (config.initialWithdrawalRate / 100)
-    case "fixed_amount_inflation_adjusted":
-      return desiredMonthlyAtRetirement * 12
-    case "variable_percentage":
-    case "guardrails":
-      // Also inflate min/max to retirement values
-      const minAtRetirement = config.minimumWithdrawal * Math.pow(1 + inflationRate, yearsToRetirement)
-      const maxAtRetirement = config.maximumWithdrawal * Math.pow(1 + inflationRate, yearsToRetirement)
-      return Math.min(
-        Math.max(desiredMonthlyAtRetirement * 12, minAtRetirement * 12),
-        maxAtRetirement * 12
-      )
-    default:
-      return portfolioValue * SA_DEFAULTS.safeWithdrawalRate
-  }
 }
 
 /**
@@ -288,7 +251,7 @@ export function calculateProjection(
 
     // Accumulate Section 11F excess credit. Income is escalated with inflation so the
     // deduction limit grows in nominal terms alongside escalating contributions.
-    const effectiveIncome = personalInfo.annualIncome * Math.pow(1 + inflationRate, year)
+    const effectiveIncome = escalate(personalInfo.annualIncome, year, inflationRate)
     accumulatedExcessCredit += calculateExcessContributionCredit(yearlyPensionContributions, effectiveIncome)
 
     // Calculate TFSA excess contribution penalty (40% tax on contributions over R46k/year)
@@ -364,7 +327,8 @@ export function calculateProjection(
     retirementGoals.desiredMonthlyIncome,
     drawdownConfig,
     yearsToRetirement,
-    inflationRate
+    inflationRate,
+    "strategy"
   )
 
   // Drawdown phase — tax-optimized sequential withdrawal: TFSA → Discretionary → Pension/RA
@@ -438,7 +402,11 @@ export function calculateProjection(
 
     // Target withdrawal with spending phase multiplier
     const spendingMultiplier = getSpendingPhaseMultiplier(year)
-    const targetWithdrawal = Math.min(annualWithdrawal * spendingMultiplier, currentTotal)
+    const desiredWithdrawalThisYear = annualWithdrawal * spendingMultiplier
+    const targetWithdrawal = Math.min(desiredWithdrawalThisYear, currentTotal)
+    // The portfolio could not fund the full withdrawal this year — the retiree ran
+    // short DURING this year rather than simply starting the next one with nothing.
+    const withdrawalWasClamped = targetWithdrawal < desiredWithdrawalThisYear
     let remaining = targetWithdrawal
 
     // 1. TFSA — fully tax-free
@@ -503,6 +471,19 @@ export function calculateProjection(
 
     currentTotal = drawdownAccounts.reduce((s, a) => s + a.balance, 0)
 
+    // Depletion is normally detected at the START of a year (see the guard at the
+    // top of this loop), but that never fires for a portfolio which empties during
+    // the FINAL year — there is no subsequent iteration to observe it. Catch it
+    // here so the engine can't report a zero ending balance and a null depletion
+    // age at the same time.
+    //
+    // Only a clamped withdrawal counts. A retiree who drew their full income every
+    // year and happens to land on exactly R0 at life expectancy has not run out
+    // early — that is a perfectly funded plan, not a depletion.
+    if (currentTotal <= 0 && withdrawalWasClamped && !portfolioDepletionAge) {
+      portfolioDepletionAge = age
+    }
+
     totalGrossWithdrawals += totalWithdrawal
     totalLifetimeIncomeTax += incomeTax
     totalMedicalAidContributions += medicalAidContribution
@@ -520,7 +501,7 @@ export function calculateProjection(
       medicalAidContribution,
       netIncome,
       endingBalance: Math.max(0, currentTotal),
-      inflationAdjustedWithdrawal: totalWithdrawal / Math.pow(1 + inflationRate, yearsToRetirement + year),
+      inflationAdjustedWithdrawal: deflate(totalWithdrawal, yearsToRetirement + year, inflationRate),
       tfsaWithdrawal,
       discretionaryWithdrawal,
       pensionWithdrawal,
@@ -542,7 +523,8 @@ export function calculateProjection(
       retirementGoals.desiredMonthlyIncome,
       drawdownConfig,
       yearsToRetirement,
-      inflationRate
+      inflationRate,
+      "strategy"
     ) / 12
 
   // Net income after tax — sourced from the first drawdown year's projection so it
@@ -570,12 +552,12 @@ export function calculateProjection(
   // against actual withdrawals captures both depletion and guardrail/variable
   // cuts below the desired income.
   const desiredMonthlyAtRetirement =
-    retirementGoals.desiredMonthlyIncome * Math.pow(1 + inflationRate, yearsToRetirement)
+    escalate(retirementGoals.desiredMonthlyIncome, yearsToRetirement, inflationRate)
   const shortfallAmount = yearlyProjections
     .slice(yearsToRetirement)
     .reduce((sum, yp, drawdownYear) => {
       const desiredAnnualThisYear =
-        desiredMonthlyAtRetirement * 12 * Math.pow(1 + inflationRate, drawdownYear)
+        escalate(desiredMonthlyAtRetirement * 12, drawdownYear, inflationRate)
       return sum + Math.max(0, desiredAnnualThisYear - yp.withdrawals)
     }, 0)
 
