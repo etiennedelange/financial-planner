@@ -410,20 +410,59 @@ twice, differently, at `projection-engine.ts:441` and `:595`.
 
 ---
 
-## Step 5: Stop clamping errors away ⬜ READY (Phase 1.5 P0 resolved 2026-07-26)
+## Step 5: Stop clamping errors away ✅ DONE
 
-`Math.max(0, currentTotal)` at `projection-engine.ts:522` and `Math.max(0, finalBalance)`
-silently swallow negative balances. A negative balance is a bug; clamping means it is never
-surfaced. This is also *why* invariants INV-005 / INV-008 are unfalsifiable — the clamp
-guarantees they pass.
+**Golden diff byte-identical** across all 96 deterministic + 24 Monte Carlo scenarios.
 
-- [ ] Dev-mode assertion when a balance goes negative
-- [ ] Clamping retained only at the display layer
-- [ ] INV-005 / INV-008 rewritten against the pre-clamp value (or deleted per Phase 1.5 P0)
+### What the problem actually was
 
----
+`Math.max(0, …)` on `endingBalance` and per-account balances protects rendering, but on its
+own it also *hides* a defect: if the engine's arithmetic ever produced a negative balance,
+the clamp would quietly turn it into 0. Two of the old invariant tests were unfalsifiable
+for precisely this reason — they asserted `endingBalance >= 0`, which the clamp guarantees
+regardless of whether the logic is correct.
 
----
+### Evidence first
+
+Before changing anything, the engine was instrumented to record any *pre-clamp* negative
+across **360 scenario combinations** (5 opening balances x 3 contribution levels x
+4 strategies x 2 lump-sum settings x 3 income targets). Result: **zero occurrences**. The
+clamps are pure insurance today, which is what made this change safe and output-preserving.
+
+### Deviation from the original plan — deliberate
+
+The plan for this step said "clamping retained only at the display layer", i.e. let the
+engine emit negative values and clamp downstream. **That was not done, on purpose.**
+
+Making `YearlyProjection.endingBalance` negative-capable changes the data contract for
+every consumer — charts, tables, CSV export, the debug window — and would need each to
+handle a state that cannot legitimately occur. It buys no additional detection: once a
+guard raises *before* the clamp, the clamp is no longer hiding anything.
+
+So: **the clamp stays, and a guard runs first.**
+
+### Implementation
+
+`lib/calculations/utils/invariant-guards.ts` — `assertNonNegativeBalance(value, context)`
+throws with the offending value and its location (`"account acc-1 at age 82"`). Wired into
+both clamp sites in the drawdown loop.
+
+Two deliberate non-throws, each with a reason:
+- **`NaN`** passes through. NaN is a distinct defect with its own guards (`money-time.ts`,
+  `calculateReplacementRatio`); reporting it as a negative balance would send whoever is
+  debugging down the wrong path.
+- **`-0`** passes through. It arises from ordinary float arithmetic and means zero.
+  (`value < 0` is false for both, which is why the check is written that way.)
+
+### Verified by mutation testing
+
+| Mutation | Detected by | Notes |
+|---|---|---|
+| Remove per-account `Math.min(remaining, acc.balance)` cap | **guard fired** | account over-drawn -> negative balance |
+| Remove `Math.min(desired, currentTotal)` withdrawal cap | **golden harness** | guard correctly silent — this changes withdrawal *amounts* without producing a negative balance |
+
+The second row is the important one: the guard staying quiet there is correct scoping, not
+a gap. Both defects are caught, each by the appropriate mechanism.
 
 ## Explicitly out of scope
 

@@ -5,6 +5,7 @@ import { calculateIncomeTaxWithRebates, calculateLumpSumCommutation, calculateEx
 import { getSpendingPhaseMultiplier } from "./utils/spending-phase"
 import { calculateMonthlyReturn } from "./utils/projection"
 import { deflate, escalate } from "./utils/money-time"
+import { assertNonNegativeBalance } from "./utils/invariant-guards"
 import { calculateInitialWithdrawal, calculateNextWithdrawal } from "./utils/drawdown-withdrawal"
 import type {
   Account,
@@ -425,14 +426,20 @@ export function runDrawdownPhase(
       lumpSumTax: 0,
       medicalAidContribution,
       netIncome,
-      endingBalance: Math.max(0, currentTotal),
+      // Clamp protects rendering; the guard ensures it cannot also hide a defect.
+      endingBalance: Math.max(0, assertNonNegativeBalance(currentTotal, `drawdown year at age ${age}`)),
       inflationAdjustedWithdrawal: deflate(totalWithdrawal, yearsToRetirement + year, inflationRate),
       tfsaWithdrawal,
       discretionaryWithdrawal,
       pensionWithdrawal,
       cgtTaxableAmount,
       taxableIncome,
-      accountBalances: Object.fromEntries(drawdownAccounts.map(a => [a.id, Math.max(0, a.balance)])),
+      accountBalances: Object.fromEntries(
+        drawdownAccounts.map(a => [
+          a.id,
+          Math.max(0, assertNonNegativeBalance(a.balance, `account ${a.id} at age ${age}`)),
+        ])
+      ),
       excessCreditApplied: creditAppliedThisYear,
       excessCreditRemaining: creditRemaining,
       tfsaExcessContributionPenalty: 0,
