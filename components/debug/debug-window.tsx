@@ -408,7 +408,7 @@ Default Equity Return: ${SA_DEFAULTS.equityReturn * 100}%
 Default Bond Return: ${SA_DEFAULTS.bondReturn * 100}%
 Default Cash Return: ${SA_DEFAULTS.cashReturn * 100}%
 Default Equity Volatility: ${SA_DEFAULTS.equityVolatility * 100}%
-Safe Withdrawal Rate: ${SA_DEFAULTS.safeWithdrawalRate * 100}%
+Safe Withdrawal Rate: ${(SA_DEFAULTS.safeWithdrawalRate * 100).toFixed(1)}%
 Base Medical Cost (Monthly): ${formatCurrency(SA_DEFAULTS.baseMedicalCostMonthly)}
 
 ${
@@ -1138,7 +1138,7 @@ Single Source of Truth:
                 />
                 <Param
                   label="Safe Withdrawal Rate"
-                  value={`${SA_DEFAULTS.safeWithdrawalRate * 100}%`}
+                  value={`${(SA_DEFAULTS.safeWithdrawalRate * 100).toFixed(1)}%`}
                 />
                 <Param
                   label="Base Medical Cost (Monthly)"

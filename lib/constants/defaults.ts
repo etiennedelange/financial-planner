@@ -30,15 +30,30 @@ export const SA_DEFAULTS = {
   defaultContributionEscalation: 6, // 6%
 } as const
 
+/**
+ * Multiply a decimal rate by 100 for display, without the floating-point tail.
+ *
+ * `0.035 * 100` is `3.5000000000000004` in IEEE-754. These values are not display-only:
+ * `calculator-store.ts` seeds `drawdownConfig.initialWithdrawalRate` from
+ * `safeWithdrawalRate`, so the artefact was reaching application state and any serialised
+ * plan or share link built from it — as well as rendering verbatim in the debug window.
+ *
+ * Rounded to 4 decimal places, which is far finer than any rate this app expresses while
+ * still removing the tail.
+ */
+function toPercent(decimalRate: number): number {
+  return Math.round(decimalRate * 100 * 10000) / 10000
+}
+
 // Display-friendly percentages (multiply decimals by 100)
 export const SA_DEFAULTS_DISPLAY = {
-  inflation: SA_DEFAULTS.inflation * 100,
-  medicalInflation: SA_DEFAULTS.medicalInflation * 100,
-  equityReturn: SA_DEFAULTS.equityReturn * 100,
-  bondReturn: SA_DEFAULTS.bondReturn * 100,
-  cashReturn: SA_DEFAULTS.cashReturn * 100,
-  equityVolatility: SA_DEFAULTS.equityVolatility * 100,
-  bondVolatility: SA_DEFAULTS.bondVolatility * 100,
-  safeWithdrawalRate: SA_DEFAULTS.safeWithdrawalRate * 100,
-  contributionEscalation: SA_DEFAULTS.contributionEscalation * 100,
+  inflation: toPercent(SA_DEFAULTS.inflation),
+  medicalInflation: toPercent(SA_DEFAULTS.medicalInflation),
+  equityReturn: toPercent(SA_DEFAULTS.equityReturn),
+  bondReturn: toPercent(SA_DEFAULTS.bondReturn),
+  cashReturn: toPercent(SA_DEFAULTS.cashReturn),
+  equityVolatility: toPercent(SA_DEFAULTS.equityVolatility),
+  bondVolatility: toPercent(SA_DEFAULTS.bondVolatility),
+  safeWithdrawalRate: toPercent(SA_DEFAULTS.safeWithdrawalRate),
+  contributionEscalation: toPercent(SA_DEFAULTS.contributionEscalation),
 } as const
