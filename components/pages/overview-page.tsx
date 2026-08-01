@@ -3,6 +3,7 @@
 import { DashboardMetricsGrid } from "@/components/dashboard/dashboard-metrics-grid"
 import { GettingStarted } from "@/components/dashboard/getting-started"
 import { KeyInsightsSummary } from "@/components/dashboard/key-insights-summary"
+import { PlanNarrativeCard } from "@/components/dashboard/plan-narrative-card"
 import { MonteCarloChart } from "@/components/charts/monte-carlo-chart"
 import { PortfolioGrowthChart } from "@/components/charts/portfolio-growth-chart"
 import type { ProjectionResult, SimulationResult } from "@/types"
@@ -75,6 +76,8 @@ export function OverviewPage({
       ) : (
         <GettingStarted />
       )}
+
+      <PlanNarrativeCard />
     </div>
   )
 }
