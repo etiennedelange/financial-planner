@@ -7,11 +7,12 @@ export default defineConfig({
     environment: 'happy-dom',
     setupFiles: [],
     exclude: [
-      'node_modules',
+      '**/node_modules/**',
       'dist',
       '.idea',
       '.git',
       '.cache',
+      '.worktrees/**',
       'e2e/**',
       '**/*.spec.ts',
     ],
