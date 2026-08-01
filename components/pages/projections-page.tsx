@@ -3,6 +3,7 @@
 import { InsightsPanel } from "@/components/results/insights-panel"
 import { CalculationsBreakdown } from "@/components/results/calculations-breakdown"
 import { ProjectionSummary } from "@/components/results/projection-summary"
+import { WhatIfPanel } from "@/components/results/what-if-panel"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import type { ProjectionResult, SimulationResult } from "@/types"
 
@@ -31,6 +32,8 @@ export function ProjectionsPage({ projection, simulationResult, isSimulating }: 
         simulationResult={simulationResult}
         isSimulating={isSimulating}
       />
+
+      <WhatIfPanel />
 
       <InsightsPanel />
       <CalculationsBreakdown projection={projection} />
