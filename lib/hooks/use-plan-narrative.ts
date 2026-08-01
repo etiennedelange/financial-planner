@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react"
 import type { Account, PersonalInfo, RetirementGoals, DrawdownConfig, ProjectionResult, SimulationResult } from "@/types"
 import { buildPlanNarrativePayload } from "@/lib/ai/plan-narrative-prompt"
+import { usePlanNarrativeStore } from "@/lib/store/plan-narrative-store"
 
 interface UsePlanNarrativeInput {
   accounts: Account[]
@@ -16,12 +17,14 @@ interface UsePlanNarrativeInput {
 const COOLDOWN_SECONDS = 8
 
 export function usePlanNarrative(input: UsePlanNarrativeInput) {
-  const [text, setText] = useState("")
+  // text/cache live in a module-scoped store (not component state) so they
+  // survive navigating away from and back to the page that renders the card —
+  // only clear()/a fresh generation replaces them, never an unmount.
+  const { text, cache, setText, setCache, clear } = usePlanNarrativeStore()
   const [isStreaming, setIsStreaming] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [cooldownRemaining, setCooldownRemaining] = useState(0)
 
-  const cacheRef = useRef<{ payloadJson: string; text: string } | null>(null)
   const cooldownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const startCooldown = useCallback(() => {
@@ -44,8 +47,8 @@ export function usePlanNarrative(input: UsePlanNarrativeInput) {
 
     const payloadJson = JSON.stringify(payload)
 
-    if (cacheRef.current && cacheRef.current.payloadJson === payloadJson) {
-      setText(cacheRef.current.text)
+    if (cache && cache.payloadJson === payloadJson) {
+      setText(cache.text)
       setError(null)
       return
     }
@@ -76,14 +79,14 @@ export function usePlanNarrative(input: UsePlanNarrativeInput) {
         setText(fullText)
       }
 
-      cacheRef.current = { payloadJson, text: fullText }
+      setCache({ payloadJson, text: fullText })
       startCooldown()
     } catch {
       setError("Couldn't generate a summary right now. Please try again.")
     } finally {
       setIsStreaming(false)
     }
-  }, [input, startCooldown])
+  }, [input, cache, setText, setCache, startCooldown])
 
-  return { text, isStreaming, error, cooldownRemaining, generate }
+  return { text, isStreaming, error, cooldownRemaining, generate, clear }
 }

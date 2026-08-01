@@ -19,7 +19,7 @@ export function PlanNarrativeCard() {
   )
   const { projection, simulationResult } = useCalculator()
 
-  const { text, isStreaming, error, cooldownRemaining, generate } = usePlanNarrative({
+  const { text, isStreaming, error, cooldownRemaining, generate, clear } = usePlanNarrative({
     accounts,
     personalInfo,
     retirementGoals,
@@ -48,14 +48,22 @@ export function PlanNarrativeCard() {
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <Button
-        variant={text ? "outline" : "default"}
-        size="sm"
-        onClick={generate}
-        disabled={isStreaming || cooldownRemaining > 0}
-      >
-        {buttonLabel}
-      </Button>
+      <div className="flex gap-2">
+        <Button
+          variant={text ? "outline" : "default"}
+          size="sm"
+          onClick={generate}
+          disabled={isStreaming || cooldownRemaining > 0}
+        >
+          {buttonLabel}
+        </Button>
+
+        {text && (
+          <Button variant="ghost" size="sm" onClick={clear} disabled={isStreaming}>
+            Clear
+          </Button>
+        )}
+      </div>
 
       <p className="text-xs text-muted-foreground">
         Generating uses AI and sends your plan&apos;s numbers to our AI provider. This is an automated
