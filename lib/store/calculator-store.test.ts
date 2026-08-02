@@ -29,6 +29,7 @@ const mockScenarioMeta = {
   id: "scenario-1",
   name: "My Plan",
   updatedAt: new Date().toISOString(),
+  claimComplete: true,
 }
 
 const mockScenarioData = {
@@ -331,7 +332,7 @@ describe("useCalculatorStore", () => {
     })
 
     it("should delete scenario and switch to next", async () => {
-      const scenario2 = { id: "scenario-2", name: "Second Plan", updatedAt: new Date().toISOString() }
+      const scenario2 = { id: "scenario-2", name: "Second Plan", updatedAt: new Date().toISOString(), claimComplete: true }
       useCalculatorStore.setState({
         scenarioList: [mockScenarioMeta, scenario2],
         activeScenarioId: "scenario-1",
@@ -395,7 +396,7 @@ describe("useCalculatorStore", () => {
     })
 
     it("should restore previously active scenario if available", async () => {
-      const scenario2 = { id: "scenario-2", name: "Second", updatedAt: new Date().toISOString() }
+      const scenario2 = { id: "scenario-2", name: "Second", updatedAt: new Date().toISOString(), claimComplete: true }
       useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
 
       vi.spyOn(scenariosApi, "listScenarios").mockResolvedValue([scenario2, mockScenarioMeta])

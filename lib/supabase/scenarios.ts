@@ -14,17 +14,23 @@ export interface ScenarioMeta {
   id: string
   name: string
   updatedAt: string
+  claimComplete: boolean
 }
 
 export async function listScenarios(userId: string): Promise<ScenarioMeta[]> {
   const supabase = createClient()
   const { data, error } = await supabase
     .from("scenarios")
-    .select("id, name, updated_at")
+    .select("id, name, updated_at, claim_complete")
     .eq("session_id", userId)
     .order("updated_at", { ascending: false })
   if (error) throw error
-  return (data ?? []).map((r) => ({ id: r.id, name: r.name, updatedAt: r.updated_at }))
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    updatedAt: r.updated_at,
+    claimComplete: r.claim_complete,
+  }))
 }
 
 export async function fetchScenario(scenarioId: string): Promise<ScenarioData | null> {
@@ -50,7 +56,8 @@ export async function fetchScenario(scenarioId: string): Promise<ScenarioData | 
 export async function createScenario(
   userId: string,
   name: string,
-  data: ScenarioData
+  data: ScenarioData,
+  claimComplete: boolean = true
 ): Promise<string> {
   const supabase = createClient()
   const { data: row, error } = await supabase
@@ -63,6 +70,7 @@ export async function createScenario(
       assumptions: data.assumptions as unknown as Json,
       drawdown_config: data.drawdownConfig as unknown as Json,
       display_mode: data.displayMode,
+      claim_complete: claimComplete,
     })
     .select("id")
     .single()
@@ -81,6 +89,15 @@ export async function updateScenario(scenarioId: string, data: ScenarioData): Pr
       drawdown_config: data.drawdownConfig as unknown as Json,
       display_mode: data.displayMode,
     })
+    .eq("id", scenarioId)
+  if (error) throw error
+}
+
+export async function markScenarioClaimComplete(scenarioId: string): Promise<void> {
+  const supabase = createClient()
+  const { error } = await supabase
+    .from("scenarios")
+    .update({ claim_complete: true })
     .eq("id", scenarioId)
   if (error) throw error
 }

@@ -259,7 +259,7 @@ export const useCalculatorStore = create<CalculatorState>()(
         })
         // Clone current accounts into the new scenario so it starts as an independent copy
         const cloned = await cloneAccounts(accounts, scenarioId)
-        const meta: ScenarioMeta = { id: scenarioId, name, updatedAt: new Date().toISOString() }
+        const meta: ScenarioMeta = { id: scenarioId, name, updatedAt: new Date().toISOString(), claimComplete: true }
         set((state) => ({
           activeScenarioId: scenarioId,
           scenarioList: [meta, ...state.scenarioList],

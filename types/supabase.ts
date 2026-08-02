@@ -191,6 +191,7 @@ export type Database = {
       scenarios: {
         Row: {
           assumptions: Json
+          claim_complete: boolean
           created_at: string
           display_mode: string
           drawdown_config: Json
@@ -203,6 +204,7 @@ export type Database = {
         }
         Insert: {
           assumptions?: Json
+          claim_complete?: boolean
           created_at?: string
           display_mode?: string
           drawdown_config?: Json
@@ -215,6 +217,7 @@ export type Database = {
         }
         Update: {
           assumptions?: Json
+          claim_complete?: boolean
           created_at?: string
           display_mode?: string
           drawdown_config?: Json

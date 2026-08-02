@@ -3,12 +3,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 vi.mock('./scenarios', () => ({
   listScenarios: vi.fn(),
   createScenario: vi.fn(),
+  markScenarioClaimComplete: vi.fn(),
 }))
-vi.mock('./accounts', () => ({ cloneAccounts: vi.fn() }))
+vi.mock('./accounts', () => ({ cloneAccounts: vi.fn(), fetchAccounts: vi.fn() }))
 vi.mock('./expenses', () => ({ migrateExpensesToSession: vi.fn() }))
 
-import { listScenarios, createScenario } from './scenarios'
-import { cloneAccounts } from './accounts'
+import { listScenarios, createScenario, markScenarioClaimComplete } from './scenarios'
+import { cloneAccounts, fetchAccounts } from './accounts'
 import { migrateExpensesToSession } from './expenses'
 import { claimLocalData } from './claim'
 
@@ -36,7 +37,7 @@ beforeEach(() => vi.clearAllMocks())
 
 describe('claimLocalData', () => {
   describe('server has no data', () => {
-    it('migrates local state up and reports the new scenario', async () => {
+    it('migrates local state up, marks the claim complete, and reports the new scenario', async () => {
       vi.mocked(listScenarios).mockResolvedValue([])
       vi.mocked(createScenario).mockResolvedValue('scenario-new')
       vi.mocked(cloneAccounts).mockResolvedValue(localState.accounts as never)
@@ -44,20 +45,24 @@ describe('claimLocalData', () => {
       const result = await claimLocalData('user-1', localState as never)
 
       expect(result).toEqual({ claimed: true, scenarioId: 'scenario-new' })
-      expect(createScenario).toHaveBeenCalledWith('user-1', 'My Plan', expect.objectContaining({
-        personalInfo: localState.personalInfo,
-      }))
+      expect(createScenario).toHaveBeenCalledWith(
+        'user-1',
+        'My Plan',
+        expect.objectContaining({ personalInfo: localState.personalInfo }),
+        false,
+      )
       expect(cloneAccounts).toHaveBeenCalledWith(localState.accounts, 'scenario-new')
       expect(migrateExpensesToSession).toHaveBeenCalledWith(
         'user-1', localState.expenseGroups, localState.expenses,
       )
+      expect(markScenarioClaimComplete).toHaveBeenCalledWith('scenario-new')
     })
   })
 
   describe('server already has data', () => {
     it('does not write anything and reports server-has-data', async () => {
       vi.mocked(listScenarios).mockResolvedValue([
-        { id: 'existing', name: 'My Plan', updatedAt: '2026-01-01T00:00:00Z' },
+        { id: 'existing', name: 'My Plan', updatedAt: '2026-01-01T00:00:00Z', claimComplete: true },
       ])
 
       const result = await claimLocalData('user-1', localState as never)
@@ -66,13 +71,51 @@ describe('claimLocalData', () => {
       expect(createScenario).not.toHaveBeenCalled()
       expect(cloneAccounts).not.toHaveBeenCalled()
       expect(migrateExpensesToSession).not.toHaveBeenCalled()
+      expect(markScenarioClaimComplete).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('resuming an interrupted claim', () => {
+    it('resumes an incomplete claim and clones accounts when the scenario has none yet', async () => {
+      vi.mocked(listScenarios).mockResolvedValue([
+        { id: 'incomplete-scenario', name: 'My Plan', updatedAt: '2026-01-01T00:00:00Z', claimComplete: false },
+      ])
+      vi.mocked(fetchAccounts).mockResolvedValue([])
+      vi.mocked(cloneAccounts).mockResolvedValue(localState.accounts as never)
+
+      const result = await claimLocalData('user-1', localState as never)
+
+      expect(result).toEqual({ claimed: true, scenarioId: 'incomplete-scenario' })
+      expect(createScenario).not.toHaveBeenCalled()
+      expect(fetchAccounts).toHaveBeenCalledWith('incomplete-scenario')
+      expect(cloneAccounts).toHaveBeenCalledWith(localState.accounts, 'incomplete-scenario')
+      expect(migrateExpensesToSession).toHaveBeenCalledWith(
+        'user-1', localState.expenseGroups, localState.expenses,
+      )
+      expect(markScenarioClaimComplete).toHaveBeenCalledWith('incomplete-scenario')
+    })
+
+    it('resumes an incomplete claim without re-cloning accounts that already exist', async () => {
+      vi.mocked(listScenarios).mockResolvedValue([
+        { id: 'incomplete-scenario', name: 'My Plan', updatedAt: '2026-01-01T00:00:00Z', claimComplete: false },
+      ])
+      vi.mocked(fetchAccounts).mockResolvedValue(localState.accounts as never)
+
+      const result = await claimLocalData('user-1', localState as never)
+
+      expect(result).toEqual({ claimed: true, scenarioId: 'incomplete-scenario' })
+      expect(cloneAccounts).not.toHaveBeenCalled()
+      expect(migrateExpensesToSession).toHaveBeenCalledWith(
+        'user-1', localState.expenseGroups, localState.expenses,
+      )
+      expect(markScenarioClaimComplete).toHaveBeenCalledWith('incomplete-scenario')
     })
   })
 
   describe('idempotence and failure', () => {
     it('is a no-op on the second call once the server has the claimed data', async () => {
       vi.mocked(listScenarios).mockResolvedValueOnce([]).mockResolvedValueOnce([
-        { id: 'scenario-new', name: 'My Plan', updatedAt: '2026-01-01T00:00:00Z' },
+        { id: 'scenario-new', name: 'My Plan', updatedAt: '2026-01-01T00:00:00Z', claimComplete: true },
       ])
       vi.mocked(createScenario).mockResolvedValue('scenario-new')
       vi.mocked(cloneAccounts).mockResolvedValue([] as never)

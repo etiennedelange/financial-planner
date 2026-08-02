@@ -6,6 +6,7 @@ import {
   updateScenario,
   renameScenario,
   deleteScenario,
+  markScenarioClaimComplete,
 } from './scenarios'
 
 // Chainable Supabase query builder mock
@@ -57,9 +58,13 @@ beforeEach(() => vi.clearAllMocks())
 
 describe('listScenarios', () => {
   it('returns mapped scenario metas', async () => {
-    mockSupabase([{ id: 'scenario-1', name: 'My Plan', updated_at: '2026-05-09T00:00:00Z' }])
+    mockSupabase([
+      { id: 'scenario-1', name: 'My Plan', updated_at: '2026-05-09T00:00:00Z', claim_complete: true },
+    ])
     const result = await listScenarios('user-1')
-    expect(result).toEqual([{ id: 'scenario-1', name: 'My Plan', updatedAt: '2026-05-09T00:00:00Z' }])
+    expect(result).toEqual([
+      { id: 'scenario-1', name: 'My Plan', updatedAt: '2026-05-09T00:00:00Z', claimComplete: true },
+    ])
   })
 
   it('returns empty array when no scenarios exist', async () => {
@@ -107,6 +112,35 @@ describe('createScenario', () => {
     expect(id).toBe('new-id')
   })
 
+  it('defaults claim_complete to true when not passed', async () => {
+    const chain = mockSupabase({ id: 'new-id' })
+    await createScenario('user-1', 'Optimistic', {
+      personalInfo: mockScenarioRow.personal_info as never,
+      retirementGoals: mockScenarioRow.retirement_goals as never,
+      assumptions: mockScenarioRow.assumptions as never,
+      drawdownConfig: mockScenarioRow.drawdown_config as never,
+      displayMode: 'nominal',
+    })
+    expect(chain.insert).toHaveBeenCalledWith(expect.objectContaining({ claim_complete: true }))
+  })
+
+  it('passes claim_complete: false through when a claim starts the scenario', async () => {
+    const chain = mockSupabase({ id: 'new-id' })
+    await createScenario(
+      'user-1',
+      'My Plan',
+      {
+        personalInfo: mockScenarioRow.personal_info as never,
+        retirementGoals: mockScenarioRow.retirement_goals as never,
+        assumptions: mockScenarioRow.assumptions as never,
+        drawdownConfig: mockScenarioRow.drawdown_config as never,
+        displayMode: 'nominal',
+      },
+      false
+    )
+    expect(chain.insert).toHaveBeenCalledWith(expect.objectContaining({ claim_complete: false }))
+  })
+
   it('throws on insert error', async () => {
     mockSupabase(null, { message: 'insert failed', code: '500' })
     await expect(
@@ -146,6 +180,18 @@ describe('renameScenario', () => {
   it('throws on error', async () => {
     mockSupabase(null, { message: 'update failed', code: '500' })
     await expect(renameScenario('scenario-1', 'Conservative')).rejects.toMatchObject({ message: 'update failed' })
+  })
+})
+
+describe('markScenarioClaimComplete', () => {
+  it('resolves without error on success', async () => {
+    mockSupabase(null, null)
+    await expect(markScenarioClaimComplete('scenario-1')).resolves.toBeUndefined()
+  })
+
+  it('throws on error', async () => {
+    mockSupabase(null, { message: 'update failed', code: '500' })
+    await expect(markScenarioClaimComplete('scenario-1')).rejects.toMatchObject({ message: 'update failed' })
   })
 })
 
