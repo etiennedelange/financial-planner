@@ -21,6 +21,15 @@ values
   ('aaaaaaaa-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'Alice Plan'),
   ('bbbbbbbb-0000-0000-0000-000000000002', '22222222-2222-2222-2222-222222222222', 'Bob Plan');
 
+insert into accounts (id, scenario_id, name, type)
+values ('cccccccc-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'Alice RA', 'retirement_annuity');
+
+insert into expense_groups (id, session_id, name)
+values ('dddddddd-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'Alice Housing');
+
+insert into expenses (id, session_id, group_id, name)
+values ('eeeeeeee-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'dddddddd-0000-0000-0000-000000000001', 'Alice Rent');
+
 set local role authenticated;
 
 -- 1. Alice at aal1 WITH a verified factor: must see nothing.
@@ -47,7 +56,7 @@ do $$ begin
   end if;
 end $$;
 
--- 4. Bob must never see Alice's row, at any AAL.
+-- 4. Cross-user isolation: Bob must never see Alice's row, regardless of his own AAL.
 set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated","aal":"aal2"}';
 do $$ begin
   if exists (select 1 from scenarios where session_id = '11111111-1111-1111-1111-111111111111') then
@@ -65,6 +74,80 @@ do $$ begin
   exception when insufficient_privilege then
     null; -- expected
   end;
+end $$;
+
+-- 6. Alice at aal1 WITH a verified factor: must see nothing in accounts either.
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated","aal":"aal1"}';
+do $$ begin
+  if (select count(*) from accounts) <> 0 then
+    raise exception 'FAIL: enrolled user at aal1 can read accounts';
+  end if;
+end $$;
+
+-- 7. Alice at aal2: must see exactly her own account.
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated","aal":"aal2"}';
+do $$ begin
+  if (select count(*) from accounts) <> 1 then
+    raise exception 'FAIL: enrolled user at aal2 cannot read own accounts';
+  end if;
+end $$;
+
+-- 8. Alice at aal1 WITH a verified factor: must see nothing in expense_groups either.
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated","aal":"aal1"}';
+do $$ begin
+  if (select count(*) from expense_groups) <> 0 then
+    raise exception 'FAIL: enrolled user at aal1 can read expense_groups';
+  end if;
+end $$;
+
+-- 9. Alice at aal2: must see exactly her own expense group.
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated","aal":"aal2"}';
+do $$ begin
+  if (select count(*) from expense_groups) <> 1 then
+    raise exception 'FAIL: enrolled user at aal2 cannot read own expense_groups';
+  end if;
+end $$;
+
+-- 10. Alice at aal1 WITH a verified factor: must see nothing in expenses either.
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated","aal":"aal1"}';
+do $$ begin
+  if (select count(*) from expenses) <> 0 then
+    raise exception 'FAIL: enrolled user at aal1 can read expenses';
+  end if;
+end $$;
+
+-- 11. Alice at aal2: must see exactly her own expense.
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated","aal":"aal2"}';
+do $$ begin
+  if (select count(*) from expenses) <> 1 then
+    raise exception 'FAIL: enrolled user at aal2 cannot read own expenses';
+  end if;
+end $$;
+
+-- 12. Alice at aal1 must not be able to UPDATE her own scenario (zero rows match — not an error, RLS silently excludes it).
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated","aal":"aal1"}';
+do $$
+declare
+  affected int;
+begin
+  update scenarios set name = 'Hacked' where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+  get diagnostics affected = row_count;
+  if affected <> 0 then
+    raise exception 'FAIL: enrolled user at aal1 can update scenarios';
+  end if;
+end $$;
+
+-- 13. Alice at aal1 must not be able to DELETE her own scenario (zero rows match — not an error).
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated","aal":"aal1"}';
+do $$
+declare
+  affected int;
+begin
+  delete from scenarios where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+  get diagnostics affected = row_count;
+  if affected <> 0 then
+    raise exception 'FAIL: enrolled user at aal1 can delete scenarios';
+  end if;
 end $$;
 
 rollback;

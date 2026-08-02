@@ -30,14 +30,14 @@ comment on function public.mfa_satisfied() is
 -- scenarios
 drop policy if exists "session users can manage their own scenario" on scenarios;
 create policy "users manage own scenarios"
-  on scenarios for all
+  on scenarios for all to authenticated
   using       (session_id = (select auth.uid()) and public.mfa_satisfied())
   with check  (session_id = (select auth.uid()) and public.mfa_satisfied());
 
 -- accounts (scoped through scenarios)
 drop policy if exists "users can manage accounts in their scenarios" on accounts;
 create policy "users manage own accounts"
-  on accounts for all
+  on accounts for all to authenticated
   using (
     public.mfa_satisfied()
     and scenario_id in (select id from scenarios where session_id = (select auth.uid()))
@@ -50,14 +50,14 @@ create policy "users manage own accounts"
 -- expense_groups
 drop policy if exists "users can manage their own expense groups" on expense_groups;
 create policy "users manage own expense groups"
-  on expense_groups for all
+  on expense_groups for all to authenticated
   using       (session_id = (select auth.uid()) and public.mfa_satisfied())
   with check  (session_id = (select auth.uid()) and public.mfa_satisfied());
 
 -- expenses
 drop policy if exists "users can manage their own expenses" on expenses;
 create policy "users manage own expenses"
-  on expenses for all
+  on expenses for all to authenticated
   using       (session_id = (select auth.uid()) and public.mfa_satisfied())
   with check  (session_id = (select auth.uid()) and public.mfa_satisfied());
 
