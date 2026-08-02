@@ -1,12 +1,27 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
 import { PageCard } from "@/components/ui/page-card"
 import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useCalculator } from "@/lib/context/calculator-context"
 import { usePlanNarrative } from "@/lib/hooks/use-plan-narrative"
+import { DEFAULT_MODEL_TIER, type ModelTier } from "@/lib/ai/model-tiers"
 import { Sparkles } from "lucide-react"
+
+const TIER_LABELS: Record<ModelTier, string> = {
+  fast: "Fast",
+  balanced: "Balanced",
+  best: "Best",
+}
+
+const TIER_STORAGE_KEY = "plan-narrative-model-tier"
+
+function isModelTier(value: string): value is ModelTier {
+  return value in TIER_LABELS
+}
 
 export function PlanNarrativeCard() {
   const { accounts, personalInfo, retirementGoals, drawdownConfig } = useCalculatorStore(
@@ -19,6 +34,19 @@ export function PlanNarrativeCard() {
   )
   const { projection, simulationResult } = useCalculator()
 
+  const [tier, setTier] = useState<ModelTier>(DEFAULT_MODEL_TIER)
+
+  useEffect(() => {
+    const stored = localStorage.getItem(TIER_STORAGE_KEY)
+    if (stored && isModelTier(stored)) setTier(stored)
+  }, [])
+
+  const handleTierChange = (value: string) => {
+    if (!isModelTier(value)) return
+    setTier(value)
+    localStorage.setItem(TIER_STORAGE_KEY, value)
+  }
+
   const { text, isStreaming, error, cooldownRemaining, generate, clear } = usePlanNarrative({
     accounts,
     personalInfo,
@@ -26,6 +54,7 @@ export function PlanNarrativeCard() {
     drawdownConfig,
     projection,
     simulationResult,
+    tier,
   })
 
   if (accounts.length === 0 || !projection) return null
@@ -48,7 +77,7 @@ export function PlanNarrativeCard() {
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           variant={text ? "outline" : "default"}
           size="sm"
@@ -63,6 +92,19 @@ export function PlanNarrativeCard() {
             Clear
           </Button>
         )}
+
+        <Select value={tier} onValueChange={handleTierChange} disabled={isStreaming}>
+          <SelectTrigger className="w-28 h-8 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {(Object.keys(TIER_LABELS) as ModelTier[]).map((value) => (
+              <SelectItem key={value} value={value}>
+                {TIER_LABELS[value]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <p className="text-xs text-muted-foreground">

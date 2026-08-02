@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react"
 import type { Account, PersonalInfo, RetirementGoals, DrawdownConfig, ProjectionResult, SimulationResult } from "@/types"
 import { buildPlanNarrativePayload } from "@/lib/ai/plan-narrative-prompt"
 import { usePlanNarrativeStore } from "@/lib/store/plan-narrative-store"
+import type { ModelTier } from "@/lib/ai/model-tiers"
 
 interface UsePlanNarrativeInput {
   accounts: Account[]
@@ -12,6 +13,7 @@ interface UsePlanNarrativeInput {
   drawdownConfig: DrawdownConfig
   projection: ProjectionResult | null
   simulationResult: SimulationResult | null
+  tier: ModelTier
 }
 
 const COOLDOWN_SECONDS = 8
@@ -45,7 +47,7 @@ export function usePlanNarrative(input: UsePlanNarrativeInput) {
     const payload = buildPlanNarrativePayload(input)
     if (!payload) return
 
-    const payloadJson = JSON.stringify(payload)
+    const payloadJson = JSON.stringify({ ...payload, tier: input.tier })
 
     if (cache && cache.payloadJson === payloadJson) {
       setText(cache.text)
@@ -79,8 +81,12 @@ export function usePlanNarrative(input: UsePlanNarrativeInput) {
         setText(fullText)
       }
 
-      setCache({ payloadJson, text: fullText })
-      startCooldown()
+      if (fullText.length === 0) {
+        setError("Couldn't generate a summary right now. Please try again.")
+      } else {
+        setCache({ payloadJson, text: fullText })
+        startCooldown()
+      }
     } catch {
       setError("Couldn't generate a summary right now. Please try again.")
     } finally {
