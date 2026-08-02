@@ -59,7 +59,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
     init()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const newUser = session?.user ?? null
       setUser(newUser)
 
@@ -75,24 +75,34 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
       setSessionId(newUser.id)
 
-      try {
-        await claimLocalData(newUser.id, {
-          personalInfo: calc.personalInfo,
-          retirementGoals: calc.retirementGoals,
-          assumptions: calc.assumptions,
-          drawdownConfig: calc.drawdownConfig,
-          displayMode: calc.displayMode,
-          accounts: calc.accounts,
-          expenseGroups: exp.groups,
-          expenses: exp.expenses,
-        })
-      } catch (err) {
-        // Local state is untouched; the next sign-in retries.
-        console.error("Claiming local data failed:", err)
-      }
+      // Deferred: the Supabase client is still resolving its own internal
+      // initialization while this callback runs (it's invoked from inside
+      // `_recoverAndRefresh`/`_initialize`). Any call in here that awaits
+      // another Supabase method (claimLocalData/syncFromDb go through
+      // Postgrest, which fetches the session via the same client) would wait
+      // on that same initialization promise and deadlock forever. Supabase's
+      // own docs warn against awaiting Supabase calls inside
+      // onAuthStateChange for this reason — defer with setTimeout instead.
+      setTimeout(async () => {
+        try {
+          await claimLocalData(newUser.id, {
+            personalInfo: calc.personalInfo,
+            retirementGoals: calc.retirementGoals,
+            assumptions: calc.assumptions,
+            drawdownConfig: calc.drawdownConfig,
+            displayMode: calc.displayMode,
+            accounts: calc.accounts,
+            expenseGroups: exp.groups,
+            expenses: exp.expenses,
+          })
+        } catch (err) {
+          // Local state is untouched; the next sign-in retries.
+          console.error("Claiming local data failed:", err)
+        }
 
-      await syncFromDb()
-      await syncExpensesFromDb(newUser.id)
+        await syncFromDb()
+        await syncExpensesFromDb(newUser.id)
+      }, 0)
     })
 
     return () => subscription.unsubscribe()

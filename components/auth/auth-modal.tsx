@@ -102,7 +102,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   async function handleReset(values: EmailForm) {
     setLoading(true); setMessage(null)
     const { error } = await createClient().auth.resetPasswordForEmail(values.email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/calculator`,
+      redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
     })
     setLoading(false)
     if (error) setMessage({ type: "error", text: error.message })
