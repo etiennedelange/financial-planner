@@ -463,3 +463,27 @@ describe("useCalculatorStore", () => {
     })
   })
 })
+
+describe('local-only mode (no session)', () => {
+  it('does not attempt a DB read when sessionId is null', async () => {
+    useCalculatorStore.setState({ sessionId: null, activeScenarioId: null })
+    await useCalculatorStore.getState().syncFromDb()
+    expect(useCalculatorStore.getState().activeScenarioId).toBeNull()
+  })
+
+  it('keeps account edits in memory when signed out', () => {
+    useCalculatorStore.setState({ sessionId: null, accounts: [] })
+    useCalculatorStore.getState().addAccount({
+      id: 'acc-local-1',
+      name: 'Local RA',
+      provider: 'Test Provider',
+      type: 'retirement_annuity',
+      currentBalance: 100000,
+      monthlyContribution: 5000,
+      contributionEscalation: 6,
+      expectedReturn: 11,
+      annualFees: 0.75,
+    })
+    expect(useCalculatorStore.getState().accounts).toHaveLength(1)
+  })
+})

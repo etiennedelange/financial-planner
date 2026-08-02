@@ -32,31 +32,24 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
     async function init() {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        // getUser() verifies the token with the auth server.
+        // getSession() trusts the cookie unverified — do not substitute it.
+        const { data: { user: current } } = await supabase.auth.getUser()
 
-        if (session) {
-          setUser(session.user)
-          if (session.user.id !== sessionId) {
-            setSessionId(session.user.id)
-          }
-          await syncFromDb()
-          await syncExpensesFromDb(session.user.id)
-          setIsLoaded(true)
+        if (!current) {
+          // Signed out: the app runs entirely from localStorage.
+          // Both stores no-op their DB writes while sessionId is null.
+          setUser(null)
+          setSessionId(null)
           return
         }
 
-        const { data, error } = await supabase.auth.signInAnonymously()
-        if (error) {
-          console.error("Anonymous sign-in failed:", error.message)
-          setIsLoaded(true)
-          return
+        setUser(current)
+        if (current.id !== useCalculatorStore.getState().sessionId) {
+          setSessionId(current.id)
         }
-        if (data.user) {
-          setUser(data.user)
-          setSessionId(data.user.id)
-          await syncFromDb()
-          await syncExpensesFromDb(data.user.id)
-        }
+        await syncFromDb()
+        await syncExpensesFromDb(current.id)
       } catch (err) {
         console.error("Supabase init failed:", err)
       } finally {

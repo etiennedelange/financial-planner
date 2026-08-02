@@ -24,7 +24,7 @@ export function UserMenu({ user }: UserMenuProps) {
   const [modalOpen, setModalOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
 
-  const isAnon = !user || user.is_anonymous
+  const isAnon = !user
   const email = user?.email
 
   async function handleSignOut() {

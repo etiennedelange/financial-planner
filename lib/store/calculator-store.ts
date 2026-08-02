@@ -51,7 +51,7 @@ interface CalculatorState {
   scenarioList: ScenarioMeta[]
   displayMode: "nominal" | "real"
 
-  setSessionId: (id: string) => void
+  setSessionId: (id: string | null) => void
   syncFromDb: () => Promise<void>
   addAccount: (account: Account) => void
   seedAccounts: (accounts: Omit<Account, "id">[]) => void
