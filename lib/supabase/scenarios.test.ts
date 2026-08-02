@@ -141,6 +141,37 @@ describe('createScenario', () => {
     expect(chain.insert).toHaveBeenCalledWith(expect.objectContaining({ claim_complete: false }))
   })
 
+  it('inserts with a client-supplied id when one is given', async () => {
+    const chain = mockSupabase({ id: 'client-chosen-id' })
+    await createScenario(
+      'user-1',
+      'My Plan',
+      {
+        personalInfo: mockScenarioRow.personal_info as never,
+        retirementGoals: mockScenarioRow.retirement_goals as never,
+        assumptions: mockScenarioRow.assumptions as never,
+        drawdownConfig: mockScenarioRow.drawdown_config as never,
+        displayMode: 'nominal',
+      },
+      false,
+      'client-chosen-id'
+    )
+    expect(chain.insert).toHaveBeenCalledWith(expect.objectContaining({ id: 'client-chosen-id' }))
+  })
+
+  it('omits id from the insert payload when none is given, letting the DB assign one', async () => {
+    const chain = mockSupabase({ id: 'db-assigned-id' })
+    await createScenario('user-1', 'Optimistic', {
+      personalInfo: mockScenarioRow.personal_info as never,
+      retirementGoals: mockScenarioRow.retirement_goals as never,
+      assumptions: mockScenarioRow.assumptions as never,
+      drawdownConfig: mockScenarioRow.drawdown_config as never,
+      displayMode: 'nominal',
+    })
+    const insertedPayload = vi.mocked(chain.insert as (...args: unknown[]) => unknown).mock.calls[0][0]
+    expect(insertedPayload).not.toHaveProperty('id')
+  })
+
   it('throws on insert error', async () => {
     mockSupabase(null, { message: 'insert failed', code: '500' })
     await expect(

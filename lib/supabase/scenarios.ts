@@ -57,12 +57,14 @@ export async function createScenario(
   userId: string,
   name: string,
   data: ScenarioData,
-  claimComplete: boolean = true
+  claimComplete: boolean = true,
+  id?: string
 ): Promise<string> {
   const supabase = createClient()
   const { data: row, error } = await supabase
     .from("scenarios")
     .insert({
+      ...(id ? { id } : {}),
       session_id: userId,
       name,
       personal_info: data.personalInfo as unknown as Json,
