@@ -136,19 +136,10 @@ export const useCalculatorStore = create<CalculatorState>()(
           const scenarios = await listScenarios(sessionId)
 
           if (scenarios.length === 0) {
-            // First sign-in: create scenario from current local state, clone local accounts into it
-            const state = useCalculatorStore.getState()
-            const scenarioId = await createScenario(sessionId, "My Plan", {
-              personalInfo: state.personalInfo,
-              retirementGoals: state.retirementGoals,
-              assumptions: state.assumptions,
-              drawdownConfig: state.drawdownConfig,
-              displayMode: state.displayMode,
-            })
-            // Persist local accounts under the new scenario
-            const cloned = await cloneAccounts(state.accounts, scenarioId)
-            const meta: ScenarioMeta = { id: scenarioId, name: "My Plan", updatedAt: new Date().toISOString() }
-            set({ activeScenarioId: scenarioId, scenarioList: [meta], accounts: cloned })
+            // Claiming is owned by claimLocalData(), called from SupabaseProvider on
+            // sign-in. syncFromDb must not create scenarios — two code paths creating
+            // "My Plan" is how duplicate plans appear.
+            set({ activeScenarioId: null, scenarioList: [] })
             return
           }
 

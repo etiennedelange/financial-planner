@@ -382,17 +382,16 @@ describe("useCalculatorStore", () => {
       expect(state.accounts).toHaveLength(1)
     })
 
-    it("should create default scenario on first sign-in", async () => {
+    it("should clear scenario state without creating one when the account has zero scenarios", async () => {
+      const createScenario = vi.spyOn(scenariosApi, "createScenario")
       vi.spyOn(scenariosApi, "listScenarios").mockResolvedValue([])
-      vi.spyOn(scenariosApi, "createScenario").mockResolvedValue("new-default-scenario")
-      vi.spyOn(accountsApi, "cloneAccounts").mockResolvedValue([])
 
       await useCalculatorStore.getState().syncFromDb()
 
       const state = useCalculatorStore.getState()
-      expect(state.activeScenarioId).toBe("new-default-scenario")
-      expect(state.scenarioList).toHaveLength(1)
-      expect(state.scenarioList[0].name).toBe("My Plan")
+      expect(state.activeScenarioId).toBeNull()
+      expect(state.scenarioList).toHaveLength(0)
+      expect(createScenario).not.toHaveBeenCalled()
     })
 
     it("should restore previously active scenario if available", async () => {

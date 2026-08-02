@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/client"
-import { migrateExpensesToSession } from "@/lib/supabase/expenses"
+import { claimLocalData } from "@/lib/supabase/claim"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useExpensesStore } from "@/lib/store/expenses-store"
 
@@ -59,27 +59,40 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
     init()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const newUser = session?.user ?? null
       setUser(newUser)
 
-      if (newUser && newUser.id !== useCalculatorStore.getState().sessionId) {
-        // Capture expenses from Zustand BEFORE syncExpensesFromDb overwrites the store.
-        // If this is an anon→real sign-in, we'll copy them to the new session in the DB.
-        const { groups, expenses } = useExpensesStore.getState()
-        const isAnonUpgrade = !newUser.is_anonymous && groups.length > 0
-
-        setSessionId(newUser.id)
-        await syncFromDb()
-
-        if (isAnonUpgrade) {
-          await migrateExpensesToSession(newUser.id, groups, expenses).catch(console.error)
-        }
-
-        await syncExpensesFromDb(newUser.id)
+      if (!newUser) {
+        setSessionId(null)
+        return
       }
-      // On SIGNED_OUT: user becomes null, UserMenu shows "Sign In".
-      // A new anon session is created on the next page load via init().
+      if (newUser.id === useCalculatorStore.getState().sessionId) return
+
+      // Snapshot local state BEFORE any sync overwrites it.
+      const calc = useCalculatorStore.getState()
+      const exp = useExpensesStore.getState()
+
+      setSessionId(newUser.id)
+
+      try {
+        await claimLocalData(newUser.id, {
+          personalInfo: calc.personalInfo,
+          retirementGoals: calc.retirementGoals,
+          assumptions: calc.assumptions,
+          drawdownConfig: calc.drawdownConfig,
+          displayMode: calc.displayMode,
+          accounts: calc.accounts,
+          expenseGroups: exp.groups,
+          expenses: exp.expenses,
+        })
+      } catch (err) {
+        // Local state is untouched; the next sign-in retries.
+        console.error("Claiming local data failed:", err)
+      }
+
+      await syncFromDb()
+      await syncExpensesFromDb(newUser.id)
     })
 
     return () => subscription.unsubscribe()
