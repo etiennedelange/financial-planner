@@ -20,6 +20,13 @@ create policy "users read own recovery code state"
   on user_recovery_codes for select
   using (user_id = (select auth.uid()));
 
+-- RLS is row-level only — it does not by itself grant table access, and it cannot
+-- restrict which columns a permitted row exposes. Both matter here: without this
+-- grant the policy above can never fire (no base SELECT privilege), and if we
+-- granted whole-row SELECT instead, a user could read their own code_hash directly,
+-- contradicting the policy comment. Column-level grant closes both gaps at once.
+grant select (id, user_id, used_at, created_at) on user_recovery_codes to authenticated;
+
 revoke insert, update, delete on user_recovery_codes from authenticated;
 
 -- Replaces the caller's entire code set. Called at enrolment and at regeneration.

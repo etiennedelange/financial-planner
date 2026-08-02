@@ -179,4 +179,63 @@ do $$ begin
   end if;
 end $$;
 
+-- A user can read their own recovery-code metadata directly, but never the hash:
+-- RLS is row-level only, so the policy needs a matching column-level grant that
+-- excludes code_hash, or a granted SELECT would expose the hash directly.
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated","aal":"aal1"}';
+do $$ begin
+  perform id, user_id, used_at, created_at from user_recovery_codes; -- must succeed
+  begin
+    perform code_hash from user_recovery_codes;
+    raise exception 'FAIL: code_hash is selectable by an authenticated client';
+  exception when insufficient_privilege then
+    null; -- expected
+  end;
+end $$;
+
+-- store_recovery_codes: a second call replaces the caller's entire batch —
+-- old codes stop working, new ones do.
+do $$ begin
+  perform public.store_recovery_codes(array[
+    'AAAAA-11111', 'AAAAA-22222', 'AAAAA-33333', 'AAAAA-44444', 'AAAAA-55555',
+    'AAAAA-66666', 'AAAAA-77777', 'AAAAA-88888', 'AAAAA-99999', 'AAAAA-00000'
+  ]);
+  perform public.store_recovery_codes(array[
+    'BBBBB-11111', 'BBBBB-22222', 'BBBBB-33333', 'BBBBB-44444', 'BBBBB-55555',
+    'BBBBB-66666', 'BBBBB-77777', 'BBBBB-88888', 'BBBBB-99999', 'BBBBB-00000'
+  ]);
+  if public.redeem_recovery_code('AAAAA-11111') then
+    raise exception 'FAIL: code from a replaced batch is still redeemable';
+  end if;
+  if not public.redeem_recovery_code('BBBBB-11111') then
+    raise exception 'FAIL: code from the new batch was rejected';
+  end if;
+end $$;
+
+-- store_recovery_codes: an array that isn't exactly 10 elements is rejected.
+do $$ begin
+  begin
+    perform public.store_recovery_codes(array['ONLY1-CODE0']);
+    raise exception 'FAIL: store_recovery_codes accepted fewer than 10 codes';
+  exception when sqlstate '22023' then
+    null; -- expected
+  end;
+end $$;
+
+-- recovery_codes_remaining: 10 right after a fresh batch, decrements by exactly 1
+-- after one successful redemption.
+do $$ begin
+  perform public.store_recovery_codes(array[
+    'CCCCC-11111', 'CCCCC-22222', 'CCCCC-33333', 'CCCCC-44444', 'CCCCC-55555',
+    'CCCCC-66666', 'CCCCC-77777', 'CCCCC-88888', 'CCCCC-99999', 'CCCCC-00000'
+  ]);
+  if public.recovery_codes_remaining() <> 10 then
+    raise exception 'FAIL: recovery_codes_remaining is not 10 right after storing a fresh batch';
+  end if;
+  perform public.redeem_recovery_code('CCCCC-11111');
+  if public.recovery_codes_remaining() <> 9 then
+    raise exception 'FAIL: recovery_codes_remaining did not decrement by exactly 1 after redemption';
+  end if;
+end $$;
+
 rollback;

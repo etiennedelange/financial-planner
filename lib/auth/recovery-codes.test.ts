@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { generateRecoveryCodes, RECOVERY_CODE_COUNT } from './recovery-codes'
+import { generateRecoveryCodes, normaliseRecoveryCode, RECOVERY_CODE_COUNT } from './recovery-codes'
 
 describe('generateRecoveryCodes', () => {
   it('returns exactly ten codes', () => {
@@ -26,5 +26,24 @@ describe('generateRecoveryCodes', () => {
     const a = new Set(generateRecoveryCodes())
     const b = generateRecoveryCodes()
     expect(b.some((c) => a.has(c))).toBe(false)
+  })
+})
+
+describe('normaliseRecoveryCode', () => {
+  it('uppercases a hyphenated mixed-case code and preserves the hyphen', () => {
+    expect(normaliseRecoveryCode('abcde-fghjk')).toBe('ABCDE-FGHJK')
+  })
+
+  it('inserts a hyphen at the midpoint when the input has none', () => {
+    expect(normaliseRecoveryCode('abcdefghjk')).toBe('ABCDE-FGHJK')
+  })
+
+  it('strips surrounding and internal whitespace', () => {
+    expect(normaliseRecoveryCode(' abcde fghjk ')).toBe('ABCDE-FGHJK')
+  })
+
+  it('returns an invalid-length input uppercased without forcing a hyphen', () => {
+    expect(normaliseRecoveryCode('abc')).toBe('ABC')
+    expect(normaliseRecoveryCode('abcdefghjklmno')).toBe('ABCDEFGHJKLMNO')
   })
 })
