@@ -20,11 +20,13 @@
 - [x] **Favicon** — `app/icon.tsx` using Next.js `ImageResponse`; blue rounded-square with white bars + rising trend line + dot; consistent with auth modal motif
 - [x] **Sign-out race condition fixed** — removed `signInAnonymously()` from `onAuthStateChange(SIGNED_OUT)` handler; was racing with cookie cleanup and restoring the real user session
 - [x] **Profile management modal** — `ProfileModal` with change-email + change-password forms; "Manage Account" item in `UserMenu` dropdown; same visual style as auth modal (static finance chart header, pill status messages, compact `h-8` inputs)
+- [x] **12-char password policy + reauthentication gate** — `minimum_password_length = 12`, `password_requirements = "lower_upper_letters_digits"` in `supabase/config.toml`; `secure_password_change = true`; sign-up schema in `AuthModal` mirrors the server policy while sign-in keeps a length-1 check so legacy accounts with shorter passwords can still log in; new `ReauthenticateDialog` (`components/auth/reauthenticate-dialog.tsx`) re-confirms the current password via `signInWithPassword` before `ProfileModal` proceeds with an email or password change
 
 ## Pending
 
 - [ ] Social login (Google OAuth) — optional
 - [ ] Protected routes / redirect to login — not needed currently (app works anonymously)
+- [ ] **Enable "Prevent use of leaked passwords"** in the hosted Supabase project (Dashboard → Authentication → Policies) the day the project is created — this setting has no `config.toml` equivalent and cannot be applied locally
 
 ## Key Design Decisions
 

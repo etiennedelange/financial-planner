@@ -15,9 +15,23 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { FinanceAnimation } from "@/components/auth/finance-animation"
 
+const passwordSchema = z
+  .string()
+  .min(12, "Password must be at least 12 characters")
+  .regex(/[a-z]/, "Include a lowercase letter")
+  .regex(/[A-Z]/, "Include an uppercase letter")
+  .regex(/[0-9]/, "Include a digit")
+
 const emailPasswordSchema = z.object({
   email: z.string().email("Enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: passwordSchema,
+})
+
+// Sign-in must NOT apply the new complexity rules — existing users may hold a
+// shorter legacy password and must still be able to sign in to change it.
+const signInSchema = z.object({
+  email: z.string().email("Enter a valid email address"),
+  password: z.string().min(1, "Enter your password"),
 })
 
 const emailSchema = z.object({
@@ -26,6 +40,7 @@ const emailSchema = z.object({
 
 type Mode = "signin" | "signup" | "reset"
 type EmailPasswordForm = z.infer<typeof emailPasswordSchema>
+type SignInForm = z.infer<typeof signInSchema>
 type EmailForm = z.infer<typeof emailSchema>
 
 interface AuthModalProps {
@@ -44,7 +59,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const signinForm  = useForm<EmailPasswordForm>({ resolver: zodResolver(emailPasswordSchema) })
+  const signinForm  = useForm<SignInForm>({ resolver: zodResolver(signInSchema) })
   const signupForm  = useForm<EmailPasswordForm>({ resolver: zodResolver(emailPasswordSchema) })
   const resetForm   = useForm<EmailForm>({ resolver: zodResolver(emailSchema) })
 
@@ -53,7 +68,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
     setMessage(null)
   }
 
-  async function handleSignIn(values: EmailPasswordForm) {
+  async function handleSignIn(values: SignInForm) {
     setLoading(true); setMessage(null)
     const { error } = await createClient().auth.signInWithPassword({ email: values.email, password: values.password })
     setLoading(false)
