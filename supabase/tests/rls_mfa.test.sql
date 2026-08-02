@@ -150,4 +150,33 @@ begin
   end if;
 end $$;
 
+-- Recovery codes: redemption is single-use and scoped to the caller.
+set local role postgres;
+insert into user_recovery_codes (user_id, code_hash)
+values ('11111111-1111-1111-1111-111111111111',
+        extensions.crypt('ABCDE-FGHJK', extensions.gen_salt('bf', 10)));
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated","aal":"aal1"}';
+
+do $$ begin
+  if not public.redeem_recovery_code('ABCDE-FGHJK') then
+    raise exception 'FAIL: valid recovery code was rejected';
+  end if;
+  if public.redeem_recovery_code('ABCDE-FGHJK') then
+    raise exception 'FAIL: recovery code redeemed twice';
+  end if;
+  if public.redeem_recovery_code('ZZZZZ-ZZZZZ') then
+    raise exception 'FAIL: unknown recovery code accepted';
+  end if;
+end $$;
+
+-- Bob must not be able to redeem Alice's code.
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated","aal":"aal1"}';
+do $$ begin
+  if public.redeem_recovery_code('ABCDE-FGHJK') then
+    raise exception 'FAIL: recovery code redeemable across users';
+  end if;
+end $$;
+
 rollback;
