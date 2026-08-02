@@ -14,6 +14,7 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
+    "test:rls": "psql \"postgresql://postgres:postgres@127.0.0.1:54322/postgres\" -v ON_ERROR_STOP=1 -f supabase/tests/rls_mfa.test.sql",
     "ui:doc": "playwright test",
     "ui:doc:desktop": "playwright test --project=desktop-chrome",
     "ui:doc:tablet": "playwright test --project=tablet",
