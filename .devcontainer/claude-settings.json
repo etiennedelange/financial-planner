@@ -1,5 +1,4 @@
 {
-  "model": "opus",
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline-command.sh",
@@ -23,7 +22,8 @@
     "supabase@claude-plugins-official": true,
     "chrome-devtools-mcp@claude-plugins-official": true,
     "remember@claude-plugins-official": true,
-    "andrej-karpathy-skills@karpathy-skills": true
+    "andrej-karpathy-skills@karpathy-skills": true,
+    "playwright@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "karpathy-skills": {
