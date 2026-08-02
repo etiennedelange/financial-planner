@@ -33,6 +33,13 @@
 - **Estate planning** — model estate duty, executor fees, bequest goals
 - **Legacy goals** — target end-of-plan balance for inheritance
 
+### Monetization (discussed 2026-08-02, not scoped)
+- **Bill users for AI plan-narrative access** — the AI narrative feature (`app/api/plan-narrative/`) currently has no usage limits or payment gate beyond a client-side cooldown. Two approaches discussed:
+  - **Metered credits (leaning this way)** — small free monthly allowance per account, tracked in a Supabase table, top-up packs or subscription via Stripe when exhausted. Mirrors how the AI Gateway itself is billed, reuses the existing anonymous→real Supabase auth upgrade path.
+  - **Flat subscription tier** — single paid plan unlocks unlimited narratives. Simpler to build, but no protection against a single Pro user driving up Gateway costs.
+  - Either approach needs: Stripe via the Vercel Marketplace integration (not a hand-rolled SDK call), a `credits`/`subscription` table in Supabase, and an enforcement check in the route handler before it calls the Gateway.
+  - Not brainstormed/spec'd yet — needs a full design pass before implementation.
+
 ## Future Phases
 
 ### Phase 7: MCP Tools Review
