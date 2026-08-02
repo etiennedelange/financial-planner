@@ -65,13 +65,13 @@ describe("compareScenarios", () => {
     currentAge: 35,
     retirementAge: 65,
     lifeExpectancy: 90,
-    grossAnnualIncome: 900000,
-    currentTaxRate: 36,
+    annualIncome: 900000,
   }
 
   const baseRetirementGoals: RetirementGoals = {
     desiredMonthlyIncome: 45000,
     inflationRate: 5.5,
+    legacyAmount: 0,
   }
 
   const baseDrawdownConfig: DrawdownConfig = {
@@ -80,7 +80,6 @@ describe("compareScenarios", () => {
     minimumWithdrawal: 30000,
     maximumWithdrawal: 60000,
     lumpSumPercentage: 0,
-    flexibilityPercentage: 10,
   }
 
   const baseParams = {
@@ -415,12 +414,12 @@ describe("compareScenarios", () => {
           currentAge: 28,
           retirementAge: 65,
           lifeExpectancy: 90,
-          grossAnnualIncome: 600000,
-          currentTaxRate: 31,
+          annualIncome: 600000,
         },
         retirementGoals: {
           desiredMonthlyIncome: 40000,
           inflationRate: 5.5,
+          legacyAmount: 0,
         },
         drawdownConfig: baseDrawdownConfig,
         contributionEscalation: 0.06,
@@ -440,12 +439,12 @@ describe("compareScenarios", () => {
           currentAge: 45,
           retirementAge: 65,
           lifeExpectancy: 90,
-          grossAnnualIncome: 1200000,
-          currentTaxRate: 41,
+          annualIncome: 1200000,
         },
         retirementGoals: {
           desiredMonthlyIncome: 60000,
           inflationRate: 5.5,
+          legacyAmount: 0,
         },
         drawdownConfig: baseDrawdownConfig,
         contributionEscalation: 0.06,
@@ -465,12 +464,12 @@ describe("compareScenarios", () => {
           currentAge: 58,
           retirementAge: 65,
           lifeExpectancy: 90,
-          grossAnnualIncome: 1500000,
-          currentTaxRate: 45,
+          annualIncome: 1500000,
         },
         retirementGoals: {
           desiredMonthlyIncome: 70000,
           inflationRate: 5.5,
+          legacyAmount: 0,
         },
         drawdownConfig: baseDrawdownConfig,
         contributionEscalation: 0.06,
@@ -488,6 +487,7 @@ describe("compareScenarios", () => {
         retirementGoals: {
           desiredMonthlyIncome: 45000,
           inflationRate: 5.5, // SA inflation
+          legacyAmount: 0,
         },
       })
 

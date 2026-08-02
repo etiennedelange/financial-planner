@@ -1,5 +1,5 @@
 {
-  "name": "SA Retirement Calculator",
+  "name": "Financial Planner App Dev Container",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:dev-24-bookworm",
 
   "features": {
@@ -64,10 +64,25 @@
   "runArgs": ["--ipc=host", "--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
 
   "containerEnv": {
-    "CLAUDE_CONFIG_DIR": "/home/node/.claude"
+    "CLAUDE_CONFIG_DIR": "/home/node/.claude",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    // Long-lived token from `claude setup-token` (1 year), set as a host env
+    // var or GitHub Codespaces secret. Lets Claude authenticate in a brand
+    // new/ephemeral container without an interactive browser login — the
+    // volume mount below only carries auth across rebuilds of the *same*
+    // container, not across fresh Codespaces or throwaway sandboxes.
+    // Resolves to "" (falsy, ignored) when unset, so interactive /login
+    // still works normally.
+    "CLAUDE_CODE_OAUTH_TOKEN": "${localEnv:CLAUDE_CODE_OAUTH_TOKEN}"
+    // "ANTHROPIC_BASE_URL": "http://host.docker.internal:11434/v1",
+    // "ANTHROPIC_BASE_URL": "http://host.docker.internal:12434",
+    // "ANTHROPIC_AUTH_TOKEN": "docker"
   },
 
-  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  // sudo is required: postCreateCommand runs as remoteUser (node, non-root),
+  // but a freshly created named volume starts out root-owned, so a plain
+  // chown fails and the && chain would abort before post-create.sh ever runs.
+  "postCreateCommand": "sudo chown -R node:node /home/node/.claude && bash .devcontainer/post-create.sh",
 
   "remoteUser": "node",
 

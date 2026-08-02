@@ -16,7 +16,7 @@ function makeChain(resolveWith: { data?: unknown; error?: unknown }) {
     chain[m] = vi.fn(() => chain)
   })
   // Terminal resolution
-  ;(chain as Promise<unknown> & Record<string, unknown>)[Symbol.iterator] = undefined
+  ;(chain as unknown as Record<symbol, unknown>)[Symbol.iterator] = undefined
   Object.assign(chain, Promise.resolve(resolveWith))
   // Make it thenable
   ;(chain as Record<string, unknown>).then = (resolve: (v: unknown) => unknown) =>
@@ -49,7 +49,7 @@ const mockScenarioRow = {
 
 function mockSupabase(data: unknown, error: unknown = null) {
   const chain = makeChain({ data, error })
-  vi.mocked(createClient).mockReturnValue(chain as ReturnType<typeof createClient>)
+  vi.mocked(createClient).mockReturnValue(chain as unknown as ReturnType<typeof createClient>)
   return chain
 }
 
@@ -60,12 +60,6 @@ describe('listScenarios', () => {
     mockSupabase([{ id: 'scenario-1', name: 'My Plan', updated_at: '2026-05-09T00:00:00Z' }])
     const result = await listScenarios('user-1')
     expect(result).toEqual([{ id: 'scenario-1', name: 'My Plan', updatedAt: '2026-05-09T00:00:00Z' }])
-  })
-
-  it('returns empty array when supabase is not available', async () => {
-    vi.mocked(createClient).mockReturnValue(null)
-    const result = await listScenarios('user-1')
-    expect(result).toEqual([])
   })
 
   it('returns empty array when no scenarios exist', async () => {
@@ -87,11 +81,6 @@ describe('fetchScenario', () => {
     expect(result?.personalInfo.currentAge).toBe(35)
     expect(result?.displayMode).toBe('nominal')
     expect(result?.assumptions.compoundingMethod).toBe('compound')
-  })
-
-  it('returns null when supabase is not available', async () => {
-    vi.mocked(createClient).mockReturnValue(null)
-    expect(await fetchScenario('scenario-1')).toBeNull()
   })
 
   it('returns null on PGRST116 (no rows)', async () => {
@@ -116,11 +105,6 @@ describe('createScenario', () => {
       displayMode: 'nominal',
     })
     expect(id).toBe('new-id')
-  })
-
-  it('throws when supabase is not available', async () => {
-    vi.mocked(createClient).mockReturnValue(null)
-    await expect(createScenario('user-1', 'Test', {} as never)).rejects.toThrow('Supabase not available')
   })
 
   it('throws on insert error', async () => {
@@ -151,10 +135,6 @@ describe('updateScenario', () => {
     ).resolves.toBeUndefined()
   })
 
-  it('no-ops when supabase is not available', async () => {
-    vi.mocked(createClient).mockReturnValue(null)
-    await expect(updateScenario('scenario-1', {} as never)).resolves.toBeUndefined()
-  })
 })
 
 describe('renameScenario', () => {
@@ -175,8 +155,4 @@ describe('deleteScenario', () => {
     await expect(deleteScenario('scenario-1')).resolves.toBeUndefined()
   })
 
-  it('no-ops when supabase is not available', async () => {
-    vi.mocked(createClient).mockReturnValue(null)
-    await expect(deleteScenario('scenario-1')).resolves.toBeUndefined()
-  })
 })

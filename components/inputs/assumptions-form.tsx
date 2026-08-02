@@ -1,26 +1,23 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useCallback, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import { motion, useReducedMotion } from "motion/react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Slider } from "@/components/ui/slider"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { PageCard } from "@/components/ui/page-card"
+import { SectionLabel } from "@/components/ui/section-label"
+import { Button } from "@/components/ui/button"
+import { RotateCcw } from "lucide-react"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
-import { formatCurrency } from "@/lib/utils/currency"
+import { SA_DEFAULTS_DISPLAY } from "@/lib/constants/defaults"
 import { useShallow } from "zustand/react/shallow"
-import { DRAWDOWN_STRATEGY_LABELS } from "@/types"
-import type { DrawdownStrategy } from "@/types"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
+import { cn } from "@/lib/utils"
+import { COMPOUNDING_METHOD_DESCRIPTIONS, COMPOUNDING_METHOD_LABELS } from "@/types"
+import type { CompoundingMethod } from "@/types"
 
 const schema = z.object({
   equityReturn: z.number().min(0).max(30),
@@ -28,72 +25,129 @@ const schema = z.object({
   cashReturn: z.number().min(0).max(15),
   equityVolatility: z.number().min(0).max(40),
   bondVolatility: z.number().min(0).max(20),
+  inflationRate: z.number().min(0).max(20),
 })
 
 type FormData = z.infer<typeof schema>
 
-interface AssumptionsFormProps {
-  portfolioAtRetirement?: number
-  yearsToRetirement?: number
-  displayMode?: "nominal" | "real"
-  inflationRate?: number
-}
-
-export function AssumptionsForm({
-  portfolioAtRetirement,
-  yearsToRetirement = 0,
-  displayMode = "nominal",
-  inflationRate = 0.055,
-}: AssumptionsFormProps) {
-  const { assumptions, setAssumptions, drawdownConfig, setDrawdownConfig } =
+export function AssumptionsForm() {
+  const { assumptions, setAssumptions, retirementGoals, setRetirementGoals } =
     useCalculatorStore(
       useShallow(state => ({
         assumptions: state.assumptions,
         setAssumptions: state.setAssumptions,
-        drawdownConfig: state.drawdownConfig,
-        setDrawdownConfig: state.setDrawdownConfig,
+        retirementGoals: state.retirementGoals,
+        setRetirementGoals: state.setRetirementGoals,
       }))
     )
 
   const {
     register,
     watch,
-    formState: { errors },
+    reset,
+    getValues,
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: assumptions,
+    defaultValues: {
+      equityReturn: assumptions.equityReturn,
+      bondReturn: assumptions.bondReturn,
+      cashReturn: assumptions.cashReturn,
+      equityVolatility: assumptions.equityVolatility,
+      bondVolatility: assumptions.bondVolatility,
+      inflationRate: retirementGoals.inflationRate,
+    },
+    mode: 'onChange', // Validate as user types for immediate feedback
   })
+
+  const saDefaults = {
+    equityReturn: SA_DEFAULTS_DISPLAY.equityReturn,
+    bondReturn: SA_DEFAULTS_DISPLAY.bondReturn,
+    cashReturn: SA_DEFAULTS_DISPLAY.cashReturn,
+    equityVolatility: SA_DEFAULTS_DISPLAY.equityVolatility,
+    bondVolatility: SA_DEFAULTS_DISPLAY.bondVolatility,
+    inflationRate: SA_DEFAULTS_DISPLAY.inflation,
+  }
+
+  const shouldReduceMotion = useReducedMotion()
+  const [resetSpins, setResetSpins] = useState(0)
+
+  const handleReset = useCallback(() => {
+    reset(saDefaults)
+    setAssumptions({ compoundingMethod: "nominal" })
+    setResetSpins((n) => n + 1)
+  }, [reset, setAssumptions]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const subscription = watch((value) => {
       if (value.equityReturn !== undefined) {
-        setAssumptions(value as FormData)
+        const { inflationRate, ...assumptionFields } = value as FormData
+        setAssumptions({ ...assumptionFields, inflationRate })
+        setRetirementGoals({ inflationRate })
       }
     })
     return () => subscription.unsubscribe()
-  }, [watch, setAssumptions])
+  }, [watch, setAssumptions, setRetirementGoals])
 
-  // Local slider state — updates instantly during drag, commits to store on release
-  const [localWithdrawalRate, setLocalWithdrawalRate] = useState(drawdownConfig.initialWithdrawalRate)
-  const [localLumpSum, setLocalLumpSum] = useState(drawdownConfig.lumpSumPercentage ?? 0)
+  // Sync form when store hydrates from localStorage or scenario switches
+  useEffect(() => {
+    const current = getValues()
+    if (
+      current.equityReturn === assumptions.equityReturn &&
+      current.bondReturn === assumptions.bondReturn &&
+      current.cashReturn === assumptions.cashReturn &&
+      current.equityVolatility === assumptions.equityVolatility &&
+      current.bondVolatility === assumptions.bondVolatility &&
+      current.inflationRate === retirementGoals.inflationRate
+    ) {
+      return
+    }
+    reset({
+      equityReturn: assumptions.equityReturn,
+      bondReturn: assumptions.bondReturn,
+      cashReturn: assumptions.cashReturn,
+      equityVolatility: assumptions.equityVolatility,
+      bondVolatility: assumptions.bondVolatility,
+      inflationRate: retirementGoals.inflationRate,
+    })
+  }, [
+    assumptions.equityReturn,
+    assumptions.bondReturn,
+    assumptions.cashReturn,
+    assumptions.equityVolatility,
+    assumptions.bondVolatility,
+    retirementGoals.inflationRate,
+    reset,
+    getValues,
+  ])
 
-  // Sync from store when changed externally (e.g. reset to defaults)
-  useEffect(() => { setLocalWithdrawalRate(drawdownConfig.initialWithdrawalRate) }, [drawdownConfig.initialWithdrawalRate])
-  useEffect(() => { setLocalLumpSum(drawdownConfig.lumpSumPercentage ?? 0) }, [drawdownConfig.lumpSumPercentage])
+  const resetButton = (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={handleReset}
+      className="h-6 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground"
+    >
+      <motion.span
+        className="inline-flex"
+        animate={{ rotate: resetSpins * -360 }}
+        transition={{ duration: shouldReduceMotion ? 0 : 0.4, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <RotateCcw className="h-3 w-3" />
+      </motion.span>
+      SA defaults
+    </Button>
+  )
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Market Assumptions</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Reference values for asset class returns. Each account uses its own expected return setting.
-          Volatility is used in Monte Carlo simulations.
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-6">
+    <PageCard
+      label="Market Assumptions"
+      description="Reference values for asset class returns and inflation. Each account uses its own expected return setting. Volatility is used in Monte Carlo simulations."
+      trailing={resetButton}
+      contentClassName="space-y-6"
+    >
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <h4 className="text-sm font-medium">Expected Returns (Nominal)</h4>
+            <SectionLabel>Expected Returns (Nominal)</SectionLabel>
             <InfoTooltip
               content="These are reference values for different asset classes. Each account uses its own expected return rate. Nominal returns include inflation - a 10% nominal return with 5% inflation gives ~5% real growth."
               side="right"
@@ -140,7 +194,7 @@ export function AssumptionsForm({
 
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <h4 className="text-sm font-medium">Volatility (Std Dev)</h4>
+            <SectionLabel>Volatility (Std Dev)</SectionLabel>
             <InfoTooltip
               content="Volatility measures how much returns vary from year to year. Higher volatility means more uncertainty. In Monte Carlo simulations, higher volatility reduces the probability of success because of sequence-of-returns risk. Typical SA equity volatility: 15-18%."
               side="right"
@@ -173,154 +227,76 @@ export function AssumptionsForm({
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 border-t border-border pt-4">
           <div className="flex items-center gap-2">
-            <h4 className="text-sm font-medium">Drawdown Strategy</h4>
+            <SectionLabel>Return Calculation Method</SectionLabel>
             <InfoTooltip
-              content="Determines how you withdraw money during retirement. Fixed Percentage: withdraw a % of remaining balance each year (safer but variable income). Fixed Amount: withdraw a fixed amount adjusted for inflation (predictable income but higher risk). Variable strategies adjust based on portfolio performance."
+              content="Controls how annual returns are converted to monthly returns for projections. Compound is actuarially precise; nominal matches Excel-style monthly division."
               side="right"
             />
           </div>
-
-          <div className="space-y-2">
-            <Label>Strategy</Label>
-            <Select
-              value={drawdownConfig.strategy}
-              onValueChange={(value) =>
-                setDrawdownConfig({ strategy: value as DrawdownStrategy })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(DRAWDOWN_STRATEGY_LABELS).map(
-                  ([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  )
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Label>Initial Withdrawal Rate</Label>
-                <InfoTooltip
-                  content="The % of your retirement nest egg you plan to withdraw in the first year. Lower rates (3-4%) require a larger nest egg but are safer. Higher rates (5-6%) allow a smaller nest egg but increase the risk of running out of money. Example: 4% of R10M = R400k/year. To get R500k/year at 4%, you'd need R12.5M (hence why lower rates need bigger nest eggs)."
-                  side="left"
-                />
-              </div>
-              <span className="text-sm font-medium">
-                {localWithdrawalRate.toFixed(1)}%
-              </span>
-            </div>
-            <Slider
-              value={[localWithdrawalRate]}
-              onValueChange={([value]) => setLocalWithdrawalRate(value)}
-              onValueCommit={([value]) => setDrawdownConfig({ initialWithdrawalRate: value })}
-              min={2}
-              max={8}
-              step={0.5}
-            />
-            <p className="text-xs text-muted-foreground">
-              Traditional &quot;safe&quot; rate is 4%. SA research suggests 3-5%
-              may be appropriate.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Label>Lump Sum at Retirement</Label>
-                <InfoTooltip
-                  content="SA pension/RA rules allow you to take up to one-third of your fund as a lump sum at retirement. The first R550,000 is tax-free (lifetime); amounts above are taxed at 18–36%. The remaining two-thirds must be used to purchase an annuity."
-                  side="left"
-                />
-              </div>
-              <div className="text-right">
-                <span className="text-sm font-medium">{localLumpSum.toFixed(0)}%</span>
-                {portfolioAtRetirement != null && localLumpSum > 0 && (
-                  <span className="ml-2 text-sm text-muted-foreground">
-                    ≈ {formatCurrency(
-                      portfolioAtRetirement * (localLumpSum / 100),
-                      displayMode,
-                      yearsToRetirement,
-                      inflationRate
-                    )}
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {(["nominal", "compound"] as CompoundingMethod[]).map((method) => {
+              const active = assumptions.compoundingMethod === method
+              return (
+                <button
+                  key={method}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setAssumptions({ compoundingMethod: method })}
+                  className={cn(
+                    "relative isolate flex h-auto min-h-16 flex-col items-start justify-start gap-1 overflow-hidden rounded-md border border-transparent px-3 py-3 text-left text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                    active
+                      ? "text-primary-foreground"
+                      : "border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="compounding-method-active"
+                      className="absolute inset-0 -z-10 bg-primary"
+                      transition={
+                        shouldReduceMotion
+                          ? { duration: 0 }
+                          : { type: "spring", stiffness: 500, damping: 38 }
+                      }
+                    />
+                  )}
+                  <span className="relative z-10 block text-sm font-medium">
+                    {COMPOUNDING_METHOD_LABELS[method]}
                   </span>
-                )}
-              </div>
-            </div>
-            <Slider
-              value={[localLumpSum]}
-              onValueChange={([value]) => setLocalLumpSum(value)}
-              onValueCommit={([value]) => setDrawdownConfig({ lumpSumPercentage: value })}
-              min={0}
-              max={33}
-              step={1}
-            />
-            <p className="text-xs text-muted-foreground">
-              SA regulations cap the lump sum at one-third (33%) of pension/RA funds. TFSA and discretionary funds have no restriction.
-            </p>
+                  <span className="relative z-10 block text-xs font-normal leading-5 opacity-80">
+                    {COMPOUNDING_METHOD_DESCRIPTIONS[method]}
+                  </span>
+                </button>
+              )
+            })}
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="monthlyMedicalAid">Medical Aid (R/month, today&apos;s value)</Label>
-                <InfoTooltip
-                  content="Enter your current monthly medical aid contribution in today's Rands. The projection escalates this with inflation each year. It reduces net retirement income but generates an s6A tax credit (R364/month for principal member + first dependant, R246/month per additional dependant) that directly reduces income tax."
-                  side="left"
-                />
-              </div>
-              <Input
-                id="monthlyMedicalAid"
-                type="number"
-                min="0"
-                step="100"
-                placeholder="0"
-                value={drawdownConfig.monthlyMedicalAid ?? ""}
-                onChange={(e) =>
-                  setDrawdownConfig({
-                    monthlyMedicalAid: e.target.value === "" ? undefined : Number(e.target.value),
-                  })
-                }
+        <div className="pt-2 border-t border-border">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="inflationRate">Expected Inflation (%)</Label>
+              <InfoTooltip
+                content="Expected annual CPI inflation rate. Used to project your income needs at retirement and to adjust withdrawals each year to preserve purchasing power. SA historical average: 5–6%. This rate affects how much you'll need in nominal terms at retirement."
+                side="right"
               />
             </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="medicalAidDependants">Dependants</Label>
-                <InfoTooltip
-                  content="Number of additional beneficiaries on your medical aid (excluding yourself). Each additional dependant adds a s6A credit of R364/month (first) or R246/month (subsequent) to reduce your tax."
-                  side="left"
-                />
-              </div>
+            <div className="flex items-center gap-3">
               <Input
-                id="medicalAidDependants"
+                id="inflationRate"
                 type="number"
                 min="0"
-                max="10"
-                step="1"
-                placeholder="0"
-                value={drawdownConfig.medicalAidDependants ?? ""}
-                onChange={(e) =>
-                  setDrawdownConfig({
-                    medicalAidDependants: e.target.value === "" ? undefined : Number(e.target.value),
-                  })
-                }
+                max="20"
+                step="0.5"
+                className="max-w-[120px]"
+                {...register("inflationRate", { valueAsNumber: true })}
               />
-              <p className="text-xs text-muted-foreground">
-                Tax credits: R364/month (member), R364 (1st dependant), R246 each thereafter.
-              </p>
+              <p className="text-xs text-muted-foreground">SA historical average: 5–6%</p>
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+    </PageCard>
   )
 }

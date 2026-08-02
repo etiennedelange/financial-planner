@@ -1,5 +1,5 @@
-import { defineConfig } from 'vitest/config'
-import path from 'path'
+import path from 'path';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
@@ -7,11 +7,12 @@ export default defineConfig({
     environment: 'happy-dom',
     setupFiles: [],
     exclude: [
-      'node_modules',
+      '**/node_modules/**',
       'dist',
       '.idea',
       '.git',
       '.cache',
+      '.worktrees/**',
       'e2e/**',
       '**/*.spec.ts',
     ],
@@ -27,7 +28,7 @@ export default defineConfig({
         '**/types/**',
         '**/__tests__/**',
         '**/verify-*.ts',
-        'history/**',
+        'docs/history/**',
       ],
       thresholds: {
         lines: 90,

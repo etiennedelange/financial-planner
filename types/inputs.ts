@@ -55,7 +55,7 @@ export interface DrawdownConfig {
   // Medical aid (retirement phase)
   monthlyMedicalAid?: number    // Monthly contribution paid from retirement income
   medicalAidDependants?: number // Number of additional beneficiaries (0 = member only)
-  // Guardrails specific
-  upperGuardrail?: number // % above which to increase withdrawal
-  lowerGuardrail?: number // % below which to decrease withdrawal
+  // Guardrails specific (Guyton-Klinger decision rules)
+  upperGuardrail?: number // % above target rate at which withdrawal is cut 10% (capital preservation)
+  lowerGuardrail?: number // % below target rate at which withdrawal is raised 10% (prosperity rule)
 }

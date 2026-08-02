@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { randomNormal, generateReturnSequence, getPercentile } from '../random-returns'
+import { describe, it, expect, vi } from 'vitest'
+import { randomNormal, generateReturnSequence, getPercentile, createSeededRandom } from '../random-returns'
 
 describe('randomNormal', () => {
   it('should generate normally distributed random numbers', () => {
@@ -28,6 +28,18 @@ describe('randomNormal', () => {
     const val2 = randomNormal(0, 1)
     // Extremely unlikely to be the same
     expect(val1).not.toBe(val2)
+  })
+
+  it('should stay finite when Math.random() returns exactly 0', () => {
+    // Box-Muller's u1 feeds Math.log(u1); Math.random() can return exactly 0,
+    // giving Math.log(0) = -Infinity and poisoning the whole draw with ±Infinity.
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValueOnce(0.5)
+    try {
+      const result = randomNormal(0.1, 0.15)
+      expect(Number.isFinite(result)).toBe(true)
+    } finally {
+      randomSpy.mockRestore()
+    }
   })
 })
 
@@ -157,5 +169,66 @@ describe('getPercentile', () => {
     expect(getPercentile(data, 0)).toBe(-100)
     expect(getPercentile(data, 50)).toBe(0)
     expect(getPercentile(data, 100)).toBe(100)
+  })
+})
+
+describe('createSeededRandom', () => {
+  it('produces the same sequence for the same seed', () => {
+    const a = createSeededRandom(42)
+    const b = createSeededRandom(42)
+    const seqA = Array.from({ length: 20 }, () => a())
+    const seqB = Array.from({ length: 20 }, () => b())
+    expect(seqA).toEqual(seqB)
+  })
+
+  it('produces a different sequence for a different seed', () => {
+    const a = createSeededRandom(1)
+    const b = createSeededRandom(2)
+    const seqA = Array.from({ length: 20 }, () => a())
+    const seqB = Array.from({ length: 20 }, () => b())
+    expect(seqA).not.toEqual(seqB)
+  })
+
+  it('returns values in [0, 1)', () => {
+    const rng = createSeededRandom(12345)
+    for (let i = 0; i < 500; i++) {
+      const v = rng()
+      expect(v).toBeGreaterThanOrEqual(0)
+      expect(v).toBeLessThan(1)
+    }
+  })
+
+  it('does not degenerate to a constant', () => {
+    const rng = createSeededRandom(7)
+    const values = new Set(Array.from({ length: 100 }, () => rng()))
+    expect(values.size).toBeGreaterThan(90)
+  })
+
+  it('has a mean near 0.5 over many draws', () => {
+    const rng = createSeededRandom(99)
+    const n = 20000
+    let sum = 0
+    for (let i = 0; i < n; i++) sum += rng()
+    expect(sum / n).toBeCloseTo(0.5, 1)
+  })
+})
+
+describe('generateReturnSequence with injected rng', () => {
+  it('is deterministic for the same seed', () => {
+    const a = generateReturnSequence(0.11, 0.15, 30, createSeededRandom(5))
+    const b = generateReturnSequence(0.11, 0.15, 30, createSeededRandom(5))
+    expect(a).toEqual(b)
+  })
+
+  it('differs for different seeds', () => {
+    const a = generateReturnSequence(0.11, 0.15, 30, createSeededRandom(5))
+    const b = generateReturnSequence(0.11, 0.15, 30, createSeededRandom(6))
+    expect(a).not.toEqual(b)
+  })
+
+  it('still works without an injected rng (defaults to Math.random)', () => {
+    const seq = generateReturnSequence(0.11, 0.15, 10)
+    expect(seq).toHaveLength(10)
+    expect(seq.every((r) => Number.isFinite(r))).toBe(true)
   })
 })

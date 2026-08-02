@@ -60,7 +60,7 @@ pnpm-lock.yaml
 # *.spec.tsx
 
 # Historical documentation (uncomment if you rarely reference it)
-# history/
+# docs/history/
 
 # Large data/media files that don't need AI analysis
 # *.png

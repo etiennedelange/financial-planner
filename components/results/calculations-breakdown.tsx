@@ -1,11 +1,8 @@
 "use client"
 
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { PageCard } from "@/components/ui/page-card"
+import { SectionLabel } from "@/components/ui/section-label"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   Accordion,
   AccordionContent,
@@ -20,12 +17,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  SlidersHorizontal,
+  Calculator,
+  TrendingUp,
+  TrendingDown,
+  Shuffle,
+  Receipt,
+  FileText,
+  Percent,
+  Landmark,
+} from "lucide-react"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useShallow } from "zustand/react/shallow"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import { getSpendingPhaseMultiplier } from "@/lib/calculations/utils/spending-phase"
 import { calculateMonthlyReturn, formatMonthlyReturnFormula } from "@/lib/calculations/utils/projection"
+import { escalate } from "@/lib/calculations/utils/money-time"
 import { calculateRAOptimization } from "@/lib/calculations/utils/ra-optimization"
 import { formatCurrency } from "@/lib/utils/currency"
 import type { ProjectionResult } from "@/types"
@@ -38,6 +47,32 @@ function getSpendingPhaseName(yearsInRetirement: number): string {
   if (yearsInRetirement <= 15) return "Go-Go"
   if (yearsInRetirement <= 25) return "Slow-Go"
   return "No-Go"
+}
+
+// Account type → design-system chart token (text color)
+const typeTextColor: Record<string, string> = {
+  tfsa: "text-chart-2",
+  discretionary: "text-chart-4",
+  pension_fund: "text-warning",
+  retirement_annuity: "text-warning",
+  preservation_fund: "text-warning",
+}
+
+// Account type → background + border using chart token opacity utilities
+const typeCardBg: Record<string, string> = {
+  tfsa: "bg-chart-2/10 border-chart-2/20",
+  discretionary: "bg-chart-4/10 border-chart-4/20",
+  pension_fund: "bg-warning/10 border-warning/20",
+  retirement_annuity: "bg-warning/10 border-warning/20",
+  preservation_fund: "bg-warning/10 border-warning/20",
+}
+
+const typeLabel: Record<string, string> = {
+  tfsa: "TFSA",
+  discretionary: "Discretionary",
+  pension_fund: "Pension Fund",
+  retirement_annuity: "Retirement Annuity",
+  preservation_fund: "Preservation Fund",
 }
 
 interface CalculationsBreakdownProps {
@@ -59,14 +94,12 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
 
   const inflationRate = retirementGoals.inflationRate / 100
   const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
-  // Display-mode-aware currency formatter: yearsFromNow=0 for today's values, yearsToRetirement for retirement values
   const fmt = (value: number, yearsFromNow: number = 0) =>
     formatCurrency(value, displayMode, yearsFromNow, inflationRate)
 
   const calculations = (() => {
     if (!projection || accounts.length === 0) return null
 
-    // Aggregate account data (for Input Summary display)
     const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
     const totalMonthlyContribution = accounts.reduce(
       (sum, acc) => sum + acc.monthlyContribution,
@@ -100,10 +133,8 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
     const yearsInRetirement = personalInfo.lifeExpectancy - personalInfo.retirementAge
     const monthlyReturn = calculateMonthlyReturn(netReturn, assumptions.compoundingMethod)
     const desiredMonthlyAtRetirement =
-      retirementGoals.desiredMonthlyIncome *
-      Math.pow(1 + inflationRate, yearsToRetirement)
+      escalate(retirementGoals.desiredMonthlyIncome, yearsToRetirement, inflationRate)
 
-    // Tax rebates based on retirement age
     let applicableRebate: number = SA_TAX_LIMITS.primaryRebate
     let taxThreshold: number = SA_TAX_LIMITS.taxThresholdUnder65
     if (personalInfo.retirementAge >= 75) {
@@ -123,7 +154,6 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
       ) ?? null
 
     return {
-      // Aggregate inputs
       totalBalance,
       totalMonthlyContribution,
       totalAnnualContribution,
@@ -137,13 +167,9 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
       yearsInRetirement,
       volatility: assumptions.equityVolatility,
       desiredMonthlyAtRetirement,
-
-      // Tax info
       firstRetirementYear,
       applicableRebate,
       taxThreshold,
-
-      // Formula strings
       formulas: {
         monthlyReturn: formatMonthlyReturnFormula(netReturn, assumptions.compoundingMethod),
         futureExpenses: `${fmt(retirementGoals.desiredMonthlyIncome)} × (1 + ${formatPercent(inflationRate * 100)})^${yearsToRetirement} = ${fmt(desiredMonthlyAtRetirement, yearsToRetirement)}`,
@@ -153,32 +179,21 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
   })()
 
   if (!calculations || !projection) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Calculations Breakdown</CardTitle>
-          <CardDescription>Add accounts to see detailed calculations</CardDescription>
-        </CardHeader>
-      </Card>
-    )
+    return <PageCard label="Calculations Breakdown" description="Add accounts to see detailed calculations" />
   }
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Calculations Breakdown</CardTitle>
-          <CardDescription>
-            Detailed view of all calculations and formulas used
-          </CardDescription>
-        </CardHeader>
-      </Card>
-
-      <Accordion type="multiple" defaultValue={["inputs", "formulas"]} className="space-y-2">
+    <Card className="dashboard-card shadow-none">
+      <CardContent className="pt-6 space-y-4">
+        <SectionLabel>Calculations Breakdown</SectionLabel>
+        <Accordion type="multiple" defaultValue={["inputs", "formulas"]}>
         {/* Input Summary */}
-        <AccordionItem value="inputs" className="border rounded-lg px-4">
-          <AccordionTrigger className="text-lg font-semibold">
-            1. Input Summary
+        <AccordionItem value="inputs" className="border-b last:border-b-0">
+          <AccordionTrigger className="text-base font-semibold">
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4 text-muted-foreground flex-none" />
+              Input Summary
+            </div>
           </AccordionTrigger>
           <AccordionContent>
             <div className="grid gap-4 md:grid-cols-2">
@@ -296,9 +311,12 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
         </AccordionItem>
 
         {/* Key Formulas */}
-        <AccordionItem value="formulas" className="border rounded-lg px-4">
-          <AccordionTrigger className="text-lg font-semibold">
-            2. Key Formulas
+        <AccordionItem value="formulas" className="border-b last:border-b-0">
+          <AccordionTrigger className="text-base font-semibold">
+            <div className="flex items-center gap-2">
+              <Calculator className="h-4 w-4 text-muted-foreground flex-none" />
+              Key Formulas
+            </div>
           </AccordionTrigger>
           <AccordionContent>
             <div className="space-y-4">
@@ -397,29 +415,33 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
         </AccordionItem>
 
         {/* Accumulation Projections */}
-        <AccordionItem value="accumulation" className="border rounded-lg px-4">
-          <AccordionTrigger className="text-lg font-semibold">
-            3. Accumulation Phase ({calculations.yearsToRetirement} years)
+        <AccordionItem value="accumulation" className="border-b last:border-b-0">
+          <AccordionTrigger className="text-base font-semibold">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-muted-foreground flex-none" />
+              Accumulation Phase ({calculations.yearsToRetirement} years)
+            </div>
           </AccordionTrigger>
           <AccordionContent>
             <div className="space-y-4">
-              <div className="rounded-lg bg-green-50 dark:bg-green-950 p-4">
-                <p className="text-lg font-semibold text-green-700 dark:text-green-300">
+              <div className="rounded-lg bg-primary/5 p-4">
+                <p className="text-lg font-semibold text-primary">
                   Portfolio at Retirement:{" "}
                   {fmt(projection.portfolioAtRetirement, yearsToRetirement)}
-                  {displayMode === 'real' && <span className="text-sm font-normal ml-1">(today&apos;s value)</span>}
+                  {displayMode === 'real' && <span className="text-sm font-normal ml-1 text-muted-foreground">(today&apos;s value)</span>}
                 </p>
               </div>
 
               <div className="max-h-96 overflow-auto">
                 <Table>
+                  <caption className="sr-only">Yearly accumulation phase projections by age</caption>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Year</TableHead>
                       <TableHead>Age</TableHead>
                       <TableHead className="text-right">Start Balance</TableHead>
-                      <TableHead className="text-right">Contributions</TableHead>
-                      <TableHead className="text-right">Growth</TableHead>
+                      <TableHead className="text-right text-chart-4">Contributions</TableHead>
+                      <TableHead className="text-right text-chart-2">Growth</TableHead>
                       <TableHead className="text-right">End Balance</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -433,10 +455,10 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                           <TableCell className="text-right font-mono text-sm">
                             {fmt(proj.startingBalance, proj.age - personalInfo.currentAge)}
                           </TableCell>
-                          <TableCell className="text-right font-mono text-sm text-blue-600 dark:text-blue-400">
+                          <TableCell className="text-right font-mono text-sm text-chart-4">
                             +{fmt(proj.contributions, proj.age - personalInfo.currentAge)}
                           </TableCell>
-                          <TableCell className="text-right font-mono text-sm text-green-600 dark:text-green-400">
+                          <TableCell className="text-right font-mono text-sm text-chart-2">
                             +{fmt(proj.growth, proj.age - personalInfo.currentAge)}
                           </TableCell>
                           <TableCell className="text-right font-mono text-sm font-medium">
@@ -452,18 +474,21 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
         </AccordionItem>
 
         {/* Drawdown Projections */}
-        <AccordionItem value="drawdown" className="border rounded-lg px-4">
-          <AccordionTrigger className="text-lg font-semibold">
-            4. Drawdown Phase ({calculations.yearsInRetirement} years planned)
+        <AccordionItem value="drawdown" className="border-b last:border-b-0">
+          <AccordionTrigger className="text-base font-semibold">
+            <div className="flex items-center gap-2">
+              <TrendingDown className="h-4 w-4 text-muted-foreground flex-none" />
+              Drawdown Phase ({calculations.yearsInRetirement} years planned)
+            </div>
           </AccordionTrigger>
           <AccordionContent>
             <div className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-lg bg-blue-50 dark:bg-blue-950 p-4">
+                <div className="rounded-lg bg-muted p-4">
                   <p className="text-sm text-muted-foreground">
                     Initial Monthly Withdrawal
                   </p>
-                  <p className="text-lg font-semibold text-blue-700 dark:text-blue-300">
+                  <p className="text-lg font-semibold text-foreground font-mono">
                     {fmt(projection.monthlyIncomeAtRetirement, yearsToRetirement)}/month
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -473,16 +498,16 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                 <div
                   className={`rounded-lg p-4 ${
                     projection.portfolioDepletionAge
-                      ? "bg-red-50 dark:bg-red-950"
-                      : "bg-green-50 dark:bg-green-950"
+                      ? "bg-destructive/10"
+                      : "bg-primary/5"
                   }`}
                 >
                   <p className="text-sm text-muted-foreground">Portfolio Depletion</p>
                   <p
                     className={`text-lg font-semibold ${
                       projection.portfolioDepletionAge
-                        ? "text-red-700 dark:text-red-300"
-                        : "text-green-700 dark:text-green-300"
+                        ? "text-destructive"
+                        : "text-primary"
                     }`}
                   >
                     {projection.portfolioDepletionAge
@@ -494,16 +519,17 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
 
               <div className="max-h-96 overflow-auto">
                 <Table>
+                  <caption className="sr-only">Yearly drawdown phase projections: withdrawals, growth, tax, and balance by retirement spending phase</caption>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Yr</TableHead>
                       <TableHead>Age</TableHead>
                       <TableHead className="text-right">Start</TableHead>
-                      <TableHead className="text-right">Growth</TableHead>
+                      <TableHead className="text-right text-chart-2">Growth</TableHead>
                       <TableHead>Phase</TableHead>
-                      <TableHead className="text-right text-green-700 dark:text-green-400">TFSA</TableHead>
-                      <TableHead className="text-right text-blue-700 dark:text-blue-400">Discret.</TableHead>
-                      <TableHead className="text-right text-orange-700 dark:text-orange-400">Pension</TableHead>
+                      <TableHead className="text-right text-chart-2">TFSA</TableHead>
+                      <TableHead className="text-right text-chart-4">Discretionary</TableHead>
+                      <TableHead className="text-right text-warning">Pension</TableHead>
                       <TableHead className="text-right">Tax</TableHead>
                       <TableHead className="text-right">End</TableHead>
                     </TableRow>
@@ -518,14 +544,14 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                         return (
                           <TableRow
                             key={proj.year}
-                            className={proj.endingBalance <= 0 ? "bg-red-50 dark:bg-red-950" : ""}
+                            className={proj.endingBalance <= 0 ? "bg-destructive/5" : ""}
                           >
                             <TableCell>{idx + 1}</TableCell>
                             <TableCell>{proj.age}</TableCell>
                             <TableCell className="text-right font-mono text-sm">
                               {fmt(proj.startingBalance, proj.age - personalInfo.currentAge)}
                             </TableCell>
-                            <TableCell className="text-right font-mono text-sm text-green-600 dark:text-green-400">
+                            <TableCell className="text-right font-mono text-sm text-chart-2">
                               +{fmt(proj.growth, proj.age - personalInfo.currentAge)}
                             </TableCell>
                             <TableCell>
@@ -533,16 +559,16 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                                 {phaseName} ({formatPercent(phaseMultiplier * 100, 0)})
                               </span>
                             </TableCell>
-                            <TableCell className="text-right font-mono text-sm text-green-700 dark:text-green-400">
+                            <TableCell className="text-right font-mono text-sm text-chart-2">
                               {proj.tfsaWithdrawal ? fmt(proj.tfsaWithdrawal, proj.age - personalInfo.currentAge) : "—"}
                             </TableCell>
-                            <TableCell className="text-right font-mono text-sm text-blue-700 dark:text-blue-400">
+                            <TableCell className="text-right font-mono text-sm text-chart-4">
                               {proj.discretionaryWithdrawal ? fmt(proj.discretionaryWithdrawal, proj.age - personalInfo.currentAge) : "—"}
                             </TableCell>
-                            <TableCell className="text-right font-mono text-sm text-orange-700 dark:text-orange-400">
+                            <TableCell className="text-right font-mono text-sm text-warning">
                               {proj.pensionWithdrawal ? fmt(proj.pensionWithdrawal, proj.age - personalInfo.currentAge) : "—"}
                             </TableCell>
-                            <TableCell className="text-right font-mono text-sm text-red-600 dark:text-red-400">
+                            <TableCell className="text-right font-mono text-sm text-destructive">
                               {proj.incomeTax > 0 ? `-${fmt(proj.incomeTax, proj.age - personalInfo.currentAge)}` : "—"}
                             </TableCell>
                             <TableCell className="text-right font-mono text-sm font-medium">
@@ -569,13 +595,11 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                   const startBal = projection.accountBalancesAtRetirement[acc.id] ?? 0
                   if (startBal <= 0) return null
 
-                  // Find first year balance hits zero
                   const depletionRow = drawdownRows.find(
                     p => (p.accountBalances?.[acc.id] ?? 0) <= 0
                   )
                   const depletionAge = depletionRow?.age ?? null
 
-                  // Balance at life expectancy (last row)
                   const lastRow = drawdownRows[drawdownRows.length - 1]
                   const finalBal = lastRow?.accountBalances?.[acc.id] ?? 0
 
@@ -589,28 +613,6 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
 
                 if (accountInfos.length === 0) return null
 
-                const typeColor: Record<string, string> = {
-                  tfsa: "text-green-700 dark:text-green-400",
-                  discretionary: "text-blue-700 dark:text-blue-400",
-                  pension_fund: "text-orange-700 dark:text-orange-400",
-                  retirement_annuity: "text-orange-700 dark:text-orange-400",
-                  preservation_fund: "text-orange-700 dark:text-orange-400",
-                }
-                const typeBg: Record<string, string> = {
-                  tfsa: "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800",
-                  discretionary: "bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800",
-                  pension_fund: "bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800",
-                  retirement_annuity: "bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800",
-                  preservation_fund: "bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800",
-                }
-                const typeLabel: Record<string, string> = {
-                  tfsa: "TFSA",
-                  discretionary: "Discretionary",
-                  pension_fund: "Pension Fund",
-                  retirement_annuity: "Retirement Annuity",
-                  preservation_fund: "Preservation Fund",
-                }
-
                 const totalYears = personalInfo.lifeExpectancy - personalInfo.retirementAge
 
                 return (
@@ -623,26 +625,28 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                           ? depletionAge - personalInfo.retirementAge
                           : totalYears
                         const pct = Math.min(100, Math.round((yearsActive / totalYears) * 100))
+                        const cardBg = typeCardBg[acc.type] ?? "bg-muted border-border"
+                        const textColor = typeTextColor[acc.type] ?? "text-muted-foreground"
 
                         return (
                           <div
                             key={acc.id}
-                            className={`rounded-lg border p-3 space-y-2 ${typeBg[acc.type] ?? "bg-muted border-border"}`}
+                            className={`rounded-lg border p-3 space-y-2 ${cardBg}`}
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div>
                                 <p className="text-sm font-medium leading-tight">{acc.name}</p>
-                                <p className={`text-xs ${typeColor[acc.type] ?? "text-muted-foreground"}`}>
+                                <p className={`text-xs ${textColor}`}>
                                   {typeLabel[acc.type] ?? acc.type}
                                 </p>
                               </div>
                               <div className="text-right shrink-0">
                                 {depletes ? (
-                                  <p className="text-xs font-semibold text-red-600 dark:text-red-400">
+                                  <p className="text-xs font-semibold text-destructive">
                                     Depletes age {depletionAge}
                                   </p>
                                 ) : (
-                                  <p className="text-xs font-semibold text-green-700 dark:text-green-400">
+                                  <p className={`text-xs font-semibold text-chart-2`}>
                                     Lasts to age {personalInfo.lifeExpectancy}+
                                   </p>
                                 )}
@@ -653,12 +657,18 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                                 <span>Start: {fmt(startBal, yearsToRetirement)}</span>
                                 <span>End: {depletes ? "—" : fmt(finalBal, personalInfo.lifeExpectancy - personalInfo.currentAge)}</span>
                               </div>
-                              <div className="h-1.5 rounded-full bg-background/60 overflow-hidden">
+                              <div
+                                className="h-1.5 rounded-full bg-background/60 overflow-hidden"
+                                role="presentation"
+                              >
                                 <div
+                                  role="progressbar"
+                                  aria-valuenow={pct}
+                                  aria-valuemin={0}
+                                  aria-valuemax={100}
+                                  aria-label={`${acc.name}: ${depletes ? `depletes at age ${depletionAge}` : `lasts full retirement (${totalYears} years)`}`}
                                   className={`h-full rounded-full transition-all ${
-                                    depletes
-                                      ? "bg-red-400 dark:bg-red-600"
-                                      : "bg-green-500 dark:bg-green-600"
+                                    depletes ? "bg-destructive/70" : "bg-chart-2"
                                   }`}
                                   style={{ width: `${pct}%` }}
                                 />
@@ -681,9 +691,12 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
         </AccordionItem>
 
         {/* Monte Carlo Info */}
-        <AccordionItem value="montecarlo" className="border rounded-lg px-4">
-          <AccordionTrigger className="text-lg font-semibold">
-            5. Monte Carlo Simulation
+        <AccordionItem value="montecarlo" className="border-b last:border-b-0">
+          <AccordionTrigger className="text-base font-semibold">
+            <div className="flex items-center gap-2">
+              <Shuffle className="h-4 w-4 text-muted-foreground flex-none" />
+              Monte Carlo Simulation
+            </div>
           </AccordionTrigger>
           <AccordionContent>
             <div className="space-y-4">
@@ -737,16 +750,19 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
         </AccordionItem>
 
         {/* Retirement Tax Analysis */}
-        <AccordionItem value="tax-analysis" className="border rounded-lg px-4">
-          <AccordionTrigger className="text-lg font-semibold">
-            6. Retirement Tax Analysis
+        <AccordionItem value="tax-analysis" className="border-b last:border-b-0">
+          <AccordionTrigger className="text-base font-semibold">
+            <div className="flex items-center gap-2">
+              <Receipt className="h-4 w-4 text-muted-foreground flex-none" />
+              Retirement Tax Analysis
+            </div>
           </AccordionTrigger>
           <AccordionContent>
             <div className="space-y-4">
               {/* Lump Sum Commutation */}
               {projection.lumpSumCommutation.lumpSumPercentage > 0 ? (
-                <div className="rounded-lg bg-amber-50 dark:bg-amber-950 p-4">
-                  <h4 className="font-medium text-amber-700 dark:text-amber-300 mb-3">
+                <div className="rounded-lg bg-warning/10 p-4">
+                  <h4 className="font-medium text-warning mb-3">
                     Lump Sum Commutation at Retirement ({projection.lumpSumCommutation.lumpSumPercentage}%)
                   </h4>
                   <Table>
@@ -759,13 +775,13 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                       </TableRow>
                       <TableRow>
                         <TableCell>Lump Sum Tax</TableCell>
-                        <TableCell className="text-right font-mono text-red-600 dark:text-red-400">
+                        <TableCell className="text-right font-mono text-destructive">
                           -{fmt(projection.lumpSumCommutation.lumpSumTax, yearsToRetirement)}
                         </TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell className="font-medium">Net Lump Sum Received</TableCell>
-                        <TableCell className="text-right font-mono font-medium text-green-600 dark:text-green-400">
+                        <TableCell className="text-right font-mono font-medium text-chart-2">
                           {fmt(projection.lumpSumCommutation.netLumpSum, yearsToRetirement)}
                         </TableCell>
                       </TableRow>
@@ -795,15 +811,15 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                 </div>
               )}
 
-              <div className="rounded-lg bg-blue-50 dark:bg-blue-950 p-4">
-                <h4 className="font-medium text-blue-700 dark:text-blue-300 mb-3">
+              <div className="rounded-lg bg-muted p-4">
+                <h4 className="font-medium text-foreground mb-3">
                   Lifetime Tax Summary
                 </h4>
                 <Table>
                   <TableBody>
                     <TableRow>
                       <TableCell className="font-medium">Total Income Tax (All Years)</TableCell>
-                      <TableCell className="text-right font-mono text-red-600 dark:text-red-400">
+                      <TableCell className="text-right font-mono text-destructive">
                         {fmt(projection.totalLifetimeIncomeTax, yearsToRetirement)}
                       </TableCell>
                     </TableRow>
@@ -857,7 +873,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                         <TableHead>Age</TableHead>
                         <TableHead className="text-right">Gross Withdrawal</TableHead>
                         <TableHead className="text-right">Income Tax</TableHead>
-                        <TableHead className="text-right">Net Income</TableHead>
+                        <TableHead className="text-right text-chart-2">Net Income</TableHead>
                         <TableHead className="text-right">Effective Rate</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -872,10 +888,10 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                             <TableCell className="text-right font-mono text-sm">
                               {fmt(proj.withdrawals, proj.age - personalInfo.currentAge)}
                             </TableCell>
-                            <TableCell className="text-right font-mono text-sm text-red-600 dark:text-red-400">
+                            <TableCell className="text-right font-mono text-sm text-destructive">
                               -{fmt(proj.incomeTax, proj.age - personalInfo.currentAge)}
                             </TableCell>
-                            <TableCell className="text-right font-mono text-sm text-green-600 dark:text-green-400">
+                            <TableCell className="text-right font-mono text-sm text-chart-2">
                               {fmt(proj.netIncome, proj.age - personalInfo.currentAge)}
                             </TableCell>
                             <TableCell className="text-right font-mono text-sm">
@@ -894,13 +910,16 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
         </AccordionItem>
 
         {/* Sample Retirement Payslip */}
-        <AccordionItem value="payslip" className="border rounded-lg px-4">
-          <AccordionTrigger className="text-lg font-semibold">
-            7. Sample Retirement Payslip
+        <AccordionItem value="payslip" className="border-b last:border-b-0">
+          <AccordionTrigger className="text-base font-semibold">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-muted-foreground flex-none" />
+              Sample Retirement Payslip
+            </div>
           </AccordionTrigger>
           <AccordionContent>
             <div className="space-y-4">
-              <div className="rounded-lg border-2 border-primary p-6 bg-background">
+              <div className="rounded-lg border border-primary/30 p-6 bg-background">
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-bold">Retirement Income Breakdown</h3>
                   <p className="text-sm text-muted-foreground">
@@ -919,7 +938,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                   <div className="space-y-2 pl-4">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Less: Income Tax</span>
-                      <span className="font-mono text-red-600 dark:text-red-400">
+                      <span className="font-mono text-destructive">
                         -{fmt(
                           calculations.firstRetirementYear
                             ? calculations.firstRetirementYear.incomeTax / 12
@@ -931,7 +950,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                     {calculations.firstRetirementYear && calculations.firstRetirementYear.lumpSumTax > 0 && (
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-muted-foreground">Less: Lump Sum Tax (One-time)</span>
-                        <span className="font-mono text-red-600 dark:text-red-400">
+                        <span className="font-mono text-destructive">
                           -{fmt(calculations.firstRetirementYear.lumpSumTax / 12, yearsToRetirement)}
                         </span>
                       </div>
@@ -939,16 +958,16 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                     {calculations.firstRetirementYear && calculations.firstRetirementYear.medicalAidContribution > 0 && (
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-muted-foreground">Less: Medical Aid</span>
-                        <span className="font-mono text-red-600 dark:text-red-400">
+                        <span className="font-mono text-destructive">
                           -{fmt(calculations.firstRetirementYear.medicalAidContribution / 12, yearsToRetirement)}
                         </span>
                       </div>
                     )}
                   </div>
 
-                  <div className="flex justify-between items-center pt-3 border-t-2 border-primary">
+                  <div className="flex justify-between items-center pt-3 border-t-2 border-primary/30">
                     <span className="text-lg font-bold">Net Monthly Income:</span>
-                    <span className="font-mono text-2xl font-bold text-green-600 dark:text-green-400">
+                    <span className="font-mono text-2xl font-bold text-chart-2">
                       {fmt(projection.monthlyNetIncomeAtRetirement, yearsToRetirement)}
                     </span>
                   </div>
@@ -962,7 +981,7 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Annual Net Income:</span>
-                      <span className="font-mono text-green-600 dark:text-green-400">
+                      <span className="font-mono text-chart-2">
                         {fmt(projection.monthlyNetIncomeAtRetirement * 12, yearsToRetirement)}
                       </span>
                     </div>
@@ -999,9 +1018,12 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
         {/* RA Contribution Optimization */}
         {(() => {
           if (personalInfo.annualIncome <= 0) return (
-            <AccordionItem value="ra-optimization" className="border rounded-lg px-4">
-              <AccordionTrigger className="text-lg font-semibold">
-                8. RA/Pension Contribution Optimisation
+            <AccordionItem value="ra-optimization" className="border-b last:border-b-0">
+              <AccordionTrigger className="text-base font-semibold">
+                <div className="flex items-center gap-2">
+                  <Percent className="h-4 w-4 text-muted-foreground flex-none" />
+                  RA/Pension Contribution Optimisation
+                </div>
               </AccordionTrigger>
               <AccordionContent>
                 <div className="rounded-lg border border-muted bg-muted/40 p-4 text-sm text-muted-foreground space-y-1">
@@ -1017,14 +1039,17 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
           )
 
           return (
-            <AccordionItem value="ra-optimization" className="border rounded-lg px-4">
-              <AccordionTrigger className="text-lg font-semibold">
-                8. RA/Pension Contribution Optimisation
-                {!opt.isFullyUtilized && opt.annualTaxSaving > 0 && (
-                  <span className="ml-2 text-sm font-normal text-amber-600 dark:text-amber-400">
-                    Save {formatCurrency(opt.annualTaxSaving)} in tax/year
-                  </span>
-                )}
+            <AccordionItem value="ra-optimization" className="border-b last:border-b-0">
+              <AccordionTrigger className="text-base font-semibold">
+                <div className="flex items-center gap-2">
+                  <Percent className="h-4 w-4 text-muted-foreground flex-none" />
+                  RA/Pension Contribution Optimisation
+                  {!opt.isFullyUtilized && opt.annualTaxSaving > 0 && (
+                    <span className="ml-2 text-sm font-normal text-warning">
+                      Save {formatCurrency(opt.annualTaxSaving)} in tax/year
+                    </span>
+                  )}
+                </div>
               </AccordionTrigger>
               <AccordionContent>
                 <div className="space-y-4">
@@ -1049,14 +1074,14 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                     </div>
                     <div className={`rounded-lg p-3 space-y-1 ${
                       opt.isFullyUtilized
-                        ? "bg-green-50 dark:bg-green-950"
-                        : "bg-amber-50 dark:bg-amber-950"
+                        ? "bg-primary/5"
+                        : "bg-warning/10"
                     }`}>
                       <p className="text-xs text-muted-foreground">Unused Deduction Room</p>
                       <p className={`font-semibold ${
                         opt.isFullyUtilized
-                          ? "text-green-700 dark:text-green-400"
-                          : "text-amber-700 dark:text-amber-400"
+                          ? "text-primary"
+                          : "text-warning"
                       }`}>
                         {opt.isFullyUtilized ? "Fully utilised" : formatCurrency(opt.remainingRoom)}
                       </p>
@@ -1072,14 +1097,19 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                       <span>Deduction utilisation</span>
                       <span>{opt.utilizationPct.toFixed(1)}%</span>
                     </div>
-                    <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div className="h-1 rounded-full bg-muted overflow-hidden" role="presentation">
                       <div
+                        role="progressbar"
+                        aria-valuenow={Math.min(100, opt.utilizationPct)}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={`RA deduction utilisation: ${opt.utilizationPct.toFixed(1)}% of limit used`}
                         className={`h-full rounded-full transition-all ${
                           opt.utilizationPct >= 100
-                            ? "bg-green-500"
+                            ? "bg-primary"
                             : opt.utilizationPct >= 60
-                            ? "bg-amber-400"
-                            : "bg-red-400"
+                            ? "bg-warning"
+                            : "bg-destructive"
                         }`}
                         style={{ width: `${Math.min(100, opt.utilizationPct)}%` }}
                       />
@@ -1088,8 +1118,8 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
 
                   {/* Tax saving callout */}
                   {!opt.isFullyUtilized && opt.annualTaxSaving > 0 && (
-                    <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 p-4 space-y-2">
-                      <p className="font-medium text-amber-800 dark:text-amber-200">
+                    <div className="rounded-lg border border-warning/30 bg-warning/10 p-4 space-y-2">
+                      <p className="font-medium text-warning">
                         You could save {formatCurrency(opt.annualTaxSaving)}/year in income tax
                       </p>
                       <p className="text-sm text-muted-foreground">
@@ -1105,8 +1135,8 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                   )}
 
                   {opt.isFullyUtilized && (
-                    <div className="rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950 p-4">
-                      <p className="font-medium text-green-800 dark:text-green-200">
+                    <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+                      <p className="font-medium text-primary">
                         Your RA/pension deduction limit is fully utilised.
                       </p>
                       <p className="text-sm text-muted-foreground mt-1">
@@ -1122,8 +1152,8 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                     const creditToDrawdown = projection?.lumpSumCommutation.creditCarriedIntoDrawdown ?? 0
                     return (
                       <div className="space-y-3">
-                        <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950 p-4 space-y-3">
-                          <p className="font-medium text-blue-800 dark:text-blue-200">
+                        <div className="rounded-lg border border-border bg-muted p-4 space-y-3">
+                          <p className="font-medium text-foreground">
                             Section 11F carry-forward credit
                           </p>
                           <p className="text-sm text-muted-foreground">
@@ -1131,17 +1161,17 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                             These disallowed contributions accumulate as a carry-forward credit that reduces your tax at retirement.
                           </p>
                           <div className="grid gap-3 sm:grid-cols-3 pt-1">
-                            <div className="rounded-lg bg-background/60 p-3 space-y-1">
+                            <div className="rounded border border-border/50 p-3 space-y-1">
                               <p className="text-xs text-muted-foreground">Annual excess</p>
                               <p className="font-semibold">{formatCurrency(annualExcess)}</p>
                               <p className="text-xs text-muted-foreground">not deductible this year</p>
                             </div>
-                            <div className="rounded-lg bg-background/60 p-3 space-y-1">
+                            <div className="rounded border border-border/50 p-3 space-y-1">
                               <p className="text-xs text-muted-foreground">Accumulated credit at retirement</p>
                               <p className="font-semibold">{accumulated > 0 ? formatCurrency(accumulated) : "—"}</p>
                               <p className="text-xs text-muted-foreground">total carry-forward built up</p>
                             </div>
-                            <div className="rounded-lg bg-background/60 p-3 space-y-1">
+                            <div className="rounded border border-border/50 p-3 space-y-1">
                               <p className="text-xs text-muted-foreground">Applied at retirement</p>
                               <p className="font-semibold">
                                 {creditToLumpSum > 0 ? formatCurrency(creditToLumpSum) : "—"}
@@ -1181,7 +1211,8 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
           )
         })()
         })()}
-      </Accordion>
-    </div>
+        </Accordion>
+      </CardContent>
+    </Card>
   )
 }

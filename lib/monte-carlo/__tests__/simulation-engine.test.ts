@@ -1,8 +1,16 @@
-import { describe, it, expect } from 'vitest'
+import { afterEach, describe, it, expect, vi } from 'vitest'
 import { runMonteCarloSimulation } from '../simulation-engine'
+import { calculateIncomeTaxWithRebates, calculateLumpSumCommutation } from '@/lib/calculations/retirement-tax'
+import { SA_TAX_LIMITS } from '@/lib/constants/limits'
 import type { Account, PersonalInfo, RetirementGoals, DrawdownConfig, SimulationConfig } from '@/types'
 
 describe('runMonteCarloSimulation', () => {
+  // Guarantees no test can leak a mocked Math.random into its successors, even if it
+  // fails before reaching its own cleanup.
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   const baseAccount: Account = {
     id: '1',
     name: 'Test RA',
@@ -38,6 +46,9 @@ describe('runMonteCarloSimulation', () => {
 
   const baseSimulationConfig: SimulationConfig = {
     numberOfRuns: 100, // Smaller for testing
+    // Fixed seed: several assertions here compare success rates across configurations,
+    // which is only meaningful when the draws are identical.
+    randomSeed: 20260726,
   }
 
   describe('Basic simulation functionality', () => {
@@ -47,7 +58,7 @@ describe('runMonteCarloSimulation', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 50 }
+        { numberOfRuns: 50, randomSeed: 20260726 }
       )
 
       expect(result.runs.length).toBe(50)
@@ -200,7 +211,7 @@ describe('runMonteCarloSimulation', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 50 }
+        { numberOfRuns: 50, randomSeed: 20260726 }
       )
 
       // Well-funded should have good success rate
@@ -318,6 +329,27 @@ describe('runMonteCarloSimulation', () => {
     })
   })
 
+  describe('Zero runs handling', () => {
+    it('should not divide by zero when numberOfRuns is 0', () => {
+      // aggregateResults divided by runs.length unconditionally, so an empty
+      // runs array (numberOfRuns: 0, with real accounts present) produced
+      // NaN for successRate/averageFinalBalance/averageLifetimeIncomeTax/
+      // averageLumpSumTax instead of a safe degenerate result.
+      const result = runMonteCarloSimulation(
+        [baseAccount],
+        basePersonalInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig,
+        { numberOfRuns: 0, randomSeed: 20260726 }
+      )
+
+      expect(result.runs.length).toBe(0)
+      expect(Number.isFinite(result.successRate)).toBe(true)
+      expect(result.successRate).toBe(0)
+      expect(Number.isFinite(result.averageFinalBalance)).toBe(true)
+    })
+  })
+
   describe('Compounding methods', () => {
     it('should use nominal compounding by default', () => {
       const resultNoMethod = runMonteCarloSimulation(
@@ -347,7 +379,7 @@ describe('runMonteCarloSimulation', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 100 },
+        { numberOfRuns: 100, randomSeed: 20260726 },
         { compoundingMethod: 'nominal', equityReturn: 12, bondReturn: 8, cashReturn: 6, equityVolatility: 16, bondVolatility: 8, inflationRate: 5.5 }
       )
 
@@ -356,7 +388,7 @@ describe('runMonteCarloSimulation', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 100 },
+        { numberOfRuns: 100, randomSeed: 20260726 },
         { compoundingMethod: 'compound', equityReturn: 12, bondReturn: 8, cashReturn: 6, equityVolatility: 16, bondVolatility: 8, inflationRate: 5.5 }
       )
 
@@ -375,7 +407,7 @@ describe('runMonteCarloSimulation', () => {
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        { strategy: 'fixed_percentage', initialWithdrawalRate: 4, minimumWithdrawal: 10000, maximumWithdrawal: 50000 },
+        { strategy: 'fixed_percentage', initialWithdrawalRate: 4, minimumWithdrawal: 10000, maximumWithdrawal: 50000, lumpSumPercentage: 0 },
         baseSimulationConfig
       )
 
@@ -387,7 +419,7 @@ describe('runMonteCarloSimulation', () => {
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        { strategy: 'fixed_amount_inflation_adjusted', initialWithdrawalRate: 4, minimumWithdrawal: 10000, maximumWithdrawal: 50000 },
+        { strategy: 'fixed_amount_inflation_adjusted', initialWithdrawalRate: 4, minimumWithdrawal: 10000, maximumWithdrawal: 50000, lumpSumPercentage: 0 },
         baseSimulationConfig
       )
 
@@ -399,7 +431,7 @@ describe('runMonteCarloSimulation', () => {
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        { strategy: 'variable_percentage', initialWithdrawalRate: 4, minimumWithdrawal: 10000, maximumWithdrawal: 50000 },
+        { strategy: 'variable_percentage', initialWithdrawalRate: 4, minimumWithdrawal: 10000, maximumWithdrawal: 50000, lumpSumPercentage: 0 },
         baseSimulationConfig
       )
 
@@ -414,7 +446,7 @@ describe('runMonteCarloSimulation', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 100 },
+        { numberOfRuns: 100, randomSeed: 20260726 },
         { compoundingMethod: 'nominal', equityReturn: 12, bondReturn: 8, cashReturn: 6, equityVolatility: 8, bondVolatility: 4, inflationRate: 5.5 }
       )
 
@@ -423,7 +455,7 @@ describe('runMonteCarloSimulation', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 100 },
+        { numberOfRuns: 100, randomSeed: 20260726 },
         { compoundingMethod: 'nominal', equityReturn: 12, bondReturn: 8, cashReturn: 6, equityVolatility: 20, bondVolatility: 12, inflationRate: 5.5 }
       )
 
@@ -442,7 +474,7 @@ describe('runMonteCarloSimulation', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 10 }
+        { numberOfRuns: 10, randomSeed: 20260726 }
       )
 
       for (const run of result.runs) {
@@ -457,7 +489,7 @@ describe('runMonteCarloSimulation', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 20 }
+        { numberOfRuns: 20, randomSeed: 20260726 }
       )
 
       const successfulRuns = result.runs.filter((r) => r.success)
@@ -470,7 +502,7 @@ describe('runMonteCarloSimulation', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 20 }
+        { numberOfRuns: 20, randomSeed: 20260726 }
       )
 
       const ids = result.runs.map((r) => r.runId)
@@ -508,7 +540,7 @@ describe('runMonteCarloSimulation', () => {
           legacyAmount: 0,
         },
         baseDrawdownConfig,
-        { numberOfRuns: 100 }
+        { numberOfRuns: 100, randomSeed: 20260726 }
       )
 
       // Professional with decent savings and modest goals should have reasonable success rate
@@ -543,7 +575,7 @@ describe('runMonteCarloSimulation', () => {
           legacyAmount: 0,
         },
         baseDrawdownConfig,
-        { numberOfRuns: 100 }
+        { numberOfRuns: 100, randomSeed: 20260726 }
       )
 
       // Underfunded scenario — success rate will be low but non-zero
@@ -580,7 +612,7 @@ describe('runMonteCarloSimulation', () => {
           legacyAmount: 0,
         },
         baseDrawdownConfig,
-        { numberOfRuns: 100 }
+        { numberOfRuns: 100, randomSeed: 20260726 }
       )
 
       // Pre-retiree with substantial balance and reasonable goals should succeed in many scenarios
@@ -627,8 +659,9 @@ describe('runMonteCarloSimulation', () => {
           initialWithdrawalRate: 3.5,
           minimumWithdrawal: 15000,
           maximumWithdrawal: 60000,
+          lumpSumPercentage: 0,
         },
-        { numberOfRuns: 100 }
+        { numberOfRuns: 100, randomSeed: 20260726 }
       )
 
       // With R4k/month contributions for 27 years, portfolio will be ~R9M
@@ -678,8 +711,9 @@ describe('runMonteCarloSimulation', () => {
           initialWithdrawalRate: 4,
           minimumWithdrawal: 15000,
           maximumWithdrawal: 60000,
+          lumpSumPercentage: 0,
         },
-        { numberOfRuns: 100 }
+        { numberOfRuns: 100, randomSeed: 20260726 }
       )
 
       // Well-funded portfolio with modest goals should have good success rate
@@ -725,6 +759,7 @@ describe('runMonteCarloSimulation', () => {
         initialWithdrawalRate: 4,
         minimumWithdrawal: 10000,
         maximumWithdrawal: 80000,
+        lumpSumPercentage: 0,
       }
 
       const lowIncomeResult = runMonteCarloSimulation(
@@ -732,7 +767,7 @@ describe('runMonteCarloSimulation', () => {
         personalInfo,
         lowIncome,
         drawdownConfig,
-        { numberOfRuns: 100 }
+        { numberOfRuns: 100, randomSeed: 20260726 }
       )
 
       const highIncomeResult = runMonteCarloSimulation(
@@ -740,11 +775,447 @@ describe('runMonteCarloSimulation', () => {
         personalInfo,
         highIncome,
         drawdownConfig,
-        { numberOfRuns: 100 }
+        { numberOfRuns: 100, randomSeed: 20260726 }
       )
 
       // Higher desired income should result in lower success rate
       expect(lowIncomeResult.successRate).toBeGreaterThan(highIncomeResult.successRate)
     })
+  })
+
+  describe('Account-type-aware lump sum commutation (Monte Carlo)', () => {
+    // expectedReturn: 0 makes the per-account return sequence exactly 0 every year
+    // (volatility is forced to 0 too), so a single run is fully deterministic.
+    const flatAccount = (overrides: Partial<Account>): Account => ({
+      id: '1',
+      name: 'Flat account',
+      provider: 'Test Provider',
+      type: 'tfsa',
+      currentBalance: 1_000_000,
+      monthlyContribution: 0,
+      expectedReturn: 0,
+      annualFees: 0,
+      contributionEscalation: 0,
+      ...overrides,
+    })
+
+    const zeroWithdrawalDrawdownConfig: DrawdownConfig = {
+      strategy: 'fixed_percentage',
+      initialWithdrawalRate: 0,
+      minimumWithdrawal: 0,
+      maximumWithdrawal: 0,
+      lumpSumPercentage: 0,
+    }
+
+    const zeroIncomeGoals: RetirementGoals = {
+      desiredMonthlyIncome: 0,
+      inflationRate: 0,
+      legacyAmount: 0,
+    }
+
+    const flatPersonalInfo: PersonalInfo = {
+      currentAge: 64,
+      retirementAge: 65,
+      lifeExpectancy: 66,
+      annualIncome: 0,
+    }
+
+    it('does not apply lump sum commutation to a TFSA balance', () => {
+      const result = runMonteCarloSimulation(
+        [flatAccount({ type: 'tfsa' })],
+        flatPersonalInfo,
+        zeroIncomeGoals,
+        { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 30 },
+        { numberOfRuns: 1, randomSeed: 20260726 }
+      )
+
+      // No pension-type balance exists, so the 30% lump sum request must not reduce
+      // the TFSA balance — first post-retirement balance should equal the un-grown,
+      // un-withdrawn starting balance.
+      expect(result.runs[0].yearlyBalances[flatPersonalInfo.retirementAge - flatPersonalInfo.currentAge]).toBeCloseTo(1_000_000, 5)
+    })
+
+    it('does not apply lump sum commutation to a discretionary balance', () => {
+      const result = runMonteCarloSimulation(
+        [flatAccount({ type: 'discretionary' })],
+        flatPersonalInfo,
+        zeroIncomeGoals,
+        { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 30 },
+        { numberOfRuns: 1, randomSeed: 20260726 }
+      )
+
+      expect(result.runs[0].yearlyBalances[flatPersonalInfo.retirementAge - flatPersonalInfo.currentAge]).toBeCloseTo(1_000_000, 5)
+    })
+
+    it('applies lump sum commutation to a pension-type balance', () => {
+      const result = runMonteCarloSimulation(
+        [flatAccount({ type: 'retirement_annuity' })],
+        flatPersonalInfo,
+        zeroIncomeGoals,
+        { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 20 },
+        { numberOfRuns: 1, randomSeed: 20260726 }
+      )
+
+      // 20% commuted, no growth, no withdrawal -> balance should be exactly 80% of the original
+      expect(result.runs[0].yearlyBalances[flatPersonalInfo.retirementAge - flatPersonalInfo.currentAge]).toBeCloseTo(800_000, 5)
+    })
+
+    it('clamps lump sum commutation on pension-type balances to one-third', () => {
+      const overRequested = runMonteCarloSimulation(
+        [flatAccount({ type: 'retirement_annuity' })],
+        flatPersonalInfo,
+        zeroIncomeGoals,
+        { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 90 },
+        { numberOfRuns: 1, randomSeed: 20260726 }
+      )
+
+      const atCap = runMonteCarloSimulation(
+        [flatAccount({ type: 'retirement_annuity' })],
+        flatPersonalInfo,
+        zeroIncomeGoals,
+        { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: SA_TAX_LIMITS.maxLumpSumCommutationPercentage },
+        { numberOfRuns: 1, randomSeed: 20260726 }
+      )
+
+      const idx = flatPersonalInfo.retirementAge - flatPersonalInfo.currentAge
+      expect(overRequested.runs[0].yearlyBalances[idx]).toBeCloseTo(atCap.runs[0].yearlyBalances[idx], 5)
+      expect(overRequested.runs[0].yearlyBalances[idx]).toBeCloseTo(1_000_000 * (1 - 1 / 3), 5)
+    })
+
+    it('reports zero lump sum tax when no lump sum is taken', () => {
+      const result = runMonteCarloSimulation(
+        [flatAccount({ type: 'retirement_annuity' })],
+        flatPersonalInfo,
+        zeroIncomeGoals,
+        zeroWithdrawalDrawdownConfig,
+        { numberOfRuns: 1, randomSeed: 20260726 }
+      )
+
+      expect(result.runs[0].lumpSumTax).toBe(0)
+      expect(result.averageLumpSumTax).toBe(0)
+    })
+
+    it('reports lump sum tax on the commuted pension balance, matching calculateLumpSumCommutation', () => {
+      // Large enough that the 20% commuted lump sum exceeds the R550,000 tax-free
+      // retirement lump sum threshold, so the expected tax is non-zero.
+      const largeBalance = 10_000_000
+      const result = runMonteCarloSimulation(
+        [flatAccount({ type: 'retirement_annuity', currentBalance: largeBalance })],
+        flatPersonalInfo,
+        zeroIncomeGoals,
+        { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 20 },
+        { numberOfRuns: 1, randomSeed: 20260726 }
+      )
+
+      // No growth before retirement (expectedReturn: 0), so the pension balance at
+      // retirement equals the starting balance.
+      const expectedLumpSumTax = calculateLumpSumCommutation(largeBalance, 20).lumpSumTax
+      expect(expectedLumpSumTax).toBeGreaterThan(0)
+      expect(result.runs[0].lumpSumTax).toBeCloseTo(expectedLumpSumTax, 5)
+      expect(result.averageLumpSumTax).toBeCloseTo(expectedLumpSumTax, 5)
+    })
+
+    it('does not apply lump sum tax when the lump sum is sourced from a non-pension account', () => {
+      const result = runMonteCarloSimulation(
+        [flatAccount({ type: 'discretionary' })],
+        flatPersonalInfo,
+        zeroIncomeGoals,
+        { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 30 },
+        { numberOfRuns: 1, randomSeed: 20260726 }
+      )
+
+      expect(result.runs[0].lumpSumTax).toBe(0)
+      expect(result.averageLumpSumTax).toBe(0)
+    })
+  })
+
+  describe('Income tax and CGT reporting (Monte Carlo)', () => {
+    const flatPersonalInfo: PersonalInfo = {
+      currentAge: 64,
+      retirementAge: 65,
+      lifeExpectancy: 66,
+      annualIncome: 0,
+    }
+
+    it('reports zero average lifetime tax when withdrawals are sourced entirely from a TFSA', () => {
+      const account: Account = {
+        id: '1',
+        name: 'TFSA',
+        provider: 'Test Provider',
+        type: 'tfsa',
+        currentBalance: 1_000_000,
+        monthlyContribution: 0,
+        expectedReturn: 0,
+        annualFees: 0,
+        contributionEscalation: 0,
+      }
+
+      const result = runMonteCarloSimulation(
+        [account],
+        flatPersonalInfo,
+        { desiredMonthlyIncome: 20000, inflationRate: 0, legacyAmount: 0 },
+        {
+          strategy: 'fixed_amount_inflation_adjusted',
+          initialWithdrawalRate: 0,
+          minimumWithdrawal: 0,
+          maximumWithdrawal: 0,
+          lumpSumPercentage: 0,
+        },
+        { numberOfRuns: 1, randomSeed: 20260726 }
+      )
+
+      expect(result.averageLifetimeIncomeTax).toBe(0)
+    })
+
+    it('applies the configured CGT annual exclusion to discretionary capital gains before taxing', () => {
+      // expectedReturn !=0 re-enables stochastic volatility, so pin Math.random() to a fixed
+      // cycle to make the per-account return sequence (and therefore the realized gain)
+      // fully deterministic and reproducible by replicating the engine's own formulas below.
+      let callCount = 0
+      const randomSpy = vi.spyOn(Math, 'random').mockImplementation(() => (callCount++ % 2 === 0 ? 0.5 : 0.25))
+      // NOTE: restored via afterEach below as well — an inline mockRestore() at the end
+      // of this test is skipped when an assertion throws, which silently leaves
+      // Math.random mocked for every test that runs afterwards.
+
+      // Under-65 so only the primary rebate applies (keeps the tax-threshold math simple)
+      const personalInfo: PersonalInfo = { currentAge: 49, retirementAge: 50, lifeExpectancy: 51, annualIncome: 0 }
+
+      const currentBalance = 20_000_000
+      const expectedReturnPct = 5
+      const equityVolatilityPct = 16
+      const netReturn = expectedReturnPct / 100
+      const vol = equityVolatilityPct / 100
+      const logMean = Math.log(1 + netReturn) - (vol * vol) / 2
+      const z0 = Math.sqrt(-2 * Math.log(0.5)) * Math.cos(2 * Math.PI * 0.25)
+      const r = Math.exp(logMean + vol * z0) - 1
+
+      const balanceAtRetirement = currentBalance * Math.pow(1 + r / 12, 12)
+      const balanceAfterDrawdownGrowth = balanceAtRetirement * (1 + r)
+      const gainFraction = Math.max(
+        0,
+        Math.min(1, (balanceAfterDrawdownGrowth - currentBalance) / balanceAfterDrawdownGrowth)
+      )
+
+      const account: Account = {
+        id: '1',
+        name: 'Discretionary',
+        provider: 'Test Provider',
+        type: 'discretionary',
+        currentBalance,
+        monthlyContribution: 0,
+        expectedReturn: expectedReturnPct,
+        annualFees: 0,
+        contributionEscalation: 0,
+      }
+
+      const marketAssumptions = {
+        compoundingMethod: 'nominal' as const,
+        equityReturn: expectedReturnPct,
+        bondReturn: 8,
+        cashReturn: 6,
+        equityVolatility: equityVolatilityPct,
+        bondVolatility: 8,
+        inflationRate: 0,
+      }
+
+      const runWithWithdrawal = (take: number) => {
+        callCount = 0
+        return runMonteCarloSimulation(
+          [account],
+          personalInfo,
+          { desiredMonthlyIncome: take / 12, inflationRate: 0, legacyAmount: 0 },
+          {
+            strategy: 'fixed_amount_inflation_adjusted',
+            initialWithdrawalRate: 0,
+            minimumWithdrawal: 0,
+            maximumWithdrawal: 0,
+            lumpSumPercentage: 0,
+          },
+          { numberOfRuns: 1 },
+          marketAssumptions
+        )
+      }
+
+      // Below the annual exclusion -> zero CGT, zero tax
+      const smallTake = 400_000
+      const smallGain = smallTake * gainFraction
+      expect(smallGain).toBeLessThan(SA_TAX_LIMITS.cgtAnnualExclusion)
+      const smallResult = runWithWithdrawal(smallTake)
+      expect(smallResult.averageLifetimeIncomeTax).toBeCloseTo(0, 5)
+
+      // Above the annual exclusion -> only the excess is taxed
+      const largeTake = 5_000_000
+      const largeGain = largeTake * gainFraction
+      expect(largeGain).toBeGreaterThan(SA_TAX_LIMITS.cgtAnnualExclusion)
+      const taxableCapitalGain = largeGain - SA_TAX_LIMITS.cgtAnnualExclusion
+      const expectedTax = calculateIncomeTaxWithRebates(
+        taxableCapitalGain * SA_TAX_LIMITS.cgtInclusionRateIndividual,
+        personalInfo.retirementAge
+      )
+      const largeResult = runWithWithdrawal(largeTake)
+      expect(largeResult.averageLifetimeIncomeTax).toBeCloseTo(expectedTax, 0)
+      expect(largeResult.averageLifetimeIncomeTax).toBeGreaterThan(0)
+
+      randomSpy.mockRestore()
+    })
+  })
+
+  describe('Drawdown strategy divergence after year 1', () => {
+    // No accumulation phase (currentAge === retirementAge), volatility forced to 0,
+    // and a single account isolate the drawdown-year recompute so withdrawals can
+    // be hand-verified exactly via the yearlyBalances deltas. desiredMonthlyIncome
+    // is chosen so every strategy's year-0 withdrawal is the same R40,000 anchor.
+    const personalInfo: PersonalInfo = {
+      currentAge: 65,
+      retirementAge: 65,
+      lifeExpectancy: 67,
+      annualIncome: 0,
+    }
+    const goals: RetirementGoals = {
+      desiredMonthlyIncome: (1000000 * 0.04) / 12,
+      inflationRate: 5.5,
+      legacyAmount: 0,
+    }
+    const baseConfig: DrawdownConfig = {
+      strategy: 'fixed_percentage',
+      initialWithdrawalRate: 4,
+      minimumWithdrawal: 1,
+      maximumWithdrawal: 1_000_000_000,
+      lumpSumPercentage: 0,
+    }
+    const zeroVolatility = {
+      compoundingMethod: 'nominal' as const,
+      equityReturn: 0,
+      bondReturn: 0,
+      cashReturn: 0,
+      equityVolatility: 0,
+      bondVolatility: 0,
+      inflationRate: 5.5,
+    }
+
+    function run(account: Account, config: DrawdownConfig) {
+      return runMonteCarloSimulation([account], personalInfo, goals, config, { numberOfRuns: 1, randomSeed: 20260726 }, zeroVolatility)
+    }
+
+    it('a harsh negative return: guardrails cuts withdrawal by 10% when the rate breaches the upper band', () => {
+      const account: Account = {
+        id: '1',
+        name: 'Single RA',
+        type: 'retirement_annuity',
+        provider: 'Test Provider',
+        currentBalance: 1000000,
+        monthlyContribution: 0,
+        expectedReturn: -50,
+        annualFees: 0,
+        contributionEscalation: 0,
+      }
+
+      const fixedAmountResult = run(account, { ...baseConfig, strategy: 'fixed_amount_inflation_adjusted' })
+      const guardrailsResult = run(account, { ...baseConfig, strategy: 'guardrails', upperGuardrail: 20, lowerGuardrail: 20 })
+
+      // Year 0 balance: 1,000,000 * 0.5 - 40,000 = 460,000 (identical for both strategies)
+      expect(fixedAmountResult.runs[0].yearlyBalances[0]).toBeCloseTo(460000, 2)
+      expect(guardrailsResult.runs[0].yearlyBalances[0]).toBeCloseTo(460000, 2)
+
+      // Year 1: balance grows to 460,000 * 0.5 = 230,000 before withdrawal.
+      // fixed_amount_inflation_adjusted: withdrawal = 40,000 * 1.055 = 42,200 -> ending 187,800
+      // guardrails: actual rate 40,000/230,000 ≈ 17.4% breaches the 4.8% upper band
+      //   -> 10% cut: withdrawal = 36,000 -> ending 194,000 (NOT 187,800)
+      expect(fixedAmountResult.runs[0].yearlyBalances[1]).toBeCloseTo(230000 - 42200, 2)
+      expect(guardrailsResult.runs[0].yearlyBalances[1]).toBeCloseTo(230000 - 36000, 2)
+      expect(guardrailsResult.runs[0].yearlyBalances[1]).not.toBeCloseTo(fixedAmountResult.runs[0].yearlyBalances[1], 2)
+    })
+
+    it('a strong positive return: fixed_percentage tracks the live balance, diverging from CPI', () => {
+      const account: Account = {
+        id: '1',
+        name: 'Single RA',
+        type: 'retirement_annuity',
+        provider: 'Test Provider',
+        currentBalance: 1000000,
+        monthlyContribution: 0,
+        expectedReturn: 11,
+        annualFees: 0,
+        contributionEscalation: 0,
+      }
+
+      const fixedAmountResult = run(account, { ...baseConfig, strategy: 'fixed_amount_inflation_adjusted' })
+      const fixedPctResult = run(account, { ...baseConfig, strategy: 'fixed_percentage' })
+
+      // Year 0 balance: 1,000,000 * 1.11 - 40,000 = 1,070,000 (identical for both)
+      expect(fixedAmountResult.runs[0].yearlyBalances[0]).toBeCloseTo(1070000, 2)
+      expect(fixedPctResult.runs[0].yearlyBalances[0]).toBeCloseTo(1070000, 2)
+
+      // Year 1: balance grows to 1,070,000 * 1.11 = 1,187,700 before withdrawal.
+      // fixed_amount_inflation_adjusted: withdrawal = 40,000 * 1.055 = 42,200
+      // fixed_percentage: 4% of 1,187,700 = 47,508 (exceeds the desired-income
+      //   floor of 42,200, so the live-balance percentage wins) -> diverges
+      expect(fixedAmountResult.runs[0].yearlyBalances[1]).toBeCloseTo(1187700 - 42200, 2)
+      expect(fixedPctResult.runs[0].yearlyBalances[1]).toBeCloseTo(1187700 - 47508, 2)
+      expect(fixedPctResult.runs[0].yearlyBalances[1]).not.toBeCloseTo(fixedAmountResult.runs[0].yearlyBalances[1], 2)
+    })
+  })
+})
+
+describe('Reproducibility via randomSeed', () => {
+  const seedAccount: Account = {
+    id: '1', name: 'RA', type: 'retirement_annuity', provider: 'P',
+    currentBalance: 900000, monthlyContribution: 6000,
+    expectedReturn: 11, annualFees: 1.2, contributionEscalation: 6,
+  }
+  const seedPersonal: PersonalInfo = {
+    currentAge: 40, retirementAge: 65, lifeExpectancy: 90, annualIncome: 750000,
+  }
+  const seedGoals: RetirementGoals = {
+    desiredMonthlyIncome: 35000, inflationRate: 5.5, legacyAmount: 0,
+  }
+  const seedConfig: DrawdownConfig = {
+    strategy: 'fixed_percentage', initialWithdrawalRate: 4,
+    minimumWithdrawal: 10000, maximumWithdrawal: 200000, lumpSumPercentage: 0,
+  }
+
+  const run = (randomSeed?: number) =>
+    runMonteCarloSimulation(
+      [seedAccount], seedPersonal, seedGoals, seedConfig,
+      { numberOfRuns: 100, randomSeed }
+    )
+
+  it('produces identical results for the same seed', () => {
+    const a = run(4242)
+    const b = run(4242)
+
+    expect(a.successRate).toBe(b.successRate)
+    expect(a.averageFinalBalance).toBe(b.averageFinalBalance)
+    expect(a.medianDepletionAge).toBe(b.medianDepletionAge)
+    expect(a.percentiles.p50).toEqual(b.percentiles.p50)
+    expect(a.percentiles.p10).toEqual(b.percentiles.p10)
+    expect(a.percentiles.p90).toEqual(b.percentiles.p90)
+  })
+
+  it('produces different results for a different seed', () => {
+    // Guards against the seed being accepted but ignored — which is exactly what
+    // happened before: SimulationConfig.randomSeed existed but was never read.
+    const a = run(1)
+    const b = run(2)
+    expect(a.percentiles.p50).not.toEqual(b.percentiles.p50)
+  })
+
+  it('remains non-deterministic when no seed is supplied', () => {
+    const a = run()
+    const b = run()
+    expect(a.percentiles.p50).not.toEqual(b.percentiles.p50)
+  })
+
+  it('keeps individual runs independent within a seeded simulation', () => {
+    // A shared generator must not make every run identical.
+    //
+    // Asserted on an accumulation-phase balance, NOT finalBalance: depleted runs are
+    // clamped to exactly 0 by `Math.max(0, …)`, so they collapse into a single value
+    // and finalBalance under-reports variety (63 of 100 runs deplete on this fixture).
+    // Year-10 balances are unclamped and therefore measure independence rather than
+    // the clamp.
+    const result = run(777)
+    const atYear10 = new Set(result.runs.map((r) => Math.round(r.yearlyBalances[10])))
+    expect(atYear10.size).toBe(result.runs.length)
   })
 })

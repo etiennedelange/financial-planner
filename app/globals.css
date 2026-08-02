@@ -28,6 +28,17 @@
   --color-popover-foreground: hsl(var(--popover-foreground));
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+
+  /* Fonts */
+  --font-sans: var(--font-ibm-sans), system-ui, sans-serif;
+  --font-mono: var(--font-ibm-mono), ui-monospace, monospace;
 
   /* Border radius */
   --radius-lg: var(--radius);
@@ -58,165 +69,71 @@
 /* ─── Base CSS variables ────────────────────────────────────────────────── */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 210 25% 98%;
+    --foreground: 222 40% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 222 40% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --popover-foreground: 222 40% 10%;
+    --primary: 162 70% 34%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 20% 94%;
+    --secondary-foreground: 222 40% 15%;
+    --muted: 210 20% 94%;
+    --muted-foreground: 220 12% 48%;
+    --accent: 210 20% 92%;
+    --accent-foreground: 222 40% 10%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --warning: 38 90% 40%;
+    --warning-foreground: 0 0% 100%;
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 162 70% 34%;
     --radius: 0.5rem;
-    --chart-1: 221.2 83.2% 53.3%;
-    --chart-2: 142 76% 36%;
-    --chart-3: 142 71% 45%;
-    --chart-4: 47 85% 57%;
-    --chart-5: 27 87% 67%;
+    --chart-1: 162 70% 34%;
+    --chart-2: 195 70% 22%;
+    --chart-3: 133 47% 68%;
+    --chart-4: 220 75% 58%;
+    --chart-5: 0 65% 52%;
   }
 
+  /* ── Dark theme: deep navy + teal ── */
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-    --chart-1: 217.2 91.2% 59.8%;
-    --chart-2: 142 76% 36%;
-    --chart-3: 142 71% 45%;
-    --chart-4: 47 85% 57%;
-    --chart-5: 27 87% 67%;
-  }
-
-  /* Blue Theme (Default) */
-  .theme-blue {
-    --primary: 225 73% 57%;
-    --ring: 225 73% 57%;
-    --chart-1: 225 73% 57%;
-    --chart-2: 225 73% 67%;
-    --chart-3: 225 73% 77%;
-    --chart-4: 225 73% 47%;
-    --chart-5: 225 73% 37%;
-  }
-
-  .theme-blue.dark {
-    --primary: 225 73% 65%;
-    --ring: 225 73% 65%;
-    --chart-1: 225 73% 65%;
-    --chart-2: 225 73% 75%;
-    --chart-3: 225 73% 85%;
-    --chart-4: 225 73% 55%;
-    --chart-5: 225 73% 45%;
-  }
-
-  /* Green Theme */
-  .theme-green {
-    --primary: 142 76% 36%;
-    --ring: 142 76% 36%;
-    --chart-1: 142 76% 36%;
-    --chart-2: 142 76% 46%;
-    --chart-3: 142 76% 56%;
-    --chart-4: 142 76% 28%;
-    --chart-5: 142 76% 20%;
-  }
-
-  .theme-green.dark {
-    --primary: 142 71% 45%;
-    --ring: 142 71% 45%;
-    --chart-1: 142 71% 45%;
-    --chart-2: 142 71% 55%;
-    --chart-3: 142 71% 65%;
-    --chart-4: 142 71% 35%;
-    --chart-5: 142 71% 25%;
-  }
-
-  /* Rose Theme */
-  .theme-rose {
-    --primary: 346.8 77.2% 49.8%;
-    --ring: 346.8 77.2% 49.8%;
-    --chart-1: 346.8 77.2% 49.8%;
-    --chart-2: 346.8 77.2% 59.8%;
-    --chart-3: 346.8 77.2% 69.8%;
-    --chart-4: 346.8 77.2% 39.8%;
-    --chart-5: 346.8 77.2% 29.8%;
-  }
-
-  .theme-rose.dark {
-    --primary: 346.8 77.2% 59.8%;
-    --ring: 346.8 77.2% 59.8%;
-    --chart-1: 346.8 77.2% 59.8%;
-    --chart-2: 346.8 77.2% 69.8%;
-    --chart-3: 346.8 77.2% 79.8%;
-    --chart-4: 346.8 77.2% 49.8%;
-    --chart-5: 346.8 77.2% 39.8%;
-  }
-
-  /* Violet Theme */
-  .theme-violet {
-    --primary: 262.1 83.3% 57.8%;
-    --ring: 262.1 83.3% 57.8%;
-    --chart-1: 262.1 83.3% 57.8%;
-    --chart-2: 262.1 83.3% 67.8%;
-    --chart-3: 262.1 83.3% 77.8%;
-    --chart-4: 262.1 83.3% 47.8%;
-    --chart-5: 262.1 83.3% 37.8%;
-  }
-
-  .theme-violet.dark {
-    --primary: 263.4 70% 66.4%;
-    --ring: 263.4 70% 66.4%;
-    --chart-1: 263.4 70% 66.4%;
-    --chart-2: 263.4 70% 76.4%;
-    --chart-3: 263.4 70% 86.4%;
-    --chart-4: 263.4 70% 56.4%;
-    --chart-5: 263.4 70% 46.4%;
-  }
-
-  /* Orange Theme */
-  .theme-orange {
-    --primary: 24.6 95% 53.1%;
-    --ring: 24.6 95% 53.1%;
-    --chart-1: 24.6 95% 53.1%;
-    --chart-2: 24.6 95% 63.1%;
-    --chart-3: 24.6 95% 73.1%;
-    --chart-4: 24.6 95% 43.1%;
-    --chart-5: 24.6 95% 33.1%;
-  }
-
-  .theme-orange.dark {
-    --primary: 20.5 90.2% 58.2%;
-    --ring: 20.5 90.2% 58.2%;
-    --chart-1: 20.5 90.2% 58.2%;
-    --chart-2: 20.5 90.2% 68.2%;
-    --chart-3: 20.5 90.2% 78.2%;
-    --chart-4: 20.5 90.2% 48.2%;
-    --chart-5: 20.5 90.2% 38.2%;
+    --background: 222 47% 5%;
+    --foreground: 210 20% 92%;
+    --card: 222 40% 8%;
+    --card-foreground: 210 20% 92%;
+    --popover: 222 40% 10%;
+    --popover-foreground: 210 20% 92%;
+    --primary: 162 70% 55%;
+    --primary-foreground: 222 47% 5%;
+    --secondary: 222 30% 13%;
+    --secondary-foreground: 210 15% 80%;
+    --muted: 222 30% 12%;
+    --muted-foreground: 220 12% 50%;
+    --accent: 222 30% 14%;
+    --accent-foreground: 210 20% 92%;
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --warning: 38 90% 58%;
+    --warning-foreground: 222 47% 5%;
+    --border: 222 25% 18%;
+    --input: 222 30% 13%;
+    --ring: 162 70% 55%;
+    --chart-1: 162 70% 55%;
+    --chart-2: 195 65% 42%;
+    --chart-3: 133 50% 70%;
+    --chart-4: 220 80% 62%;
+    --chart-5: 0 65% 55%;
   }
 }
+
+/* ─── Dark mode scrollbar ────────────────────────────────────────────────── */
+.dark ::-webkit-scrollbar { width: 5px; height: 5px; }
+.dark ::-webkit-scrollbar-track { background: hsl(var(--background)); }
+.dark ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
+.dark ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
 
 /* ─── Dashboard utility classes ─────────────────────────────────────────── */
 @layer components {
@@ -229,11 +146,11 @@
   }
 
   .dashboard-card {
-    @apply rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200;
+    @apply rounded-lg shadow-sm;
   }
 
   .dashboard-metric-card {
-    @apply rounded-lg p-3 transition-all duration-200;
+    @apply rounded-lg p-3 overflow-hidden;
   }
 
   .dashboard-grid {
@@ -251,5 +168,31 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  /* Hide number input spinners globally */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+}
+
+/* ─── View Transitions API support for smooth morphing ──────────────────── */
+/* Allocation segments morph smoothly as account values change */
+@supports (view-transition-name: auto) {
+  ::view-transition-old(segment-root),
+  ::view-transition-new(segment-root) {
+    animation-duration: 0.2s;
+  }
+}
+
+/* Respect prefers-reduced-motion for all View Transitions */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }

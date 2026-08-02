@@ -1,17 +1,41 @@
 {
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline-command.sh",
+    "padding": 2
+  },
   "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true,
     "code-review@claude-plugins-official": true,
     "context7@claude-plugins-official": true,
+    "skill-creator@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true,
+    "github@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
     "feature-dev@claude-plugins-official": true,
     "security-guidance@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true,
     "ralph-loop@claude-plugins-official": true,
-    "vercel@claude-plugins-official": true,
     "claude-code-setup@claude-plugins-official": true,
+    "vercel@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true,
     "supabase@claude-plugins-official": true,
     "chrome-devtools-mcp@claude-plugins-official": true,
-    "linear@claude-plugins-official": true
+    "linear@claude-plugins-official": true,
+    "remember@claude-plugins-official": true,
+    "andrej-karpathy-skills@karpathy-skills": true,
+    "playwright@claude-plugins-official": true
   },
-  "theme": "dark"
+  "extraKnownMarketplaces": {
+    "karpathy-skills": {
+      "source": {
+        "source": "github",
+        "repo": "forrestchang/andrej-karpathy-skills"
+      }
+    }
+  },
+  "tui": "default",
+  "theme": "dark",
+  "agentPushNotifEnabled": true
 }

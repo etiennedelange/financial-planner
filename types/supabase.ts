@@ -115,6 +115,79 @@ export type Database = {
           },
         ]
       }
+      expense_groups: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          name: string
+          session_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          session_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          session_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          created_at: string
+          group_id: string
+          id: string
+          in_retirement: boolean
+          name: string
+          session_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          group_id: string
+          id?: string
+          in_retirement?: boolean
+          name: string
+          session_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          group_id?: string
+          id?: string
+          in_retirement?: boolean
+          name?: string
+          session_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_group_id_fkey"
+            columns: ["group_id"]
+            referencedRelation: "expense_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scenarios: {
         Row: {
           assumptions: Json

@@ -18,7 +18,7 @@ function Slider({ className, ref, ...props }: React.ComponentProps<typeof Slider
       <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">
         <SliderPrimitive.Range className="absolute h-full bg-primary" />
       </SliderPrimitive.Track>
-      <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50" />
+      <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-[transform,box-shadow,border-color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-125 active:ring-4 active:ring-primary/20 disabled:pointer-events-none disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100 motion-reduce:active:ring-0" />
     </SliderPrimitive.Root>
   )
 }

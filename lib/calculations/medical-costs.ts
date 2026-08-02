@@ -1,4 +1,5 @@
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
+import { escalate } from "./utils/money-time"
 
 interface MedicalCostParams {
   currentAge: number
@@ -53,7 +54,7 @@ export function projectMedicalCosts(params: MedicalCostParams): MedicalCostProje
 
   // Calculate medical cost at retirement (inflated from today)
   const medicalCostAtRetirementMonthly =
-    currentMedicalCostMonthly * Math.pow(1 + medicalInflation, yearsToRetirement)
+    escalate(currentMedicalCostMonthly, yearsToRetirement, medicalInflation)
 
   const yearlyBreakdown: YearlyMedicalCost[] = []
   let cumulativeCost = 0
@@ -64,8 +65,7 @@ export function projectMedicalCosts(params: MedicalCostParams): MedicalCostProje
     const age = retirementAge + year
 
     // Base medical cost increases with medical inflation
-    const baseCost =
-      medicalCostAtRetirementMonthly * Math.pow(1 + medicalInflation, year)
+    const baseCost = escalate(medicalCostAtRetirementMonthly, year, medicalInflation)
 
     // Additional age-related increase (medical needs grow with age)
     const ageMultiplier = 1 + SA_DEFAULTS.medicalCostGrowthAge * year
@@ -159,18 +159,12 @@ export function calculateMedicalInflationPremium(params: {
 
     // Cost with medical inflation
     const costMedical =
-      baseMedicalCostMonthly *
-      Math.pow(1 + medicalInflation, year) *
-      ageMultiplier *
-      12
+      escalate(baseMedicalCostMonthly, year, medicalInflation) * ageMultiplier * 12
     totalAtMedicalInflation += costMedical
 
     // Cost with general inflation
     const costGeneral =
-      baseMedicalCostMonthly *
-      Math.pow(1 + generalInflation, year) *
-      ageMultiplier *
-      12
+      escalate(baseMedicalCostMonthly, year, generalInflation) * ageMultiplier * 12
     totalAtGeneralInflation += costGeneral
   }
 

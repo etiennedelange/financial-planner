@@ -44,7 +44,15 @@ next-env.d.ts
 /playwright-report/
 /test-results/
 /.playwright/
+/.playwright-mcp/
 
 /.superpowers
 
 .claude/settings.local.json
+
+Uitgawes.xlsx
+
+.claude/worktrees
+
+/.worktrees
+

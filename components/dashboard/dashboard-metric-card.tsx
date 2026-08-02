@@ -1,7 +1,9 @@
 "use client"
 
 import { LucideIcon } from "lucide-react"
+import { memo } from "react"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
+import { getSuccessRateStyle } from "@/lib/utils/success-rate"
 
 interface DashboardMetricCardProps {
   icon: LucideIcon
@@ -12,7 +14,7 @@ interface DashboardMetricCardProps {
   tooltip?: string | React.ReactNode
 }
 
-export function DashboardMetricCard({
+export const DashboardMetricCard = memo(function DashboardMetricCard({
   icon: Icon,
   label,
   value,
@@ -20,66 +22,28 @@ export function DashboardMetricCard({
   successRate,
   tooltip,
 }: DashboardMetricCardProps) {
-  // Determine styling based on success rate
-  const getSuccessRateStyles = () => {
-    if (successRate !== undefined) {
-      // Success rate card - colored based on value
-      if (successRate >= 90) {
-        return {
-          border: "border-green-500",
-          text: "text-green-600 dark:text-green-500",
-          icon: "text-green-600 dark:text-green-500"
-        }
-      } else if (successRate >= 75) {
-        return {
-          border: "border-cyan-500",
-          text: "text-cyan-600 dark:text-cyan-500",
-          icon: "text-cyan-600 dark:text-cyan-500"
-        }
-      } else if (successRate >= 60) {
-        return {
-          border: "border-orange-500",
-          text: "text-orange-600 dark:text-orange-500",
-          icon: "text-orange-600 dark:text-orange-500"
-        }
-      } else {
-        return {
-          border: "border-red-500",
-          text: "text-red-600 dark:text-red-500",
-          icon: "text-red-600 dark:text-red-500"
-        }
-      }
-    }
-    // Default card - simple grey border
-    return {
-      border: "border-border",
-      text: "",
-      icon: "text-muted-foreground"
-    }
-  }
-
-  const styles = getSuccessRateStyles()
+  const styles = successRate !== undefined
+    ? getSuccessRateStyle(successRate)
+    : { border: "border-border", text: "", bg: "", label: "" }
+  const iconClass = successRate !== undefined ? styles.text : "text-muted-foreground"
 
   return (
     <div className={`dashboard-metric-card bg-card text-card-foreground border ${styles.border}`}>
-      {/* Content */}
       <div className="flex flex-col h-full">
-        {/* Header with icon and label */}
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-1.5">
-            <h3 className="text-xs font-medium text-muted-foreground">
-              {label}
-            </h3>
-            {tooltip && (
-              <InfoTooltip content={tooltip} side="top" />
-            )}
-          </div>
-          <Icon className={`w-5 h-5 md:w-6 md:h-6 flex-shrink-0 ${styles.icon}`} />
+        {/* Label row: icon + label + tooltip all inline */}
+        <div className="flex items-center gap-1 mb-2">
+          <Icon aria-hidden="true" className={`w-3.5 h-3.5 shrink-0 ${iconClass}`} />
+          <h3 className="text-xs font-medium text-muted-foreground truncate">
+            {label}
+          </h3>
+          {tooltip && (
+            <InfoTooltip content={tooltip} side="top" />
+          )}
         </div>
 
         {/* Value */}
         <div className="mb-1">
-          <p className={`text-lg md:text-xl font-bold ${styles.text}`}>
+          <p className={`text-base font-bold font-mono ${styles.text}`}>
             {value}
           </p>
         </div>
@@ -93,4 +57,4 @@ export function DashboardMetricCard({
       </div>
     </div>
   )
-}
+})

@@ -46,6 +46,7 @@ const drawdownConfig: DrawdownConfig = {
   initialWithdrawalRate: 4,
   minimumWithdrawal: 15_000,
   maximumWithdrawal: 80_000,
+  lumpSumPercentage: 0,
 }
 
 describe("Monte Carlo simulation throughput", () => {
@@ -96,7 +97,7 @@ describe("Multi-account portfolio throughput (realistic)", () => {
       ...account,
       id: "3",
       name: "TFSA",
-      type: "tax_free_savings",
+      type: "tfsa",
       currentBalance: 250_000,
       monthlyContribution: 3_000,
       expectedReturn: 10,

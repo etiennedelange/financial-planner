@@ -1,0 +1,5498 @@
+{
+  "mid-career|fixed_percentage|inside-band|lump0": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 116132.29,
+    "monthlyNetIncomeAtRetirement": 116132.29,
+    "shortfallAmount": 0,
+    "surplusAmount": 137166770.07,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 20670272.68,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 29.95,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 34839686.74
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1393587.47,
+        "incomeTax": 0,
+        "netIncome": 1393587.47,
+        "endingBalance": 36719840.62,
+        "inflationAdjustedWithdrawal": 365445.6
+      },
+      {
+        "age": 66,
+        "withdrawals": 1606982.45,
+        "incomeTax": 0,
+        "netIncome": 1606982.45,
+        "endingBalance": 38567578.73,
+        "inflationAdjustedWithdrawal": 399435.98
+      },
+      {
+        "age": 70,
+        "withdrawals": 1958810.97,
+        "incomeTax": 135348.53,
+        "netIncome": 1823462.44,
+        "endingBalance": 47011463.32,
+        "inflationAdjustedWithdrawal": 393023.7
+      },
+      {
+        "age": 75,
+        "withdrawals": 2537292.45,
+        "incomeTax": 931916.6,
+        "netIncome": 1605375.85,
+        "endingBalance": 60895018.91,
+        "inflationAdjustedWithdrawal": 389524.2
+      },
+      {
+        "age": 85,
+        "withdrawals": 3553143.47,
+        "incomeTax": 1389049.56,
+        "netIncome": 2164093.91,
+        "endingBalance": 107482589.87,
+        "inflationAdjustedWithdrawal": 319339.07
+      }
+    ]
+  },
+  "mid-career|fixed_percentage|inside-band|lump30": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 92744.82,
+    "monthlyNetIncomeAtRetirement": 92744.82,
+    "shortfallAmount": 0,
+    "surplusAmount": 107838445.61,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 13801989.68,
+    "totalLumpSumTax": 2253596.35,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 25.37,
+    "lumpSum": {
+      "amount": 7016239.87,
+      "tax": 2253596.35,
+      "remainingPortfolio": 27823446.88
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1112937.88,
+        "incomeTax": 0,
+        "netIncome": 1112937.88,
+        "endingBalance": 29296658.84,
+        "inflationAdjustedWithdrawal": 291849.82
+      },
+      {
+        "age": 66,
+        "withdrawals": 1280888.95,
+        "incomeTax": 0,
+        "netIncome": 1280888.95,
+        "endingBalance": 30741334.74,
+        "inflationAdjustedWithdrawal": 318381.28
+      },
+      {
+        "age": 70,
+        "withdrawals": 1554259.51,
+        "incomeTax": 24405.16,
+        "netIncome": 1529854.35,
+        "endingBalance": 37302228.24,
+        "inflationAdjustedWithdrawal": 311852.87
+      },
+      {
+        "age": 75,
+        "withdrawals": 1996363.24,
+        "incomeTax": 151802.94,
+        "netIncome": 1844560.3,
+        "endingBalance": 47912717.77,
+        "inflationAdjustedWithdrawal": 306480.94
+      },
+      {
+        "age": 85,
+        "withdrawals": 2793427.8,
+        "incomeTax": 1047177.51,
+        "netIncome": 1746250.29,
+        "endingBalance": 84501190.89,
+        "inflationAdjustedWithdrawal": 251059.56
+      }
+    ]
+  },
+  "mid-career|fixed_percentage|below-min|lump0": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 116132.29,
+    "monthlyNetIncomeAtRetirement": 116132.29,
+    "shortfallAmount": 0,
+    "surplusAmount": 137166770.07,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 20670272.68,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 29.95,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 34839686.74
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1393587.47,
+        "incomeTax": 0,
+        "netIncome": 1393587.47,
+        "endingBalance": 36719840.62,
+        "inflationAdjustedWithdrawal": 365445.6
+      },
+      {
+        "age": 66,
+        "withdrawals": 1606982.45,
+        "incomeTax": 0,
+        "netIncome": 1606982.45,
+        "endingBalance": 38567578.73,
+        "inflationAdjustedWithdrawal": 399435.98
+      },
+      {
+        "age": 70,
+        "withdrawals": 1958810.97,
+        "incomeTax": 135348.53,
+        "netIncome": 1823462.44,
+        "endingBalance": 47011463.32,
+        "inflationAdjustedWithdrawal": 393023.7
+      },
+      {
+        "age": 75,
+        "withdrawals": 2537292.45,
+        "incomeTax": 931916.6,
+        "netIncome": 1605375.85,
+        "endingBalance": 60895018.91,
+        "inflationAdjustedWithdrawal": 389524.2
+      },
+      {
+        "age": 85,
+        "withdrawals": 3553143.47,
+        "incomeTax": 1389049.56,
+        "netIncome": 2164093.91,
+        "endingBalance": 107482589.87,
+        "inflationAdjustedWithdrawal": 319339.07
+      }
+    ]
+  },
+  "mid-career|fixed_percentage|below-min|lump30": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 92744.82,
+    "monthlyNetIncomeAtRetirement": 92744.82,
+    "shortfallAmount": 0,
+    "surplusAmount": 107838445.61,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 13801989.68,
+    "totalLumpSumTax": 2253596.35,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 25.37,
+    "lumpSum": {
+      "amount": 7016239.87,
+      "tax": 2253596.35,
+      "remainingPortfolio": 27823446.88
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1112937.88,
+        "incomeTax": 0,
+        "netIncome": 1112937.88,
+        "endingBalance": 29296658.84,
+        "inflationAdjustedWithdrawal": 291849.82
+      },
+      {
+        "age": 66,
+        "withdrawals": 1280888.95,
+        "incomeTax": 0,
+        "netIncome": 1280888.95,
+        "endingBalance": 30741334.74,
+        "inflationAdjustedWithdrawal": 318381.28
+      },
+      {
+        "age": 70,
+        "withdrawals": 1554259.51,
+        "incomeTax": 24405.16,
+        "netIncome": 1529854.35,
+        "endingBalance": 37302228.24,
+        "inflationAdjustedWithdrawal": 311852.87
+      },
+      {
+        "age": 75,
+        "withdrawals": 1996363.24,
+        "incomeTax": 151802.94,
+        "netIncome": 1844560.3,
+        "endingBalance": 47912717.77,
+        "inflationAdjustedWithdrawal": 306480.94
+      },
+      {
+        "age": 85,
+        "withdrawals": 2793427.8,
+        "incomeTax": 1047177.51,
+        "netIncome": 1746250.29,
+        "endingBalance": 84501190.89,
+        "inflationAdjustedWithdrawal": 251059.56
+      }
+    ]
+  },
+  "mid-career|fixed_percentage|above-max|lump0": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 116132.29,
+    "monthlyNetIncomeAtRetirement": 116132.29,
+    "shortfallAmount": 0,
+    "surplusAmount": 137166770.07,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 20670272.68,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 29.95,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 34839686.74
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1393587.47,
+        "incomeTax": 0,
+        "netIncome": 1393587.47,
+        "endingBalance": 36719840.62,
+        "inflationAdjustedWithdrawal": 365445.6
+      },
+      {
+        "age": 66,
+        "withdrawals": 1606982.45,
+        "incomeTax": 0,
+        "netIncome": 1606982.45,
+        "endingBalance": 38567578.73,
+        "inflationAdjustedWithdrawal": 399435.98
+      },
+      {
+        "age": 70,
+        "withdrawals": 1958810.97,
+        "incomeTax": 135348.53,
+        "netIncome": 1823462.44,
+        "endingBalance": 47011463.32,
+        "inflationAdjustedWithdrawal": 393023.7
+      },
+      {
+        "age": 75,
+        "withdrawals": 2537292.45,
+        "incomeTax": 931916.6,
+        "netIncome": 1605375.85,
+        "endingBalance": 60895018.91,
+        "inflationAdjustedWithdrawal": 389524.2
+      },
+      {
+        "age": 85,
+        "withdrawals": 3553143.47,
+        "incomeTax": 1389049.56,
+        "netIncome": 2164093.91,
+        "endingBalance": 107482589.87,
+        "inflationAdjustedWithdrawal": 319339.07
+      }
+    ]
+  },
+  "mid-career|fixed_percentage|above-max|lump30": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 92744.82,
+    "monthlyNetIncomeAtRetirement": 92744.82,
+    "shortfallAmount": 0,
+    "surplusAmount": 107838445.61,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 13801989.68,
+    "totalLumpSumTax": 2253596.35,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 25.37,
+    "lumpSum": {
+      "amount": 7016239.87,
+      "tax": 2253596.35,
+      "remainingPortfolio": 27823446.88
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1112937.88,
+        "incomeTax": 0,
+        "netIncome": 1112937.88,
+        "endingBalance": 29296658.84,
+        "inflationAdjustedWithdrawal": 291849.82
+      },
+      {
+        "age": 66,
+        "withdrawals": 1280888.95,
+        "incomeTax": 0,
+        "netIncome": 1280888.95,
+        "endingBalance": 30741334.74,
+        "inflationAdjustedWithdrawal": 318381.28
+      },
+      {
+        "age": 70,
+        "withdrawals": 1554259.51,
+        "incomeTax": 24405.16,
+        "netIncome": 1529854.35,
+        "endingBalance": 37302228.24,
+        "inflationAdjustedWithdrawal": 311852.87
+      },
+      {
+        "age": 75,
+        "withdrawals": 1996363.24,
+        "incomeTax": 151802.94,
+        "netIncome": 1844560.3,
+        "endingBalance": 47912717.77,
+        "inflationAdjustedWithdrawal": 306480.94
+      },
+      {
+        "age": 85,
+        "withdrawals": 2793427.8,
+        "incomeTax": 1047177.51,
+        "netIncome": 1746250.29,
+        "endingBalance": 84501190.89,
+        "inflationAdjustedWithdrawal": 251059.56
+      }
+    ]
+  },
+  "mid-career|fixed_amount_inflation_adjusted|inside-band|lump0": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 133468.73,
+    "monthlyNetIncomeAtRetirement": 133468.73,
+    "shortfallAmount": 0,
+    "surplusAmount": 122176081.59,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 22742795.39,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 30.97,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 34839686.74
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1601624.79,
+        "incomeTax": 0,
+        "netIncome": 1601624.79,
+        "endingBalance": 36511803.3,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1689714.15,
+        "incomeTax": 0,
+        "netIncome": 1689714.15,
+        "endingBalance": 38257670.28,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 70,
+        "withdrawals": 2093259.54,
+        "incomeTax": 151506.33,
+        "netIncome": 1941753.22,
+        "endingBalance": 46064419.5,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 75,
+        "withdrawals": 2735806.5,
+        "incomeTax": 1021247.93,
+        "netIncome": 1714558.58,
+        "endingBalance": 58437307.24,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 85,
+        "withdrawals": 3738522.17,
+        "incomeTax": 1472469.98,
+        "netIncome": 2266052.2,
+        "endingBalance": 97603797.33,
+        "inflationAdjustedWithdrawal": 336000
+      }
+    ]
+  },
+  "mid-career|fixed_amount_inflation_adjusted|inside-band|lump30": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 133468.73,
+    "monthlyNetIncomeAtRetirement": 133468.73,
+    "shortfallAmount": 0,
+    "surplusAmount": 49538239.99,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 22742795.39,
+    "totalLumpSumTax": 2253596.35,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 30.97,
+    "lumpSum": {
+      "amount": 7016239.87,
+      "tax": 2253596.35,
+      "remainingPortfolio": 27823446.88
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1601624.79,
+        "incomeTax": 0,
+        "netIncome": 1601624.79,
+        "endingBalance": 28807971.93,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1689714.15,
+        "incomeTax": 0,
+        "netIncome": 1689714.15,
+        "endingBalance": 29798863.43,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 70,
+        "withdrawals": 2093259.54,
+        "incomeTax": 151506.33,
+        "netIncome": 1941753.22,
+        "endingBalance": 33769704.42,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 75,
+        "withdrawals": 2735806.5,
+        "incomeTax": 1021247.93,
+        "netIncome": 1714558.58,
+        "endingBalance": 38815899.2,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 85,
+        "withdrawals": 3738522.17,
+        "incomeTax": 1472469.98,
+        "netIncome": 2266052.2,
+        "endingBalance": 47628709,
+        "inflationAdjustedWithdrawal": 336000
+      }
+    ]
+  },
+  "mid-career|fixed_amount_inflation_adjusted|below-min|lump0": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 133468.73,
+    "monthlyNetIncomeAtRetirement": 133468.73,
+    "shortfallAmount": 0,
+    "surplusAmount": 122176081.59,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 22742795.39,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 30.97,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 34839686.74
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1601624.79,
+        "incomeTax": 0,
+        "netIncome": 1601624.79,
+        "endingBalance": 36511803.3,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1689714.15,
+        "incomeTax": 0,
+        "netIncome": 1689714.15,
+        "endingBalance": 38257670.28,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 70,
+        "withdrawals": 2093259.54,
+        "incomeTax": 151506.33,
+        "netIncome": 1941753.22,
+        "endingBalance": 46064419.5,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 75,
+        "withdrawals": 2735806.5,
+        "incomeTax": 1021247.93,
+        "netIncome": 1714558.58,
+        "endingBalance": 58437307.24,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 85,
+        "withdrawals": 3738522.17,
+        "incomeTax": 1472469.98,
+        "netIncome": 2266052.2,
+        "endingBalance": 97603797.33,
+        "inflationAdjustedWithdrawal": 336000
+      }
+    ]
+  },
+  "mid-career|fixed_amount_inflation_adjusted|below-min|lump30": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 133468.73,
+    "monthlyNetIncomeAtRetirement": 133468.73,
+    "shortfallAmount": 0,
+    "surplusAmount": 49538239.99,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 22742795.39,
+    "totalLumpSumTax": 2253596.35,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 30.97,
+    "lumpSum": {
+      "amount": 7016239.87,
+      "tax": 2253596.35,
+      "remainingPortfolio": 27823446.88
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1601624.79,
+        "incomeTax": 0,
+        "netIncome": 1601624.79,
+        "endingBalance": 28807971.93,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1689714.15,
+        "incomeTax": 0,
+        "netIncome": 1689714.15,
+        "endingBalance": 29798863.43,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 70,
+        "withdrawals": 2093259.54,
+        "incomeTax": 151506.33,
+        "netIncome": 1941753.22,
+        "endingBalance": 33769704.42,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 75,
+        "withdrawals": 2735806.5,
+        "incomeTax": 1021247.93,
+        "netIncome": 1714558.58,
+        "endingBalance": 38815899.2,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 85,
+        "withdrawals": 3738522.17,
+        "incomeTax": 1472469.98,
+        "netIncome": 2266052.2,
+        "endingBalance": 47628709,
+        "inflationAdjustedWithdrawal": 336000
+      }
+    ]
+  },
+  "mid-career|fixed_amount_inflation_adjusted|above-max|lump0": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 133468.73,
+    "monthlyNetIncomeAtRetirement": 133468.73,
+    "shortfallAmount": 0,
+    "surplusAmount": 122176081.59,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 22742795.39,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 30.97,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 34839686.74
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1601624.79,
+        "incomeTax": 0,
+        "netIncome": 1601624.79,
+        "endingBalance": 36511803.3,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1689714.15,
+        "incomeTax": 0,
+        "netIncome": 1689714.15,
+        "endingBalance": 38257670.28,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 70,
+        "withdrawals": 2093259.54,
+        "incomeTax": 151506.33,
+        "netIncome": 1941753.22,
+        "endingBalance": 46064419.5,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 75,
+        "withdrawals": 2735806.5,
+        "incomeTax": 1021247.93,
+        "netIncome": 1714558.58,
+        "endingBalance": 58437307.24,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 85,
+        "withdrawals": 3738522.17,
+        "incomeTax": 1472469.98,
+        "netIncome": 2266052.2,
+        "endingBalance": 97603797.33,
+        "inflationAdjustedWithdrawal": 336000
+      }
+    ]
+  },
+  "mid-career|fixed_amount_inflation_adjusted|above-max|lump30": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 133468.73,
+    "monthlyNetIncomeAtRetirement": 133468.73,
+    "shortfallAmount": 0,
+    "surplusAmount": 49538239.99,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 22742795.39,
+    "totalLumpSumTax": 2253596.35,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 30.97,
+    "lumpSum": {
+      "amount": 7016239.87,
+      "tax": 2253596.35,
+      "remainingPortfolio": 27823446.88
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1601624.79,
+        "incomeTax": 0,
+        "netIncome": 1601624.79,
+        "endingBalance": 28807971.93,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1689714.15,
+        "incomeTax": 0,
+        "netIncome": 1689714.15,
+        "endingBalance": 29798863.43,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 70,
+        "withdrawals": 2093259.54,
+        "incomeTax": 151506.33,
+        "netIncome": 1941753.22,
+        "endingBalance": 33769704.42,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 75,
+        "withdrawals": 2735806.5,
+        "incomeTax": 1021247.93,
+        "netIncome": 1714558.58,
+        "endingBalance": 38815899.2,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 85,
+        "withdrawals": 3738522.17,
+        "incomeTax": 1472469.98,
+        "netIncome": 2266052.2,
+        "endingBalance": 47628709,
+        "inflationAdjustedWithdrawal": 336000
+      }
+    ]
+  },
+  "mid-career|variable_percentage|inside-band|lump0": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 133468.73,
+    "monthlyNetIncomeAtRetirement": 133468.73,
+    "shortfallAmount": 0,
+    "surplusAmount": 136452055.9,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 20659066.18,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 30,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 34839686.74
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1601624.79,
+        "incomeTax": 0,
+        "netIncome": 1601624.79,
+        "endingBalance": 36511803.3,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1597895.38,
+        "incomeTax": 0,
+        "netIncome": 1597895.38,
+        "endingBalance": 38349489.05,
+        "inflationAdjustedWithdrawal": 397177.27
+      },
+      {
+        "age": 70,
+        "withdrawals": 1947956.71,
+        "incomeTax": 134044.08,
+        "netIncome": 1813912.62,
+        "endingBalance": 46750960.92,
+        "inflationAdjustedWithdrawal": 390845.86
+      },
+      {
+        "age": 75,
+        "withdrawals": 2524071.77,
+        "incomeTax": 925967.3,
+        "netIncome": 1598104.47,
+        "endingBalance": 60577722.43,
+        "inflationAdjustedWithdrawal": 387494.56
+      },
+      {
+        "age": 85,
+        "withdrawals": 3534629.64,
+        "incomeTax": 1380718.34,
+        "netIncome": 2153911.3,
+        "endingBalance": 106922546.58,
+        "inflationAdjustedWithdrawal": 317675.14
+      }
+    ]
+  },
+  "mid-career|variable_percentage|inside-band|lump30": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 133468.73,
+    "monthlyNetIncomeAtRetirement": 133468.73,
+    "shortfallAmount": 0,
+    "surplusAmount": 106203004.8,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 13816400.22,
+    "totalLumpSumTax": 2253596.35,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 25.56,
+    "lumpSum": {
+      "amount": 7016239.87,
+      "tax": 2253596.35,
+      "remainingPortfolio": 27823446.88
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1601624.79,
+        "incomeTax": 0,
+        "netIncome": 1601624.79,
+        "endingBalance": 28807971.93,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1259543.1,
+        "incomeTax": 0,
+        "netIncome": 1259543.1,
+        "endingBalance": 30229034.48,
+        "inflationAdjustedWithdrawal": 313075.5
+      },
+      {
+        "age": 70,
+        "withdrawals": 1528479.16,
+        "incomeTax": 83049.29,
+        "netIncome": 1445429.87,
+        "endingBalance": 36683499.82,
+        "inflationAdjustedWithdrawal": 306680.2
+      },
+      {
+        "age": 75,
+        "withdrawals": 1965477.09,
+        "incomeTax": 147856.08,
+        "netIncome": 1817621.01,
+        "endingBalance": 47171450.19,
+        "inflationAdjustedWithdrawal": 301739.31
+      },
+      {
+        "age": 85,
+        "withdrawals": 2751063.63,
+        "incomeTax": 1028113.63,
+        "netIncome": 1722950,
+        "endingBalance": 83219674.87,
+        "inflationAdjustedWithdrawal": 247252.08
+      }
+    ]
+  },
+  "mid-career|variable_percentage|below-min|lump0": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 343205.31,
+    "monthlyNetIncomeAtRetirement": 343205.31,
+    "shortfallAmount": 57102990.6,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 76,
+    "totalLifetimeIncomeTax": 20425838.19,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 33.2,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 34839686.74
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 4118463.74,
+        "incomeTax": 0,
+        "netIncome": 4118463.74,
+        "endingBalance": 33994964.35,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 66,
+        "withdrawals": 4344979.24,
+        "incomeTax": 159456.6,
+        "netIncome": 4185522.64,
+        "endingBalance": 32854017.05,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 70,
+        "withdrawals": 5382667.39,
+        "incomeTax": 2215584.33,
+        "netIncome": 3167083.07,
+        "endingBalance": 24748876.1,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 75,
+        "withdrawals": 7034931.01,
+        "incomeTax": 2955853.95,
+        "netIncome": 4079077.05,
+        "endingBalance": 1336038.45,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "mid-career|variable_percentage|below-min|lump30": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 343205.31,
+    "monthlyNetIncomeAtRetirement": 343205.31,
+    "shortfallAmount": 63898948.84,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 73,
+    "totalLifetimeIncomeTax": 12742739.34,
+    "totalLumpSumTax": 2253596.35,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 29.57,
+    "lumpSum": {
+      "amount": 7016239.87,
+      "tax": 2253596.35,
+      "remainingPortfolio": 27823446.88
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 4118463.74,
+        "incomeTax": 0,
+        "netIncome": 4118463.74,
+        "endingBalance": 26291132.98,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 66,
+        "withdrawals": 4344979.24,
+        "incomeTax": 159456.6,
+        "netIncome": 4185522.64,
+        "endingBalance": 24395210.21,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 70,
+        "withdrawals": 5382667.39,
+        "incomeTax": 2215584.33,
+        "netIncome": 3167083.07,
+        "endingBalance": 12454161.02,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 75,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "mid-career|variable_percentage|above-max|lump0": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 76267.85,
+    "monthlyNetIncomeAtRetirement": 76267.85,
+    "shortfallAmount": 0,
+    "surplusAmount": 216055325.83,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 7592689.04,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 18.09,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 34839686.74
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 915214.16,
+        "incomeTax": 0,
+        "netIncome": 915214.16,
+        "endingBalance": 37198213.92,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 66,
+        "withdrawals": 965550.94,
+        "incomeTax": 0,
+        "netIncome": 965550.94,
+        "endingBalance": 39731393.89,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 70,
+        "withdrawals": 1196148.31,
+        "incomeTax": 0,
+        "netIncome": 1196148.31,
+        "endingBalance": 51913825.13,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 75,
+        "withdrawals": 1563318,
+        "incomeTax": 96465.24,
+        "netIncome": 1466852.76,
+        "endingBalance": 73298582.89,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 85,
+        "withdrawals": 2136298.39,
+        "incomeTax": 751469.27,
+        "netIncome": 1384829.11,
+        "endingBalance": 156387518.83,
+        "inflationAdjustedWithdrawal": 192000
+      }
+    ]
+  },
+  "mid-career|variable_percentage|above-max|lump30": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 76267.85,
+    "monthlyNetIncomeAtRetirement": 76267.85,
+    "shortfallAmount": 0,
+    "surplusAmount": 143417484.23,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 7592689.04,
+    "totalLumpSumTax": 2253596.35,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 18.09,
+    "lumpSum": {
+      "amount": 7016239.87,
+      "tax": 2253596.35,
+      "remainingPortfolio": 27823446.88
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 915214.16,
+        "incomeTax": 0,
+        "netIncome": 915214.16,
+        "endingBalance": 29494382.55,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 66,
+        "withdrawals": 965550.94,
+        "incomeTax": 0,
+        "netIncome": 965550.94,
+        "endingBalance": 31272587.04,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 70,
+        "withdrawals": 1196148.31,
+        "incomeTax": 0,
+        "netIncome": 1196148.31,
+        "endingBalance": 39619110.05,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 75,
+        "withdrawals": 1563318,
+        "incomeTax": 96465.24,
+        "netIncome": 1466852.76,
+        "endingBalance": 53677174.86,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 85,
+        "withdrawals": 2136298.39,
+        "incomeTax": 751469.27,
+        "netIncome": 1384829.11,
+        "endingBalance": 106412430.51,
+        "inflationAdjustedWithdrawal": 192000
+      }
+    ]
+  },
+  "mid-career|guardrails|inside-band|lump0": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 133468.73,
+    "monthlyNetIncomeAtRetirement": 133468.73,
+    "shortfallAmount": 0,
+    "surplusAmount": 122176081.59,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 22742795.39,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 30.97,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 34839686.74
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1601624.79,
+        "incomeTax": 0,
+        "netIncome": 1601624.79,
+        "endingBalance": 36511803.3,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1689714.15,
+        "incomeTax": 0,
+        "netIncome": 1689714.15,
+        "endingBalance": 38257670.28,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 70,
+        "withdrawals": 2093259.54,
+        "incomeTax": 151506.33,
+        "netIncome": 1941753.22,
+        "endingBalance": 46064419.5,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 75,
+        "withdrawals": 2735806.5,
+        "incomeTax": 1021247.93,
+        "netIncome": 1714558.58,
+        "endingBalance": 58437307.24,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 85,
+        "withdrawals": 3738522.17,
+        "incomeTax": 1472469.98,
+        "netIncome": 2266052.2,
+        "endingBalance": 97603797.33,
+        "inflationAdjustedWithdrawal": 336000
+      }
+    ]
+  },
+  "mid-career|guardrails|inside-band|lump30": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 133468.73,
+    "monthlyNetIncomeAtRetirement": 133468.73,
+    "shortfallAmount": 0,
+    "surplusAmount": 93461034.68,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 14916681.44,
+    "totalLumpSumTax": 2253596.35,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 26.51,
+    "lumpSum": {
+      "amount": 7016239.87,
+      "tax": 2253596.35,
+      "remainingPortfolio": 27823446.88
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1601624.79,
+        "incomeTax": 0,
+        "netIncome": 1601624.79,
+        "endingBalance": 28807971.93,
+        "inflationAdjustedWithdrawal": 420000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1441462.31,
+        "incomeTax": 0,
+        "netIncome": 1441462.31,
+        "endingBalance": 30047115.27,
+        "inflationAdjustedWithdrawal": 358293.84
+      },
+      {
+        "age": 70,
+        "withdrawals": 1785719.04,
+        "incomeTax": 114546.64,
+        "netIncome": 1671172.4,
+        "endingBalance": 35402354.85,
+        "inflationAdjustedWithdrawal": 358293.84
+      },
+      {
+        "age": 75,
+        "withdrawals": 1990973.49,
+        "incomeTax": 686073.07,
+        "netIncome": 1304900.42,
+        "endingBalance": 43756031.25,
+        "inflationAdjustedWithdrawal": 305653.51
+      },
+      {
+        "age": 85,
+        "withdrawals": 2720696.27,
+        "incomeTax": 1014448.32,
+        "netIncome": 1706247.95,
+        "endingBalance": 74159736.58,
+        "inflationAdjustedWithdrawal": 244522.81
+      }
+    ]
+  },
+  "mid-career|guardrails|below-min|lump0": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 343205.31,
+    "monthlyNetIncomeAtRetirement": 343205.31,
+    "shortfallAmount": 57102990.6,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 76,
+    "totalLifetimeIncomeTax": 20425838.19,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 33.2,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 34839686.74
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 4118463.74,
+        "incomeTax": 0,
+        "netIncome": 4118463.74,
+        "endingBalance": 33994964.35,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 66,
+        "withdrawals": 4344979.24,
+        "incomeTax": 159456.6,
+        "netIncome": 4185522.64,
+        "endingBalance": 32854017.05,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 70,
+        "withdrawals": 5382667.39,
+        "incomeTax": 2215584.33,
+        "netIncome": 3167083.07,
+        "endingBalance": 24748876.1,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 75,
+        "withdrawals": 7034931.01,
+        "incomeTax": 2955853.95,
+        "netIncome": 4079077.05,
+        "endingBalance": 1336038.45,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "mid-career|guardrails|below-min|lump30": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 343205.31,
+    "monthlyNetIncomeAtRetirement": 343205.31,
+    "shortfallAmount": 63898948.84,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 73,
+    "totalLifetimeIncomeTax": 12742739.34,
+    "totalLumpSumTax": 2253596.35,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 29.57,
+    "lumpSum": {
+      "amount": 7016239.87,
+      "tax": 2253596.35,
+      "remainingPortfolio": 27823446.88
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 4118463.74,
+        "incomeTax": 0,
+        "netIncome": 4118463.74,
+        "endingBalance": 26291132.98,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 66,
+        "withdrawals": 4344979.24,
+        "incomeTax": 159456.6,
+        "netIncome": 4185522.64,
+        "endingBalance": 24395210.21,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 70,
+        "withdrawals": 5382667.39,
+        "incomeTax": 2215584.33,
+        "netIncome": 3167083.07,
+        "endingBalance": 12454161.02,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 75,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "mid-career|guardrails|above-max|lump0": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 76267.85,
+    "monthlyNetIncomeAtRetirement": 76267.85,
+    "shortfallAmount": 0,
+    "surplusAmount": 216055325.83,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 7592689.04,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 18.09,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 34839686.74
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 915214.16,
+        "incomeTax": 0,
+        "netIncome": 915214.16,
+        "endingBalance": 37198213.92,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 66,
+        "withdrawals": 965550.94,
+        "incomeTax": 0,
+        "netIncome": 965550.94,
+        "endingBalance": 39731393.89,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 70,
+        "withdrawals": 1196148.31,
+        "incomeTax": 0,
+        "netIncome": 1196148.31,
+        "endingBalance": 51913825.13,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 75,
+        "withdrawals": 1563318,
+        "incomeTax": 96465.24,
+        "netIncome": 1466852.76,
+        "endingBalance": 73298582.89,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 85,
+        "withdrawals": 2136298.39,
+        "incomeTax": 751469.27,
+        "netIncome": 1384829.11,
+        "endingBalance": 156387518.83,
+        "inflationAdjustedWithdrawal": 192000
+      }
+    ]
+  },
+  "mid-career|guardrails|above-max|lump30": {
+    "portfolioAtRetirement": 34839686.74,
+    "monthlyIncomeAtRetirement": 76267.85,
+    "monthlyNetIncomeAtRetirement": 76267.85,
+    "shortfallAmount": 0,
+    "surplusAmount": 143417484.23,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 7592689.04,
+    "totalLumpSumTax": 2253596.35,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 18.09,
+    "lumpSum": {
+      "amount": 7016239.87,
+      "tax": 2253596.35,
+      "remainingPortfolio": 27823446.88
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 915214.16,
+        "incomeTax": 0,
+        "netIncome": 915214.16,
+        "endingBalance": 29494382.55,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 66,
+        "withdrawals": 965550.94,
+        "incomeTax": 0,
+        "netIncome": 965550.94,
+        "endingBalance": 31272587.04,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 70,
+        "withdrawals": 1196148.31,
+        "incomeTax": 0,
+        "netIncome": 1196148.31,
+        "endingBalance": 39619110.05,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 75,
+        "withdrawals": 1563318,
+        "incomeTax": 96465.24,
+        "netIncome": 1466852.76,
+        "endingBalance": 53677174.86,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 85,
+        "withdrawals": 2136298.39,
+        "incomeTax": 751469.27,
+        "netIncome": 1384829.11,
+        "endingBalance": 106412430.51,
+        "inflationAdjustedWithdrawal": 192000
+      }
+    ]
+  },
+  "near-retirement|fixed_percentage|inside-band|lump0": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 11352.8,
+    "monthlyNetIncomeAtRetirement": 11352.8,
+    "shortfallAmount": 0,
+    "surplusAmount": 13186655.26,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 452323.1,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 6.8,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 3405838.5
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 136233.54,
+        "incomeTax": 0,
+        "netIncome": 136233.54,
+        "endingBalance": 3585784.51,
+        "inflationAdjustedWithdrawal": 104236.96
+      },
+      {
+        "age": 66,
+        "withdrawals": 156758.48,
+        "incomeTax": 0,
+        "netIncome": 156758.48,
+        "endingBalance": 3762203.47,
+        "inflationAdjustedWithdrawal": 113688.43
+      },
+      {
+        "age": 70,
+        "withdrawals": 190126.39,
+        "incomeTax": 0,
+        "netIncome": 190126.39,
+        "endingBalance": 4563033.36,
+        "inflationAdjustedWithdrawal": 111305.8
+      },
+      {
+        "age": 75,
+        "withdrawals": 244145.57,
+        "incomeTax": 0,
+        "netIncome": 244145.57,
+        "endingBalance": 5859493.74,
+        "inflationAdjustedWithdrawal": 109360.87
+      },
+      {
+        "age": 85,
+        "withdrawals": 341584.76,
+        "incomeTax": 38370.04,
+        "netIncome": 303214.72,
+        "endingBalance": 10332938.93,
+        "inflationAdjustedWithdrawal": 89575.04
+      }
+    ]
+  },
+  "near-retirement|fixed_percentage|inside-band|lump30": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 9357.68,
+    "monthlyNetIncomeAtRetirement": 9357.68,
+    "shortfallAmount": 0,
+    "surplusAmount": 10614570.51,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 201220.66,
+    "totalLumpSumTax": 8736.25,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 3.74,
+    "lumpSum": {
+      "amount": 598534.74,
+      "tax": 8736.25,
+      "remainingPortfolio": 2807303.76
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 112292.15,
+        "incomeTax": 0,
+        "netIncome": 112292.15,
+        "endingBalance": 2952534.76,
+        "inflationAdjustedWithdrawal": 85918.58
+      },
+      {
+        "age": 66,
+        "withdrawals": 128940.4,
+        "incomeTax": 0,
+        "netIncome": 128940.4,
+        "endingBalance": 3094569.67,
+        "inflationAdjustedWithdrawal": 93513.49
+      },
+      {
+        "age": 70,
+        "withdrawals": 155672.6,
+        "incomeTax": 0,
+        "netIncome": 155672.6,
+        "endingBalance": 3736142.51,
+        "inflationAdjustedWithdrawal": 91135.5
+      },
+      {
+        "age": 75,
+        "withdrawals": 198004.17,
+        "incomeTax": 0,
+        "netIncome": 198004.17,
+        "endingBalance": 4752100.04,
+        "inflationAdjustedWithdrawal": 88692.61
+      },
+      {
+        "age": 85,
+        "withdrawals": 274957.93,
+        "incomeTax": 21047.06,
+        "netIncome": 253910.87,
+        "endingBalance": 8317477.53,
+        "inflationAdjustedWithdrawal": 72103.24
+      }
+    ]
+  },
+  "near-retirement|fixed_percentage|below-min|lump0": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 11352.8,
+    "monthlyNetIncomeAtRetirement": 11352.8,
+    "shortfallAmount": 0,
+    "surplusAmount": 13186655.26,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 452323.1,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 6.8,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 3405838.5
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 136233.54,
+        "incomeTax": 0,
+        "netIncome": 136233.54,
+        "endingBalance": 3585784.51,
+        "inflationAdjustedWithdrawal": 104236.96
+      },
+      {
+        "age": 66,
+        "withdrawals": 156758.48,
+        "incomeTax": 0,
+        "netIncome": 156758.48,
+        "endingBalance": 3762203.47,
+        "inflationAdjustedWithdrawal": 113688.43
+      },
+      {
+        "age": 70,
+        "withdrawals": 190126.39,
+        "incomeTax": 0,
+        "netIncome": 190126.39,
+        "endingBalance": 4563033.36,
+        "inflationAdjustedWithdrawal": 111305.8
+      },
+      {
+        "age": 75,
+        "withdrawals": 244145.57,
+        "incomeTax": 0,
+        "netIncome": 244145.57,
+        "endingBalance": 5859493.74,
+        "inflationAdjustedWithdrawal": 109360.87
+      },
+      {
+        "age": 85,
+        "withdrawals": 341584.76,
+        "incomeTax": 38370.04,
+        "netIncome": 303214.72,
+        "endingBalance": 10332938.93,
+        "inflationAdjustedWithdrawal": 89575.04
+      }
+    ]
+  },
+  "near-retirement|fixed_percentage|below-min|lump30": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 9357.68,
+    "monthlyNetIncomeAtRetirement": 9357.68,
+    "shortfallAmount": 0,
+    "surplusAmount": 10614570.51,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 201220.66,
+    "totalLumpSumTax": 8736.25,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 3.74,
+    "lumpSum": {
+      "amount": 598534.74,
+      "tax": 8736.25,
+      "remainingPortfolio": 2807303.76
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 112292.15,
+        "incomeTax": 0,
+        "netIncome": 112292.15,
+        "endingBalance": 2952534.76,
+        "inflationAdjustedWithdrawal": 85918.58
+      },
+      {
+        "age": 66,
+        "withdrawals": 128940.4,
+        "incomeTax": 0,
+        "netIncome": 128940.4,
+        "endingBalance": 3094569.67,
+        "inflationAdjustedWithdrawal": 93513.49
+      },
+      {
+        "age": 70,
+        "withdrawals": 155672.6,
+        "incomeTax": 0,
+        "netIncome": 155672.6,
+        "endingBalance": 3736142.51,
+        "inflationAdjustedWithdrawal": 91135.5
+      },
+      {
+        "age": 75,
+        "withdrawals": 198004.17,
+        "incomeTax": 0,
+        "netIncome": 198004.17,
+        "endingBalance": 4752100.04,
+        "inflationAdjustedWithdrawal": 88692.61
+      },
+      {
+        "age": 85,
+        "withdrawals": 274957.93,
+        "incomeTax": 21047.06,
+        "netIncome": 253910.87,
+        "endingBalance": 8317477.53,
+        "inflationAdjustedWithdrawal": 72103.24
+      }
+    ]
+  },
+  "near-retirement|fixed_percentage|above-max|lump0": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 11352.8,
+    "monthlyNetIncomeAtRetirement": 11352.8,
+    "shortfallAmount": 0,
+    "surplusAmount": 13186655.26,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 452323.1,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 6.8,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 3405838.5
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 136233.54,
+        "incomeTax": 0,
+        "netIncome": 136233.54,
+        "endingBalance": 3585784.51,
+        "inflationAdjustedWithdrawal": 104236.96
+      },
+      {
+        "age": 66,
+        "withdrawals": 156758.48,
+        "incomeTax": 0,
+        "netIncome": 156758.48,
+        "endingBalance": 3762203.47,
+        "inflationAdjustedWithdrawal": 113688.43
+      },
+      {
+        "age": 70,
+        "withdrawals": 190126.39,
+        "incomeTax": 0,
+        "netIncome": 190126.39,
+        "endingBalance": 4563033.36,
+        "inflationAdjustedWithdrawal": 111305.8
+      },
+      {
+        "age": 75,
+        "withdrawals": 244145.57,
+        "incomeTax": 0,
+        "netIncome": 244145.57,
+        "endingBalance": 5859493.74,
+        "inflationAdjustedWithdrawal": 109360.87
+      },
+      {
+        "age": 85,
+        "withdrawals": 341584.76,
+        "incomeTax": 38370.04,
+        "netIncome": 303214.72,
+        "endingBalance": 10332938.93,
+        "inflationAdjustedWithdrawal": 89575.04
+      }
+    ]
+  },
+  "near-retirement|fixed_percentage|above-max|lump30": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 9357.68,
+    "monthlyNetIncomeAtRetirement": 9357.68,
+    "shortfallAmount": 0,
+    "surplusAmount": 10614570.51,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 201220.66,
+    "totalLumpSumTax": 8736.25,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 3.74,
+    "lumpSum": {
+      "amount": 598534.74,
+      "tax": 8736.25,
+      "remainingPortfolio": 2807303.76
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 112292.15,
+        "incomeTax": 0,
+        "netIncome": 112292.15,
+        "endingBalance": 2952534.76,
+        "inflationAdjustedWithdrawal": 85918.58
+      },
+      {
+        "age": 66,
+        "withdrawals": 128940.4,
+        "incomeTax": 0,
+        "netIncome": 128940.4,
+        "endingBalance": 3094569.67,
+        "inflationAdjustedWithdrawal": 93513.49
+      },
+      {
+        "age": 70,
+        "withdrawals": 155672.6,
+        "incomeTax": 0,
+        "netIncome": 155672.6,
+        "endingBalance": 3736142.51,
+        "inflationAdjustedWithdrawal": 91135.5
+      },
+      {
+        "age": 75,
+        "withdrawals": 198004.17,
+        "incomeTax": 0,
+        "netIncome": 198004.17,
+        "endingBalance": 4752100.04,
+        "inflationAdjustedWithdrawal": 88692.61
+      },
+      {
+        "age": 85,
+        "withdrawals": 274957.93,
+        "incomeTax": 21047.06,
+        "netIncome": 253910.87,
+        "endingBalance": 8317477.53,
+        "inflationAdjustedWithdrawal": 72103.24
+      }
+    ]
+  },
+  "near-retirement|fixed_amount_inflation_adjusted|inside-band|lump0": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 71882.8,
+    "monthlyNetIncomeAtRetirement": 71882.8,
+    "shortfallAmount": 39712406.88,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 69,
+    "totalLifetimeIncomeTax": 719027.94,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 16.3,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 3405838.5
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 862593.6,
+        "incomeTax": 0,
+        "netIncome": 862593.6,
+        "endingBalance": 2859424.44,
+        "inflationAdjustedWithdrawal": 660000
+      },
+      {
+        "age": 66,
+        "withdrawals": 910036.25,
+        "incomeTax": 26191.76,
+        "netIncome": 883844.49,
+        "endingBalance": 2217573.62,
+        "inflationAdjustedWithdrawal": 660000
+      },
+      {
+        "age": 70,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 75,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "near-retirement|fixed_amount_inflation_adjusted|inside-band|lump30": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 71882.8,
+    "monthlyNetIncomeAtRetirement": 71882.8,
+    "shortfallAmount": 40641797.43,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 68,
+    "totalLifetimeIncomeTax": 466882.08,
+    "totalLumpSumTax": 8736.25,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 13.41,
+    "lumpSum": {
+      "amount": 598534.74,
+      "tax": 8736.25,
+      "remainingPortfolio": 2807303.76
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 862593.6,
+        "incomeTax": 0,
+        "netIncome": 862593.6,
+        "endingBalance": 2202233.3,
+        "inflationAdjustedWithdrawal": 660000
+      },
+      {
+        "age": 66,
+        "withdrawals": 910036.25,
+        "incomeTax": 26191.76,
+        "netIncome": 883844.49,
+        "endingBalance": 1495977.74,
+        "inflationAdjustedWithdrawal": 660000
+      },
+      {
+        "age": 70,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 75,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "near-retirement|fixed_amount_inflation_adjusted|below-min|lump0": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 71882.8,
+    "monthlyNetIncomeAtRetirement": 71882.8,
+    "shortfallAmount": 39712406.88,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 69,
+    "totalLifetimeIncomeTax": 719027.94,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 16.3,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 3405838.5
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 862593.6,
+        "incomeTax": 0,
+        "netIncome": 862593.6,
+        "endingBalance": 2859424.44,
+        "inflationAdjustedWithdrawal": 660000
+      },
+      {
+        "age": 66,
+        "withdrawals": 910036.25,
+        "incomeTax": 26191.76,
+        "netIncome": 883844.49,
+        "endingBalance": 2217573.62,
+        "inflationAdjustedWithdrawal": 660000
+      },
+      {
+        "age": 70,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 75,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "near-retirement|fixed_amount_inflation_adjusted|below-min|lump30": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 71882.8,
+    "monthlyNetIncomeAtRetirement": 71882.8,
+    "shortfallAmount": 40641797.43,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 68,
+    "totalLifetimeIncomeTax": 466882.08,
+    "totalLumpSumTax": 8736.25,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 13.41,
+    "lumpSum": {
+      "amount": 598534.74,
+      "tax": 8736.25,
+      "remainingPortfolio": 2807303.76
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 862593.6,
+        "incomeTax": 0,
+        "netIncome": 862593.6,
+        "endingBalance": 2202233.3,
+        "inflationAdjustedWithdrawal": 660000
+      },
+      {
+        "age": 66,
+        "withdrawals": 910036.25,
+        "incomeTax": 26191.76,
+        "netIncome": 883844.49,
+        "endingBalance": 1495977.74,
+        "inflationAdjustedWithdrawal": 660000
+      },
+      {
+        "age": 70,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 75,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "near-retirement|fixed_amount_inflation_adjusted|above-max|lump0": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 71882.8,
+    "monthlyNetIncomeAtRetirement": 71882.8,
+    "shortfallAmount": 39712406.88,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 69,
+    "totalLifetimeIncomeTax": 719027.94,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 16.3,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 3405838.5
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 862593.6,
+        "incomeTax": 0,
+        "netIncome": 862593.6,
+        "endingBalance": 2859424.44,
+        "inflationAdjustedWithdrawal": 660000
+      },
+      {
+        "age": 66,
+        "withdrawals": 910036.25,
+        "incomeTax": 26191.76,
+        "netIncome": 883844.49,
+        "endingBalance": 2217573.62,
+        "inflationAdjustedWithdrawal": 660000
+      },
+      {
+        "age": 70,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 75,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "near-retirement|fixed_amount_inflation_adjusted|above-max|lump30": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 71882.8,
+    "monthlyNetIncomeAtRetirement": 71882.8,
+    "shortfallAmount": 40641797.43,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 68,
+    "totalLifetimeIncomeTax": 466882.08,
+    "totalLumpSumTax": 8736.25,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 13.41,
+    "lumpSum": {
+      "amount": 598534.74,
+      "tax": 8736.25,
+      "remainingPortfolio": 2807303.76
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 862593.6,
+        "incomeTax": 0,
+        "netIncome": 862593.6,
+        "endingBalance": 2202233.3,
+        "inflationAdjustedWithdrawal": 660000
+      },
+      {
+        "age": 66,
+        "withdrawals": 910036.25,
+        "incomeTax": 26191.76,
+        "netIncome": 883844.49,
+        "endingBalance": 1495977.74,
+        "inflationAdjustedWithdrawal": 660000
+      },
+      {
+        "age": 70,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 75,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "near-retirement|variable_percentage|inside-band|lump0": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 71882.8,
+    "monthlyNetIncomeAtRetirement": 71882.8,
+    "shortfallAmount": 0,
+    "surplusAmount": 5511920.93,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 654617.98,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 8.29,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 3405838.5
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 862593.6,
+        "incomeTax": 0,
+        "netIncome": 862593.6,
+        "endingBalance": 2859424.44,
+        "inflationAdjustedWithdrawal": 660000
+      },
+      {
+        "age": 66,
+        "withdrawals": 165461.14,
+        "incomeTax": 0,
+        "netIncome": 165461.14,
+        "endingBalance": 2962148.73,
+        "inflationAdjustedWithdrawal": 120000
+      },
+      {
+        "age": 70,
+        "withdrawals": 204977.34,
+        "incomeTax": 0,
+        "netIncome": 204977.34,
+        "endingBalance": 3404130.06,
+        "inflationAdjustedWithdrawal": 120000
+      },
+      {
+        "age": 75,
+        "withdrawals": 267897.18,
+        "incomeTax": 19211.27,
+        "netIncome": 248685.91,
+        "endingBalance": 3979508.49,
+        "inflationAdjustedWithdrawal": 120000
+      },
+      {
+        "age": 85,
+        "withdrawals": 366085.67,
+        "incomeTax": 44740.27,
+        "netIncome": 321345.39,
+        "endingBalance": 5118702.07,
+        "inflationAdjustedWithdrawal": 96000
+      }
+    ]
+  },
+  "near-retirement|variable_percentage|inside-band|lump30": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 71882.8,
+    "monthlyNetIncomeAtRetirement": 71882.8,
+    "shortfallAmount": 36891170.48,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 88,
+    "totalLifetimeIncomeTax": 528622.05,
+    "totalLumpSumTax": 8736.25,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 7.31,
+    "lumpSum": {
+      "amount": 598534.74,
+      "tax": 8736.25,
+      "remainingPortfolio": 2807303.76
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 862593.6,
+        "incomeTax": 0,
+        "netIncome": 862593.6,
+        "endingBalance": 2202233.3,
+        "inflationAdjustedWithdrawal": 660000
+      },
+      {
+        "age": 66,
+        "withdrawals": 165461.14,
+        "incomeTax": 0,
+        "netIncome": 165461.14,
+        "endingBalance": 2240552.86,
+        "inflationAdjustedWithdrawal": 120000
+      },
+      {
+        "age": 70,
+        "withdrawals": 204977.34,
+        "incomeTax": 0,
+        "netIncome": 204977.34,
+        "endingBalance": 2355304.17,
+        "inflationAdjustedWithdrawal": 120000
+      },
+      {
+        "age": 75,
+        "withdrawals": 267897.18,
+        "incomeTax": 19211.27,
+        "netIncome": 248685.91,
+        "endingBalance": 2305664.01,
+        "inflationAdjustedWithdrawal": 120000
+      },
+      {
+        "age": 85,
+        "withdrawals": 366085.67,
+        "incomeTax": 44740.27,
+        "netIncome": 321345.39,
+        "endingBalance": 855474.62,
+        "inflationAdjustedWithdrawal": 96000
+      }
+    ]
+  },
+  "near-retirement|variable_percentage|below-min|lump0": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 117626.4,
+    "monthlyNetIncomeAtRetirement": 117626.4,
+    "shortfallAmount": 41391177.28,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 67,
+    "totalLifetimeIncomeTax": 765464.14,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 18.91,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 3405838.5
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1411516.81,
+        "incomeTax": 0,
+        "netIncome": 1411516.81,
+        "endingBalance": 2310501.24,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1489150.23,
+        "incomeTax": 426217.77,
+        "netIncome": 1062932.47,
+        "endingBalance": 1045622.58,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 70,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 75,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "near-retirement|variable_percentage|below-min|lump30": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 117626.4,
+    "monthlyNetIncomeAtRetirement": 117626.4,
+    "shortfallAmount": 41995484.21,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 67,
+    "totalLifetimeIncomeTax": 471527.91,
+    "totalLumpSumTax": 8736.25,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 14.48,
+    "lumpSum": {
+      "amount": 598534.74,
+      "tax": 8736.25,
+      "remainingPortfolio": 2807303.76
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1411516.81,
+        "incomeTax": 0,
+        "netIncome": 1411516.81,
+        "endingBalance": 1653310.1,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1489150.23,
+        "incomeTax": 426217.77,
+        "netIncome": 1062932.47,
+        "endingBalance": 324026.7,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 70,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 75,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "near-retirement|variable_percentage|above-max|lump0": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 26139.2,
+    "monthlyNetIncomeAtRetirement": 26139.2,
+    "shortfallAmount": 0,
+    "surplusAmount": 12597078.81,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 422135.91,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 6.46,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 3405838.5
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 313670.4,
+        "incomeTax": 0,
+        "netIncome": 313670.4,
+        "endingBalance": 3408347.65,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 66,
+        "withdrawals": 149008.04,
+        "incomeTax": 0,
+        "netIncome": 149008.04,
+        "endingBalance": 3576192.86,
+        "inflationAdjustedWithdrawal": 108067.46
+      },
+      {
+        "age": 70,
+        "withdrawals": 180846.73,
+        "incomeTax": 0,
+        "netIncome": 180846.73,
+        "endingBalance": 4340321.6,
+        "inflationAdjustedWithdrawal": 105873.21
+      },
+      {
+        "age": 75,
+        "withdrawals": 233028.08,
+        "incomeTax": 0,
+        "netIncome": 233028.08,
+        "endingBalance": 5592673.92,
+        "inflationAdjustedWithdrawal": 104380.98
+      },
+      {
+        "age": 85,
+        "withdrawals": 326312.48,
+        "incomeTax": 34399.24,
+        "netIncome": 291913.23,
+        "endingBalance": 9870952.38,
+        "inflationAdjustedWithdrawal": 85570.13
+      }
+    ]
+  },
+  "near-retirement|variable_percentage|above-max|lump30": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 26139.2,
+    "monthlyNetIncomeAtRetirement": 26139.2,
+    "shortfallAmount": 0,
+    "surplusAmount": 9973267.65,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 184845.44,
+    "totalLumpSumTax": 8736.25,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 3.52,
+    "lumpSum": {
+      "amount": 598534.74,
+      "tax": 8736.25,
+      "remainingPortfolio": 2807303.76
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 313670.4,
+        "incomeTax": 0,
+        "netIncome": 313670.4,
+        "endingBalance": 2751156.5,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 66,
+        "withdrawals": 120144.2,
+        "incomeTax": 0,
+        "netIncome": 120144.2,
+        "endingBalance": 2883460.82,
+        "inflationAdjustedWithdrawal": 87134.08
+      },
+      {
+        "age": 70,
+        "withdrawals": 145061.41,
+        "incomeTax": 0,
+        "netIncome": 145061.41,
+        "endingBalance": 3481473.74,
+        "inflationAdjustedWithdrawal": 84923.38
+      },
+      {
+        "age": 75,
+        "withdrawals": 185246.07,
+        "incomeTax": 0,
+        "netIncome": 185246.07,
+        "endingBalance": 4445905.75,
+        "inflationAdjustedWithdrawal": 82977.84
+      },
+      {
+        "age": 85,
+        "withdrawals": 258345.74,
+        "incomeTax": 16727.89,
+        "netIncome": 241617.85,
+        "endingBalance": 7814958.65,
+        "inflationAdjustedWithdrawal": 67746.96
+      }
+    ]
+  },
+  "near-retirement|guardrails|inside-band|lump0": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 71882.8,
+    "monthlyNetIncomeAtRetirement": 71882.8,
+    "shortfallAmount": 39399185.69,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 72,
+    "totalLifetimeIncomeTax": 583309.18,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 12.35,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 3405838.5
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 862593.6,
+        "incomeTax": 0,
+        "netIncome": 862593.6,
+        "endingBalance": 2859424.44,
+        "inflationAdjustedWithdrawal": 660000
+      },
+      {
+        "age": 66,
+        "withdrawals": 776334.24,
+        "incomeTax": 0,
+        "netIncome": 776334.24,
+        "endingBalance": 2351275.62,
+        "inflationAdjustedWithdrawal": 563033.18
+      },
+      {
+        "age": 70,
+        "withdrawals": 509352.9,
+        "incomeTax": 91551.4,
+        "netIncome": 417801.5,
+        "endingBalance": 603742.73,
+        "inflationAdjustedWithdrawal": 298190.76
+      },
+      {
+        "age": 75,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "near-retirement|guardrails|inside-band|lump30": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 71882.8,
+    "monthlyNetIncomeAtRetirement": 71882.8,
+    "shortfallAmount": 40527218.58,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 70,
+    "totalLifetimeIncomeTax": 403165.54,
+    "totalLumpSumTax": 8736.25,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 11.21,
+    "lumpSum": {
+      "amount": 598534.74,
+      "tax": 8736.25,
+      "remainingPortfolio": 2807303.76
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 862593.6,
+        "incomeTax": 0,
+        "netIncome": 862593.6,
+        "endingBalance": 2202233.3,
+        "inflationAdjustedWithdrawal": 660000
+      },
+      {
+        "age": 66,
+        "withdrawals": 776334.24,
+        "incomeTax": 0,
+        "netIncome": 776334.24,
+        "endingBalance": 1629679.75,
+        "inflationAdjustedWithdrawal": 563033.18
+      },
+      {
+        "age": 70,
+        "withdrawals": 64269.73,
+        "incomeTax": 0,
+        "netIncome": 64269.73,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 37625.47
+      },
+      {
+        "age": 75,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "near-retirement|guardrails|below-min|lump0": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 117626.4,
+    "monthlyNetIncomeAtRetirement": 117626.4,
+    "shortfallAmount": 41391177.28,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 67,
+    "totalLifetimeIncomeTax": 765464.14,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 18.91,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 3405838.5
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1411516.81,
+        "incomeTax": 0,
+        "netIncome": 1411516.81,
+        "endingBalance": 2310501.24,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1489150.23,
+        "incomeTax": 426217.77,
+        "netIncome": 1062932.47,
+        "endingBalance": 1045622.58,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 70,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 75,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "near-retirement|guardrails|below-min|lump30": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 117626.4,
+    "monthlyNetIncomeAtRetirement": 117626.4,
+    "shortfallAmount": 41995484.21,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 67,
+    "totalLifetimeIncomeTax": 471527.91,
+    "totalLumpSumTax": 8736.25,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 14.48,
+    "lumpSum": {
+      "amount": 598534.74,
+      "tax": 8736.25,
+      "remainingPortfolio": 2807303.76
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1411516.81,
+        "incomeTax": 0,
+        "netIncome": 1411516.81,
+        "endingBalance": 1653310.1,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1489150.23,
+        "incomeTax": 426217.77,
+        "netIncome": 1062932.47,
+        "endingBalance": 324026.7,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 70,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 75,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "near-retirement|guardrails|above-max|lump0": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 26139.2,
+    "monthlyNetIncomeAtRetirement": 26139.2,
+    "shortfallAmount": 0,
+    "surplusAmount": 9872509.52,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 473944.5,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 6.78,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 3405838.5
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 313670.4,
+        "incomeTax": 0,
+        "netIncome": 313670.4,
+        "endingBalance": 3408347.65,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 66,
+        "withdrawals": 282303.36,
+        "incomeTax": 0,
+        "netIncome": 282303.36,
+        "endingBalance": 3442897.54,
+        "inflationAdjustedWithdrawal": 204739.34
+      },
+      {
+        "age": 70,
+        "withdrawals": 185219.24,
+        "incomeTax": 0,
+        "netIncome": 185219.24,
+        "endingBalance": 3915714.96,
+        "inflationAdjustedWithdrawal": 108433
+      },
+      {
+        "age": 75,
+        "withdrawals": 242074.13,
+        "incomeTax": 12739.34,
+        "netIncome": 229334.79,
+        "endingBalance": 4917346.88,
+        "inflationAdjustedWithdrawal": 108433
+      },
+      {
+        "age": 85,
+        "withdrawals": 330798.07,
+        "incomeTax": 35565.5,
+        "netIncome": 295232.57,
+        "endingBalance": 7990940.54,
+        "inflationAdjustedWithdrawal": 86746.4
+      }
+    ]
+  },
+  "near-retirement|guardrails|above-max|lump30": {
+    "portfolioAtRetirement": 3405838.5,
+    "monthlyIncomeAtRetirement": 26139.2,
+    "monthlyNetIncomeAtRetirement": 26139.2,
+    "shortfallAmount": 0,
+    "surplusAmount": 7125383.42,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 159438.78,
+    "totalLumpSumTax": 8736.25,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 2.89,
+    "lumpSum": {
+      "amount": 598534.74,
+      "tax": 8736.25,
+      "remainingPortfolio": 2807303.76
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 313670.4,
+        "incomeTax": 0,
+        "netIncome": 313670.4,
+        "endingBalance": 2751156.5,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 66,
+        "withdrawals": 282303.36,
+        "incomeTax": 0,
+        "netIncome": 282303.36,
+        "endingBalance": 2721301.66,
+        "inflationAdjustedWithdrawal": 204739.34
+      },
+      {
+        "age": 70,
+        "withdrawals": 185219.24,
+        "incomeTax": 0,
+        "netIncome": 185219.24,
+        "endingBalance": 2866889.06,
+        "inflationAdjustedWithdrawal": 108433
+      },
+      {
+        "age": 75,
+        "withdrawals": 176168.59,
+        "incomeTax": 876.35,
+        "netIncome": 175292.25,
+        "endingBalance": 3562563.16,
+        "inflationAdjustedWithdrawal": 78911.73
+      },
+      {
+        "age": 85,
+        "withdrawals": 240737.12,
+        "incomeTax": 12498.68,
+        "netIncome": 228238.44,
+        "endingBalance": 5774579.78,
+        "inflationAdjustedWithdrawal": 63129.39
+      }
+    ]
+  },
+  "underfunded|fixed_percentage|inside-band|lump0": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 68320.79,
+    "monthlyNetIncomeAtRetirement": 68320.79,
+    "shortfallAmount": 0,
+    "surplusAmount": 80414799.14,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 10356027.36,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 25.58,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 20496235.55
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 819849.42,
+        "incomeTax": 0,
+        "netIncome": 819849.42,
+        "endingBalance": 21597234.45,
+        "inflationAdjustedWithdrawal": 280986.14
+      },
+      {
+        "age": 66,
+        "withdrawals": 944945.13,
+        "incomeTax": 0,
+        "netIncome": 944945.13,
+        "endingBalance": 22678683.13,
+        "inflationAdjustedWithdrawal": 306976.36
+      },
+      {
+        "age": 70,
+        "withdrawals": 1150469.42,
+        "incomeTax": 42728.59,
+        "netIncome": 1107740.83,
+        "endingBalance": 27611265.99,
+        "inflationAdjustedWithdrawal": 301691.86
+      },
+      {
+        "age": 75,
+        "withdrawals": 1487502.13,
+        "incomeTax": 475154.87,
+        "netIncome": 1012347.26,
+        "endingBalance": 35700051.2,
+        "inflationAdjustedWithdrawal": 298458.4
+      },
+      {
+        "age": 85,
+        "withdrawals": 2083050.57,
+        "incomeTax": 727507.76,
+        "netIncome": 1355542.81,
+        "endingBalance": 63012279.66,
+        "inflationAdjustedWithdrawal": 244681.67
+      }
+    ]
+  },
+  "underfunded|fixed_percentage|inside-band|lump30": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 55005.81,
+    "monthlyNetIncomeAtRetirement": 55005.81,
+    "shortfallAmount": 0,
+    "surplusAmount": 63615761.49,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 6675971.37,
+    "totalLumpSumTax": 1165767.62,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 20.78,
+    "lumpSum": {
+      "amount": 3994493.39,
+      "tax": 1165767.62,
+      "remainingPortfolio": 16501742.16
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 660069.69,
+        "incomeTax": 0,
+        "netIncome": 660069.69,
+        "endingBalance": 17371060.44,
+        "inflationAdjustedWithdrawal": 226225
+      },
+      {
+        "age": 66,
+        "withdrawals": 759293.22,
+        "incomeTax": 0,
+        "netIncome": 759293.22,
+        "endingBalance": 18223037.3,
+        "inflationAdjustedWithdrawal": 246665.19
+      },
+      {
+        "age": 70,
+        "withdrawals": 920318.47,
+        "incomeTax": 0,
+        "netIncome": 920318.47,
+        "endingBalance": 22087643.17,
+        "inflationAdjustedWithdrawal": 241338.52
+      },
+      {
+        "age": 75,
+        "withdrawals": 1179037.47,
+        "incomeTax": 50006.44,
+        "netIncome": 1129031.03,
+        "endingBalance": 28296899.38,
+        "inflationAdjustedWithdrawal": 236566.81
+      },
+      {
+        "age": 85,
+        "withdrawals": 1647891.3,
+        "incomeTax": 540914.43,
+        "netIncome": 1106976.87,
+        "endingBalance": 49848711.89,
+        "inflationAdjustedWithdrawal": 193566.49
+      }
+    ]
+  },
+  "underfunded|fixed_percentage|below-min|lump0": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 68320.79,
+    "monthlyNetIncomeAtRetirement": 68320.79,
+    "shortfallAmount": 0,
+    "surplusAmount": 80414799.14,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 10356027.36,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 25.58,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 20496235.55
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 819849.42,
+        "incomeTax": 0,
+        "netIncome": 819849.42,
+        "endingBalance": 21597234.45,
+        "inflationAdjustedWithdrawal": 280986.14
+      },
+      {
+        "age": 66,
+        "withdrawals": 944945.13,
+        "incomeTax": 0,
+        "netIncome": 944945.13,
+        "endingBalance": 22678683.13,
+        "inflationAdjustedWithdrawal": 306976.36
+      },
+      {
+        "age": 70,
+        "withdrawals": 1150469.42,
+        "incomeTax": 42728.59,
+        "netIncome": 1107740.83,
+        "endingBalance": 27611265.99,
+        "inflationAdjustedWithdrawal": 301691.86
+      },
+      {
+        "age": 75,
+        "withdrawals": 1487502.13,
+        "incomeTax": 475154.87,
+        "netIncome": 1012347.26,
+        "endingBalance": 35700051.2,
+        "inflationAdjustedWithdrawal": 298458.4
+      },
+      {
+        "age": 85,
+        "withdrawals": 2083050.57,
+        "incomeTax": 727507.76,
+        "netIncome": 1355542.81,
+        "endingBalance": 63012279.66,
+        "inflationAdjustedWithdrawal": 244681.67
+      }
+    ]
+  },
+  "underfunded|fixed_percentage|below-min|lump30": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 55005.81,
+    "monthlyNetIncomeAtRetirement": 55005.81,
+    "shortfallAmount": 0,
+    "surplusAmount": 63615761.49,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 6675971.37,
+    "totalLumpSumTax": 1165767.62,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 20.78,
+    "lumpSum": {
+      "amount": 3994493.39,
+      "tax": 1165767.62,
+      "remainingPortfolio": 16501742.16
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 660069.69,
+        "incomeTax": 0,
+        "netIncome": 660069.69,
+        "endingBalance": 17371060.44,
+        "inflationAdjustedWithdrawal": 226225
+      },
+      {
+        "age": 66,
+        "withdrawals": 759293.22,
+        "incomeTax": 0,
+        "netIncome": 759293.22,
+        "endingBalance": 18223037.3,
+        "inflationAdjustedWithdrawal": 246665.19
+      },
+      {
+        "age": 70,
+        "withdrawals": 920318.47,
+        "incomeTax": 0,
+        "netIncome": 920318.47,
+        "endingBalance": 22087643.17,
+        "inflationAdjustedWithdrawal": 241338.52
+      },
+      {
+        "age": 75,
+        "withdrawals": 1179037.47,
+        "incomeTax": 50006.44,
+        "netIncome": 1129031.03,
+        "endingBalance": 28296899.38,
+        "inflationAdjustedWithdrawal": 236566.81
+      },
+      {
+        "age": 85,
+        "withdrawals": 1647891.3,
+        "incomeTax": 540914.43,
+        "netIncome": 1106976.87,
+        "endingBalance": 49848711.89,
+        "inflationAdjustedWithdrawal": 193566.49
+      }
+    ]
+  },
+  "underfunded|fixed_percentage|above-max|lump0": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 68320.79,
+    "monthlyNetIncomeAtRetirement": 68320.79,
+    "shortfallAmount": 0,
+    "surplusAmount": 80414799.14,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 10356027.36,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 25.58,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 20496235.55
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 819849.42,
+        "incomeTax": 0,
+        "netIncome": 819849.42,
+        "endingBalance": 21597234.45,
+        "inflationAdjustedWithdrawal": 280986.14
+      },
+      {
+        "age": 66,
+        "withdrawals": 944945.13,
+        "incomeTax": 0,
+        "netIncome": 944945.13,
+        "endingBalance": 22678683.13,
+        "inflationAdjustedWithdrawal": 306976.36
+      },
+      {
+        "age": 70,
+        "withdrawals": 1150469.42,
+        "incomeTax": 42728.59,
+        "netIncome": 1107740.83,
+        "endingBalance": 27611265.99,
+        "inflationAdjustedWithdrawal": 301691.86
+      },
+      {
+        "age": 75,
+        "withdrawals": 1487502.13,
+        "incomeTax": 475154.87,
+        "netIncome": 1012347.26,
+        "endingBalance": 35700051.2,
+        "inflationAdjustedWithdrawal": 298458.4
+      },
+      {
+        "age": 85,
+        "withdrawals": 2083050.57,
+        "incomeTax": 727507.76,
+        "netIncome": 1355542.81,
+        "endingBalance": 63012279.66,
+        "inflationAdjustedWithdrawal": 244681.67
+      }
+    ]
+  },
+  "underfunded|fixed_percentage|above-max|lump30": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 55005.81,
+    "monthlyNetIncomeAtRetirement": 55005.81,
+    "shortfallAmount": 0,
+    "surplusAmount": 63615761.49,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 6675971.37,
+    "totalLumpSumTax": 1165767.62,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 20.78,
+    "lumpSum": {
+      "amount": 3994493.39,
+      "tax": 1165767.62,
+      "remainingPortfolio": 16501742.16
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 660069.69,
+        "incomeTax": 0,
+        "netIncome": 660069.69,
+        "endingBalance": 17371060.44,
+        "inflationAdjustedWithdrawal": 226225
+      },
+      {
+        "age": 66,
+        "withdrawals": 759293.22,
+        "incomeTax": 0,
+        "netIncome": 759293.22,
+        "endingBalance": 18223037.3,
+        "inflationAdjustedWithdrawal": 246665.19
+      },
+      {
+        "age": 70,
+        "withdrawals": 920318.47,
+        "incomeTax": 0,
+        "netIncome": 920318.47,
+        "endingBalance": 22087643.17,
+        "inflationAdjustedWithdrawal": 241338.52
+      },
+      {
+        "age": 75,
+        "withdrawals": 1179037.47,
+        "incomeTax": 50006.44,
+        "netIncome": 1129031.03,
+        "endingBalance": 28296899.38,
+        "inflationAdjustedWithdrawal": 236566.81
+      },
+      {
+        "age": 85,
+        "withdrawals": 1647891.3,
+        "incomeTax": 540914.43,
+        "netIncome": 1106976.87,
+        "endingBalance": 49848711.89,
+        "inflationAdjustedWithdrawal": 193566.49
+      }
+    ]
+  },
+  "underfunded|fixed_amount_inflation_adjusted|inside-band|lump0": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 116710.3,
+    "monthlyNetIncomeAtRetirement": 116710.3,
+    "shortfallAmount": 0,
+    "surplusAmount": 6634313.17,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 20902843.42,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 32.55,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 20496235.55
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1400523.6,
+        "incomeTax": 0,
+        "netIncome": 1400523.6,
+        "endingBalance": 21016560.28,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1477552.39,
+        "incomeTax": 0,
+        "netIncome": 1477552.39,
+        "endingBalance": 21511979.67,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 70,
+        "withdrawals": 1830428.33,
+        "incomeTax": 144307.21,
+        "netIncome": 1686121.12,
+        "endingBalance": 23190329.72,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 75,
+        "withdrawals": 2392296.62,
+        "incomeTax": 866668.48,
+        "netIncome": 1525628.14,
+        "endingBalance": 24032860.07,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 85,
+        "withdrawals": 3269110.57,
+        "incomeTax": 1261234.76,
+        "netIncome": 2007875.81,
+        "endingBalance": 16409783.45,
+        "inflationAdjustedWithdrawal": 384000
+      }
+    ]
+  },
+  "underfunded|fixed_amount_inflation_adjusted|inside-band|lump30": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 116710.3,
+    "monthlyNetIncomeAtRetirement": 116710.3,
+    "shortfallAmount": 33089136.56,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 82,
+    "totalLifetimeIncomeTax": 10842547.1,
+    "totalLumpSumTax": 1165767.62,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 28.13,
+    "lumpSum": {
+      "amount": 3994493.39,
+      "tax": 1165767.62,
+      "remainingPortfolio": 16501742.16
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1400523.6,
+        "incomeTax": 0,
+        "netIncome": 1400523.6,
+        "endingBalance": 16630606.53,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1477552.39,
+        "incomeTax": 0,
+        "netIncome": 1477552.39,
+        "endingBalance": 16696202.46,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 70,
+        "withdrawals": 1830428.33,
+        "incomeTax": 144307.21,
+        "netIncome": 1686121.12,
+        "endingBalance": 16190689.02,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 75,
+        "withdrawals": 2392296.62,
+        "incomeTax": 866668.48,
+        "netIncome": 1525628.14,
+        "endingBalance": 12861978.48,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "underfunded|fixed_amount_inflation_adjusted|below-min|lump0": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 116710.3,
+    "monthlyNetIncomeAtRetirement": 116710.3,
+    "shortfallAmount": 0,
+    "surplusAmount": 6634313.17,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 20902843.42,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 32.55,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 20496235.55
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1400523.6,
+        "incomeTax": 0,
+        "netIncome": 1400523.6,
+        "endingBalance": 21016560.28,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1477552.39,
+        "incomeTax": 0,
+        "netIncome": 1477552.39,
+        "endingBalance": 21511979.67,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 70,
+        "withdrawals": 1830428.33,
+        "incomeTax": 144307.21,
+        "netIncome": 1686121.12,
+        "endingBalance": 23190329.72,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 75,
+        "withdrawals": 2392296.62,
+        "incomeTax": 866668.48,
+        "netIncome": 1525628.14,
+        "endingBalance": 24032860.07,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 85,
+        "withdrawals": 3269110.57,
+        "incomeTax": 1261234.76,
+        "netIncome": 2007875.81,
+        "endingBalance": 16409783.45,
+        "inflationAdjustedWithdrawal": 384000
+      }
+    ]
+  },
+  "underfunded|fixed_amount_inflation_adjusted|below-min|lump30": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 116710.3,
+    "monthlyNetIncomeAtRetirement": 116710.3,
+    "shortfallAmount": 33089136.56,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 82,
+    "totalLifetimeIncomeTax": 10842547.1,
+    "totalLumpSumTax": 1165767.62,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 28.13,
+    "lumpSum": {
+      "amount": 3994493.39,
+      "tax": 1165767.62,
+      "remainingPortfolio": 16501742.16
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1400523.6,
+        "incomeTax": 0,
+        "netIncome": 1400523.6,
+        "endingBalance": 16630606.53,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1477552.39,
+        "incomeTax": 0,
+        "netIncome": 1477552.39,
+        "endingBalance": 16696202.46,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 70,
+        "withdrawals": 1830428.33,
+        "incomeTax": 144307.21,
+        "netIncome": 1686121.12,
+        "endingBalance": 16190689.02,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 75,
+        "withdrawals": 2392296.62,
+        "incomeTax": 866668.48,
+        "netIncome": 1525628.14,
+        "endingBalance": 12861978.48,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "underfunded|fixed_amount_inflation_adjusted|above-max|lump0": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 116710.3,
+    "monthlyNetIncomeAtRetirement": 116710.3,
+    "shortfallAmount": 0,
+    "surplusAmount": 6634313.17,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 20902843.42,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 32.55,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 20496235.55
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1400523.6,
+        "incomeTax": 0,
+        "netIncome": 1400523.6,
+        "endingBalance": 21016560.28,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1477552.39,
+        "incomeTax": 0,
+        "netIncome": 1477552.39,
+        "endingBalance": 21511979.67,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 70,
+        "withdrawals": 1830428.33,
+        "incomeTax": 144307.21,
+        "netIncome": 1686121.12,
+        "endingBalance": 23190329.72,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 75,
+        "withdrawals": 2392296.62,
+        "incomeTax": 866668.48,
+        "netIncome": 1525628.14,
+        "endingBalance": 24032860.07,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 85,
+        "withdrawals": 3269110.57,
+        "incomeTax": 1261234.76,
+        "netIncome": 2007875.81,
+        "endingBalance": 16409783.45,
+        "inflationAdjustedWithdrawal": 384000
+      }
+    ]
+  },
+  "underfunded|fixed_amount_inflation_adjusted|above-max|lump30": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 116710.3,
+    "monthlyNetIncomeAtRetirement": 116710.3,
+    "shortfallAmount": 33089136.56,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 82,
+    "totalLifetimeIncomeTax": 10842547.1,
+    "totalLumpSumTax": 1165767.62,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 28.13,
+    "lumpSum": {
+      "amount": 3994493.39,
+      "tax": 1165767.62,
+      "remainingPortfolio": 16501742.16
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1400523.6,
+        "incomeTax": 0,
+        "netIncome": 1400523.6,
+        "endingBalance": 16630606.53,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1477552.39,
+        "incomeTax": 0,
+        "netIncome": 1477552.39,
+        "endingBalance": 16696202.46,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 70,
+        "withdrawals": 1830428.33,
+        "incomeTax": 144307.21,
+        "netIncome": 1686121.12,
+        "endingBalance": 16190689.02,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 75,
+        "withdrawals": 2392296.62,
+        "incomeTax": 866668.48,
+        "netIncome": 1525628.14,
+        "endingBalance": 12861978.48,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "underfunded|variable_percentage|inside-band|lump0": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 116710.3,
+    "monthlyNetIncomeAtRetirement": 116710.3,
+    "shortfallAmount": 0,
+    "surplusAmount": 78422315.36,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 10271777.94,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 25.64,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 20496235.55
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1400523.6,
+        "incomeTax": 0,
+        "netIncome": 1400523.6,
+        "endingBalance": 21016560.28,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 66,
+        "withdrawals": 919581.28,
+        "incomeTax": 0,
+        "netIncome": 919581.28,
+        "endingBalance": 22069950.78,
+        "inflationAdjustedWithdrawal": 298736.63
+      },
+      {
+        "age": 70,
+        "withdrawals": 1120209.84,
+        "incomeTax": 40226.7,
+        "netIncome": 1079983.13,
+        "endingBalance": 26885036.09,
+        "inflationAdjustedWithdrawal": 293756.77
+      },
+      {
+        "age": 75,
+        "withdrawals": 1450645.44,
+        "incomeTax": 460043.63,
+        "netIncome": 990601.81,
+        "endingBalance": 34815490.47,
+        "inflationAdjustedWithdrawal": 291063.33
+      },
+      {
+        "age": 85,
+        "withdrawals": 2031437.62,
+        "incomeTax": 704281.93,
+        "netIncome": 1327155.69,
+        "endingBalance": 61450988.13,
+        "inflationAdjustedWithdrawal": 238619.05
+      }
+    ]
+  },
+  "underfunded|variable_percentage|inside-band|lump30": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 116710.3,
+    "monthlyNetIncomeAtRetirement": 116710.3,
+    "shortfallAmount": 0,
+    "surplusAmount": 61173921.74,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 6662546.47,
+    "totalLumpSumTax": 1165767.62,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 21.07,
+    "lumpSum": {
+      "amount": 3994493.39,
+      "tax": 1165767.62,
+      "remainingPortfolio": 16501742.16
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1400523.6,
+        "incomeTax": 0,
+        "netIncome": 1400523.6,
+        "endingBalance": 16630606.53,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 66,
+        "withdrawals": 726950.19,
+        "incomeTax": 0,
+        "netIncome": 726950.19,
+        "endingBalance": 17446804.66,
+        "inflationAdjustedWithdrawal": 236158.19
+      },
+      {
+        "age": 70,
+        "withdrawals": 881349.31,
+        "incomeTax": 20477.55,
+        "netIncome": 860871.75,
+        "endingBalance": 21152383.42,
+        "inflationAdjustedWithdrawal": 231119.49
+      },
+      {
+        "age": 75,
+        "withdrawals": 1132350.48,
+        "incomeTax": 45692.53,
+        "netIncome": 1086657.95,
+        "endingBalance": 27176411.45,
+        "inflationAdjustedWithdrawal": 227199.35
+      },
+      {
+        "age": 85,
+        "withdrawals": 1584638.32,
+        "incomeTax": 514980.71,
+        "netIncome": 1069657.61,
+        "endingBalance": 47935309.25,
+        "inflationAdjustedWithdrawal": 186136.6
+      }
+    ]
+  },
+  "underfunded|variable_percentage|below-min|lump0": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 262598.17,
+    "monthlyNetIncomeAtRetirement": 262598.17,
+    "shortfallAmount": 57369135.29,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 73,
+    "totalLifetimeIncomeTax": 9360577.45,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 29.92,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 20496235.55
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 3151178.09,
+        "incomeTax": 0,
+        "netIncome": 3151178.09,
+        "endingBalance": 19265905.78,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 66,
+        "withdrawals": 3324492.88,
+        "incomeTax": 175858.99,
+        "netIncome": 3148633.89,
+        "endingBalance": 17753324.47,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 70,
+        "withdrawals": 4118463.74,
+        "incomeTax": 1646692.68,
+        "netIncome": 2471771.06,
+        "endingBalance": 8254925.42,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 75,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "underfunded|variable_percentage|below-min|lump30": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 262598.17,
+    "monthlyNetIncomeAtRetirement": 262598.17,
+    "shortfallAmount": 60615226.06,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 71,
+    "totalLifetimeIncomeTax": 6046127.53,
+    "totalLumpSumTax": 1165767.62,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 26.19,
+    "lumpSum": {
+      "amount": 3994493.39,
+      "tax": 1165767.62,
+      "remainingPortfolio": 16501742.16
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 3151178.09,
+        "incomeTax": 0,
+        "netIncome": 3151178.09,
+        "endingBalance": 14879952.04,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 66,
+        "withdrawals": 3324492.88,
+        "incomeTax": 175858.99,
+        "netIncome": 3148633.89,
+        "endingBalance": 12937547.26,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 70,
+        "withdrawals": 4118463.74,
+        "incomeTax": 1646692.68,
+        "netIncome": 2471771.06,
+        "endingBalance": 1255284.72,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 75,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "underfunded|variable_percentage|above-max|lump0": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 58355.15,
+    "monthlyNetIncomeAtRetirement": 58355.15,
+    "shortfallAmount": 0,
+    "surplusAmount": 104685644.53,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 6661255.35,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 20.75,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 20496235.55
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 700261.8,
+        "incomeTax": 0,
+        "netIncome": 700261.8,
+        "endingBalance": 21716822.08,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 66,
+        "withdrawals": 738776.2,
+        "incomeTax": 0,
+        "netIncome": 738776.2,
+        "endingBalance": 23015441.75,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 70,
+        "withdrawals": 915214.16,
+        "incomeTax": 0,
+        "netIncome": 915214.16,
+        "endingBalance": 29108021.02,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 75,
+        "withdrawals": 1196148.31,
+        "incomeTax": 51832.17,
+        "netIncome": 1144316.14,
+        "endingBalance": 39451956.74,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 85,
+        "withdrawals": 1634555.28,
+        "incomeTax": 535446.67,
+        "netIncome": 1099108.62,
+        "endingBalance": 77946764.93,
+        "inflationAdjustedWithdrawal": 192000
+      }
+    ]
+  },
+  "underfunded|variable_percentage|above-max|lump30": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 58355.15,
+    "monthlyNetIncomeAtRetirement": 58355.15,
+    "shortfallAmount": 0,
+    "surplusAmount": 63936529.97,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 6577897.07,
+    "totalLumpSumTax": 1165767.62,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 20.63,
+    "lumpSum": {
+      "amount": 3994493.39,
+      "tax": 1165767.62,
+      "remainingPortfolio": 16501742.16
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 700261.8,
+        "incomeTax": 0,
+        "netIncome": 700261.8,
+        "endingBalance": 17330868.33,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 66,
+        "withdrawals": 738776.2,
+        "incomeTax": 0,
+        "netIncome": 738776.2,
+        "endingBalance": 18199664.54,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 70,
+        "withdrawals": 915214.16,
+        "incomeTax": 0,
+        "netIncome": 915214.16,
+        "endingBalance": 22108380.32,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 75,
+        "withdrawals": 1180134.78,
+        "incomeTax": 50123.52,
+        "netIncome": 1130011.25,
+        "endingBalance": 28323234.71,
+        "inflationAdjustedWithdrawal": 236786.98
+      },
+      {
+        "age": 85,
+        "withdrawals": 1634555.28,
+        "incomeTax": 535446.67,
+        "netIncome": 1099108.62,
+        "endingBalance": 49911232.01,
+        "inflationAdjustedWithdrawal": 192000
+      }
+    ]
+  },
+  "underfunded|guardrails|inside-band|lump0": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 116710.3,
+    "monthlyNetIncomeAtRetirement": 116710.3,
+    "shortfallAmount": 0,
+    "surplusAmount": 68647322.93,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 10965097.65,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 26.31,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 20496235.55
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1400523.6,
+        "incomeTax": 0,
+        "netIncome": 1400523.6,
+        "endingBalance": 21016560.28,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1260471.24,
+        "incomeTax": 0,
+        "netIncome": 1260471.24,
+        "endingBalance": 21729060.83,
+        "inflationAdjustedWithdrawal": 409478.67
+      },
+      {
+        "age": 70,
+        "withdrawals": 1332087.73,
+        "incomeTax": 58770.28,
+        "netIncome": 1273317.45,
+        "endingBalance": 25558772.33,
+        "inflationAdjustedWithdrawal": 349318.3
+      },
+      {
+        "age": 75,
+        "withdrawals": 1485200.8,
+        "incomeTax": 474211.33,
+        "netIncome": 1010989.47,
+        "endingBalance": 32351110.75,
+        "inflationAdjustedWithdrawal": 297996.65
+      },
+      {
+        "age": 85,
+        "withdrawals": 2029550.02,
+        "incomeTax": 703432.51,
+        "netIncome": 1326117.51,
+        "endingBalance": 54583504.87,
+        "inflationAdjustedWithdrawal": 238397.32
+      }
+    ]
+  },
+  "underfunded|guardrails|inside-band|lump30": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 116710.3,
+    "monthlyNetIncomeAtRetirement": 116710.3,
+    "shortfallAmount": 0,
+    "surplusAmount": 51216640.17,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 7076992.88,
+    "totalLumpSumTax": 1165767.62,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 21.85,
+    "lumpSum": {
+      "amount": 3994493.39,
+      "tax": 1165767.62,
+      "remainingPortfolio": 16501742.16
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1400523.6,
+        "incomeTax": 0,
+        "netIncome": 1400523.6,
+        "endingBalance": 16630606.53,
+        "inflationAdjustedWithdrawal": 480000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1260471.24,
+        "incomeTax": 0,
+        "netIncome": 1260471.24,
+        "endingBalance": 16913283.62,
+        "inflationAdjustedWithdrawal": 409478.67
+      },
+      {
+        "age": 70,
+        "withdrawals": 969422.13,
+        "incomeTax": 27759.47,
+        "netIncome": 941662.65,
+        "endingBalance": 19498151.61,
+        "inflationAdjustedWithdrawal": 254215.15
+      },
+      {
+        "age": 75,
+        "withdrawals": 1266995.95,
+        "incomeTax": 384747.34,
+        "netIncome": 882248.61,
+        "endingBalance": 24062296.35,
+        "inflationAdjustedWithdrawal": 254215.15
+      },
+      {
+        "age": 85,
+        "withdrawals": 1476997.84,
+        "incomeTax": 470848.11,
+        "netIncome": 1006149.72,
+        "endingBalance": 40589007.03,
+        "inflationAdjustedWithdrawal": 173492.81
+      }
+    ]
+  },
+  "underfunded|guardrails|below-min|lump0": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 262598.17,
+    "monthlyNetIncomeAtRetirement": 262598.17,
+    "shortfallAmount": 57369135.29,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 73,
+    "totalLifetimeIncomeTax": 9360577.45,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 29.92,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 20496235.55
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 3151178.09,
+        "incomeTax": 0,
+        "netIncome": 3151178.09,
+        "endingBalance": 19265905.78,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 66,
+        "withdrawals": 3324492.88,
+        "incomeTax": 175858.99,
+        "netIncome": 3148633.89,
+        "endingBalance": 17753324.47,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 70,
+        "withdrawals": 4118463.74,
+        "incomeTax": 1646692.68,
+        "netIncome": 2471771.06,
+        "endingBalance": 8254925.42,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 75,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "underfunded|guardrails|below-min|lump30": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 262598.17,
+    "monthlyNetIncomeAtRetirement": 262598.17,
+    "shortfallAmount": 60615226.06,
+    "surplusAmount": 0,
+    "portfolioDepletionAge": 71,
+    "totalLifetimeIncomeTax": 6046127.53,
+    "totalLumpSumTax": 1165767.62,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 26.19,
+    "lumpSum": {
+      "amount": 3994493.39,
+      "tax": 1165767.62,
+      "remainingPortfolio": 16501742.16
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 3151178.09,
+        "incomeTax": 0,
+        "netIncome": 3151178.09,
+        "endingBalance": 14879952.04,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 66,
+        "withdrawals": 3324492.88,
+        "incomeTax": 175858.99,
+        "netIncome": 3148633.89,
+        "endingBalance": 12937547.26,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 70,
+        "withdrawals": 4118463.74,
+        "incomeTax": 1646692.68,
+        "netIncome": 2471771.06,
+        "endingBalance": 1255284.72,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 75,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      },
+      {
+        "age": 85,
+        "withdrawals": 0,
+        "incomeTax": 0,
+        "netIncome": 0,
+        "endingBalance": 0,
+        "inflationAdjustedWithdrawal": 0
+      }
+    ]
+  },
+  "underfunded|guardrails|above-max|lump0": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 58355.15,
+    "monthlyNetIncomeAtRetirement": 58355.15,
+    "shortfallAmount": 0,
+    "surplusAmount": 104685644.53,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 6661255.35,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 20.75,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 20496235.55
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 700261.8,
+        "incomeTax": 0,
+        "netIncome": 700261.8,
+        "endingBalance": 21716822.08,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 66,
+        "withdrawals": 738776.2,
+        "incomeTax": 0,
+        "netIncome": 738776.2,
+        "endingBalance": 23015441.75,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 70,
+        "withdrawals": 915214.16,
+        "incomeTax": 0,
+        "netIncome": 915214.16,
+        "endingBalance": 29108021.02,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 75,
+        "withdrawals": 1196148.31,
+        "incomeTax": 51832.17,
+        "netIncome": 1144316.14,
+        "endingBalance": 39451956.74,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 85,
+        "withdrawals": 1634555.28,
+        "incomeTax": 535446.67,
+        "netIncome": 1099108.62,
+        "endingBalance": 77946764.93,
+        "inflationAdjustedWithdrawal": 192000
+      }
+    ]
+  },
+  "underfunded|guardrails|above-max|lump30": {
+    "portfolioAtRetirement": 20496235.55,
+    "monthlyIncomeAtRetirement": 58355.15,
+    "monthlyNetIncomeAtRetirement": 58355.15,
+    "shortfallAmount": 0,
+    "surplusAmount": 63331388.71,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 6661255.35,
+    "totalLumpSumTax": 1165767.62,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 20.75,
+    "lumpSum": {
+      "amount": 3994493.39,
+      "tax": 1165767.62,
+      "remainingPortfolio": 16501742.16
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 700261.8,
+        "incomeTax": 0,
+        "netIncome": 700261.8,
+        "endingBalance": 17330868.33,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 66,
+        "withdrawals": 738776.2,
+        "incomeTax": 0,
+        "netIncome": 738776.2,
+        "endingBalance": 18199664.54,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 70,
+        "withdrawals": 915214.16,
+        "incomeTax": 0,
+        "netIncome": 915214.16,
+        "endingBalance": 22108380.32,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 75,
+        "withdrawals": 1196148.31,
+        "incomeTax": 51832.17,
+        "netIncome": 1144316.14,
+        "endingBalance": 28281075.15,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 85,
+        "withdrawals": 1634555.28,
+        "incomeTax": 535446.67,
+        "netIncome": 1099108.62,
+        "endingBalance": 49494892.71,
+        "inflationAdjustedWithdrawal": 192000
+      }
+    ]
+  },
+  "zero-inflation|fixed_percentage|inside-band|lump0": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 39504.21,
+    "monthlyNetIncomeAtRetirement": 39504.21,
+    "shortfallAmount": 0,
+    "surplusAmount": 34123341.69,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 2629858.77,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 15.92,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 11851262.52
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 474050.5,
+        "incomeTax": 0,
+        "netIncome": 474050.5,
+        "endingBalance": 12484658.24,
+        "inflationAdjustedWithdrawal": 474050.5
+      },
+      {
+        "age": 66,
+        "withdrawals": 546101.84,
+        "incomeTax": 0,
+        "netIncome": 546101.84,
+        "endingBalance": 13106444.13,
+        "inflationAdjustedWithdrawal": 546101.84
+      },
+      {
+        "age": 70,
+        "withdrawals": 664008.31,
+        "incomeTax": 2198.83,
+        "netIncome": 661809.47,
+        "endingBalance": 15936199.36,
+        "inflationAdjustedWithdrawal": 664008.31
+      },
+      {
+        "age": 75,
+        "withdrawals": 856173.26,
+        "incomeTax": 40371.58,
+        "netIncome": 815801.67,
+        "endingBalance": 20548158.14,
+        "inflationAdjustedWithdrawal": 856173.26
+      },
+      null
+    ]
+  },
+  "zero-inflation|fixed_percentage|inside-band|lump30": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 32109,
+    "monthlyNetIncomeAtRetirement": 32109,
+    "shortfallAmount": 0,
+    "surplusAmount": 27195907.74,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 1305382.7,
+    "totalLumpSumTax": 525634.84,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 9.86,
+    "lumpSum": {
+      "amount": 2218561.37,
+      "tax": 525634.84,
+      "remainingPortfolio": 9632701.15
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 385308.05,
+        "incomeTax": 0,
+        "netIncome": 385308.05,
+        "endingBalance": 10137420.31,
+        "inflationAdjustedWithdrawal": 385308.05
+      },
+      {
+        "age": 66,
+        "withdrawals": 442989.85,
+        "incomeTax": 0,
+        "netIncome": 442989.85,
+        "endingBalance": 10631756.42,
+        "inflationAdjustedWithdrawal": 442989.85
+      },
+      {
+        "age": 70,
+        "withdrawals": 536300.03,
+        "incomeTax": 0,
+        "netIncome": 536300.03,
+        "endingBalance": 12871200.81,
+        "inflationAdjustedWithdrawal": 536300.03
+      },
+      {
+        "age": 75,
+        "withdrawals": 685084.58,
+        "incomeTax": 6228.65,
+        "netIncome": 678855.93,
+        "endingBalance": 16442029.93,
+        "inflationAdjustedWithdrawal": 685084.58
+      },
+      null
+    ]
+  },
+  "zero-inflation|fixed_percentage|below-min|lump0": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 39504.21,
+    "monthlyNetIncomeAtRetirement": 39504.21,
+    "shortfallAmount": 0,
+    "surplusAmount": 34123341.69,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 2629858.77,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 15.92,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 11851262.52
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 474050.5,
+        "incomeTax": 0,
+        "netIncome": 474050.5,
+        "endingBalance": 12484658.24,
+        "inflationAdjustedWithdrawal": 474050.5
+      },
+      {
+        "age": 66,
+        "withdrawals": 546101.84,
+        "incomeTax": 0,
+        "netIncome": 546101.84,
+        "endingBalance": 13106444.13,
+        "inflationAdjustedWithdrawal": 546101.84
+      },
+      {
+        "age": 70,
+        "withdrawals": 664008.31,
+        "incomeTax": 2198.83,
+        "netIncome": 661809.47,
+        "endingBalance": 15936199.36,
+        "inflationAdjustedWithdrawal": 664008.31
+      },
+      {
+        "age": 75,
+        "withdrawals": 856173.26,
+        "incomeTax": 40371.58,
+        "netIncome": 815801.67,
+        "endingBalance": 20548158.14,
+        "inflationAdjustedWithdrawal": 856173.26
+      },
+      null
+    ]
+  },
+  "zero-inflation|fixed_percentage|below-min|lump30": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 32109,
+    "monthlyNetIncomeAtRetirement": 32109,
+    "shortfallAmount": 0,
+    "surplusAmount": 27195907.74,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 1305382.7,
+    "totalLumpSumTax": 525634.84,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 9.86,
+    "lumpSum": {
+      "amount": 2218561.37,
+      "tax": 525634.84,
+      "remainingPortfolio": 9632701.15
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 385308.05,
+        "incomeTax": 0,
+        "netIncome": 385308.05,
+        "endingBalance": 10137420.31,
+        "inflationAdjustedWithdrawal": 385308.05
+      },
+      {
+        "age": 66,
+        "withdrawals": 442989.85,
+        "incomeTax": 0,
+        "netIncome": 442989.85,
+        "endingBalance": 10631756.42,
+        "inflationAdjustedWithdrawal": 442989.85
+      },
+      {
+        "age": 70,
+        "withdrawals": 536300.03,
+        "incomeTax": 0,
+        "netIncome": 536300.03,
+        "endingBalance": 12871200.81,
+        "inflationAdjustedWithdrawal": 536300.03
+      },
+      {
+        "age": 75,
+        "withdrawals": 685084.58,
+        "incomeTax": 6228.65,
+        "netIncome": 678855.93,
+        "endingBalance": 16442029.93,
+        "inflationAdjustedWithdrawal": 685084.58
+      },
+      null
+    ]
+  },
+  "zero-inflation|fixed_percentage|above-max|lump0": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 39504.21,
+    "monthlyNetIncomeAtRetirement": 39504.21,
+    "shortfallAmount": 0,
+    "surplusAmount": 34123341.69,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 2629858.77,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 15.92,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 11851262.52
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 474050.5,
+        "incomeTax": 0,
+        "netIncome": 474050.5,
+        "endingBalance": 12484658.24,
+        "inflationAdjustedWithdrawal": 474050.5
+      },
+      {
+        "age": 66,
+        "withdrawals": 546101.84,
+        "incomeTax": 0,
+        "netIncome": 546101.84,
+        "endingBalance": 13106444.13,
+        "inflationAdjustedWithdrawal": 546101.84
+      },
+      {
+        "age": 70,
+        "withdrawals": 664008.31,
+        "incomeTax": 2198.83,
+        "netIncome": 661809.47,
+        "endingBalance": 15936199.36,
+        "inflationAdjustedWithdrawal": 664008.31
+      },
+      {
+        "age": 75,
+        "withdrawals": 856173.26,
+        "incomeTax": 40371.58,
+        "netIncome": 815801.67,
+        "endingBalance": 20548158.14,
+        "inflationAdjustedWithdrawal": 856173.26
+      },
+      null
+    ]
+  },
+  "zero-inflation|fixed_percentage|above-max|lump30": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 32109,
+    "monthlyNetIncomeAtRetirement": 32109,
+    "shortfallAmount": 0,
+    "surplusAmount": 27195907.74,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 1305382.7,
+    "totalLumpSumTax": 525634.84,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 9.86,
+    "lumpSum": {
+      "amount": 2218561.37,
+      "tax": 525634.84,
+      "remainingPortfolio": 9632701.15
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 385308.05,
+        "incomeTax": 0,
+        "netIncome": 385308.05,
+        "endingBalance": 10137420.31,
+        "inflationAdjustedWithdrawal": 385308.05
+      },
+      {
+        "age": 66,
+        "withdrawals": 442989.85,
+        "incomeTax": 0,
+        "netIncome": 442989.85,
+        "endingBalance": 10631756.42,
+        "inflationAdjustedWithdrawal": 442989.85
+      },
+      {
+        "age": 70,
+        "withdrawals": 536300.03,
+        "incomeTax": 0,
+        "netIncome": 536300.03,
+        "endingBalance": 12871200.81,
+        "inflationAdjustedWithdrawal": 536300.03
+      },
+      {
+        "age": 75,
+        "withdrawals": 685084.58,
+        "incomeTax": 6228.65,
+        "netIncome": 678855.93,
+        "endingBalance": 16442029.93,
+        "inflationAdjustedWithdrawal": 685084.58
+      },
+      null
+    ]
+  },
+  "zero-inflation|fixed_amount_inflation_adjusted|inside-band|lump0": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 30000,
+    "monthlyNetIncomeAtRetirement": 30000,
+    "shortfallAmount": 0,
+    "surplusAmount": 53120724.34,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 0,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 0,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 11851262.52
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 12598708.74,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 66,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 13417089.11,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 70,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 17545660.79,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 75,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 25342925.66,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      null
+    ]
+  },
+  "zero-inflation|fixed_amount_inflation_adjusted|inside-band|lump30": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 30000,
+    "monthlyNetIncomeAtRetirement": 30000,
+    "shortfallAmount": 0,
+    "surplusAmount": 38728820.49,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 0,
+    "totalLumpSumTax": 525634.84,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 0,
+    "lumpSum": {
+      "amount": 2218561.37,
+      "tax": 525634.84,
+      "remainingPortfolio": 9632701.15
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 10162728.36,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 66,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 10742382.65,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 70,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 13658025.76,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 75,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 19138562.82,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      null
+    ]
+  },
+  "zero-inflation|fixed_amount_inflation_adjusted|below-min|lump0": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 30000,
+    "monthlyNetIncomeAtRetirement": 30000,
+    "shortfallAmount": 0,
+    "surplusAmount": 53120724.34,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 0,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 0,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 11851262.52
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 12598708.74,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 66,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 13417089.11,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 70,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 17545660.79,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 75,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 25342925.66,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      null
+    ]
+  },
+  "zero-inflation|fixed_amount_inflation_adjusted|below-min|lump30": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 30000,
+    "monthlyNetIncomeAtRetirement": 30000,
+    "shortfallAmount": 0,
+    "surplusAmount": 38728820.49,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 0,
+    "totalLumpSumTax": 525634.84,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 0,
+    "lumpSum": {
+      "amount": 2218561.37,
+      "tax": 525634.84,
+      "remainingPortfolio": 9632701.15
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 10162728.36,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 66,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 10742382.65,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 70,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 13658025.76,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 75,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 19138562.82,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      null
+    ]
+  },
+  "zero-inflation|fixed_amount_inflation_adjusted|above-max|lump0": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 30000,
+    "monthlyNetIncomeAtRetirement": 30000,
+    "shortfallAmount": 0,
+    "surplusAmount": 53120724.34,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 0,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 0,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 11851262.52
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 12598708.74,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 66,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 13417089.11,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 70,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 17545660.79,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 75,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 25342925.66,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      null
+    ]
+  },
+  "zero-inflation|fixed_amount_inflation_adjusted|above-max|lump30": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 30000,
+    "monthlyNetIncomeAtRetirement": 30000,
+    "shortfallAmount": 0,
+    "surplusAmount": 38728820.49,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 0,
+    "totalLumpSumTax": 525634.84,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 0,
+    "lumpSum": {
+      "amount": 2218561.37,
+      "tax": 525634.84,
+      "remainingPortfolio": 9632701.15
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 10162728.36,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 66,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 10742382.65,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 70,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 13658025.76,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 75,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 19138562.82,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      null
+    ]
+  },
+  "zero-inflation|variable_percentage|inside-band|lump0": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 30000,
+    "monthlyNetIncomeAtRetirement": 30000,
+    "shortfallAmount": 0,
+    "surplusAmount": 34409543.95,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 2620538.86,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 15.84,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 11851262.52
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 12598708.74,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 66,
+        "withdrawals": 551083.56,
+        "incomeTax": 0,
+        "netIncome": 551083.56,
+        "endingBalance": 13226005.55,
+        "inflationAdjustedWithdrawal": 551083.56
+      },
+      {
+        "age": 70,
+        "withdrawals": 670024.96,
+        "incomeTax": 0,
+        "netIncome": 670024.96,
+        "endingBalance": 16080599.15,
+        "inflationAdjustedWithdrawal": 670024.96
+      },
+      {
+        "age": 75,
+        "withdrawals": 863381.51,
+        "incomeTax": 18379.02,
+        "netIncome": 845002.49,
+        "endingBalance": 20721156.31,
+        "inflationAdjustedWithdrawal": 863381.51
+      },
+      null
+    ]
+  },
+  "zero-inflation|variable_percentage|inside-band|lump30": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 30000,
+    "monthlyNetIncomeAtRetirement": 30000,
+    "shortfallAmount": 0,
+    "surplusAmount": 27256242.3,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 1293256.08,
+    "totalLumpSumTax": 525634.84,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 9.77,
+    "lumpSum": {
+      "amount": 2218561.37,
+      "tax": 525634.84,
+      "remainingPortfolio": 9632701.15
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 10162728.36,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 66,
+        "withdrawals": 444095.31,
+        "incomeTax": 0,
+        "netIncome": 444095.31,
+        "endingBalance": 10658287.35,
+        "inflationAdjustedWithdrawal": 444095.31
+      },
+      {
+        "age": 70,
+        "withdrawals": 537635.14,
+        "incomeTax": 0,
+        "netIncome": 537635.14,
+        "endingBalance": 12903243.42,
+        "inflationAdjustedWithdrawal": 537635.14
+      },
+      {
+        "age": 75,
+        "withdrawals": 686701.88,
+        "incomeTax": 6324.65,
+        "netIncome": 680377.23,
+        "endingBalance": 16480845.12,
+        "inflationAdjustedWithdrawal": 686701.88
+      },
+      null
+    ]
+  },
+  "zero-inflation|variable_percentage|below-min|lump0": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 90000,
+    "monthlyNetIncomeAtRetirement": 90000,
+    "shortfallAmount": 0,
+    "surplusAmount": 16284244.76,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 4249607.88,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 20.49,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 11851262.52
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1080000,
+        "incomeTax": 0,
+        "netIncome": 1080000,
+        "endingBalance": 11878708.74,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1080000,
+        "incomeTax": 0,
+        "netIncome": 1080000,
+        "endingBalance": 11910849.11,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 70,
+        "withdrawals": 1080000,
+        "incomeTax": 218300.5,
+        "netIncome": 861699.5,
+        "endingBalance": 12172316.14,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 75,
+        "withdrawals": 1080000,
+        "incomeTax": 308079,
+        "netIncome": 771921,
+        "endingBalance": 12858763.6,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      null
+    ]
+  },
+  "zero-inflation|variable_percentage|below-min|lump30": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 90000,
+    "monthlyNetIncomeAtRetirement": 90000,
+    "shortfallAmount": 0,
+    "surplusAmount": 1892340.91,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 4250471.57,
+    "totalLumpSumTax": 525634.84,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 20.5,
+    "lumpSum": {
+      "amount": 2218561.37,
+      "tax": 525634.84,
+      "remainingPortfolio": 9632701.15
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1080000,
+        "incomeTax": 0,
+        "netIncome": 1080000,
+        "endingBalance": 9442728.36,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1080000,
+        "incomeTax": 0,
+        "netIncome": 1080000,
+        "endingBalance": 9236142.65,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 70,
+        "withdrawals": 1080000,
+        "incomeTax": 219164.18,
+        "netIncome": 860835.82,
+        "endingBalance": 8284681.1,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 75,
+        "withdrawals": 1080000,
+        "incomeTax": 308079,
+        "netIncome": 771921,
+        "endingBalance": 6654400.76,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      null
+    ]
+  },
+  "zero-inflation|variable_percentage|above-max|lump0": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 20000,
+    "monthlyNetIncomeAtRetirement": 20000,
+    "shortfallAmount": 0,
+    "surplusAmount": 58925039.5,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 0,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 0,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 11851262.52
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 240000,
+        "incomeTax": 0,
+        "netIncome": 240000,
+        "endingBalance": 12718708.74,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 66,
+        "withdrawals": 240000,
+        "incomeTax": 0,
+        "netIncome": 240000,
+        "endingBalance": 13668129.11,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 70,
+        "withdrawals": 240000,
+        "incomeTax": 0,
+        "netIncome": 240000,
+        "endingBalance": 18453028.4,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 75,
+        "withdrawals": 240000,
+        "incomeTax": 0,
+        "netIncome": 240000,
+        "endingBalance": 27469896.38,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      null
+    ]
+  },
+  "zero-inflation|variable_percentage|above-max|lump30": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 20000,
+    "monthlyNetIncomeAtRetirement": 20000,
+    "shortfallAmount": 0,
+    "surplusAmount": 44533135.65,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 0,
+    "totalLumpSumTax": 525634.84,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 0,
+    "lumpSum": {
+      "amount": 2218561.37,
+      "tax": 525634.84,
+      "remainingPortfolio": 9632701.15
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 240000,
+        "incomeTax": 0,
+        "netIncome": 240000,
+        "endingBalance": 10282728.36,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 66,
+        "withdrawals": 240000,
+        "incomeTax": 0,
+        "netIncome": 240000,
+        "endingBalance": 10993422.65,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 70,
+        "withdrawals": 240000,
+        "incomeTax": 0,
+        "netIncome": 240000,
+        "endingBalance": 14565393.37,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 75,
+        "withdrawals": 240000,
+        "incomeTax": 0,
+        "netIncome": 240000,
+        "endingBalance": 21265533.54,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      null
+    ]
+  },
+  "zero-inflation|guardrails|inside-band|lump0": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 30000,
+    "monthlyNetIncomeAtRetirement": 30000,
+    "shortfallAmount": 0,
+    "surplusAmount": 39157548.53,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 1880002.17,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 12.69,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 11851262.52
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 12598708.74,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 66,
+        "withdrawals": 396000,
+        "incomeTax": 0,
+        "netIncome": 396000,
+        "endingBalance": 13381089.11,
+        "inflationAdjustedWithdrawal": 396000
+      },
+      {
+        "age": 70,
+        "withdrawals": 579783.6,
+        "incomeTax": 0,
+        "netIncome": 579783.6,
+        "endingBalance": 16851701.15,
+        "inflationAdjustedWithdrawal": 579783.6
+      },
+      {
+        "age": 75,
+        "withdrawals": 771691.97,
+        "incomeTax": 11369.16,
+        "netIncome": 760322.81,
+        "endingBalance": 22387234.61,
+        "inflationAdjustedWithdrawal": 771691.97
+      },
+      null
+    ]
+  },
+  "zero-inflation|guardrails|inside-band|lump30": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 30000,
+    "monthlyNetIncomeAtRetirement": 30000,
+    "shortfallAmount": 0,
+    "surplusAmount": 30409469.33,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 726873.67,
+    "totalLumpSumTax": 525634.84,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 6.08,
+    "lumpSum": {
+      "amount": 2218561.37,
+      "tax": 525634.84,
+      "remainingPortfolio": 9632701.15
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 10162728.36,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 66,
+        "withdrawals": 360000,
+        "incomeTax": 0,
+        "netIncome": 360000,
+        "endingBalance": 10742382.65,
+        "inflationAdjustedWithdrawal": 360000
+      },
+      {
+        "age": 70,
+        "withdrawals": 479160,
+        "incomeTax": 0,
+        "netIncome": 479160,
+        "endingBalance": 13319282.13,
+        "inflationAdjustedWithdrawal": 479160
+      },
+      {
+        "age": 75,
+        "withdrawals": 637761.96,
+        "incomeTax": 3419.86,
+        "netIncome": 634342.1,
+        "endingBalance": 17538142.86,
+        "inflationAdjustedWithdrawal": 637761.96
+      },
+      null
+    ]
+  },
+  "zero-inflation|guardrails|below-min|lump0": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 90000,
+    "monthlyNetIncomeAtRetirement": 90000,
+    "shortfallAmount": 0,
+    "surplusAmount": 16284244.76,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 4249607.88,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 20.49,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 11851262.52
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1080000,
+        "incomeTax": 0,
+        "netIncome": 1080000,
+        "endingBalance": 11878708.74,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1080000,
+        "incomeTax": 0,
+        "netIncome": 1080000,
+        "endingBalance": 11910849.11,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 70,
+        "withdrawals": 1080000,
+        "incomeTax": 218300.5,
+        "netIncome": 861699.5,
+        "endingBalance": 12172316.14,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 75,
+        "withdrawals": 1080000,
+        "incomeTax": 308079,
+        "netIncome": 771921,
+        "endingBalance": 12858763.6,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      null
+    ]
+  },
+  "zero-inflation|guardrails|below-min|lump30": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 90000,
+    "monthlyNetIncomeAtRetirement": 90000,
+    "shortfallAmount": 0,
+    "surplusAmount": 1892340.91,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 4250471.57,
+    "totalLumpSumTax": 525634.84,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 20.5,
+    "lumpSum": {
+      "amount": 2218561.37,
+      "tax": 525634.84,
+      "remainingPortfolio": 9632701.15
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 1080000,
+        "incomeTax": 0,
+        "netIncome": 1080000,
+        "endingBalance": 9442728.36,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 66,
+        "withdrawals": 1080000,
+        "incomeTax": 0,
+        "netIncome": 1080000,
+        "endingBalance": 9236142.65,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 70,
+        "withdrawals": 1080000,
+        "incomeTax": 219164.18,
+        "netIncome": 860835.82,
+        "endingBalance": 8284681.1,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      {
+        "age": 75,
+        "withdrawals": 1080000,
+        "incomeTax": 308079,
+        "netIncome": 771921,
+        "endingBalance": 6654400.76,
+        "inflationAdjustedWithdrawal": 1080000
+      },
+      null
+    ]
+  },
+  "zero-inflation|guardrails|above-max|lump0": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 20000,
+    "monthlyNetIncomeAtRetirement": 20000,
+    "shortfallAmount": 0,
+    "surplusAmount": 58925039.5,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 0,
+    "totalLumpSumTax": 0,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 0,
+    "lumpSum": {
+      "amount": 0,
+      "tax": 0,
+      "remainingPortfolio": 11851262.52
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 240000,
+        "incomeTax": 0,
+        "netIncome": 240000,
+        "endingBalance": 12718708.74,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 66,
+        "withdrawals": 240000,
+        "incomeTax": 0,
+        "netIncome": 240000,
+        "endingBalance": 13668129.11,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 70,
+        "withdrawals": 240000,
+        "incomeTax": 0,
+        "netIncome": 240000,
+        "endingBalance": 18453028.4,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 75,
+        "withdrawals": 240000,
+        "incomeTax": 0,
+        "netIncome": 240000,
+        "endingBalance": 27469896.38,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      null
+    ]
+  },
+  "zero-inflation|guardrails|above-max|lump30": {
+    "portfolioAtRetirement": 11851262.52,
+    "monthlyIncomeAtRetirement": 20000,
+    "monthlyNetIncomeAtRetirement": 20000,
+    "shortfallAmount": 0,
+    "surplusAmount": 44533135.65,
+    "portfolioDepletionAge": null,
+    "totalLifetimeIncomeTax": 0,
+    "totalLumpSumTax": 525634.84,
+    "totalMedicalAidContributions": 0,
+    "averageEffectiveTaxRate": 0,
+    "lumpSum": {
+      "amount": 2218561.37,
+      "tax": 525634.84,
+      "remainingPortfolio": 9632701.15
+    },
+    "rows": [
+      {
+        "age": 65,
+        "withdrawals": 240000,
+        "incomeTax": 0,
+        "netIncome": 240000,
+        "endingBalance": 10282728.36,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 66,
+        "withdrawals": 240000,
+        "incomeTax": 0,
+        "netIncome": 240000,
+        "endingBalance": 10993422.65,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 70,
+        "withdrawals": 240000,
+        "incomeTax": 0,
+        "netIncome": 240000,
+        "endingBalance": 14565393.37,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      {
+        "age": 75,
+        "withdrawals": 240000,
+        "incomeTax": 0,
+        "netIncome": 240000,
+        "endingBalance": 21265533.54,
+        "inflationAdjustedWithdrawal": 240000
+      },
+      null
+    ]
+  }
+}

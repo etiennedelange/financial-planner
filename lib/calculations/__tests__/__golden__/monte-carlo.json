@@ -1,0 +1,218 @@
+{
+  "mid-career|fixed_percentage|inside-band": {
+    "successRate": 61.5,
+    "medianDepletionAge": 80,
+    "averageFinalBalance": 92625686.8,
+    "p10AtRetirement": 16867370.46,
+    "p50AtRetirement": 30630414.92,
+    "p90AtRetirement": 84193177,
+    "p50Final": 30058370.03
+  },
+  "mid-career|fixed_percentage|below-min": {
+    "successRate": 61.5,
+    "medianDepletionAge": 80,
+    "averageFinalBalance": 92625686.8,
+    "p10AtRetirement": 16867370.46,
+    "p50AtRetirement": 30630414.92,
+    "p90AtRetirement": 84193177,
+    "p50Final": 30058370.03
+  },
+  "mid-career|fixed_percentage|above-max": {
+    "successRate": 61.5,
+    "medianDepletionAge": 80,
+    "averageFinalBalance": 92625686.8,
+    "p10AtRetirement": 16867370.46,
+    "p50AtRetirement": 30630414.92,
+    "p90AtRetirement": 84193177,
+    "p50Final": 30058370.03
+  },
+  "mid-career|fixed_amount_inflation_adjusted|inside-band": {
+    "successRate": 61.5,
+    "medianDepletionAge": 80,
+    "averageFinalBalance": 146319994.28,
+    "p10AtRetirement": 16867370.46,
+    "p50AtRetirement": 30630414.92,
+    "p90AtRetirement": 85780275.05,
+    "p50Final": 33262280
+  },
+  "mid-career|fixed_amount_inflation_adjusted|below-min": {
+    "successRate": 61.5,
+    "medianDepletionAge": 80,
+    "averageFinalBalance": 146319994.28,
+    "p10AtRetirement": 16867370.46,
+    "p50AtRetirement": 30630414.92,
+    "p90AtRetirement": 85780275.05,
+    "p50Final": 33262280
+  },
+  "mid-career|fixed_amount_inflation_adjusted|above-max": {
+    "successRate": 61.5,
+    "medianDepletionAge": 80,
+    "averageFinalBalance": 146319994.28,
+    "p10AtRetirement": 16867370.46,
+    "p50AtRetirement": 30630414.92,
+    "p90AtRetirement": 85780275.05,
+    "p50Final": 33262280
+  },
+  "mid-career|variable_percentage|inside-band": {
+    "successRate": 99.5,
+    "medianDepletionAge": 88,
+    "averageFinalBalance": 131148542.67,
+    "p10AtRetirement": 16867370.46,
+    "p50AtRetirement": 30630414.92,
+    "p90AtRetirement": 85780275.05,
+    "p50Final": 86579639.85
+  },
+  "mid-career|variable_percentage|below-min": {
+    "successRate": 13,
+    "medianDepletionAge": 74,
+    "averageFinalBalance": 31894839.7,
+    "p10AtRetirement": 14350531.51,
+    "p50AtRetirement": 28113575.97,
+    "p90AtRetirement": 83263436.1,
+    "p50Final": 0
+  },
+  "mid-career|variable_percentage|above-max": {
+    "successRate": 100,
+    "medianDepletionAge": null,
+    "averageFinalBalance": 230121967.66,
+    "p10AtRetirement": 17553781.08,
+    "p50AtRetirement": 31316825.54,
+    "p90AtRetirement": 86466685.68,
+    "p50Final": 124031327.17
+  },
+  "mid-career|guardrails|inside-band": {
+    "successRate": 96.5,
+    "medianDepletionAge": 83,
+    "averageFinalBalance": 160003029.48,
+    "p10AtRetirement": 16867370.46,
+    "p50AtRetirement": 30630414.92,
+    "p90AtRetirement": 85780275.05,
+    "p50Final": 83828252.86
+  },
+  "mid-career|guardrails|below-min": {
+    "successRate": 13,
+    "medianDepletionAge": 74,
+    "averageFinalBalance": 36356903.41,
+    "p10AtRetirement": 14350531.51,
+    "p50AtRetirement": 28113575.97,
+    "p90AtRetirement": 83263436.1,
+    "p50Final": 0
+  },
+  "mid-career|guardrails|above-max": {
+    "successRate": 100,
+    "medianDepletionAge": null,
+    "averageFinalBalance": 229310600.94,
+    "p10AtRetirement": 17553781.08,
+    "p50AtRetirement": 31316825.54,
+    "p90AtRetirement": 86466685.68,
+    "p50Final": 124031327.17
+  },
+  "underfunded|fixed_percentage|inside-band": {
+    "successRate": 30,
+    "medianDepletionAge": 77,
+    "averageFinalBalance": 36884330.53,
+    "p10AtRetirement": 9277616.19,
+    "p50AtRetirement": 18034236.99,
+    "p90AtRetirement": 35935115.31,
+    "p50Final": 0
+  },
+  "underfunded|fixed_percentage|below-min": {
+    "successRate": 30,
+    "medianDepletionAge": 77,
+    "averageFinalBalance": 36884330.53,
+    "p10AtRetirement": 9277616.19,
+    "p50AtRetirement": 18034236.99,
+    "p90AtRetirement": 35935115.31,
+    "p50Final": 0
+  },
+  "underfunded|fixed_percentage|above-max": {
+    "successRate": 30,
+    "medianDepletionAge": 77,
+    "averageFinalBalance": 36884330.53,
+    "p10AtRetirement": 9277616.19,
+    "p50AtRetirement": 18034236.99,
+    "p90AtRetirement": 35935115.31,
+    "p50Final": 0
+  },
+  "underfunded|fixed_amount_inflation_adjusted|inside-band": {
+    "successRate": 30,
+    "medianDepletionAge": 77,
+    "averageFinalBalance": 51598650.39,
+    "p10AtRetirement": 9277616.19,
+    "p50AtRetirement": 18034236.99,
+    "p90AtRetirement": 36034528.19,
+    "p50Final": 0
+  },
+  "underfunded|fixed_amount_inflation_adjusted|below-min": {
+    "successRate": 30,
+    "medianDepletionAge": 77,
+    "averageFinalBalance": 51598650.39,
+    "p10AtRetirement": 9277616.19,
+    "p50AtRetirement": 18034236.99,
+    "p90AtRetirement": 36034528.19,
+    "p50Final": 0
+  },
+  "underfunded|fixed_amount_inflation_adjusted|above-max": {
+    "successRate": 30,
+    "medianDepletionAge": 77,
+    "averageFinalBalance": 51598650.39,
+    "p10AtRetirement": 9277616.19,
+    "p50AtRetirement": 18034236.99,
+    "p90AtRetirement": 36034528.19,
+    "p50Final": 0
+  },
+  "underfunded|variable_percentage|inside-band": {
+    "successRate": 92.5,
+    "medianDepletionAge": 85,
+    "averageFinalBalance": 70930626.93,
+    "p10AtRetirement": 9277616.19,
+    "p50AtRetirement": 18034236.99,
+    "p90AtRetirement": 36034528.19,
+    "p50Final": 46221219.85
+  },
+  "underfunded|variable_percentage|below-min": {
+    "successRate": 5.5,
+    "medianDepletionAge": 72,
+    "averageFinalBalance": 7506455.73,
+    "p10AtRetirement": 7526961.7,
+    "p50AtRetirement": 16283582.49,
+    "p90AtRetirement": 34283873.69,
+    "p50Final": 0
+  },
+  "underfunded|variable_percentage|above-max": {
+    "successRate": 99.5,
+    "medianDepletionAge": 89,
+    "averageFinalBalance": 114004140.7,
+    "p10AtRetirement": 9977877.99,
+    "p50AtRetirement": 18734498.78,
+    "p90AtRetirement": 36734789.99,
+    "p50Final": 56824118.73
+  },
+  "underfunded|guardrails|inside-band": {
+    "successRate": 84.5,
+    "medianDepletionAge": 82,
+    "averageFinalBalance": 75036176.75,
+    "p10AtRetirement": 9277616.19,
+    "p50AtRetirement": 18034236.99,
+    "p90AtRetirement": 36034528.19,
+    "p50Final": 38648462.77
+  },
+  "underfunded|guardrails|below-min": {
+    "successRate": 5.5,
+    "medianDepletionAge": 72,
+    "averageFinalBalance": 8232549.52,
+    "p10AtRetirement": 7526961.7,
+    "p50AtRetirement": 16283582.49,
+    "p90AtRetirement": 34283873.69,
+    "p50Final": 0
+  },
+  "underfunded|guardrails|above-max": {
+    "successRate": 99,
+    "medianDepletionAge": 75,
+    "averageFinalBalance": 112695234.87,
+    "p10AtRetirement": 9977877.99,
+    "p50AtRetirement": 18734498.78,
+    "p90AtRetirement": 36734789.99,
+    "p50Final": 54599762.32
+  }
+}

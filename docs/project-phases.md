@@ -9,7 +9,7 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 | Phase | Status | Documentation |
 |-------|--------|---------------|
 | **Phase 1** | ✅ Complete | [Calculation Accuracy](project-phases/phase-1-calculation-accuracy.md) |
-| **Phase 1.5** | ✅ Complete | [Testing & Validation](project-phases/phase-1-5-testing-validation.md) |
+| **Phase 1.5** | ✅ P0 resolved | [Testing & Validation](project-phases/phase-1-5-testing-validation.md) — invariants rewritten, 12/12 mutations killed |
 | **Phase 1.6** | ✅ Complete | [Performance Optimization](project-phases/phase-1-6-performance-optimization.md) |
 | **Phase 1.7** | ✅ Complete | [Next 16 / React 19 / Tailwind v4 Modernization](project-phases/phase-1-7-modernization.md) |
 | **Phase 2** | 🔄 In Progress | [Supabase Integration](project-phases/phase-2-supabase.md) |
@@ -17,9 +17,201 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 | **Phase 4** | ✅ Complete | [Data Persistence](project-phases/phase-4-data-persistence.md) |
 | **Phase 5** | 🔄 In Progress | [Export Functionality](project-phases/phase-5-export-functionality.md) |
 | **Phase 6** | ✅ Complete | [Enhanced Tax Calculations](project-phases/phase-6-enhanced-tax.md) |
+| **Phase 7** | ✅ Complete | [UI Redesign — Sidebar App Shell](project-phases/phase-7-ui-redesign.md) |
+| **Phase 8** | ✅ Complete | [Expense Tracker](project-phases/phase-8-expense-tracker.md) |
+| **Phase 9** | 🔄 In Progress | [Site-Wide Improvement](project-phases/phase-9-site-improvement.md) |
+| **Phase 10** | ✅ Complete | [Calculation Simplification](project-phases/phase-10-calculation-simplification.md) — all steps done; engine deduplicated, money units type-safe, MC seeded |
 | **Future** | 📋 Planned | [Future Enhancements](project-phases/future-enhancements.md) |
 
 ## Current Status Summary
+
+## 2026-07-26
+
+Session began with a multi-agent audit of `75f68f7` and ran through to **Phase 10 complete**.
+Nine commits. **698 tests passing and deterministic** (from 585), typecheck clean (from 44
+errors), both golden harnesses byte-identical. Full write-ups:
+[audit + batch 1](history/2026-07-26-audit-batch-1-fixes.md),
+[Phase 10](project-phases/phase-10-calculation-simplification.md),
+[Phase 1.5](project-phases/phase-1-5-testing-validation.md).
+
+**Bugs fixed**
+- 🐛 **Replacement ratio divided future rands by today's rands** (`debug-window.tsx`) —
+  displayed **150.4%** where the truth was **30.2%**; overstated by exactly
+  `(1+inflation)^yearsToRetirement`. Confirmed dead in the live app (123.4% vs 614.9%).
+- 🐛 **Debug window promised income from already-commuted capital** — used a duplicated
+  local helper reading the *pre*-commutation portfolio.
+- 🐛 **`calculateReplacementRatio` leaked NaN to the UI** — `NaN <= 0` is `false`, so NaN
+  bypassed the guard and rendered as `"NaN%"`.
+- 🐛 **Depletion in the final year was never recorded** — the engine could report
+  `endingBalance: 0` and `portfolioDepletionAge: null` simultaneously.
+- 🐛 **Float artefact in application state** — `0.035 * 100 = 3.5000000000000004` reached
+  `drawdownConfig.initialWithdrawalRate` via `SA_DEFAULTS_DISPLAY`, so it was in saved
+  plans and share links, not just on screen.
+
+**✅ Product decision — `shortfallAmount` semantics settled, WON'T FIX**
+- Shortfall means **the portfolio depletes before death**, not cumulative income gap. The
+  audit's C1 magnitudes measure a different metric than this project wants.
+- Knowingly accepted: `fixed_percentage` / `variable_percentage` / `guardrails` ignore the
+  entered desired income after year 0, so they rarely deplete and correctly report no
+  shortfall while paying less than asked (measured: R93,948/mth desired vs R52,657/mth
+  actual). Open as a **labelling/UX** question, not a calculation defect.
+
+**Phase 1.5 P0 resolved** — invariant suite rewritten from 19 unfalsifiable checks to 21
+that can fail, verified by mutation testing (12 injected bugs, 12 killed). The test that
+would have caught the original regression had been rewritten into a tautology *by the same
+commit that introduced the regression*.
+
+**Phase 1.5 P2 resolved** — 44 type errors in test fixtures fixed. Not cosmetic: store
+tests built `Account` objects with `balance`/`type: "TFSA"` (real fields are
+`currentBalance`/`'tfsa'`), so 27 tests exercised a shape that cannot exist. Added
+`npm run typecheck`, since `next build` does not typecheck test files.
+
+**Phase 10 complete** — engine deduplicated (3 copies of the withdrawal function → 1, with
+the deterministic/Monte Carlo difference now named rather than an omitted argument); money
+units type-safe via branded `Rands<B>` so the replacement-ratio bug is a compile error;
+Monte Carlo seeded (flakiness 1-in-12 → 0-in-20); `calculateProjection` split into
+accumulation and drawdown phases (now 100% covered); negative-balance guard; summary
+metrics extracted as selectors.
+
+**Tooling added** — committed golden-output harnesses for both engines (96 + 24 scenarios,
+each verified to fail on a 0.01% perturbation), an ESLint rule banning hand-rolled
+inflation exponentiation, and `npm run typecheck`.
+
+**⚠️ Outstanding**
+- Store branch coverage 72.5% / 76.31% against the 85% threshold (Phase 1.5 P1).
+- The desired-income **labelling** question — a UX decision, not a calculation one.
+- One unexplained full-suite failure during Step 4, not reproduced in 24 subsequent runs
+  and never captured; most plausibly a transient from the dev server watching files during
+  a rewrite.
+
+## 2026-07-11 (later)
+
+✅ **Debug Window Redesigned** — Migrated from side Sheet to centered Dialog, implemented 4 color-coded section categories (Critical Metrics, Calculation Inputs, Calculated Results, Reference Data). Improved visual hierarchy and "stats for nerds" aesthetic with monospace values and teal/gray palette. All 100+ metrics preserved, copy-all functionality maintained. 585 tests passing.
+
+**Latest Update (2026-07-11 22:06) — P0 & P1 audit complete: 7 bugs fixed via TDD, 585/585 tests passing, 97.01% coverage:**
+- 🐛 **P0: Fixed `inflationAdjustedWithdrawal` deflation bug** (`projection-engine.ts:506`) — divided by `(1+inflation)^year` instead of `(1+inflation)^(yearsToRetirement+year)`, overstating "today's Rands" retirement income ~5x; RED test → GREEN code → all passing
+- 🐛 **P0: Fixed `shortfallAmount` structurally-zero bug** (`projection-engine.ts:548-551`) — for 3 of 4 withdrawal strategies compared desired to actual income for single year (always zero); now sums per-year shortfall across full drawdown phase
+- 🐛 **P0: Medical aid escalation bug** (`projection-engine.ts:483`) — escalated at general inflation (5.5%) not medical inflation (9%), understating year-25+ medical costs ~2.2x; fixed via `SA_DEFAULTS.medicalInflation`
+- 🐛 **P1: Box-Muller log(0) infinity** (`random-returns.ts:7`) — `Math.random() === 0` causes `Math.log(0) = -Infinity`, poisoning MC draws; guarded with `Math.random() || Number.MIN_VALUE`
+- 🐛 **P1: Monte Carlo 0-runs NaN** (`simulation-engine.ts:277`) — `aggregateResults` divided by empty array; now returns safe defaults when `runs.length === 0`
+- 🐛 **P1: cost-of-delay negative costs** (`cost-of-delay.ts:53`) — delay scenarios passed negative years to `projectFinalSavings`; refactored with `Math.min(delayYears, Math.max(0, yearsToRetirement))`
+- 🐛 **P1: cost-of-delay NaN percentages** (`cost-of-delay.ts:114`) — division by zero when `baselineNestEgg === 0`; guarded with ternary
+- 🐛 **P1: TFSA excess-contribution penalty** (`projection-engine.ts:255-267, 296, 405, 530`) — contributions over annual R46k limit incur 40% penalty tax; now tracked and displayed in `YearlyProjection.tfsaExcessContributionPenalty` to educate users about over-contribution risk
+- ✅ **Tax constants verified** against SARS Budget 2026 Tax Guide PDF — all values correct; no changes
+- 🎯 See `docs/docs/history/2026-07-11-p0-p1-fixes.md` for full P0 detail; P1 additions: 3 new RED tests (40% penalty, within-limit, accumulation)
+- ✅ All P0 & P1 fixes tested with unit + integration tests; `npm run build` clean; debug-window audited and up-to-date
+
+**Previous Update (2026-07-11 earlier) — Multi-agent calculation audit: 2 critical bugs fixed, tax config verified against primary source:**
+- 🐛 **Fixed `inflationAdjustedWithdrawal` deflation bug** (`projection-engine.ts`) — divided by `(1+inflation)^year` (drawdown-loop index) instead of `(1+inflation)^(yearsToRetirement+year)`, overstating the "today's Rands" retirement income figure ~5x for a 30-year horizon. Also corrected the same formula in `docs/FINANCIAL_LOGIC_REFERENCE.md`
+- 🐛 **Fixed `shortfallAmount` structurally-zero bug** (`projection-engine.ts`) — for 3 of 4 withdrawal strategies the metric compared desired income to itself and always read 0, even when the portfolio fully depleted before life expectancy. Now sums the per-year gap between desired and actually-withdrawn income across the whole drawdown phase
+- ✅ **Resolved disputed tax-year constants** — fetched the actual SARS Budget 2026 Tax Guide PDF cited in `tax-year.config.ts:9` and confirmed every value (brackets, rebates, thresholds, both lump-sum tables, R430,000 RA deduction cap, R46,000 TFSA annual limit, R50,000 CGT exclusion, R376/R376/R254 medical credits) is correct as configured — no changes needed
+- 🎯 See `docs/docs/history/2026-07-11-multiagent-audit-p0-fixes-and-tax-config-verification.md` for full detail, including the audit methodology (8 specialist subagents) and why the "revert to older values" consensus from 3 auditors was wrong (training-data anchoring bias, caught by a devil's-advocate pass)
+- ✅ 576/577 tests passing (1 pre-existing flaky/unseeded-RNG test, unrelated); `npm run build` clean
+
+**Previous Update (2026-07-06) — Locked accent migrated from gold to teal:**
+- ✅ **Retired the gold/teal-yellow color-theme switcher** — the dual-theme experiment (`ColorThemeProvider`, `theme-gold`/`theme-teal-yellow` classes) is gone; the system is back to the original "one locked accent" philosophy, now with teal instead of gold
+- ✅ **`app/globals.css`** — `--primary`, `--ring`, `--chart-1/2/3` recolored to a teal palette (`162 70% 34%` light / `162 70% 55%` dark primary; chart-2/3 use complementary deep-teal and mint tones); `--chart-4` (blue) and `--chart-5` (red) left unchanged
+- ✅ **Deleted dead code** — `components/color-theme-context.tsx`, `color-theme-provider.tsx`, `color-theme-toggle.tsx` (the latter two were an unused earlier 6-color-picker experiment, never wired into the app)
+- ✅ **`components/theme-toggle.tsx`** simplified back to a 2-state Light/Dark toggle; `app/layout.tsx` no longer needs a custom pre-hydration `<script>` (`next-themes` handles dark-mode flash prevention on its own)
+- ✅ **`docs/THEMING.md`, `DESIGN.md`, `.impeccable/design.json`, `CLAUDE.md`** all updated to describe the single locked teal accent
+- 🎯 See `docs/docs/history/2026-07-06-teal-accent-migration.md` for full rationale and color mapping
+
+**Previous Update (2026-07-04 @ 21:10) — Accounts dialog: live portfolio impact preview:**
+- ✅ **New `components/ui/spring-number.tsx`** — Reusable critically-damped spring-physics number display (no overshoot/bounce), replacing the ad-hoc unused `AnimatedNumber` previously dead-coded in `accounts-page.tsx`
+- ✅ **New `components/accounts/portfolio-impact-strip.tsx`** — Add/Edit Account dialog now shows a live "Portfolio impact" panel: total balance, weighted net return, and monthly contribution recompute against the store's other accounts on every keystroke, with spring-animated ticking numbers and up/down arrows on changed rows
+- ✅ Wired into both the 2-step Add wizard (`Step1`/`Step2`) and the single-view Edit form in `account-form-dialog.tsx`, sharing one `form.watch()` across steps so the panel stays consistent as the user moves between steps
+- 🐛 **Bug caught during browser verification and fixed:** initial implementation flagged a row "changed" via a raw-value epsilon threshold, which could disagree with the rendered text (e.g. a return moving from 8.955% → 8.917% is a tiny raw delta but crosses a rounding boundary, rendering "9.0%" → "8.9%" while still labeled "(unchanged)"). Fixed by comparing the *formatted* strings instead of raw deltas
+- ✅ All 573 tests passing; `npm run build` clean; verified interactively via Chrome DevTools MCP in both light and dark themes
+
+**Previous Update (2026-07-04 @ 20:30) — Plan page delight enhancement pass:**
+- ✅ **New `components/ui/animated-value.tsx`** — Reusable component for smooth number value transitions with fade-in/fade-out animation; respects reduced-motion preferences; accepts format functions for currency, percentages, etc.
+- ✅ **Derived value animations across Plan page forms:**
+  - Personal Info: Years to retirement, years in retirement, annual income display now animate on change (fade-in when value appears, fade-out when cleared)
+  - Retirement Goals: Desired monthly income (today & at retirement), legacy goal amount animate smoothly when input changes
+  - Drawdown Strategy: Lump sum calculated amount animates when the lump sum slider moves
+- ✅ **Summary box reveal animation** — The "-15 years until retirement | 70 years in retirement" box fades in when the user inputs valid ages; animates out if values become invalid
+- ✅ **Form input feedback enhancement** — Annual income display switches between populated/empty states with smooth animation instead of instant appearance/disappearance
+- ✅ All 573 tests passing; TypeScript type safety maintained; build succeeds; no breaking changes
+- 🎯 **Delight moment pattern:** Animations are under 200ms, use ease-out curves, fade-based (not distraction-inducing), respect user motion preferences, enhance precision/control without noise
+
+**Previous Update (2026-07-02) — Plan page delight pass:**
+- ✅ **Drawdown strategy conditional fields** — Withdrawal Floor & Ceiling and Guardrail Bands now reveal/collapse with a `motion/react` height+opacity animation (reduced-motion aware) instead of an instant DOM show/hide
+- ✅ **Slider tactile feedback** — `components/ui/slider.tsx` thumb scales up with a gold ring glow on active drag
+- ✅ **Compounding Method selector** — replaced the hard color-swap button pair with a shared-`layoutId` sliding gold pill (Linear/Raycast-style segmented control)
+- ✅ **SA-defaults reset button** — `RotateCcw` icon spins on click as tactile confirmation
+- ✅ **New `components/ui/field-error.tsx`** — validation errors fade/slide in instead of popping in abruptly; adopted in personal-info-form and retirement-goals-form
+- ✅ **Select component focus ring fix** — Implemented `SelectOpenedByPointerContext` to suppress Radix's auto-refocus for pointer-driven selections, removing stray focus ring after mouse clicks while preserving keyboard navigation feedback
+- 🎯 **Found, not fixed:** Personal Info / Retirement Goals forms never actually trigger their Zod validation errors — `useForm` has no `mode` set and no submit handler, so RHF's default `onSubmit` trigger never runs. Tracked in Phase 9.3 Low Priority.
+
+**Previous Update (2026-06-28) — Accounts page full rebuild to match app design language:**
+- ✅ **Accounts page rebuilt** — replaced floating hero number + 2-col card grid + custom section headers with `PageCard` + `SectionLabel` structure matching Overview/Expenses/Plan; compact horizontal list rows with inline expand-in-place detail accordion; type colors constrained to type badge chip and allocation bar (data encoding) only; no colored top-bar stripes; `rounded-lg` throughout
+- ✅ **Expand interaction** — click row to reveal `EXPECTED RETURN / ANNUAL FEES / NET RETURN / ESCALATION` + TFSA limit bars (where applicable); edit/delete actions appear on hover
+- ✅ **Portfolio summary card** — total balance, thin allocation bar, legend + stats (monthly, net return, account count) all in a single compact `PageCard`; `Add Account` + `Seed` in trailing slot; build clean, no TS errors
+- 🎯 **Next:** Empty chart placeholders still dominate viewport before any data is added
+
+**Previous Update (2026-06-28) — UI Polish: floating action bar + CTA cleanup:**
+- ✅ **`FloatingActionBar` component** — new `components/ui/floating-action-bar.tsx`; fixed-position bar with scroll-hide behavior (hides after 12px down-scroll past 80px, shows after 8px up-scroll); clears BottomNav on mobile (`bottom-14`), respects sidebar on desktop (`md:left-[220px]`)
+- ✅ **Accounts page** — FloatingActionBar with "Add Account" (primary) + "Seed" (secondary) actions; removed ghost "Add another account" button from populated list bottom
+- ✅ **Expenses page** — FloatingActionBar with "New Group" primary action and hint text
+- ✅ **Redundant CTAs removed** — "Add accounts" nudge banner removed from `dashboard-metrics-grid.tsx`; overview now shows `GettingStarted` exclusively when no projection exists (was showing both `GettingStarted` and an empty `KeyInsightsSummary` card in parallel)
+- ✅ **All prior Phase 9.3 high-priority items confirmed complete** — success rate color logic, semantic tokens, aria labels, delete confirmation, toast notifications (all done 2026-06-27, docs accidentally reverted; restored)
+- 🎯 **Next:** Empty chart placeholders still dominate viewport when no data; Phase 9.1 High Priority remaining items (TFSA re-contribution room, dividend withholding tax)
+
+**Previous Update (2026-06-21) — Drawdown strategies now diverge after year 1:**
+- ✅ **Per-year withdrawal recompute** — new shared `calculateNextWithdrawal()` (`lib/calculations/utils/drawdown-withdrawal.ts`) replaces the blind `annualWithdrawal *= 1 + inflationRate` that every strategy fell back to from year 1 onward; called from both `projection-engine.ts` and `simulation-engine.ts`
+- ✅ **Fixed Percentage** now recomputed against the live balance every year (Monte Carlo retains the existing "greater of % or desired income" floor); **Variable Percentage** redefined for year 1+ as percentage-of-portfolio clamped to the inflation-adjusted min/max band every year (not just t=0); **Guardrails** implements the Guyton-Klinger ±10% decision rule against configurable upper/lower bands (default 20%)
+- ✅ **Guardrail bands and min/max now editable in the main UI** — `drawdown-strategy-form.tsx` gained "Withdrawal Floor & Ceiling" inputs (Variable Percentage / Guardrails) and "Guardrail Bands" sliders (Guardrails only); previously debug-window-only
+- ✅ 21 new tests (14 unit + 5 deterministic-engine + 2 Monte Carlo); 563/563 tests pass; build succeeds; coverage 96.6-100% on touched calculation files
+- ⚠️ UI changes not verified in a live browser this session (chrome-devtools MCP browser could not launch headful in this sandbox) — verified by code review against the `DrawdownConfig` type contract instead
+- 🎯 **Next:** Phase 9.1 High Priority remaining items (TFSA re-contribution room, dividend withholding tax) per suggested work order
+
+**Previous Update (2026-06-20) — Second audit pass: 2026/2027 tax config, net-income reconciliation, MC lump sum tax:**
+- ✅ **2026/2027 SARS figures corrected** — `tax-year.config.ts` income tax brackets, medical aid tax credits, and CGT annual exclusion were carried over from the prior tax year; updated to the current `INCOME_TAX_BRACKETS_CONFIG` (top bracket now starts at R1,878,600), `MEDICAL_AID_CREDITS_CONFIG` (R376 member/first dependant, R254 additional), and `CGT_ANNUAL_EXCLUSION_CONFIG.individual` (R50,000, up from R40,000); rebates and tax thresholds were verified self-consistent and left unchanged
+- ✅ **`monthlyNetIncomeAtRetirement` mismatch fixed** — `projection-engine.ts` previously recomputed tax on the full gross withdrawal via a flawed shortcut, ignoring medical aid credits and account-type tax segregation, so it disagreed with the detailed "Sample Retirement Payslip" breakdown; now sourced directly from the first drawdown year's already-correct `netIncome`
+- ✅ **Monte Carlo lump sum tax added** — `simulation-engine.ts` deducted the commuted lump sum from pension-type balances but never taxed it; now calls `calculateLumpSumCommutation` once per run and reports the result via new optional `SimulationRun.lumpSumTax` / `SimulationResult.averageLumpSumTax` (does not affect the success-rate metric, which only depends on portfolio balance)
+- ✅ 542/542 tests pass (10 new); build succeeds; coverage 95-100% on touched calculation files
+- 🎯 **Next:** Phase 9.1 High Priority remaining items (TFSA re-contribution room, dividend withholding tax) per suggested work order; revisit fees double-counting in CSV export (flagged as debatable, not yet actioned)
+
+**Previous Update (2026-06-20) — `sa-retirement-calc-validator` audit: lump sum, annuitisation cap, MC tax, CGT exclusion fixes:**
+- ✅ **Account-type-aware lump sum commutation** — `projection-engine.ts` and `simulation-engine.ts` no longer apply `lumpSumPercentage` to TFSA/discretionary balances; the commutation fraction now derives from and applies only to pension/RA/preservation-fund balances
+- ✅ **One-third annuitisation cap enforced in-engine** — new `SA_TAX_LIMITS.maxLumpSumCommutationPercentage` (100/3); both engines clamp the requested percentage at the call site rather than trusting the UI slider
+- ✅ **R40,000 CGT annual exclusion** — new `SA_TAX_LIMITS.cgtAnnualExclusion`; discretionary capital gains (summed across accounts) are reduced by the exclusion before the 40% inclusion rate applies, in both engines
+- ✅ **Monte Carlo drawdown rewritten** — per-account stochastic growth + TFSA→discretionary→pension sequential withdrawal (mirrors the deterministic engine) replaces the old single-blended-pool model; per-year income/CGT tax now tracked for reporting via new optional `SimulationRun.lifetimeIncomeTax` / `SimulationResult.averageLifetimeIncomeTax`
+- ✅ 536/536 tests pass (11 new); build succeeds; coverage on touched files 95.5-99.1%
+- 🎯 **Next:** Phase 9.1 High Priority remaining items (TFSA re-contribution room, medical aid credit threshold, dividend withholding tax) per suggested work order
+
+**Previous Update (2026-06-20) — Phase 9.1 Critical: calculation correctness & deduplication:**
+- ✅ **Negative years guard** — `calculateProjection` returns a safe degenerate result instead of producing nonsense output when `retirementAge <= currentAge` or `lifeExpectancy <= retirementAge`; 3 new tests
+- ✅ **CGT inclusion rate constant** — `0.40` hardcode replaced with `SA_TAX_LIMITS.cgtInclusionRateIndividual`
+- ✅ **`calculateMonthlyReturn()` deduplicated** — removed copies in `projection-engine.ts` and `simulation-engine.ts`; both import the canonical version from `lib/calculations/utils/projection.ts`
+- ✅ **Monte Carlo duplication removed** — `scenario-comparison.ts` no longer reimplements accumulation/drawdown; `runFullMonteCarloSimulation` now wraps scenario inputs into a synthetic account and delegates to `runMonteCarloSimulation` in `simulation-engine.ts`
+- ✅ 523/523 tests pass; build succeeds; coverage on touched files 95-99%
+- 🎯 **Next:** Phase 9.3 High (color logic dedup + aria labels) per suggested work order, then 9.2 High (tax/projection edge case tests)
+
+**Previous Update (2026-06-20) — Debug window maintenance:**
+- ✅ **Debug page verification** — ensured all DrawdownConfig fields are displayed: added `lumpSumPercentage` (always), optional `monthlyMedicalAid` and `medicalAidDependants` (conditional)
+- ✅ **Bug fix** — fixed Accounts section title interpolation (`{accounts.length}` literal → template literal)
+- ✅ **Test coverage maintained** — 520/520 tests passing, build verified
+
+**Previous Update (2026-06-16) — Store test coverage & form persistence:**
+- ✅ **Store tests (Phase 9 blocker)** — added 52 comprehensive tests for `calculator-store.ts` (27) and `expenses-store.ts` (25); full coverage of state initialization, mutations, async operations, debouncing, scenario management, edge cases; 520/520 tests pass
+- ✅ **Form persistence fixes** — PersonalInfoForm and AssumptionsForm now properly restore state after Zustand hydration; fixes stale field values on page reload
+- ✅ **Anon→Auth migration** — `migrateExpensesToSession()` copies user's expense groups/items from anonymous session to authenticated account on first login (120 unit tests)
+- ✅ **Expense UX refinement** — removed auto-seed on reload; added "Load Sample Data" button for explicit user choice in empty state
+- ✅ **Local dev setup** — `.env.development` with JWT anon key for Supabase proxy routing (localhost:3000/supabase → localhost:54321)
+- ✅ **SUPABASE_ENABLED consistency** — all stores properly gate DB operations; Vercel fallback to localStorage works gracefully
+- 📚 **New docs** — PostgreSQL best practices (`docs/supabase-postgres-best-practices.md`), skills-lock.json for Supabase skill definitions
+
+**Previous Update (2026-06-10) — Phase 7 & 8 complete: UI redesign + expense tracker:**
+- ✅ **Phase 7 — Sidebar app shell** — fixed 220px sidebar, sticky top bar, scrollable content; four SPA-style page routes (Overview, Accounts, Plan, Projections) + Settings + Expenses; Account Sheet overlay; semantic color tokens throughout
+- ✅ **Phase 8 — Expense tracker** — `expense_groups` + `expenses` Supabase tables; user-defined groups with colour coding; per-item `inRetirement` toggle; debounced Supabase sync; offline seed; wired into sidebar nav
+- ⚠️ **Zero tests** — `calculator-store.ts` and `expenses-store.ts` both untested; Phase 9 critical gap
+
+**Latest Update (2026-06-07) — Phase 9 planned: site-wide improvement audit:**
+- 📋 **Phase 9 doc created** — `docs/project-phases/phase-9-site-improvement.md`; three-agent parallel audit covering UI/UX, calculation correctness, and test coverage
+- 📋 **9.1 Calculations** — 4 critical fixes (negative years guard, CGT constant, Monte Carlo deduplication, `calculateMonthlyReturn` triplicated); 4 high-priority SA-specific gaps (TFSA drawdown room, dividend tax, medical credit threshold, spending phase sources)
+- 📋 **9.2 Tests** — `calculator-store.ts` and `expenses-store.ts` have zero tests; estimated coverage ~65-70% vs 90% threshold; 6 additional gap areas identified
+- 📋 **9.3 UI/UX** — success rate color logic duplicated 4×; only 5 aria-labels across 58 components; missing confirmation dialogs and success toasts; responsive gaps on mobile
 
 **Latest Update (2026-05-10) — UI audit (visual clunkiness):**
 - 📋 **6 UI polish items logged** in `future-enhancements.md`: double headings in Planning Inputs cards, two-row header layout, overcrowded right-side nav, redundant welcome banner, oversized empty chart placeholders, duplicate account CTAs
@@ -156,6 +348,9 @@ docs/
 │   ├── phase-4-data-persistence.md
 │   ├── phase-5-export-functionality.md
 │   ├── phase-6-enhanced-tax.md
+│   ├── phase-7-ui-redesign.md
+│   ├── phase-8-expense-tracker.md
+│   ├── phase-9-site-improvement.md
 │   └── future-enhancements.md
 └── project-phases.md (this file)
 ```
@@ -167,7 +362,7 @@ docs/
 2. Update the status emoji in the phase table above (✅ for complete, 🔄 for in progress, 🔲 for pending)
 3. Add a dated status update to the "Current Status Summary" section
 4. Each phase file should be self-contained and focus on that phase's scope
-5. Reference related history files in `history/` for deep dives
+5. Reference related history files in `docs/history/` for deep dives
 6. Keep the main `project-phases.md` file as a lightweight index
 
 **When creating new phases:**

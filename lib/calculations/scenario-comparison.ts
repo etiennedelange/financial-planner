@@ -1,6 +1,7 @@
-import type { PersonalInfo, RetirementGoals, DrawdownConfig, CompoundingMethod } from "@/types"
-import { runMonteCarloSimulation as runMonteCarlo } from "@/lib/monte-carlo/simulation-engine"
+import type { Account, PersonalInfo, RetirementGoals, DrawdownConfig, CompoundingMethod, MarketAssumptions } from "@/types"
+import { runMonteCarloSimulation } from "@/lib/monte-carlo/simulation-engine"
 import { projectFinalSavings } from "./utils/projection"
+import { escalate } from "./utils/money-time"
 import { getSpendingPhaseMultiplier } from "./utils/spending-phase"
 
 // SA-specific investment scenarios (nominal returns)
@@ -91,82 +92,67 @@ function projectRetirementDuration(
 }
 
 /**
- * Generate a random return using Box-Muller transform (log-normal distribution)
- */
-function generateRandomReturn(expectedReturn: number, volatility: number): number {
-  const u1 = Math.random()
-  const u2 = Math.random()
-  const z = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2)
-  const logMean = Math.log(1 + expectedReturn) - 0.5 * volatility * volatility
-  return Math.exp(logMean + volatility * z) - 1
-}
-
-/**
- * Full Monte Carlo simulation including both accumulation and drawdown phases
- * This matches the methodology in simulation-engine.ts for consistency
+ * Full Monte Carlo simulation including both accumulation and drawdown phases.
+ * Delegates to the shared simulation-engine.ts (single source of truth for the
+ * Monte Carlo methodology) by wrapping the scenario's aggregate inputs into a
+ * single synthetic account, rather than reimplementing accumulation/drawdown here.
+ *
+ * The withdrawal always targets the user's desired income (not the configured
+ * drawdown strategy) to preserve this function's historical behavior of testing
+ * "can this scenario fund my actual income goal" — equivalent to forcing the
+ * 'fixed_amount_inflation_adjusted' strategy with no lump sum.
  */
 function runFullMonteCarloSimulation(
   currentBalance: number,
   monthlyContribution: number,
   contributionEscalation: number,
-  desiredMonthlyIncome: number,
-  yearsToRetirement: number,
-  yearsInRetirement: number,
+  personalInfo: PersonalInfo,
+  retirementGoals: RetirementGoals,
   expectedReturn: number,
   volatility: number,
-  inflation: number,
+  compoundingMethod: CompoundingMethod,
   iterations: number = 1000
 ): number {
-  let successCount = 0
-
-  for (let i = 0; i < iterations; i++) {
-    let balance = currentBalance
-    let monthlyContrib = monthlyContribution
-
-    // === ACCUMULATION PHASE (with stochastic returns) ===
-    for (let year = 0; year < yearsToRetirement; year++) {
-      const annualReturn = generateRandomReturn(expectedReturn, volatility)
-      const monthlyReturn = Math.pow(1 + annualReturn, 1 / 12) - 1
-
-      // Monthly compounding within each year
-      for (let month = 0; month < 12; month++) {
-        // Smooth escalation within year
-        const currentContrib = monthlyContrib * Math.pow(1 + contributionEscalation, year + month / 12)
-        balance = balance * (1 + monthlyReturn) + currentContrib
-      }
-    }
-
-    // === DRAWDOWN PHASE (with stochastic returns) ===
-    // Calculate initial withdrawal based on desired income inflated to retirement
-    const desiredMonthlyAtRetirement = desiredMonthlyIncome * Math.pow(1 + inflation, yearsToRetirement)
-    let yearlyWithdrawal = desiredMonthlyAtRetirement * 12
-    let success = true
-
-    for (let year = 0; year < yearsInRetirement; year++) {
-      const annualReturn = generateRandomReturn(expectedReturn, volatility)
-
-      // Apply return first
-      balance *= 1 + annualReturn
-
-      // Apply spending phase multiplier
-      const spendingMultiplier = getSpendingPhaseMultiplier(year)
-      const adjustedWithdrawal = yearlyWithdrawal * spendingMultiplier
-
-      // Then withdraw
-      balance -= adjustedWithdrawal
-
-      if (balance <= 0) {
-        success = false
-        break
-      }
-
-      yearlyWithdrawal *= 1 + inflation
-    }
-
-    if (success) successCount++
+  const syntheticAccount: Account = {
+    id: "scenario-comparison-synthetic",
+    name: "Scenario Portfolio",
+    provider: "",
+    type: "discretionary",
+    currentBalance,
+    monthlyContribution,
+    expectedReturn: expectedReturn * 100,
+    annualFees: 0, // expectedReturn is already net of fees
+    contributionEscalation: contributionEscalation * 100,
   }
 
-  return (successCount / iterations) * 100
+  const marketAssumptions: MarketAssumptions = {
+    equityReturn: syntheticAccount.expectedReturn,
+    bondReturn: syntheticAccount.expectedReturn,
+    cashReturn: syntheticAccount.expectedReturn,
+    equityVolatility: volatility * 100,
+    bondVolatility: volatility * 100,
+    inflationRate: retirementGoals.inflationRate,
+    compoundingMethod,
+  }
+
+  const syntheticDrawdownConfig: DrawdownConfig = {
+    strategy: "fixed_amount_inflation_adjusted",
+    initialWithdrawalRate: 0,
+    minimumWithdrawal: 0,
+    maximumWithdrawal: Number.MAX_SAFE_INTEGER,
+    lumpSumPercentage: 0,
+  }
+
+  const result = runMonteCarloSimulation(
+    [syntheticAccount],
+    personalInfo,
+    retirementGoals,
+    syntheticDrawdownConfig,
+    { numberOfRuns: iterations },
+    marketAssumptions
+  )
+
+  return result.successRate
 }
 
 /**
@@ -187,7 +173,6 @@ export function compareScenarios(
   } = params
 
   const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
-  const yearsInRetirement = personalInfo.lifeExpectancy - personalInfo.retirementAge
   const inflationRate = retirementGoals.inflationRate / 100
 
   const results: Record<ScenarioType, ScenarioResult> = {} as Record<
@@ -215,8 +200,7 @@ export function compareScenarios(
 
     // Calculate annual withdrawal at retirement
     const desiredMonthlyAtRetirement =
-      retirementGoals.desiredMonthlyIncome *
-      Math.pow(1 + inflationRate, yearsToRetirement)
+      escalate(retirementGoals.desiredMonthlyIncome, yearsToRetirement, inflationRate)
     const annualWithdrawal = desiredMonthlyAtRetirement * 12
 
     // How many years the savings will last (using nominal return, withdrawals inflate)
@@ -233,12 +217,11 @@ export function compareScenarios(
       currentSavings,
       monthlyContribution,
       contributionEscalation,
-      retirementGoals.desiredMonthlyIncome,
-      yearsToRetirement,
-      yearsInRetirement,
+      personalInfo,
+      retirementGoals,
       nominalReturn,
       scenario.volatility,
-      inflationRate
+      compoundingMethod
     )
 
     // Monthly income supported by portfolio

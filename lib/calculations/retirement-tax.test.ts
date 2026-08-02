@@ -10,6 +10,7 @@ import {
   calculateLifetimeTaxBurden,
 } from './retirement-tax'
 import { SA_TAX_LIMITS } from '../constants/limits'
+import { todayRands } from './utils/money-time'
 
 describe('retirement-tax', () => {
   describe('calculateIncomeTaxWithRebates', () => {
@@ -25,12 +26,12 @@ describe('retirement-tax', () => {
 
     describe('Age-based rebates under 65', () => {
       it('should apply primary rebate only for age 60', () => {
-        // R240,000 income
-        // Gross tax: R42,678 + (R240,000 - R237,100) × 26% = R42,678 + R754 = R43,432
+        // R240,000 income (falls fully in first bracket: 0 - R245,100 @ 18%)
+        // Gross tax: R240,000 × 18% = R43,200
         // Primary rebate: R17,820
-        // Net tax: R43,432 - R17,820 = R25,612
+        // Net tax: R43,200 - R17,820 = R25,380
         const result = calculateIncomeTaxWithRebates(240000, 60)
-        expect(result).toBe(25612)
+        expect(result).toBe(25380)
       })
 
       it('should return 0 tax for income below threshold (under 65)', () => {
@@ -46,10 +47,10 @@ describe('retirement-tax', () => {
       })
 
       it('should calculate correct tax for R360,000 income (age 60)', () => {
-        // Gross tax on R360,000: R74,632
-        // Less primary rebate: R17,235
-        // Net tax: R57,397
-        const grossTax = 42678 + (360000 - 237100) * 0.26
+        // Gross tax on R360,000: R73,992
+        // Less primary rebate: R17,820
+        // Net tax: R56,172
+        const grossTax = 44118 + (360000 - 245100) * 0.26
         const netTax = grossTax - SA_TAX_LIMITS.primaryRebate
         expect(calculateIncomeTaxWithRebates(360000, 60)).toBeCloseTo(netTax, 1)
       })
@@ -58,11 +59,11 @@ describe('retirement-tax', () => {
     describe('Age-based rebates 65-74', () => {
       it('should apply primary + secondary rebate for age 65', () => {
         // R240,000 income
-        // Gross tax: R43,432
+        // Gross tax: R43,200
         // Primary + secondary rebate: R17,820 + R9,765 = R27,585
-        // Net tax: R43,432 - R27,585 = R15,847
+        // Net tax: R43,200 - R27,585 = R15,615
         const result = calculateIncomeTaxWithRebates(240000, 65)
-        expect(result).toBe(15847)
+        expect(result).toBe(15615)
       })
 
       it('should return 0 tax for income at threshold (age 65-74)', () => {
@@ -73,10 +74,10 @@ describe('retirement-tax', () => {
       })
 
       it('should calculate correct tax for R360,000 income (age 70)', () => {
-        // Gross tax on R360,000: R74,632
-        // Less combined rebate: R26,679
-        // Net tax: R47,953
-        const grossTax = 42678 + (360000 - 237100) * 0.26
+        // Gross tax on R360,000: R73,992
+        // Less combined rebate: R27,585
+        // Net tax: R46,407
+        const grossTax = 44118 + (360000 - 245100) * 0.26
         const netTax =
           grossTax -
           (SA_TAX_LIMITS.primaryRebate + SA_TAX_LIMITS.secondaryRebate)
@@ -90,11 +91,11 @@ describe('retirement-tax', () => {
     describe('Age-based rebates 75+', () => {
       it('should apply all three rebates for age 75', () => {
         // R240,000 income
-        // Gross tax: R43,432
+        // Gross tax: R43,200
         // All rebates: R17,820 + R9,765 + R3,249 = R30,834
-        // Net tax: R43,432 - R30,834 = R12,598
+        // Net tax: R43,200 - R30,834 = R12,366
         const result = calculateIncomeTaxWithRebates(240000, 75)
-        expect(result).toBe(12598)
+        expect(result).toBe(12366)
       })
 
       it('should return 0 tax for income at threshold (age 75+)', () => {
@@ -104,10 +105,10 @@ describe('retirement-tax', () => {
       })
 
       it('should calculate correct tax for R360,000 income (age 80)', () => {
-        // Gross tax on R360,000: R74,632
-        // Less all rebates: R29,824
-        // Net tax: R44,808
-        const grossTax = 42678 + (360000 - 237100) * 0.26
+        // Gross tax on R360,000: R73,992
+        // Less all rebates: R30,834
+        // Net tax: R43,158
+        const grossTax = 44118 + (360000 - 245100) * 0.26
         const netTax =
           grossTax -
           (SA_TAX_LIMITS.primaryRebate +
@@ -121,7 +122,7 @@ describe('retirement-tax', () => {
 
       it('should apply all rebates for age 90', () => {
         const result = calculateIncomeTaxWithRebates(240000, 90)
-        expect(result).toBe(12598)
+        expect(result).toBe(12366)
       })
     })
 
@@ -129,12 +130,12 @@ describe('retirement-tax', () => {
       it('should calculate tax for R20,000/month (R240k p.a.) at age 67', () => {
         // Should benefit from primary + secondary rebate (R27,585)
         const result = calculateIncomeTaxWithRebates(240000, 67)
-        expect(result).toBe(15847)
+        expect(result).toBe(15615)
       })
 
       it('should calculate tax for R30,000/month (R360k p.a.) at age 67', () => {
         const result = calculateIncomeTaxWithRebates(360000, 67)
-        const grossTax = 42678 + (360000 - 237100) * 0.26
+        const grossTax = 44118 + (360000 - 245100) * 0.26
         const expected =
           grossTax -
           (SA_TAX_LIMITS.primaryRebate + SA_TAX_LIMITS.secondaryRebate)
@@ -144,8 +145,8 @@ describe('retirement-tax', () => {
       it('should calculate tax for R50,000/month (R600k p.a.) at age 70', () => {
         // Higher bracket income
         const result = calculateIncomeTaxWithRebates(600000, 70)
-        // Gross: R152,867, Less rebates: R27,585, Net: R125,282
-        expect(result).toBeCloseTo(125282, 0)
+        // Gross: R150,727, Less rebates: R27,585, Net: R123,142
+        expect(result).toBeCloseTo(123142, 0)
       })
     })
   })
@@ -180,28 +181,28 @@ describe('retirement-tax', () => {
   })
 
   describe('calculateMedicalAidTaxCredit', () => {
-    it('should return R4368 for member only (0 dependants)', () => {
-      // R364/month × 12
-      expect(calculateMedicalAidTaxCredit(0)).toBe(4368)
+    it('should return R4512 for member only (0 dependants)', () => {
+      // R376/month × 12
+      expect(calculateMedicalAidTaxCredit(0)).toBe(4512)
     })
 
-    it('should return R8736 for member + 1 dependant', () => {
-      // (R364 + R364) × 12
-      expect(calculateMedicalAidTaxCredit(1)).toBe(8736)
+    it('should return R9024 for member + 1 dependant', () => {
+      // (R376 + R376) × 12
+      expect(calculateMedicalAidTaxCredit(1)).toBe(9024)
     })
 
-    it('should return R11688 for member + 2 dependants', () => {
-      // (R364 + R364 + R246) × 12
-      expect(calculateMedicalAidTaxCredit(2)).toBe(11688)
+    it('should return R12072 for member + 2 dependants', () => {
+      // (R376 + R376 + R254) × 12
+      expect(calculateMedicalAidTaxCredit(2)).toBe(12072)
     })
 
-    it('should return R14640 for member + 3 dependants', () => {
-      // (R364 + R364 + R246 + R246) × 12
-      expect(calculateMedicalAidTaxCredit(3)).toBe(14640)
+    it('should return R15120 for member + 3 dependants', () => {
+      // (R376 + R376 + R254 + R254) × 12
+      expect(calculateMedicalAidTaxCredit(3)).toBe(15120)
     })
 
     it('should default to 0 dependants when not supplied', () => {
-      expect(calculateMedicalAidTaxCredit()).toBe(4368)
+      expect(calculateMedicalAidTaxCredit()).toBe(4512)
     })
   })
 
@@ -212,14 +213,14 @@ describe('retirement-tax', () => {
         monthlyMedicalAid: 3500,
       })
 
-      // grossTax = 43432, rebate = 27585, s6A credit (member only) = 4368
-      // incomeTax = 43432 - 27585 - 4368 = 11479
+      // grossTax = 43200, rebate = 27585, s6A credit (member only) = 4512
+      // incomeTax = 43200 - 27585 - 4512 = 11103
       expect(result.grossIncome).toBe(240000)
-      expect(result.incomeTax).toBe(11479)
-      expect(result.medicalAidTaxCredit).toBe(4368) // R364 × 12
+      expect(result.incomeTax).toBe(11103)
+      expect(result.medicalAidTaxCredit).toBe(4512) // R376 × 12
       expect(result.medicalAidContribution).toBe(42000) // R3,500 × 12 (cost paid from income)
-      expect(result.netIncome).toBe(240000 - 11479 - 42000)
-      expect(result.effectiveTaxRate).toBeCloseTo(4.78, 2)
+      expect(result.netIncome).toBe(240000 - 11103 - 42000)
+      expect(result.effectiveTaxRate).toBeCloseTo(4.63, 2)
       expect(result.applicableRebate).toBe(27585)
     })
 
@@ -236,7 +237,7 @@ describe('retirement-tax', () => {
       const result = calculateRetirementTax(240000, { age: 67 })
 
       expect(result.medicalAidContribution).toBe(0)
-      expect(result.netIncome).toBe(240000 - 15847)
+      expect(result.netIncome).toBe(240000 - 15615)
     })
 
     it('should calculate tax for high income (R600k) at age 75', () => {
@@ -245,13 +246,13 @@ describe('retirement-tax', () => {
         monthlyMedicalAid: 5000,
       })
 
-      // grossTax = 152867, all rebates = 30834, s6A credit (member only) = 4368
-      // incomeTax = 152867 - 30834 - 4368 = 117665
-      expect(result.incomeTax).toBeCloseTo(117665, 0)
-      expect(result.medicalAidTaxCredit).toBe(4368)
+      // grossTax = 150727, all rebates = 30834, s6A credit (member only) = 4512
+      // incomeTax = 150727 - 30834 - 4512 = 115381
+      expect(result.incomeTax).toBeCloseTo(115381, 0)
+      expect(result.medicalAidTaxCredit).toBe(4512)
       expect(result.medicalAidContribution).toBe(60000)
       expect(result.netIncome).toBe(600000 - result.incomeTax - 60000)
-      expect(result.effectiveTaxRate).toBeCloseTo(19.61, 2)
+      expect(result.effectiveTaxRate).toBeCloseTo(19.23, 2)
     })
 
     it('should return lumpSumTax as 0 for regular withdrawals', () => {
@@ -260,15 +261,15 @@ describe('retirement-tax', () => {
     })
 
     it('should apply larger credit for member + 2 dependants', () => {
-      // R240k, age 67, 2 dependants: credit = R11,688
-      // incomeTax = max(0, 43432 - 27585 - 11688) = 4159
+      // R240k, age 67, 2 dependants: credit = R12,072
+      // incomeTax = max(0, 43200 - 27585 - 12072) = 3543
       const result = calculateRetirementTax(240000, {
         age: 67,
         monthlyMedicalAid: 3500,
         medicalAidDependants: 2,
       })
-      expect(result.medicalAidTaxCredit).toBe(11688)
-      expect(result.incomeTax).toBe(4159)
+      expect(result.medicalAidTaxCredit).toBe(12072)
+      expect(result.incomeTax).toBe(3543)
     })
 
     it('should produce zero incomeTax when credit exceeds liability', () => {
@@ -457,36 +458,55 @@ describe('retirement-tax', () => {
 
   describe('calculateReplacementRatio', () => {
     it('should calculate 100% replacement for equal incomes', () => {
-      // R300k pre-retirement (est. R225k after tax at 25%)
-      // R225k retirement income
-      const result = calculateReplacementRatio(225000, 300000)
+      // Simple gross-to-gross: R300k retirement / R300k pre-retirement = 100%
+      const result = calculateReplacementRatio(todayRands(300000), todayRands(300000))
       expect(result).toBe(100)
     })
 
-    it('should calculate 80% replacement ratio', () => {
-      // R400k pre-retirement (est. R300k after tax)
-      // R240k retirement income
-      const result = calculateReplacementRatio(240000, 400000)
-      expect(result).toBe(80)
+    it('should calculate 60% replacement ratio', () => {
+      // R240k retirement / R400k pre-retirement = 60%
+      const result = calculateReplacementRatio(todayRands(240000), todayRands(400000))
+      expect(result).toBe(60)
     })
 
-    it('should calculate 70% replacement ratio', () => {
-      // R500k pre-retirement (est. R375k after tax)
-      // R262.5k retirement income
-      const result = calculateReplacementRatio(262500, 500000)
-      expect(result).toBe(70)
+    it('should calculate 52.5% replacement ratio', () => {
+      // R262.5k retirement / R500k pre-retirement = 52.5%
+      const result = calculateReplacementRatio(todayRands(262500), todayRands(500000))
+      expect(result).toBeCloseTo(52.5, 1)
     })
 
     it('should handle zero pre-retirement income', () => {
-      const result = calculateReplacementRatio(200000, 0)
+      const result = calculateReplacementRatio(todayRands(200000), todayRands(0))
       expect(result).toBe(0)
     })
 
     it('should handle higher retirement income (>100% replacement)', () => {
-      // R300k pre-retirement (est. R225k after tax)
-      // R270k retirement income (120% replacement)
-      const result = calculateReplacementRatio(270000, 300000)
-      expect(result).toBe(120)
+      // R400k retirement / R300k pre-retirement = 133.3%
+      const result = calculateReplacementRatio(todayRands(400000), todayRands(300000))
+      expect(result).toBeCloseTo(133.3, 1)
+    })
+
+    describe('Non-finite inputs', () => {
+      // `NaN <= 0` is false, so a bare `<= 0` guard lets NaN through and the
+      // ratio renders in the UI as the literal string "NaN%".
+      it('should return 0 when pre-retirement income is NaN', () => {
+        expect(calculateReplacementRatio(todayRands(300000), todayRands(NaN))).toBe(0)
+      })
+
+      it('should return 0 when retirement income is NaN', () => {
+        expect(calculateReplacementRatio(todayRands(NaN), todayRands(300000))).toBe(0)
+      })
+
+      it('should return 0 when retirement income is Infinity', () => {
+        expect(calculateReplacementRatio(todayRands(Infinity), todayRands(300000))).toBe(0)
+      })
+
+      it('should never return a non-finite ratio for non-finite inputs', () => {
+        for (const bad of [NaN, Infinity, -Infinity]) {
+          expect(Number.isFinite(calculateReplacementRatio(todayRands(bad), todayRands(300000)))).toBe(true)
+          expect(Number.isFinite(calculateReplacementRatio(todayRands(300000), todayRands(bad)))).toBe(true)
+        }
+      })
     })
   })
 
@@ -496,10 +516,10 @@ describe('retirement-tax', () => {
       const yearlyWithdrawals = Array(30).fill(240000)
       const result = calculateLifetimeTaxBurden(yearlyWithdrawals, 65, 3500)
 
-      // s6A credit (member only) = R364 × 12 = R4,368/year
-      // Ages 65-74 (primary+secondary rebate R27585): grossTax 43432 - 27585 - 4368 = R11,479/year
-      // Ages 75-94 (all rebates R30834): grossTax 43432 - 30834 - 4368 = R8,230/year
-      const expectedTax = 10 * 11479 + 20 * 8230
+      // s6A credit (member only) = R376 × 12 = R4,512/year
+      // Ages 65-74 (primary+secondary rebate R27585): grossTax 43200 - 27585 - 4512 = R11,103/year
+      // Ages 75-94 (all rebates R30834): grossTax 43200 - 30834 - 4512 = R7,854/year
+      const expectedTax = 10 * 11103 + 20 * 7854
       expect(result.totalIncomeTax).toBe(expectedTax)
 
       expect(result.totalMedicalAid).toBe(30 * 42000) // 30 years × R42k

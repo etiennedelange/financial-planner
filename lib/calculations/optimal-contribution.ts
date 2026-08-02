@@ -1,6 +1,7 @@
 import type { PersonalInfo, RetirementGoals, DrawdownConfig, CompoundingMethod } from "@/types"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import { projectFinalSavings } from "./utils/projection"
+import { escalate } from "./utils/money-time"
 
 interface OptimalContributionParams {
   currentSavings: number
@@ -44,7 +45,7 @@ export function calculateOptimalContribution(
 
   // Calculate target nest egg based on desired income
   const desiredMonthlyAtRetirement =
-    retirementGoals.desiredMonthlyIncome * Math.pow(1 + inflationRate, yearsToRetirement)
+    escalate(retirementGoals.desiredMonthlyIncome, yearsToRetirement, inflationRate)
   const desiredAnnualAtRetirement = desiredMonthlyAtRetirement * 12
 
   // Use withdrawal rate to determine required nest egg

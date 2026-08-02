@@ -1,5 +1,15 @@
 "use client"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -11,6 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { toast } from "@/lib/hooks/use-toast"
 import { ChevronDown, Pencil, Plus, Trash2 } from "lucide-react"
 import { useRef, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
@@ -28,6 +39,7 @@ export function ScenarioSwitcher() {
       }))
     )
 
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState("")
   const [creatingNew, setCreatingNew] = useState(false)
@@ -49,6 +61,7 @@ export function ScenarioSwitcher() {
     const trimmed = renameValue.trim()
     if (trimmed && trimmed !== scenarioList.find((s) => s.id === id)?.name) {
       await renameScenario(id, trimmed)
+      toast({ title: `Scenario renamed to "${trimmed}"` })
     }
     setRenamingId(null)
   }
@@ -122,14 +135,16 @@ export function ScenarioSwitcher() {
                   className="shrink-0 rounded p-1 text-muted-foreground hover:text-foreground"
                   onClick={(e) => { e.stopPropagation(); startRename(s.id, s.name) }}
                   title="Rename"
+                  aria-label={`Rename scenario ${s.name}`}
                 >
                   <Pencil className="h-3 w-3" />
                 </button>
                 {scenarioList.length > 1 && (
                   <button
                     className="shrink-0 rounded p-1 text-muted-foreground hover:text-destructive"
-                    onClick={(e) => { e.stopPropagation(); handleDelete(s.id) }}
+                    onClick={(e) => { e.stopPropagation(); setPendingDeleteId(s.id) }}
                     title="Delete"
+                    aria-label={`Delete scenario ${s.name}`}
                   >
                     <Trash2 className="h-3 w-3" />
                   </button>
@@ -168,6 +183,32 @@ export function ScenarioSwitcher() {
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
+
+      <AlertDialog open={pendingDeleteId !== null} onOpenChange={(open) => { if (!open) setPendingDeleteId(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete {scenarioList.find((s) => s.id === pendingDeleteId)?.name}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove this scenario and all its settings.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingDeleteId(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                await handleDelete(pendingDeleteId!)
+                setPendingDeleteId(null)
+                toast({ title: "Scenario deleted" })
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DropdownMenu>
   )
 }

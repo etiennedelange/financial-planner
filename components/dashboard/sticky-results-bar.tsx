@@ -3,6 +3,7 @@
 import { formatCurrency } from "@/lib/utils/currency"
 import type { ProjectionResult, SimulationResult } from "@/types"
 import { AlertTriangle, DollarSign, Gauge, Loader2, Target, TrendingDown, TrendingUp, Wallet } from "lucide-react"
+import { getSuccessRateStyle } from "@/lib/utils/success-rate"
 
 interface StickyResultsBarProps {
   projection: ProjectionResult | null
@@ -16,17 +17,10 @@ interface StickyResultsBarProps {
   displayMode: "real" | "nominal"
 }
 
-function successRateColor(rate: number) {
-  if (rate >= 90) return "text-green-500"
-  if (rate >= 75) return "text-cyan-500"
-  if (rate >= 60) return "text-orange-500"
-  return "text-red-500"
-}
-
 function depletionColor(depletionAge: number | null, lifeExpectancy: number) {
-  if (depletionAge === null) return "text-green-500"
-  if (depletionAge >= lifeExpectancy - 5) return "text-orange-500"
-  return "text-red-500"
+  if (depletionAge === null) return "text-success"
+  if (depletionAge >= lifeExpectancy - 5) return "text-warning"
+  return "text-destructive"
 }
 
 export function StickyResultsBar({
@@ -90,7 +84,7 @@ export function StickyResultsBar({
         yearsToRetirement,
         inflationRate / 100
       ),
-      colorClass: hasSurplus ? "text-green-500" : "text-red-500",
+      colorClass: hasSurplus ? "text-success" : "text-destructive",
     },
     {
       icon: AlertTriangle,
@@ -104,7 +98,7 @@ export function StickyResultsBar({
             icon: Gauge,
             label: "Success Rate",
             value: `${successRate.toFixed(0)}%`,
-            colorClass: successRateColor(successRate),
+            colorClass: getSuccessRateStyle(successRate).text,
           },
         ]
       : []),

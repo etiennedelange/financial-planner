@@ -1,11 +1,15 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { TrendingUp, AlertCircle, Target } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { PageCard } from "@/components/ui/page-card"
 import { formatCurrency } from "@/lib/utils/currency"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
+import { escalate, percentToRate } from "@/lib/calculations/utils/money-time"
 import type { ProjectionResult } from "@/types"
+import { AlertCircle, Target, TrendingUp } from "lucide-react"
+import Link from "next/link"
+import { useMemo } from "react"
 
 interface KeyInsightsSummaryProps {
   projection: ProjectionResult | null
@@ -28,103 +32,111 @@ export function KeyInsightsSummary({
   inflationRate,
   monteCarloSuccessRate,
 }: KeyInsightsSummaryProps) {
-  if (!projection) {
-    return null
-  }
+  const derived = useMemo(() => {
+    if (!projection) return null
 
-  const yearsToRetirement = retirementAge - currentAge
-  const monthlyIncome = currentMonthlyIncome || 1 // Avoid division by zero
-  const annualIncome = monthlyIncome * 12
-  const maxRaContribution = Math.min(annualIncome * SA_TAX_LIMITS.pensionRaDeductionRate, SA_TAX_LIMITS.pensionRaMaxDeduction)
-  const monthlyRaContribution = maxRaContribution / 12
+    const yearsToRetirement = retirementAge - currentAge
+    const monthlyIncome = currentMonthlyIncome || 1
+    const annualIncome = monthlyIncome * 12
+    const maxRaContribution = Math.min(annualIncome * SA_TAX_LIMITS.pensionRaDeductionRate, SA_TAX_LIMITS.pensionRaMaxDeduction)
+    const monthlyRaContribution = maxRaContribution / 12
 
-  // Adjust desired income for inflation to compare in future terms
-  const inflationMultiplier = Math.pow(1 + inflationRate / 100, yearsToRetirement)
-  const desiredIncomeAtRetirement = desiredMonthlyIncome * inflationMultiplier
+    const desiredIncomeAtRetirement = escalate(
+      desiredMonthlyIncome,
+      yearsToRetirement,
+      percentToRate(inflationRate)
+    )
 
-  // On Track calculation - primary indicator is Monte Carlo success rate
-  // A plan is "on track" if:
-  // 1. Monte Carlo success rate >= 70% (funds last until life expectancy in most scenarios), OR
-  // 2. If no Monte Carlo data, portfolio doesn't deplete before life expectancy
-  const hasSuccessRate = monteCarloSuccessRate !== null && monteCarloSuccessRate !== undefined
-  const portfolioLastsUntilLifeExpectancy =
-    projection.portfolioDepletionAge === null || projection.portfolioDepletionAge >= lifeExpectancy
+    const hasSuccessRate = monteCarloSuccessRate !== null && monteCarloSuccessRate !== undefined
+    const portfolioLastsUntilLifeExpectancy =
+      projection.portfolioDepletionAge === null || projection.portfolioDepletionAge >= lifeExpectancy
 
-  const isOnTrack = hasSuccessRate
-    ? monteCarloSuccessRate >= 70
-    : portfolioLastsUntilLifeExpectancy
+    const isOnTrack = hasSuccessRate
+      ? monteCarloSuccessRate >= 70
+      : portfolioLastsUntilLifeExpectancy
 
-  // Calculate income replacement ratio using inflation-adjusted values
-  const incomeReplacementRatio = Math.round(
-    (projection.monthlyIncomeAtRetirement / desiredIncomeAtRetirement) * 100
-  )
+    const incomeReplacementRatio = Math.round(
+      (projection.monthlyIncomeAtRetirement / desiredIncomeAtRetirement) * 100
+    )
 
-  // Determine On Track description
-  const getOnTrackDescription = (): string => {
+    let onTrackDescription: string
     if (hasSuccessRate) {
-      if (monteCarloSuccessRate >= 70) {
-        return `${monteCarloSuccessRate.toFixed(0)}% success rate`
-      } else {
-        return `Only ${monteCarloSuccessRate.toFixed(0)}% success rate`
-      }
+      onTrackDescription = monteCarloSuccessRate >= 70
+        ? `${monteCarloSuccessRate.toFixed(0)}% success rate`
+        : `Only ${monteCarloSuccessRate.toFixed(0)}% success rate`
+    } else if (portfolioLastsUntilLifeExpectancy) {
+      onTrackDescription = "Portfolio lasts until life expectancy"
+    } else {
+      onTrackDescription = `Portfolio depletes at age ${projection.portfolioDepletionAge}`
     }
-    if (portfolioLastsUntilLifeExpectancy) {
-      return "Portfolio lasts until life expectancy"
-    }
-    return `Portfolio depletes at age ${projection.portfolioDepletionAge}`
+
+    return { monthlyRaContribution, isOnTrack, incomeReplacementRatio, onTrackDescription }
+  }, [projection, retirementAge, currentAge, currentMonthlyIncome, inflationRate, desiredMonthlyIncome, monteCarloSuccessRate, lifeExpectancy])
+
+  if (!projection || !derived) {
+    return (
+      <PageCard label="Key Insights" className="dashboard-card">
+        <div className="flex min-h-[168px] flex-col items-center justify-center gap-3 text-center">
+          <p className="text-sm text-muted-foreground">Configure your accounts and plan to see personalised insights here.</p>
+          <Button asChild size="sm" variant="outline">
+            <Link href="/calculator/accounts">Add accounts →</Link>
+          </Button>
+        </div>
+      </PageCard>
+    )
   }
+
+  const { monthlyRaContribution, isOnTrack, incomeReplacementRatio, onTrackDescription } = derived
 
   const insights = [
     {
       title: "On Track Status",
       value: isOnTrack ? "Yes" : "No",
       icon: Target,
-      badge: isOnTrack ? "success" : "warning",
-      description: getOnTrackDescription(),
+      badgeVariant: isOnTrack ? "success" : "warning",
+      badgeLabel: isOnTrack ? "On Track" : "At Risk",
+      description: onTrackDescription,
     },
     {
       title: "Contribution Potential",
       value: formatCurrency(monthlyRaContribution),
       icon: TrendingUp,
-      badge: "info",
+      badgeVariant: "info",
+      badgeLabel: "Tip",
       description: "Max RA contribution per month",
     },
     {
       title: "Income Replacement",
       value: `${incomeReplacementRatio}%`,
       icon: AlertCircle,
-      badge: isOnTrack && incomeReplacementRatio >= 100 ? "success" : "warning",
+      badgeVariant: isOnTrack && incomeReplacementRatio >= 100 ? "success" : "warning",
+      badgeLabel: isOnTrack && incomeReplacementRatio >= 100 ? "On Track" : "Below Target",
       description: "Inflation-adjusted replacement",
     },
   ]
 
   return (
-    <Card className="dashboard-card">
-      <CardHeader>
-        <CardTitle className="text-lg">Key Insights</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <PageCard label="Key Insights" className="dashboard-card" contentClassName="space-y-4">
         {insights.map((insight) => {
           const Icon = insight.icon
           return (
             <div key={insight.title} className="flex items-start gap-3 pb-3 border-b border-border last:pb-0 last:border-0">
-              <Icon className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-1" />
+              <Icon aria-hidden="true" className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-1" />
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <p className="text-sm font-medium text-foreground">{insight.title}</p>
-                  {insight.badge && (
-                    <Badge variant={insight.badge === "success" ? "default" : insight.badge === "warning" ? "secondary" : "outline"}>
-                      {insight.badge}
+                  {insight.badgeLabel && (
+                    <Badge variant={insight.badgeVariant === "success" ? "default" : insight.badgeVariant === "warning" ? "destructive" : "outline"}>
+                      {insight.badgeLabel}
                     </Badge>
                   )}
                 </div>
-                <p className="text-lg font-bold text-foreground">{insight.value}</p>
+                <p className="text-lg font-bold font-mono text-foreground">{insight.value}</p>
                 <p className="text-xs text-muted-foreground">{insight.description}</p>
               </div>
             </div>
           )
         })}
-      </CardContent>
-    </Card>
+    </PageCard>
   )
 }

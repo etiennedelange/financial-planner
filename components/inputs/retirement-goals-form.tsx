@@ -4,39 +4,46 @@ import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import { AnimatePresence } from "motion/react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { PageCard } from "@/components/ui/page-card"
+import { AnimatedValue } from "@/components/ui/animated-value"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useShallow } from "zustand/react/shallow"
-import { formatCurrency } from "@/lib/utils/formatters"
+import { formatCurrency } from "@/lib/utils/currency"
+import { escalate, percentToRate } from "@/lib/calculations/utils/money-time"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
+import { FieldError } from "@/components/ui/field-error"
 
 const schema = z.object({
   desiredMonthlyIncome: z.number().min(0),
-  inflationRate: z.number().min(0).max(20),
   legacyAmount: z.number().min(0),
 })
 
 type FormData = z.infer<typeof schema>
 
 export function RetirementGoalsForm() {
-  const { retirementGoals, setRetirementGoals, personalInfo } =
+  const { retirementGoals, setRetirementGoals, personalInfo, inflationRate } =
     useCalculatorStore(
       useShallow(state => ({
         retirementGoals: state.retirementGoals,
         setRetirementGoals: state.setRetirementGoals,
         personalInfo: state.personalInfo,
+        inflationRate: state.retirementGoals.inflationRate,
       }))
     )
 
   const {
     register,
     watch,
+    reset,
+    getValues,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: retirementGoals,
+    mode: 'onChange', // Validate as user types for immediate feedback
   })
 
   const watchedValues = watch()
@@ -50,18 +57,40 @@ export function RetirementGoalsForm() {
     return () => subscription.unsubscribe()
   }, [watch, setRetirementGoals])
 
-  // Calculate inflation-adjusted income at retirement
+  useEffect(() => {
+    const current = getValues()
+    if (
+      current.desiredMonthlyIncome === retirementGoals.desiredMonthlyIncome &&
+      current.legacyAmount === retirementGoals.legacyAmount
+    ) {
+      return
+    }
+
+    reset({
+      desiredMonthlyIncome: retirementGoals.desiredMonthlyIncome,
+      legacyAmount: retirementGoals.legacyAmount,
+    })
+  }, [
+    retirementGoals.desiredMonthlyIncome,
+    retirementGoals.legacyAmount,
+    reset,
+    getValues,
+  ])
+
+  // Calculate inflation-adjusted income at retirement (uses inflation from Market Assumptions)
   const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
-  const inflatedMonthlyIncome =
-    watchedValues.desiredMonthlyIncome *
-    Math.pow(1 + watchedValues.inflationRate / 100, yearsToRetirement)
+  const inflatedMonthlyIncome = escalate(
+    watchedValues.desiredMonthlyIncome,
+    yearsToRetirement,
+    percentToRate(inflationRate)
+  )
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Retirement Goals</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <PageCard
+      label="Retirement Goals"
+      description="Your target income in today's purchasing power and estate goal. Both are inflated to your retirement date."
+      contentClassName="space-y-4"
+    >
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Label htmlFor="desiredMonthlyIncome">
@@ -76,60 +105,47 @@ export function RetirementGoalsForm() {
             id="desiredMonthlyIncome"
             type="number"
             min="0"
-            step="1000"
+            step="any"
             {...register("desiredMonthlyIncome", { valueAsNumber: true })}
           />
-          {errors.desiredMonthlyIncome && (
-            <p className="text-sm text-destructive">
-              {errors.desiredMonthlyIncome.message}
-            </p>
-          )}
-          <p className="text-xs text-muted-foreground">
-            At retirement ({yearsToRetirement} years), this equals{" "}
-            {formatCurrency(inflatedMonthlyIncome)} per month
-          </p>
+          <FieldError message={errors.desiredMonthlyIncome?.message} />
+          <AnimatePresence initial={false}>
+            {watchedValues.desiredMonthlyIncome > 0 && (
+              <div className="space-y-0.5">
+                <p className="text-xs text-muted-foreground">
+                  Today: <AnimatedValue value={watchedValues.desiredMonthlyIncome} format={formatCurrency} /> / month
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  At retirement ({yearsToRetirement} yrs): <AnimatedValue value={inflatedMonthlyIncome} format={formatCurrency} /> / month
+                </p>
+              </div>
+            )}
+          </AnimatePresence>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="inflationRate">Expected Inflation (%)</Label>
-              <InfoTooltip
-                content="Expected annual inflation rate. Used to adjust your income needs and savings targets over time. SA historical average: 5-6%. Higher inflation means you need more money in the future to buy the same goods. Your withdrawals are automatically inflated each year to maintain purchasing power."
-                side="right"
-              />
-            </div>
-            <Input
-              id="inflationRate"
-              type="number"
-              min="0"
-              max="20"
-              step="0.5"
-              {...register("inflationRate", { valueAsNumber: true })}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="legacyAmount">Legacy Goal (R)</Label>
+            <InfoTooltip
+              content="Amount you want to leave behind for heirs or charity. This is in today's money and will be added to your target nest egg. Setting this higher increases the required nest egg and may reduce your success rate if current savings/contributions are insufficient."
+              side="right"
             />
           </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="legacyAmount">Legacy Goal (R)</Label>
-              <InfoTooltip
-                content="Amount you want to leave behind for heirs or charity. This is in today's money and will be added to your target nest egg. Setting this higher increases the required nest egg and may reduce your success rate if current savings/contributions are insufficient."
-                side="right"
-              />
-            </div>
-            <Input
-              id="legacyAmount"
-              type="number"
-              min="0"
-              step="100000"
-              {...register("legacyAmount", { valueAsNumber: true })}
-            />
-            <p className="text-xs text-muted-foreground">
-              Amount to leave behind
-            </p>
-          </div>
+          <Input
+            id="legacyAmount"
+            type="number"
+            min="0"
+            step="any"
+            {...register("legacyAmount", { valueAsNumber: true })}
+          />
+          <AnimatePresence initial={false}>
+            {watchedValues.legacyAmount > 0 && (
+              <p className="text-xs text-muted-foreground">
+                <AnimatedValue value={watchedValues.legacyAmount} format={formatCurrency} /> in today&apos;s Rands
+              </p>
+            )}
+          </AnimatePresence>
         </div>
-      </CardContent>
-    </Card>
+    </PageCard>
   )
 }

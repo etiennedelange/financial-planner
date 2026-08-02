@@ -4,7 +4,6 @@ import { createClient } from "./client"
 type AccountRow = {
   id: string
   scenario_id: string
-  session_id?: string | null
   name: string
   provider: string
   type: Account["type"]
@@ -16,7 +15,7 @@ type AccountRow = {
   tfsa_contributions_to_date?: number | null
 }
 
-function toRow(account: Account, scenarioId: string): Omit<AccountRow, "session_id"> {
+function toRow(account: Account, scenarioId: string): AccountRow {
   return {
     id: account.id,
     scenario_id: scenarioId,
@@ -49,7 +48,6 @@ function fromRow(row: AccountRow): Account {
 
 export async function fetchAccounts(scenarioId: string): Promise<Account[]> {
   const supabase = createClient()
-  if (!supabase) return []
   const { data, error } = await supabase
     .from("accounts")
     .select("*")
@@ -61,7 +59,6 @@ export async function fetchAccounts(scenarioId: string): Promise<Account[]> {
 
 export async function upsertAccount(account: Account, scenarioId: string): Promise<void> {
   const supabase = createClient()
-  if (!supabase) return
   const { error } = await supabase
     .from("accounts")
     .upsert(toRow(account, scenarioId), { onConflict: "id" })
@@ -70,7 +67,6 @@ export async function upsertAccount(account: Account, scenarioId: string): Promi
 
 export async function cloneAccounts(accounts: Account[], newScenarioId: string): Promise<Account[]> {
   const supabase = createClient()
-  if (!supabase) return []
   const cloned = accounts.map((acc) => ({
     ...acc,
     id: crypto.randomUUID(),
@@ -83,7 +79,6 @@ export async function cloneAccounts(accounts: Account[], newScenarioId: string):
 
 export async function deleteAccount(id: string): Promise<void> {
   const supabase = createClient()
-  if (!supabase) return
   const { error } = await supabase.from("accounts").delete().eq("id", id)
   if (error) throw error
 }

@@ -43,7 +43,8 @@ export function useMonteCarloWorker(
   retirementGoals: RetirementGoals,
   drawdownConfig: DrawdownConfig,
   numberOfRuns: number,
-  marketAssumptions?: MarketAssumptions
+  marketAssumptions?: MarketAssumptions,
+  enabled = true
 ): { simulationResult: SimulationResult | null; isRunning: boolean } {
   const [{ result, isRunning }, dispatch] = useReducer(simReducer, {
     result: null,
@@ -63,8 +64,7 @@ export function useMonteCarloWorker(
 
   // (Re-)run the simulation whenever any input changes
   useEffect(() => {
-    // Don't start a run with no accounts — derived return values handle the reset
-    if (accounts.length === 0) return
+    if (!enabled || accounts.length === 0) return
 
     // Lazily create the worker once
     if (!workerRef.current) {
@@ -99,6 +99,7 @@ export function useMonteCarloWorker(
     }
     workerRef.current.postMessage(request)
   }, [
+    enabled,
     accounts,
     personalInfo,
     retirementGoals,

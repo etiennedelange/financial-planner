@@ -96,10 +96,31 @@ if [ -f "package.json" ] && [ ! -f "components.json" ]; then
   npx --yes shadcn@latest init -d --base radix || echo "    shadcn init skipped — run 'npx shadcn@latest init -d --base radix' manually"
 fi
 
+# ─── Environment variables ─────────────────────────────────────────────────────
+# Copy .env.example → .env.local on first container build so the app can
+# connect to local Supabase without any manual setup.
+if [ ! -f ".env.local" ] && [ -f ".env.example" ]; then
+  echo "--> Creating .env.local from .env.example..."
+  cp .env.example .env.local
+  echo "    .env.local created. Edit it if you need to point at a different Supabase project."
+fi
+
+# # ─── Claude Code user settings ────────────────────────────────────────────────
+# # Symlink ~/.claude/settings.json to the repo file so changes are always committed
+# echo "--> Linking Claude Code user settings..."
+# ln -sf /workspaces/retirement-calculator-claude/.devcontainer/claude-settings.json "$HOME/.claude/settings.json"
+# ─── Claude Code user settings ────────────────────────────────────────────────
+
+# Symlink ~/.claude/settings.json to the repo file so changes are always committed.
+# postCreateCommand runs with cwd = workspace folder, so $(pwd) resolves correctly
+# regardless of what the repo/workspace folder is named.
+echo "--> Linking Claude Code user settings..."
+ln -sf "$(pwd)/.devcontainer/claude-settings.json" "$HOME/.claude/settings.json"
+
 # Ensure the node user owns the Claude config directory for credential storage
 sudo chown node:node /home/node/.claude
 
-# ─── Claude settings symlink ──────────────────────────────────────────────────
+# ─── Claude settings symlink (robust re-check) ─────────────────────────────────
 # Keep settings.json in the repo so plugin installs persist across rebuilds.
 echo "--> Linking Claude settings to devcontainer config..."
 CLAUDE_SETTINGS="$HOME/.claude/settings.json"
@@ -116,6 +137,13 @@ if [ ! -L "$CLAUDE_SETTINGS" ] || [ "$(readlink "$CLAUDE_SETTINGS")" != "$REPO_S
 else
   echo "    Already linked — skipping"
 fi
+
+# Fix claude-code ownership: the devcontainer feature installs as root, which
+# blocks auto-updates. Transfer ownership to node so npm can write to the prefix.
+echo "--> Fixing Claude Code npm prefix ownership..."
+sudo chown -R node:npm \
+  /usr/local/share/npm-global/lib/node_modules/@anthropic-ai \
+  /usr/local/share/npm-global/bin/claude 2>/dev/null || true
 
 echo ""
 echo "==> Post-create complete!"

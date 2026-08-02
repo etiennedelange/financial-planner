@@ -3,3 +3,7 @@ blockExoticSubdeps: true
 allowBuilds:
   sharp: true        # next.js image optimisation
   unrs-resolver: true  # eslint-import-resolver-typescript (Rust native binary)
+
+overrides:
+  "@types/react": "19.2.17"
+  "@types/react-dom": "19.2.3"

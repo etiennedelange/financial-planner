@@ -16,13 +16,13 @@ export const TAX_YEAR = '2026/2027'
 // min = lower bound of bracket (inclusive), max = upper bound (inclusive)
 // ---------------------------------------------------------------------------
 export const INCOME_TAX_BRACKETS_CONFIG = [
-  { min: 0,       max: 237100,   rate: 0.18, baseTax: 0      },
-  { min: 237100,  max: 370500,   rate: 0.26, baseTax: 42678  },
-  { min: 370500,  max: 512800,   rate: 0.31, baseTax: 77362  },
-  { min: 512800,  max: 673000,   rate: 0.36, baseTax: 121475 },
-  { min: 673000,  max: 857900,   rate: 0.39, baseTax: 179147 },
-  { min: 857900,  max: 1817000,  rate: 0.41, baseTax: 251258 },
-  { min: 1817000, max: Infinity, rate: 0.45, baseTax: 644489 },
+  { min: 0,       max: 245100,   rate: 0.18, baseTax: 0      },
+  { min: 245100,  max: 383100,   rate: 0.26, baseTax: 44118  },
+  { min: 383100,  max: 530200,   rate: 0.31, baseTax: 79998  },
+  { min: 530200,  max: 695800,   rate: 0.36, baseTax: 125599 },
+  { min: 695800,  max: 887000,   rate: 0.39, baseTax: 185215 },
+  { min: 887000,  max: 1878600,  rate: 0.41, baseTax: 259783 },
+  { min: 1878600, max: Infinity, rate: 0.45, baseTax: 666339 },
 ] as const
 
 // ---------------------------------------------------------------------------
@@ -35,6 +35,20 @@ export const RETIREMENT_LUMP_SUM_CONFIG = [
   { threshold: 1155000, rate: 0.27, previousTax: 39600  },
   { threshold: Infinity, rate: 0.36, previousTax: 143550 },
 ] as const
+
+// ---------------------------------------------------------------------------
+// Maximum share of a pension/RA/preservation fund that may be commuted as a
+// lump sum at retirement — the rest must be annuitised. SA law caps this at
+// one-third of the retirement-fund interest.
+// ---------------------------------------------------------------------------
+export const MAX_LUMP_SUM_COMMUTATION_PERCENTAGE = 100 / 3
+
+// ---------------------------------------------------------------------------
+// Capital Gains Tax — annual exclusion for individuals (s5(1) Eighth Schedule)
+// ---------------------------------------------------------------------------
+export const CGT_ANNUAL_EXCLUSION_CONFIG = {
+  individual: 50000,
+} as const
 
 // ---------------------------------------------------------------------------
 // Rebates (reduce tax liability directly)
@@ -76,7 +90,7 @@ export const TFSA_LIMITS_CONFIG = {
 // Source: SARS Budget Tax Guide 2026/2027
 // ---------------------------------------------------------------------------
 export const MEDICAL_AID_CREDITS_CONFIG = {
-  primaryMemberMonthly:      364, // Principal member
-  firstDependantMonthly:     364, // First additional beneficiary
-  additionalDependantMonthly: 246, // Each further beneficiary
+  primaryMemberMonthly:      376, // Principal member
+  firstDependantMonthly:     376, // First additional beneficiary
+  additionalDependantMonthly: 254, // Each further beneficiary
 } as const

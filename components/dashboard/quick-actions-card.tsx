@@ -2,7 +2,7 @@
 
 import { Plus, Eye, Printer, FileSpreadsheet } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { PageCard } from "@/components/ui/page-card"
 
 interface QuickActionsCardProps {
   onAddAccount?: () => void
@@ -18,11 +18,7 @@ export function QuickActionsCard({
   onExportCsv,
 }: QuickActionsCardProps) {
   return (
-    <Card className="dashboard-card">
-      <CardHeader>
-        <CardTitle className="text-lg">Quick Actions</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
+    <PageCard label="Quick Actions" className="dashboard-card" contentClassName="space-y-2">
         {onAddAccount && (
           <Button onClick={onAddAccount} variant="outline" className="w-full justify-start">
             <Plus className="mr-2 h-4 w-4" />
@@ -48,7 +44,6 @@ export function QuickActionsCard({
           </Button>
         )}
 
-      </CardContent>
-    </Card>
+    </PageCard>
   )
 }

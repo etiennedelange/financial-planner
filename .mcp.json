@@ -3,49 +3,33 @@
     "playwright": {
       "command": "npx",
       "args": [
-        "-y",
-        "@playwright/mcp@latest"
-      ]
-    },
-    "chrome-devtools": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "chrome-devtools-mcp@latest",
-        "--headless",
-        "--chromeArg=--no-sandbox",
-        "--chromeArg=--disable-setuid-sandbox"
-      ]
-    },
-    "github": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-github"
+        "@playwright/mcp@latest",
+        "--browser",
+        "chromium",
+        "--headless"
       ],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
-      }
+      "env": {}
     },
-    "filesystem": {
+    "shadcn": {
       "command": "npx",
       "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "/workspaces/retirement-calculator-claude"
+        "shadcn@latest",
+        "mcp"
       ]
+    },
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp"
     },
     "supabase-local": {
       "type": "http",
       "url": "http://127.0.0.1:54321/mcp"
     },
-    "vibe-check-mcp": {
-      "command": "npx",
+    "filesystem": {
+      "command": "sh",
       "args": [
-        "-y",
-        "@pv-bhat/vibe-check-mcp",
-        "start",
-        "--stdio"
+        "-c",
+        "npx -y @modelcontextprotocol/server-filesystem \"$CLAUDE_PROJECT_DIR\""
       ]
     },
     "fetch": {
@@ -53,10 +37,6 @@
       "args": [
         "mcp-server-fetch"
       ]
-    },
-    "supabase": {
-      "type": "http",
-      "url": "https://mcp.supabase.com/mcp"
     }
   }
 }
