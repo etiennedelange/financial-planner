@@ -20,7 +20,6 @@ import {
   listFactors,
   unenrollTotp,
   currentAal,
-  redeemRecoveryCode,
   recoveryCodesRemaining,
   elevateWithTotp,
 } from './mfa'
@@ -115,24 +114,6 @@ describe('currentAal', () => {
   it('throws when Supabase rejects the request', async () => {
     mfa.getAuthenticatorAssuranceLevel.mockResolvedValue({ data: null, error: { message: 'not authenticated' } })
     await expect(currentAal()).rejects.toThrow('not authenticated')
-  })
-})
-
-describe('redeemRecoveryCode', () => {
-  it('normalises the code and returns true on success', async () => {
-    rpc.mockResolvedValue({ data: true, error: null })
-    await expect(redeemRecoveryCode('hdgf8 0yk4e')).resolves.toBe(true)
-    expect(rpc).toHaveBeenCalledWith('redeem_recovery_code', { code: 'HDGF8-0YK4E' })
-  })
-
-  it('returns false when the code does not match', async () => {
-    rpc.mockResolvedValue({ data: false, error: null })
-    await expect(redeemRecoveryCode('WRONG-CODE1')).resolves.toBe(false)
-  })
-
-  it('throws when the RPC fails', async () => {
-    rpc.mockResolvedValue({ data: null, error: { message: 'db down' } })
-    await expect(redeemRecoveryCode('HDGF8-0YK4E')).rejects.toThrow('db down')
   })
 })
 

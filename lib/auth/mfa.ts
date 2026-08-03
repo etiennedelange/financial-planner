@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/client"
-import { generateRecoveryCodes, normaliseRecoveryCode } from "./recovery-codes"
+import { generateRecoveryCodes } from "./recovery-codes"
 
 export interface TotpEnrollment {
   factorId: string
@@ -80,14 +80,6 @@ export async function currentAal(): Promise<{ current: string | null; next: stri
   const { data, error } = await createClient().auth.mfa.getAuthenticatorAssuranceLevel()
   if (error) throw new Error(error.message)
   return { current: data.currentLevel, next: data.nextLevel }
-}
-
-/** Signs a challenge with a recovery code instead of a TOTP code. */
-export async function redeemRecoveryCode(code: string): Promise<boolean> {
-  const { data, error } = await createClient()
-    .rpc("redeem_recovery_code", { code: normaliseRecoveryCode(code) })
-  if (error) throw new Error(error.message)
-  return data === true
 }
 
 export async function recoveryCodesRemaining(): Promise<number> {

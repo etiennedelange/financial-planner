@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod/v4"
@@ -55,6 +56,7 @@ const modeConfig = {
 }
 
 export function AuthModal({ open, onClose }: AuthModalProps) {
+  const router = useRouter()
   const [mode, setMode] = useState<Mode>("signin")
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [loading, setLoading] = useState(false)
@@ -72,8 +74,17 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
     setLoading(true); setMessage(null)
     const { error } = await createClient().auth.signInWithPassword({ email: values.email, password: values.password })
     setLoading(false)
-    if (error) setMessage({ type: "error", text: error.message })
-    else onClose()
+    if (error) {
+      setMessage({ type: "error", text: error.message })
+    } else {
+      onClose()
+      // The AAL gate that sends a not-yet-second-factored session to /auth/mfa
+      // lives in middleware, which only runs on a request — sign-in itself is
+      // a client-side Supabase call with no navigation, so without this the
+      // gate would sit dormant until some unrelated link click. refresh()
+      // re-requests the current route, giving middleware a request to redirect.
+      router.refresh()
+    }
   }
 
   async function handleSignUp(values: EmailPasswordForm) {
