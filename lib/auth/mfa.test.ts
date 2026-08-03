@@ -22,6 +22,7 @@ import {
   currentAal,
   redeemRecoveryCode,
   recoveryCodesRemaining,
+  elevateWithTotp,
 } from './mfa'
 
 beforeEach(() => vi.clearAllMocks())
@@ -132,6 +133,32 @@ describe('redeemRecoveryCode', () => {
   it('throws when the RPC fails', async () => {
     rpc.mockResolvedValue({ data: null, error: { message: 'db down' } })
     await expect(redeemRecoveryCode('HDGF8-0YK4E')).rejects.toThrow('db down')
+  })
+})
+
+describe('elevateWithTotp', () => {
+  it('challenges and verifies the factor', async () => {
+    mfa.challenge.mockResolvedValue({ data: { id: 'challenge-1' }, error: null })
+    mfa.verify.mockResolvedValue({ data: {}, error: null })
+
+    await expect(elevateWithTotp('factor-1', '123456')).resolves.toBeUndefined()
+    expect(mfa.challenge).toHaveBeenCalledWith({ factorId: 'factor-1' })
+    expect(mfa.verify).toHaveBeenCalledWith({ factorId: 'factor-1', challengeId: 'challenge-1', code: '123456' })
+  })
+
+  it('throws when the challenge cannot be created', async () => {
+    mfa.challenge.mockResolvedValue({ data: null, error: { message: 'too many attempts' } })
+    await expect(elevateWithTotp('factor-1', '123456')).rejects.toThrow('too many attempts')
+    expect(mfa.verify).not.toHaveBeenCalled()
+  })
+
+  it('throws when the code is wrong, without touching recovery codes', async () => {
+    mfa.challenge.mockResolvedValue({ data: { id: 'challenge-1' }, error: null })
+    mfa.verify.mockResolvedValue({ data: null, error: { message: 'Invalid TOTP code' } })
+
+    await expect(elevateWithTotp('factor-1', '000000')).rejects.toThrow('Invalid TOTP code')
+    expect(rpc).not.toHaveBeenCalled()
+    expect(mfa.unenroll).not.toHaveBeenCalled()
   })
 })
 

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { PageCard } from "@/components/ui/page-card"
 import { listFactors, recoveryCodesRemaining, unenrollTotp } from "@/lib/auth/mfa"
 import { MfaEnrollment } from "./mfa-enrollment"
-import { ReauthenticateDialog } from "./reauthenticate-dialog"
+import { TotpReauthDialog } from "./totp-reauth-dialog"
 
 export function SecuritySection({ email }: { email: string }) {
   const [factorId, setFactorId] = useState<string | null>(null)
@@ -58,9 +58,9 @@ export function SecuritySection({ email }: { email: string }) {
         </>
       )}
 
-      <ReauthenticateDialog
+      <TotpReauthDialog
         open={confirmingDisable}
-        email={email}
+        factorId={factorId ?? ""}
         action="disable two-factor authentication"
         onCancel={() => setConfirmingDisable(false)}
         onConfirmed={() => { setConfirmingDisable(false); void disable() }}

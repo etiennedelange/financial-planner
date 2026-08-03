@@ -52,6 +52,25 @@ export async function listFactors(): Promise<{ id: string; friendlyName: string 
   return (data.totp ?? []).map((f) => ({ id: f.id, friendlyName: f.friendly_name ?? null }))
 }
 
+/**
+ * Elevates the session to aal2 by challenging an already-enrolled factor.
+ * Disabling 2FA requires proof you still hold the device: Supabase's own
+ * server rejects an unenroll of a verified factor at aal1 regardless of what
+ * the client sends, so a password-only reauth can never satisfy it.
+ */
+export async function elevateWithTotp(factorId: string, code: string): Promise<void> {
+  const supabase = createClient()
+
+  const { data: challenge, error: challengeError } =
+    await supabase.auth.mfa.challenge({ factorId })
+  if (challengeError) throw new Error(challengeError.message)
+
+  const { error: verifyError } = await supabase.auth.mfa.verify({
+    factorId, challengeId: challenge.id, code,
+  })
+  if (verifyError) throw new Error(verifyError.message)
+}
+
 export async function unenrollTotp(factorId: string): Promise<void> {
   const { error } = await createClient().auth.mfa.unenroll({ factorId })
   if (error) throw new Error(error.message)
