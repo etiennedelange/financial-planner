@@ -21,13 +21,20 @@ export async function GET(request: Request) {
 
   const supabase = await createClient()
   let failed = true
+  let isRecovery = false
 
   if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     failed = Boolean(error)
+    // `exchangeCodeForSession`'s type doesn't declare `redirectType`, but the
+    // runtime response does include it (verified against the installed
+    // @supabase/auth-js source) — a known gap between this package's public
+    // types and its actual, documented behavior.
+    isRecovery = (data as { redirectType?: string } | null)?.redirectType === "recovery"
   } else if (tokenHash && type) {
     const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
     failed = Boolean(error)
+    isRecovery = type === "recovery"
   }
 
   if (failed) {
@@ -36,7 +43,18 @@ export async function GET(request: Request) {
 
   // A recovery link grants a session, which is exactly why it must not drop the
   // user into the app. Without this branch the reset link IS the login.
-  if (type === "recovery") {
+  //
+  // isRecovery must come from Supabase's own signal, not the URL's `type` param:
+  // on the `code` path, `type` is metadata this app itself appended via
+  // redirectTo, so it's fully client-editable and proves nothing — a request
+  // could hit this route with a valid `code` but no `type=recovery` and would
+  // otherwise fall through to `next`. `redirectType` is tagged server-side on
+  // the stored PKCE code-verifier when resetPasswordForEmail() starts the flow,
+  // and returned by exchangeCodeForSession() — tamper-resistant. The OTP path
+  // doesn't have this problem: `type` there is a required, verified input to
+  // verifyOtp itself, so a stripped/wrong type just fails verification rather
+  // than silently taking the wrong branch.
+  if (isRecovery) {
     return NextResponse.redirect(`${origin}/auth/reset-password`)
   }
 

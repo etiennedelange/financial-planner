@@ -84,6 +84,12 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       // own docs warn against awaiting Supabase calls inside
       // onAuthStateChange for this reason — defer with setTimeout instead.
       setTimeout(async () => {
+        // A second auth event (e.g. rapid sign-out-then-sign-in as a different
+        // user) may have already fired and moved sessionId on before this
+        // deferred block runs — bail rather than write this stale snapshot
+        // under a user the app has already left behind.
+        if (useCalculatorStore.getState().sessionId !== newUser.id) return
+
         try {
           await claimLocalData(newUser.id, {
             personalInfo: calc.personalInfo,
@@ -100,6 +106,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
           console.error("Claiming local data failed:", err)
         }
 
+        if (useCalculatorStore.getState().sessionId !== newUser.id) return
         await syncFromDb()
         await syncExpensesFromDb(newUser.id)
       }, 0)

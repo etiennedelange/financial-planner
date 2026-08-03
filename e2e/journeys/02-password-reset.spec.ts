@@ -59,3 +59,48 @@ test("password reset requires setting a new password", async ({ page }) => {
   await page.getByRole("button", { name: /^sign in$/i }).click()
   await expect(page.getByText(/invalid login credentials/i)).toBeVisible()
 })
+
+test("recovery gate cannot be bypassed by stripping type=recovery from the callback URL", async ({ page }) => {
+  const email = `reset-bypass-${Date.now()}@test.local`
+  const oldPassword = "OldPassword123"
+
+  await page.goto("/calculator")
+  await page.getByRole("button", { name: /sign in/i }).click()
+  await page.getByRole("button", { name: /sign up/i }).click()
+  await page.getByLabel("Email").fill(email)
+  await page.getByLabel("Password").fill(oldPassword)
+  await page.getByRole("button", { name: /create account/i }).click()
+
+  await page.goto("/calculator")
+  await page.getByRole("button", { name: /sign in/i }).click()
+  await page.getByRole("button", { name: /forgot password/i }).click()
+  await page.getByLabel("Email").fill(email)
+  await page.getByRole("button", { name: /send reset link/i }).click()
+  await expect(page.getByText(/reset link sent/i)).toBeVisible()
+
+  const verifyLink = await latestResetLink(email)
+
+  // Resolve GoTrue's /verify link ourselves (without letting the browser follow
+  // it) so we can capture the exact URL it redirects to, then strip
+  // `type=recovery` before navigating — simulating a request that reaches
+  // /auth/callback with a valid `code` but no `type` in the query string. The
+  // `code` itself is generated as a side effect of this request regardless of
+  // whether the redirect is followed, so it's still a real, single-use,
+  // unconsumed code.
+  const verifyResponse = await page.request.get(verifyLink, { maxRedirects: 0 })
+  const location = verifyResponse.headers()["location"]
+  if (!location) throw new Error("verify link did not redirect")
+  const strippedUrl = location.replace(/([?&])type=recovery&?/, "$1").replace(/[?&]$/, "")
+  expect(strippedUrl).not.toContain("type=recovery")
+  expect(strippedUrl).toContain("code=")
+
+  await page.goto(strippedUrl)
+
+  // Even without `type=recovery` in the URL, the session's own redirectType —
+  // tagged server-side on the PKCE code-verifier when resetPasswordForEmail()
+  // started the flow, and read back by exchangeCodeForSession() — must still
+  // force the reset-password gate. A pass here is live proof redirectType is
+  // genuinely populated in this environment, not just a type-level fix.
+  await expect(page).toHaveURL(/\/auth\/reset-password/)
+  await expect(page.getByText(/set a new password/i)).toBeVisible()
+})
