@@ -1,0 +1,70 @@
+"use client"
+
+import { useCallback, useEffect, useState } from "react"
+import { Button } from "@/components/ui/button"
+import { PageCard } from "@/components/ui/page-card"
+import { listFactors, recoveryCodesRemaining, unenrollTotp } from "@/lib/auth/mfa"
+import { MfaEnrollment } from "./mfa-enrollment"
+import { ReauthenticateDialog } from "./reauthenticate-dialog"
+
+export function SecuritySection({ email }: { email: string }) {
+  const [factorId, setFactorId] = useState<string | null>(null)
+  const [remaining, setRemaining] = useState<number | null>(null)
+  const [confirmingDisable, setConfirmingDisable] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const refresh = useCallback(async () => {
+    try {
+      const factors = await listFactors()
+      setFactorId(factors[0]?.id ?? null)
+      setRemaining(factors.length > 0 ? await recoveryCodesRemaining() : null)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not load security settings.")
+    }
+  }, [])
+
+  useEffect(() => { void refresh() }, [refresh])
+
+  async function disable() {
+    if (!factorId) return
+    try {
+      await unenrollTotp(factorId)
+      await refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not disable two-factor authentication.")
+    }
+  }
+
+  return (
+    <PageCard label="Security" contentClassName="space-y-3">
+      {error && <p className="text-xs text-destructive">{error}</p>}
+
+      {factorId === null ? (
+        <MfaEnrollment onEnrolled={refresh} />
+      ) : (
+        <>
+          <p className="text-xs text-muted-foreground">
+            Two-factor authentication is on. Sign-in requires a code from your authenticator app.
+          </p>
+          {remaining !== null && (
+            <p className={`text-xs ${remaining <= 2 ? "text-destructive" : "text-muted-foreground"}`}>
+              {remaining} recovery {remaining === 1 ? "code" : "codes"} remaining
+              {remaining <= 2 && " — disable and re-enrol to get a fresh set."}
+            </p>
+          )}
+          <Button variant="outline" className="w-full" onClick={() => setConfirmingDisable(true)}>
+            Disable Two-Factor Authentication
+          </Button>
+        </>
+      )}
+
+      <ReauthenticateDialog
+        open={confirmingDisable}
+        email={email}
+        action="disable two-factor authentication"
+        onCancel={() => setConfirmingDisable(false)}
+        onConfirmed={() => { setConfirmingDisable(false); void disable() }}
+      />
+    </PageCard>
+  )
+}

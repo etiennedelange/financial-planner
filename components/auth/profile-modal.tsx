@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { StaticFinanceChart } from "@/components/auth/static-finance-chart"
 import { ReauthenticateDialog } from "@/components/auth/reauthenticate-dialog"
+import { SecuritySection } from "@/components/auth/security-section"
 import type { User } from "@supabase/supabase-js"
 
 const emailSchema = z.object({
@@ -129,6 +130,10 @@ export function ProfileModal({ open, onClose, user }: ProfileModalProps) {
                 </Button>
               </form>
             </section>
+
+            <div className="border-t" />
+
+            <SecuritySection email={user.email ?? ""} />
           </div>
 
           <div className="border-t bg-muted/30 px-6 py-3 text-center text-xs text-muted-foreground">
