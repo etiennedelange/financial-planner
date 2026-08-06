@@ -53,7 +53,16 @@ export async function POST(request: Request) {
   })
 
   for (const factor of factors.totp) {
-    await admin.auth.admin.mfa.deleteFactor({ id: factor.id, userId: user.id })
+    const { error: deleteError } = await admin.auth.admin.mfa.deleteFactor({
+      id: factor.id,
+      userId: user.id,
+    })
+    if (deleteError) {
+      return NextResponse.json(
+        { error: "Could not remove your old authenticator. Please try again." },
+        { status: 500 },
+      )
+    }
   }
 
   return NextResponse.json({ recovered: true })
