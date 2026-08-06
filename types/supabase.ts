@@ -260,6 +260,17 @@ export type Database = {
     }
     Functions: {
       mfa_satisfied: { Args: never; Returns: boolean }
+      my_sessions: {
+        Args: never
+        Returns: {
+          created_at: string
+          id: string
+          ip: string | null
+          is_current: boolean
+          updated_at: string
+          user_agent: string | null
+        }[]
+      }
       recovery_codes_remaining: { Args: never; Returns: number }
       redeem_recovery_code: { Args: { code: string }; Returns: boolean }
       store_recovery_codes: { Args: { codes: string[] }; Returns: undefined }
