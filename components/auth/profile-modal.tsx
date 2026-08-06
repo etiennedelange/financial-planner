@@ -58,7 +58,10 @@ export function ProfileModal({ open, onClose, user }: ProfileModalProps) {
   const pwForm = useForm<PasswordForm>({ resolver: zodResolver(passwordSchema) })
 
   const [pendingAction, setPendingAction] = useState<
-    { kind: "email"; values: EmailForm } | { kind: "password"; values: PasswordForm } | null
+    | { kind: "email"; values: EmailForm }
+    | { kind: "password"; values: PasswordForm }
+    | { kind: "delete" }
+    | null
   >(null)
 
   async function runEmailChange(values: EmailForm) {
@@ -81,6 +84,17 @@ export function ProfileModal({ open, onClose, user }: ProfileModalProps) {
       setPwMsg({ type: "success", text: "Password updated successfully." })
       pwForm.reset()
     }
+  }
+
+  async function runDelete() {
+    const res = await fetch("/api/account/delete", { method: "DELETE" })
+    if (!res.ok) {
+      const { error } = await res.json()
+      setPwMsg({ type: "error", text: error ?? "Could not delete the account." })
+      return
+    }
+    localStorage.clear()
+    window.location.href = "/calculator"
   }
 
   return (
@@ -142,6 +156,23 @@ export function ProfileModal({ open, onClose, user }: ProfileModalProps) {
             <PageCard label="Active Sessions" contentClassName="space-y-3">
               <SessionList />
             </PageCard>
+
+            <div className="border-t" />
+
+            <PageCard label="Danger Zone" labelVariant="destructive"
+              className="border-destructive/40" contentClassName="space-y-3">
+              <p className="text-xs text-muted-foreground">
+                Deleting your account removes every scenario, account and expense permanently.
+                This cannot be undone. Export your data first if you want a copy.
+              </p>
+              <Button variant="outline" className="w-full" asChild>
+                <a href="/api/account/export" download>Export My Data</a>
+              </Button>
+              <Button variant="destructive" className="w-full"
+                onClick={() => setPendingAction({ kind: "delete" })}>
+                Delete My Account
+              </Button>
+            </PageCard>
           </div>
 
           <div className="border-t bg-muted/30 px-6 py-3 text-center text-xs text-muted-foreground">
@@ -153,13 +184,20 @@ export function ProfileModal({ open, onClose, user }: ProfileModalProps) {
       <ReauthenticateDialog
         open={pendingAction !== null}
         email={user.email ?? ""}
-        action={pendingAction?.kind === "email" ? "change your email address" : "change your password"}
+        action={
+          pendingAction?.kind === "email"
+            ? "change your email address"
+            : pendingAction?.kind === "delete"
+              ? "delete your account permanently"
+              : "change your password"
+        }
         onCancel={() => setPendingAction(null)}
         onConfirmed={() => {
           const action = pendingAction
           setPendingAction(null)
           if (action?.kind === "email") void runEmailChange(action.values)
           if (action?.kind === "password") void runPasswordChange(action.values)
+          if (action?.kind === "delete") void runDelete()
         }}
       />
     </>
