@@ -1,14 +1,38 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
+import { SECURITY_HEADERS, buildCsp } from "@/lib/security/headers"
 
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+  const nonce = crypto.randomUUID().replace(/-/g, "")
+  // Also true whenever the request itself isn't HTTPS (e.g. `next start`
+  // locally, or a self-hosted deployment without TLS termination in front) —
+  // `upgrade-insecure-requests` in the CSP forces the browser to retry every
+  // request as https, which fails outright there instead of just staying http.
+  const isDev = process.env.NODE_ENV === "development" || request.nextUrl.protocol !== "https:"
+
+  // Set on a Headers copy (not `request.headers` directly, which Next.js
+  // treats as read-only) so both `NextResponse.next({ request })` calls below
+  // forward x-nonce to Server Components — and so the same nonce value ends
+  // up in the CSP response header Next parses to stamp its own script tags.
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set("x-nonce", nonce)
+
+  function applySecurityHeaders(response: NextResponse): NextResponse {
+    Object.entries(SECURITY_HEADERS).forEach(([k, v]) => response.headers.set(k, v))
+    response.headers.set(
+      "Content-Security-Policy",
+      buildCsp(nonce, process.env.NEXT_PUBLIC_SUPABASE_URL ?? "", isDev),
+    )
+    return response
+  }
+
+  let supabaseResponse = NextResponse.next({ request: { headers: requestHeaders } })
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 
   if (!supabaseUrl || !supabaseKey) {
-    return supabaseResponse
+    return applySecurityHeaders(supabaseResponse)
   }
 
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
@@ -18,7 +42,7 @@ export async function updateSession(request: NextRequest) {
       },
       setAll(cookiesToSet, headers) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-        supabaseResponse = NextResponse.next({ request })
+        supabaseResponse = NextResponse.next({ request: { headers: requestHeaders } })
         cookiesToSet.forEach(({ name, value, options }) =>
           supabaseResponse.cookies.set(name, value, options)
         )
@@ -59,15 +83,15 @@ export async function updateSession(request: NextRequest) {
       const url = request.nextUrl.clone()
       url.pathname = "/auth/mfa"
       url.search = ""
-      return NextResponse.redirect(url)
+      return applySecurityHeaders(NextResponse.redirect(url))
     }
     if (!needsSecondFactor && path === "/auth/mfa") {
       const url = request.nextUrl.clone()
       url.pathname = "/calculator"
       url.search = ""
-      return NextResponse.redirect(url)
+      return applySecurityHeaders(NextResponse.redirect(url))
     }
   }
 
-  return supabaseResponse
+  return applySecurityHeaders(supabaseResponse)
 }
