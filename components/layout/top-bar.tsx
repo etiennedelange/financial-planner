@@ -37,7 +37,7 @@ export function TopBar({ user }: TopBarProps) {
   const displayMode = useCalculatorStore((s) => s.displayMode)
   const setDisplayMode = useCalculatorStore((s) => s.setDisplayMode)
 
-  const isSignedIn = user && !user.is_anonymous
+  const isSignedIn = user !== null
 
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-card/80 backdrop-blur-md">

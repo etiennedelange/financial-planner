@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/client"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod/v4"
 import { Button } from "@/components/ui/button"
@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { FinanceAnimation } from "@/components/auth/finance-animation"
-import { Turnstile } from "@/components/auth/turnstile"
+import { Turnstile, type TurnstileHandle } from "@/components/auth/turnstile"
 
 const passwordSchema = z
   .string()
@@ -62,6 +62,15 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [loading, setLoading] = useState(false)
   const [captchaToken, setCaptchaToken] = useState<string | undefined>()
+  const turnstile = useRef<TurnstileHandle>(null)
+
+  // Turnstile tokens are single-use. Every failed attempt has consumed the one
+  // we hold, so it must be dropped and a fresh challenge issued — otherwise the
+  // retry fails on a replayed captcha rather than on whatever the user fixed.
+  function resetCaptcha() {
+    setCaptchaToken(undefined)
+    turnstile.current?.reset()
+  }
 
   const signinForm  = useForm<SignInForm>({ resolver: zodResolver(signInSchema) })
   const signupForm  = useForm<EmailPasswordForm>({ resolver: zodResolver(emailPasswordSchema) })
@@ -70,6 +79,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   function switchMode(next: Mode) {
     setMode(next)
     setMessage(null)
+    resetCaptcha()
   }
 
   async function handleSignIn(values: SignInForm) {
@@ -80,6 +90,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
     setLoading(false)
     if (error) {
       setMessage({ type: "error", text: error.message })
+      resetCaptcha()
     } else {
       onClose()
       // The AAL gate that sends a not-yet-second-factored session to /auth/mfa
@@ -93,24 +104,17 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
   async function handleSignUp(values: EmailPasswordForm) {
     setLoading(true); setMessage(null)
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    const isAnon = user?.is_anonymous ?? false
-
-    if (isAnon) {
-      const { error } = await supabase.auth.updateUser({ email: values.email, password: values.password })
-      setLoading(false)
-      if (error) setMessage({ type: "error", text: error.message })
-      else setMessage({ type: "success", text: "Check your email to confirm your account." })
+    const { error } = await createClient().auth.signUp({
+      email: values.email,
+      password: values.password,
+      options: { captchaToken, emailRedirectTo: `${window.location.origin}/auth/callback` },
+    })
+    setLoading(false)
+    if (error) {
+      setMessage({ type: "error", text: error.message })
+      resetCaptcha()
     } else {
-      const { error } = await supabase.auth.signUp({
-        email: values.email,
-        password: values.password,
-        options: { captchaToken, emailRedirectTo: `${window.location.origin}/auth/callback` },
-      })
-      setLoading(false)
-      if (error) setMessage({ type: "error", text: error.message })
-      else setMessage({ type: "success", text: "Check your email to confirm your account." })
+      setMessage({ type: "success", text: "Check your email to confirm your account." })
     }
   }
 
@@ -121,8 +125,12 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
       redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
     })
     setLoading(false)
-    if (error) setMessage({ type: "error", text: error.message })
-    else setMessage({ type: "success", text: "Reset link sent — check your inbox." })
+    if (error) {
+      setMessage({ type: "error", text: error.message })
+      resetCaptcha()
+    } else {
+      setMessage({ type: "success", text: "Reset link sent — check your inbox." })
+    }
   }
 
   const { title, subtitle } = modeConfig[mode]
@@ -164,7 +172,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                 )}
               </div>
               <StatusMessage message={message} />
-              <Turnstile onToken={setCaptchaToken} />
+              <Turnstile ref={turnstile} onToken={setCaptchaToken} />
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Signing in…" : "Sign In"}
               </Button>
@@ -180,7 +188,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                 error={signupForm.formState.errors.password?.message}
                 {...signupForm.register("password")} />
               <StatusMessage message={message} />
-              <Turnstile onToken={setCaptchaToken} />
+              <Turnstile ref={turnstile} onToken={setCaptchaToken} />
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Creating account…" : "Create Account"}
               </Button>
@@ -193,7 +201,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                 error={resetForm.formState.errors.email?.message}
                 {...resetForm.register("email")} />
               <StatusMessage message={message} />
-              <Turnstile onToken={setCaptchaToken} />
+              <Turnstile ref={turnstile} onToken={setCaptchaToken} />
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Sending…" : "Send Reset Link"}
               </Button>

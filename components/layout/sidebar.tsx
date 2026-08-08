@@ -47,7 +47,7 @@ export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [profileModalOpen, setProfileModalOpen] = useState(false)
 
-  const isAnon = !user || user.is_anonymous
+  const isAnon = !user
   const email = user?.email
 
   async function handleSignOut() {

@@ -52,11 +52,16 @@ export default function MfaChallengePage() {
         })
         if (vErr) { setError("That code is not correct."); return }
       }
-      // replace() alone re-requests /calculator through middleware, which is
-      // what actually clears the gate now that AAL/the factor state has
-      // changed — a trailing refresh() here raced that pending navigation
-      // and won, re-fetching the OLD /auth/mfa route instead of the new one.
-      router.replace("/calculator")
+      // Full navigation, not router.replace(). SupabaseProvider lives in the
+      // root layout, so a client-side navigation never remounts it — and its
+      // sync ran at aal1 during sign-in, when RLS legitimately returned zero
+      // rows, leaving the store with a null activeScenarioId and an empty
+      // scenarioList. Edits made in that window are silently dropped, since
+      // scheduleScenarioSync early-returns without an active scenario. A hard
+      // load remounts the provider and re-syncs at the now-satisfied aal2.
+      // session-list.tsx and profile-modal.tsx force a reload for the same
+      // reason after changing auth state.
+      window.location.href = "/calculator"
     } finally {
       setLoading(false)
     }

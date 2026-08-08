@@ -6,10 +6,12 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod/v4"
 import { createClient } from "@/lib/supabase/client"
+import { listFactors } from "@/lib/auth/mfa"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PageCard } from "@/components/ui/page-card"
+import { TotpReauthDialog } from "@/components/auth/totp-reauth-dialog"
 
 const schema = z
   .object({
@@ -32,12 +34,14 @@ export default function ResetPasswordPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [checking, setChecking] = useState(true)
+  const [factorId, setFactorId] = useState<string | null>(null)
+  const [pending, setPending] = useState<Form | null>(null)
   const form = useForm<Form>({ resolver: zodResolver(schema) })
 
   // The recovery link must have established a session before we get here.
   // Landing without one means the link was stale, reused, or tampered with.
   useEffect(() => {
-    createClient().auth.getUser().then(({ data: { user } }) => {
+    createClient().auth.getUser().then(async ({ data: { user } }) => {
       if (!user) {
         // `/calculator` itself server-redirects to `/calculator/overview` and drops
         // the query string in the process — target the final route directly so the
@@ -45,13 +49,23 @@ export default function ResetPasswordPage() {
         router.replace("/calculator/overview?error=reset-expired")
         return
       }
+      // A recovery link yields an aal1 session, and GoTrue refuses a password
+      // change from aal1 once the account has a verified factor
+      // (401 insufficient_aal). This route is exempt from the middleware AAL
+      // gate — it has to be reachable by someone who has lost their password —
+      // so the second-factor challenge has to happen here instead.
+      try {
+        setFactorId((await listFactors())[0]?.id ?? null)
+      } catch {
+        setError("Could not check your two-factor settings. Try the reset link again.")
+      }
       setChecking(false)
     })
   }, [router])
 
-  async function onSubmit(values: Form) {
+  async function applyNewPassword(password: string) {
     const supabase = createClient()
-    const { error: updateError } = await supabase.auth.updateUser({ password: values.password })
+    const { error: updateError } = await supabase.auth.updateUser({ password })
     if (updateError) {
       setError(updateError.message)
       return
@@ -60,6 +74,15 @@ export default function ResetPasswordPage() {
     // compromised, and leaving those sessions alive defeats the point.
     await supabase.auth.signOut({ scope: "others" })
     router.replace("/calculator/overview?reset=success")
+  }
+
+  async function onSubmit(values: Form) {
+    setError(null)
+    if (factorId) {
+      setPending(values)
+      return
+    }
+    await applyNewPassword(values.password)
   }
 
   if (checking) return null
@@ -93,6 +116,20 @@ export default function ResetPasswordPage() {
             {form.formState.isSubmitting ? "Updating…" : "Update Password"}
           </Button>
         </form>
+
+        {factorId && (
+          <TotpReauthDialog
+            open={pending !== null}
+            factorId={factorId}
+            action="change your password"
+            onCancel={() => setPending(null)}
+            onConfirmed={() => {
+              const values = pending
+              setPending(null)
+              if (values) void applyNewPassword(values.password)
+            }}
+          />
+        )}
       </PageCard>
     </div>
   )
