@@ -173,8 +173,8 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
               </div>
               <StatusMessage message={message} />
               <Turnstile ref={turnstile} onToken={setCaptchaToken} />
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Signing in…" : "Sign In"}
+              <Button type="submit" className="w-full" disabled={loading || !captchaToken}>
+                {loading ? "Signing in…" : captchaToken ? "Sign In" : "Verifying…"}
               </Button>
             </form>
           )}
@@ -189,8 +189,8 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                 {...signupForm.register("password")} />
               <StatusMessage message={message} />
               <Turnstile ref={turnstile} onToken={setCaptchaToken} />
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Creating account…" : "Create Account"}
+              <Button type="submit" className="w-full" disabled={loading || !captchaToken}>
+                {loading ? "Creating account…" : captchaToken ? "Create Account" : "Verifying…"}
               </Button>
             </form>
           )}
@@ -202,8 +202,8 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                 {...resetForm.register("email")} />
               <StatusMessage message={message} />
               <Turnstile ref={turnstile} onToken={setCaptchaToken} />
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Sending…" : "Send Reset Link"}
+              <Button type="submit" className="w-full" disabled={loading || !captchaToken}>
+                {loading ? "Sending…" : captchaToken ? "Send Reset Link" : "Verifying…"}
               </Button>
             </form>
           )}
