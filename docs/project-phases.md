@@ -25,6 +25,50 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
+## 2026-08-08
+
+✅ **Auth-Hardening Phase Complete — 13 tasks, 1 critical + 4 important bugs fixed**
+
+The comprehensive auth-hardening branch (`feature/auth-hardening-2fa`) has been completed with all code findings fixed and documentation updated. The branch implements mandatory login (replacing anonymous-first system), optional TOTP-based 2FA with recovery codes, session/device management, self-serve account deletion and data export (POPIA compliance), bot protection (Cloudflare Turnstile), and strict security headers including per-request CSP nonces. **789 tests passing**, all typecheck and build clean.
+
+**Architecture highlights:**
+- **RLS as the security boundary**: `mfa_satisfied()` SQL function enforces 2FA at the database layer — clients that bypass middleware still get zero rows
+- **AAL (Authenticator Assurance Level) gating**: Middleware applies UX-layer gate (redirects to `/auth/mfa` if aal1 + factor exists); real enforcement via RLS
+- **Recovery-code redemption**: `/api/auth/recover` exempt from AAL gate (recovery entry point); auto-deletes victim's TOTP factor if valid code supplied via Admin API
+- **Session management**: `my_sessions()` RPC lists active sessions; "Sign Out Everywhere" terminates all others
+- **Per-request CSP nonces**: Every script tag carries the request's nonce attribute; nonce generated in middleware and threaded through to layout via headers
+- **Turnstile bot protection**: Single-use tokens with reset capability on retry; render nothing if site key unconfigured
+
+**13 tasks completed via Subagent-Driven Development:**
+1. ✅ Replace anonymous sign-in with login-required model
+2. ✅ AI narrative persistence (non-persisted Zustand store module-scope)
+3. ✅ TOTP enrolment + one-time recovery codes
+4. ✅ RLS enforcement via `mfa_satisfied()`
+5. ✅ MFA challenge flow on sign-in
+6. ✅ Password reset with TOTP reauthentication
+7. ✅ Session management (list, sign-out-everywhere)
+8. ✅ Self-serve account deletion (POPIA compliance)
+9. ✅ Account data export (POPIA right to portability)
+10. ✅ Recovery-code route with regression tests
+11. ✅ Session timeouts & inactivity limits
+12. ✅ CSP + security headers with per-request nonces
+13. ✅ Cloudflare Turnstile bot protection
+
+**Critical finding fixed (C1):**
+- 🔒 **Recovery-code RPC required 2FA gate**: `store_recovery_codes` was security-definer but had no `mfa_satisfied()` check, allowing aal1 sessions to replace codes, redeem them to auto-delete victim's TOTP, and gain full account access from password alone. Added check; verified via live exploit chain; added RLS test assertion.
+
+**4 Important flow gaps fixed (I1-I4):**
+- 🔄 **Password reset now requires TOTP challenge** for 2FA-enrolled users (GoTrue rejects at aal1)
+- 🔄 **MFA challenge now forces full navigation** (window.location.href, not router.replace) to remount SupabaseProvider and re-sync store at aal2
+- 🔄 **Turnstile tokens now reset after failed auth** (single-use; spent tokens block retry on captcha instead of real error)
+- 🗑️ **Dead is_anonymous branches removed** (Task 1 made them unreachable; cleaned up)
+
+**Tests:** 789/789 passing (up from 782), all app routes now dynamic (ƒ indicator), zero CSP violations, zero type errors. Full manual browser verification: calculator load, sign-in, TOTP enrolment + QR render, MFA challenge, password reset, 2FA disable, account deletion, data export, session list.
+
+**Documentation:** Updated `docs/project-phases/phase-3-user-accounts.md` (marked complete, added 2FA + hardening section, updated design decisions); added 2026-08-08 entry to `docs/project-phases.md` (this summary).
+
+**Next:** Branch ready to merge to `main` via superpowers:finishing-a-development-branch.
+
 ## 2026-07-26
 
 Session began with a multi-agent audit of `75f68f7` and ran through to **Phase 10 complete**.

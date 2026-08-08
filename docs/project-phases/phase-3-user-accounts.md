@@ -1,37 +1,53 @@
-# Phase 3: User Accounts 🔄 In Progress
+# Phase 3: User Accounts ✅ Complete
 
-**Goal:** Implement user authentication and profile management so users can sync their retirement plan across devices.
+**Goal:** Implement user authentication and profile management so users can sync their retirement plan across devices, with hardened security including mandatory login and optional 2FA.
 
 ## Completed
 
+### Basic Authentication & Profile Management
 - [x] **Supabase Auth integration** — `onAuthStateChange` listener in `SupabaseProvider`; `AuthContext` exposes current user to all components
-- [x] **Sign up flow** — `AuthModal` sign-up tab calls `supabase.auth.updateUser()` on anon users (upgrades anonymous → real, preserving UUID + all saved data); falls back to `signUp()` if not anon
+- [x] **Sign up flow** — `AuthModal` sign-up tab calls `supabase.auth.signUp()` with email/password; email confirmation required
 - [x] **Login flow** — `AuthModal` sign-in tab calls `signInWithPassword`; session change triggers `sessionId` update + DB sync
-- [x] **Logout** — `UserMenu` dropdown calls `signOut()`; `user` becomes null → "Sign In" button shown; new anon session created on next page load
-- [x] **Password reset** — `AuthModal` reset tab calls `resetPasswordForEmail` with redirect to `/auth/callback`
+- [x] **Logout** — `UserMenu` dropdown calls `signOut()`; `user` becomes null
+- [x] **Password reset** — `AuthModal` reset tab calls `resetPasswordForEmail` with redirect to `/auth/callback`; now requires TOTP challenge for 2FA-enrolled users
 - [x] **Auth callback route** — `app/auth/callback/route.ts` exchanges OAuth code for session; handles email confirmation + password reset redirects
-- [x] **User menu in header** — `UserMenu` component: shows "Sign In" button for anon users; shows email + "Sign Out" dropdown for authenticated users
-- [x] **Proxy (middleware)** — `proxy.ts` refreshes Supabase session on every request so tokens don't expire mid-session
+- [x] **User menu in header** — `UserMenu` component: shows "Sign In" button for logged-out users; shows email + "Sign Out" dropdown + "Manage Account" for authenticated users
+- [x] **Proxy (middleware)** — `proxy.ts` refreshes Supabase session on every request; enforces AAL (Authenticator Assurance Level) gating for 2FA
 - [x] **Server-side Supabase client** — `lib/supabase/server.ts` for use in Server Components and Route Handlers
 
-- [x] **Redesigned auth modal** — dropped shadcn Tabs for contextual mode-switching via footer links; branded Motion animation in header; inline "Forgot password?" link; status messages as pill banners
+### UI & Experience
+- [x] **Redesigned auth modal** — contextual mode-switching via footer links; branded Motion animation in header; inline "Forgot password?" link; status messages as pill banners
 - [x] **Finance animation** — `FinanceAnimation` (Motion-powered, 60fps): growing bars + animated trend line + pulsing dot; `StaticFinanceChart` (plain SVG, no deps) for static contexts
-- [x] **Welcome banner** — shown on home page when real user is signed in; static finance chart + "Welcome back, {name}" + sync status line; hidden for anonymous users
-- [x] **Favicon** — `app/icon.tsx` using Next.js `ImageResponse`; blue rounded-square with white bars + rising trend line + dot; consistent with auth modal motif
-- [x] **Sign-out race condition fixed** — removed `signInAnonymously()` from `onAuthStateChange(SIGNED_OUT)` handler; was racing with cookie cleanup and restoring the real user session
-- [x] **Profile management modal** — `ProfileModal` with change-email + change-password forms; "Manage Account" item in `UserMenu` dropdown; same visual style as auth modal (static finance chart header, pill status messages, compact `h-8` inputs)
-- [x] **12-char password policy + reauthentication gate** — `minimum_password_length = 12`, `password_requirements = "lower_upper_letters_digits"` in `supabase/config.toml`; `secure_password_change = true`; sign-up schema in `AuthModal` mirrors the server policy while sign-in keeps a length-1 check so legacy accounts with shorter passwords can still log in; new `ReauthenticateDialog` (`components/auth/reauthenticate-dialog.tsx`) re-confirms the current password via `signInWithPassword` before `ProfileModal` proceeds with an email or password change
+- [x] **Favicon** — `app/icon.tsx` using Next.js `ImageResponse`; teal rounded-square with white bars + rising trend line + dot
+- [x] **Profile management modal** — `ProfileModal` with account security section (2FA, session management), account deletion (POPIA), and data export
+
+### Mandatory Login & Password Policy
+- [x] **Anonymous sign-in removed** — `enable_anonymous_sign_ins = false` in config; all users must authenticate
+- [x] **12-char password policy** — `minimum_password_length = 12`, `password_requirements = "lower_upper_letters_digits"` in `supabase/config.toml`; sign-up schema mirrors server policy
+
+### Multi-Factor Authentication (2FA)
+- [x] **TOTP (Time-based One-Time Password)** — `lib/auth/mfa.ts` with `listFactors()`, `enrollTotp()`, `verifyTotp()`, `disableTfa()`
+- [x] **Recovery codes** — single-use, bcrypt-hashed, generated at enrolment and at regeneration; user may see count but never the codes themselves (column-level RLS grant)
+- [x] **MFA challenge flow** — `app/auth/mfa/page.tsx` gates all requests requiring AAL2 (second factor satisfied); supports both TOTP verification and recovery-code redemption
+- [x] **RLS enforcement via `mfa_satisfied()`** — SQL function checking both verified TOTP factor existence and AAL level; enforces 2FA at the database boundary for all protected tables
+- [x] **Recovery-code redemption** — `/api/auth/recover` exempt from AAL gate (recovery entry point); auto-deletes victim's TOTP factor if valid code supplied; 0-downtime recovery path
+
+### Security Hardening
+- [x] **CSP (Content-Security-Policy) with per-request nonces** — `lib/security/headers.ts` builds strict CSP; nonce generated in middleware and threaded to client; all Next.js script tags carry nonce attribute
+- [x] **Security headers** — X-Frame-Options (DENY), HSTS (2-year max-age), X-Content-Type-Options (nosniff), Referrer-Policy (strict-origin-when-cross-origin), Permissions-Policy (camera/microphone/etc denied)
+- [x] **Cloudflare Turnstile bot protection** — bot protection on auth forms (sign-in, sign-up, password reset); single-use tokens with reset capability on retry
+- [x] **Session management** — `my_sessions()` RPC lists active sessions with user agent, IP, last activity; "Sign Out Everywhere" terminates all other sessions; configurable timeouts and inactivity limits
+- [x] **Account deletion (POPIA compliance)** — user-initiated self-serve deletion via service-role Admin API; cascades to all user data (scenarios, expenses, auth records)
+- [x] **Data export** — user-initiated export of all personal data in JSON format (POPIA right to portability)
+
+### Known Design Decisions
+- **Login-required model**: App no longer works without authentication. All routes except `/auth/*` require user session. Anonymous access removed in favor of stronger default security.
+- **AAL gating**: Middleware applies UX-layer AAL gate (redirect to `/auth/mfa` if needed); RLS enforces the real boundary via `mfa_satisfied()` — a client that bypasses middleware still gets zero rows.
+- **Recovery codes over email**: Email-based account recovery is unilaterally strong; recovery codes provide a self-serve path without requiring email access. Both coexist: email recovery resets password, codes auto-delete TOTP.
+- **Single TOTP factor per user**: Only one TOTP factor supported per account. Backup devices must share the same secret or use recovery codes.
 
 ## Pending
 
 - [ ] Social login (Google OAuth) — optional
-- [ ] Protected routes / redirect to login — not needed currently (app works anonymously)
-- [ ] **Enable "Prevent use of leaked passwords"** in the hosted Supabase project (Dashboard → Authentication → Policies) the day the project is created — this setting has no `config.toml` equivalent and cannot be applied locally
-
-## Key Design Decisions
-
-- **Anonymous-first**: App works without auth. Anonymous session created on first load; upgrading to a real account preserves all data (same UUID via `updateUser`).
-- **Data migration on sign-up**: Calling `updateUser()` on an existing anonymous user converts it to a real user without changing the `user.id`, so all rows keyed by `session_id` remain accessible.
-- **Post sign-out**: `user` becomes null; app keeps working via localStorage; new anon session created on next page load via `init()`. DO NOT call `signInAnonymously()` inside `onAuthStateChange(SIGNED_OUT)` — it races with cookie cleanup and restores the old session.
-- **`proxy.ts`**: Next.js 16 renamed `middleware.ts` to `proxy.ts` and the export from `middleware` to `proxy`.
-- **Motion**: installed via pnpm (`pnpm add motion`); npm install broken in this environment due to pnpm/jiti conflict.
+- [ ] **Enable "Prevent use of leaked passwords"** in the hosted Supabase project (Dashboard → Authentication → Policies) on the day the project is deployed to production — this setting has no `config.toml` equivalent and cannot be applied locally
+- [ ] **WebAuthn/passkeys** — optional future enhancement for passwordless 2FA
