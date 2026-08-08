@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { FinanceAnimation } from "@/components/auth/finance-animation"
+import { Turnstile } from "@/components/auth/turnstile"
 
 const passwordSchema = z
   .string()
@@ -60,6 +61,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   const [mode, setMode] = useState<Mode>("signin")
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [loading, setLoading] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState<string | undefined>()
 
   const signinForm  = useForm<SignInForm>({ resolver: zodResolver(signInSchema) })
   const signupForm  = useForm<EmailPasswordForm>({ resolver: zodResolver(emailPasswordSchema) })
@@ -72,7 +74,9 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
   async function handleSignIn(values: SignInForm) {
     setLoading(true); setMessage(null)
-    const { error } = await createClient().auth.signInWithPassword({ email: values.email, password: values.password })
+    const { error } = await createClient().auth.signInWithPassword({
+      email: values.email, password: values.password, options: { captchaToken },
+    })
     setLoading(false)
     if (error) {
       setMessage({ type: "error", text: error.message })
@@ -102,7 +106,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
       const { error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+        options: { captchaToken, emailRedirectTo: `${window.location.origin}/auth/callback` },
       })
       setLoading(false)
       if (error) setMessage({ type: "error", text: error.message })
@@ -113,6 +117,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   async function handleReset(values: EmailForm) {
     setLoading(true); setMessage(null)
     const { error } = await createClient().auth.resetPasswordForEmail(values.email, {
+      captchaToken,
       redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
     })
     setLoading(false)
@@ -159,6 +164,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                 )}
               </div>
               <StatusMessage message={message} />
+              <Turnstile onToken={setCaptchaToken} />
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Signing in…" : "Sign In"}
               </Button>
@@ -174,6 +180,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                 error={signupForm.formState.errors.password?.message}
                 {...signupForm.register("password")} />
               <StatusMessage message={message} />
+              <Turnstile onToken={setCaptchaToken} />
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Creating account…" : "Create Account"}
               </Button>
@@ -186,6 +193,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                 error={resetForm.formState.errors.email?.message}
                 {...resetForm.register("email")} />
               <StatusMessage message={message} />
+              <Turnstile onToken={setCaptchaToken} />
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Sending…" : "Send Reset Link"}
               </Button>
