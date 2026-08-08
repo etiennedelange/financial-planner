@@ -193,8 +193,45 @@ do $$ begin
   end;
 end $$;
 
+-- store_recovery_codes must refuse an aal1 session that HAS a verified factor.
+-- This is the exact attacker position: password stolen, second factor not cleared.
+-- The RPC is security definer and so bypasses RLS by construction — without an
+-- explicit mfa_satisfied() check inside it, this call silently replaces the
+-- victim's recovery codes with attacker-chosen ones and defeats 2FA entirely.
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated","aal":"aal1"}';
+do $$ begin
+  begin
+    perform public.store_recovery_codes(array[
+      'EVIL0-11111', 'EVIL0-22222', 'EVIL0-33333', 'EVIL0-44444', 'EVIL0-55555',
+      'EVIL0-66666', 'EVIL0-77777', 'EVIL0-88888', 'EVIL0-99999', 'EVIL0-00000'
+    ]);
+    raise exception 'FAIL: enrolled user at aal1 can replace recovery codes';
+  exception when sqlstate '28000' then
+    null; -- expected
+  end;
+  -- and the attacker's codes must not have landed
+  if public.redeem_recovery_code('EVIL0-11111') then
+    raise exception 'FAIL: recovery code planted by an aal1 session is redeemable';
+  end if;
+end $$;
+
+-- Enrolment path stays aal1-reachable: a user with NO verified factor must still
+-- be able to store their first batch, since that call happens before verification.
+set local request.jwt.claims = '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated","aal":"aal1"}';
+do $$ begin
+  perform public.store_recovery_codes(array[
+    'BOB00-11111', 'BOB00-22222', 'BOB00-33333', 'BOB00-44444', 'BOB00-55555',
+    'BOB00-66666', 'BOB00-77777', 'BOB00-88888', 'BOB00-99999', 'BOB00-00000'
+  ]);
+  if not public.redeem_recovery_code('BOB00-11111') then
+    raise exception 'FAIL: unenrolled user at aal1 cannot store and use recovery codes';
+  end if;
+end $$;
+
 -- store_recovery_codes: a second call replaces the caller's entire batch —
--- old codes stop working, new ones do.
+-- old codes stop working, new ones do. Runs at aal2: replacing a live code set
+-- for an enrolled user now requires a cleared second factor.
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated","aal":"aal2"}';
 do $$ begin
   perform public.store_recovery_codes(array[
     'AAAAA-11111', 'AAAAA-22222', 'AAAAA-33333', 'AAAAA-44444', 'AAAAA-55555',
