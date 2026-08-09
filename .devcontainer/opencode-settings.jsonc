@@ -1,0 +1,7 @@
+{
+  // OpenCode global config — lives at ~/.config/opencode/opencode.jsonc in the
+  // container, symlinked here (see .devcontainer/post-create.sh) so changes are
+  // version-controlled like claude-settings.json.
+  "$schema": "https://opencode.ai/config.json",
+  "autoupdate": true
+}

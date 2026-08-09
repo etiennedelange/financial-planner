@@ -82,11 +82,18 @@
   // sudo is required: postCreateCommand runs as remoteUser (node, non-root),
   // but a freshly created named volume starts out root-owned, so a plain
   // chown fails and the && chain would abort before post-create.sh ever runs.
-  "postCreateCommand": "sudo chown -R node:node /home/node/.claude && bash .devcontainer/post-create.sh",
+  "postCreateCommand": "sudo chown -R node:node /home/node/.claude /home/node/.config/opencode /home/node/.local/share/opencode /home/node/.opencode && bash .devcontainer/post-create.sh",
 
   "remoteUser": "node",
 
   "mounts": [
-    "source=claude-code-config-${devcontainerId},target=/home/node/.claude,type=volume"
+    "source=claude-code-config-${devcontainerId},target=/home/node/.claude,type=volume",
+    // OpenCode is installed on startup by post-create.sh (no official
+    // devcontainer feature exists). These named volumes persist the binary,
+    // global config and auth/session data (~/.config/opencode + ~/.local/share/opencode)
+    // across rebuilds so you don't have to re-login or reinstall plugins.
+    "source=opencode-home-${devcontainerId},target=/home/node/.opencode,type=volume",
+    "source=opencode-config-${devcontainerId},target=/home/node/.config/opencode,type=volume",
+    "source=opencode-data-${devcontainerId},target=/home/node/.local/share/opencode,type=volume"
   ]
 }

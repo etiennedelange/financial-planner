@@ -28,6 +28,23 @@ echo "==> Starting devcontainer post-create setup..."
 #   fi
 # fi
 
+# ─── OpenCode CLI ─────────────────────────────────────────────────────────────
+# No official devcontainer feature exists for OpenCode (unlike Claude Code), so
+# install via the official installer. The binary, global config and auth/session
+# data are persisted as named volumes mounted in devcontainer.json, so auth and
+# plugins survive rebuilds — only the ~/.opencode/bin binary is (re)installed here.
+echo "--> Installing OpenCode CLI..."
+export PATH="$HOME/.opencode/bin:$PATH"
+if command -v opencode >/dev/null 2>&1; then
+  echo "    opencode already installed ($(opencode --version)) — upgrading..."
+  opencode upgrade || echo "    Warning: opencode upgrade failed — will try again on next startup"
+else
+  curl -fsSL https://opencode.ai/install | bash \
+    || echo "    Warning: opencode install failed — run 'curl -fsSL https://opencode.ai/install | bash' manually"
+fi
+command -v opencode >/dev/null 2>&1 || echo 'export PATH="$HOME/.opencode/bin:$PATH"' >> ~/.profile
+echo "    opencode $(opencode --version 2>/dev/null || echo 'not yet on PATH — reload shell')"
+
 # ─── uv + semgrep ──────────────────────────────────────────────────────────────
 # Install uv (fast Python toolchain manager), then use `uv tool install semgrep`
 # to get an isolated semgrep install. Symlink into /usr/local/bin so the semgrep
@@ -144,6 +161,28 @@ echo "--> Fixing Claude Code npm prefix ownership..."
 sudo chown -R node:npm \
   /usr/local/share/npm-global/lib/node_modules/@anthropic-ai \
   /usr/local/share/npm-global/bin/claude 2>/dev/null || true
+
+# ─── OpenCode user config ────────────────────────────────────────────────────
+# Symlink the global opencode config to a committed file in .devcontainer/ so
+# changes are always version-controlled, mirroring the Claude settings link
+# above. The named volume mount keeps auth + plugins persisted across rebuilds.
+echo "--> Linking OpenCode user config..."
+OPENCODE_CONFIG="$HOME/.config/opencode/opencode.jsonc"
+REPO_OPENCODE_CONFIG="$(pwd)/.devcontainer/opencode-settings.jsonc"
+if [ ! -L "$OPENCODE_CONFIG" ] || [ "$(readlink "$OPENCODE_CONFIG")" != "$REPO_OPENCODE_CONFIG" ]; then
+  # Seed repo file from existing config if it has content
+  if [ -f "$OPENCODE_CONFIG" ] && [ ! -L "$OPENCODE_CONFIG" ] && [ -s "$OPENCODE_CONFIG" ] && [ ! -s "$REPO_OPENCODE_CONFIG" ]; then
+    cp "$OPENCODE_CONFIG" "$REPO_OPENCODE_CONFIG"
+  fi
+  rm -f "$OPENCODE_CONFIG"
+  ln -s "$REPO_OPENCODE_CONFIG" "$OPENCODE_CONFIG"
+  echo "    Linked $OPENCODE_CONFIG -> $REPO_OPENCODE_CONFIG"
+else
+  echo "    Already linked — skipping"
+fi
+
+# Ensure the node user owns the opencode config/data dirs for credential storage
+sudo chown node:node /home/node/.config/opencode /home/node/.local/share/opencode /home/node/.opencode 2>/dev/null || true
 
 echo ""
 echo "==> Post-create complete!"
