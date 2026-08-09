@@ -25,7 +25,8 @@
     "linear@claude-plugins-official": false,
     "remember@claude-plugins-official": true,
     "andrej-karpathy-skills@karpathy-skills": true,
-    "playwright@claude-plugins-official": true
+    "playwright@claude-plugins-official": true,
+    "claude-security@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "karpathy-skills": {
@@ -38,5 +39,6 @@
   "effortLevel": "medium",
   "tui": "default",
   "theme": "dark",
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "model": "haiku"
 }

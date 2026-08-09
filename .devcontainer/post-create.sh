@@ -137,6 +137,21 @@ ln -sf "$(pwd)/.devcontainer/claude-settings.json" "$HOME/.claude/settings.json"
 # Ensure the node user owns the Claude config directory for credential storage
 sudo chown node:node /home/node/.claude
 
+# ─── Claude statusline symlink ──────────────────────────────────────────────────
+# Keep the statusline script in the repo (referenced by claude-settings.json) so
+# it survives rebuilds. claude-settings.json points at ~/.claude/statusline-command.sh.
+echo "--> Linking Claude statusline script..."
+STATUSLINE_SCRIPT="$HOME/.claude/statusline-command.sh"
+REPO_STATUSLINE_SCRIPT="$(pwd)/.devcontainer/statusline-command.sh"
+if [ ! -L "$STATUSLINE_SCRIPT" ] || [ "$(readlink "$STATUSLINE_SCRIPT")" != "$REPO_STATUSLINE_SCRIPT" ]; then
+  rm -f "$STATUSLINE_SCRIPT"
+  ln -s "$REPO_STATUSLINE_SCRIPT" "$STATUSLINE_SCRIPT"
+  chmod +x "$REPO_STATUSLINE_SCRIPT"
+  echo "    Linked $STATUSLINE_SCRIPT -> $REPO_STATUSLINE_SCRIPT"
+else
+  echo "    Already linked — skipping"
+fi
+
 # ─── Claude settings symlink (robust re-check) ─────────────────────────────────
 # Keep settings.json in the repo so plugin installs persist across rebuilds.
 echo "--> Linking Claude settings to devcontainer config..."
