@@ -15,6 +15,13 @@ export const SECURITY_HEADERS: Record<string, string> = {
  * risk than inline scripts.
  */
 export function buildCsp(nonce: string, supabaseUrl: string, isDev: boolean): string {
+  // CSP path matching in a source expression is a directory prefix only when
+  // the path ends in "/" — without it, "/supabase" matches just that exact
+  // path, not "/supabase/auth/v1/user". This was masked whenever the app and
+  // Supabase proxy shared an origin (connect-src 'self' covered everything
+  // regardless of path); it only bites once they're on different ports/hosts.
+  const connectSupabaseUrl = supabaseUrl && !supabaseUrl.endsWith("/") ? `${supabaseUrl}/` : supabaseUrl
+
   const scriptSrc = [
     "'self'",
     `'nonce-${nonce}'`,
@@ -31,7 +38,7 @@ export function buildCsp(nonce: string, supabaseUrl: string, isDev: boolean): st
     // data: covers the TOTP enrolment QR code, which is an inline SVG data URI.
     `img-src 'self' data: blob:`,
     `font-src 'self' data:`,
-    `connect-src 'self' ${supabaseUrl} https://vitals.vercel-insights.com`,
+    `connect-src 'self' ${connectSupabaseUrl} https://vitals.vercel-insights.com`,
     `frame-src https://challenges.cloudflare.com`,
     `frame-ancestors 'none'`,
     `form-action 'self'`,

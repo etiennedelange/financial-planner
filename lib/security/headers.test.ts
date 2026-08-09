@@ -18,6 +18,14 @@ describe('buildCsp', () => {
     expect(directive(buildCsp('n', SUPABASE, false), 'connect-src')).toContain(SUPABASE)
   })
 
+  it('treats a Supabase URL with a path as a directory prefix, not an exact match', () => {
+    // Without a trailing "/", CSP matches only the literal path "/supabase" —
+    // not "/supabase/auth/v1/user" — per the CSP source-expression path rules.
+    const proxied = 'http://localhost:3000/supabase'
+    const connectSrc = directive(buildCsp('n', proxied, true), 'connect-src')
+    expect(connectSrc).toContain(`${proxied}/`)
+  })
+
   it('blocks framing entirely', () => {
     expect(directive(buildCsp('n', SUPABASE, false), 'frame-ancestors')).toContain("'none'")
   })

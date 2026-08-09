@@ -113,8 +113,8 @@ Every new card section must use these two components (never write the raw Tailwi
 
 Design rules:
 - `shadow-none` on all cards (PageCard applies it automatically; add it manually to chart Cards)
-- Teal left-border label: `border-l-2 border-primary` (default variant)
-- Danger zone: `border-l-2 border-destructive` via `labelVariant="destructive"`
+- Default label variant is a plain muted mono label (`text-muted-foreground`, no border) — teal is reserved for primary actions, not section headers
+- Danger zone: `border-l-2 border-destructive` via `labelVariant="destructive"` (the only variant that renders a border)
 - `dashboard-card` utility class has `shadow-sm` baked in — always pair with `shadow-none`
 
 ## Common Pitfalls
@@ -147,4 +147,4 @@ Locked teal accent + light/dark mode (no color-theme switching). Full details: `
 
 1. `docs/project-phases/` — mark tasks complete, update pending list
 2. `docs/project-phases.md` — add dated entry to "Current Status Summary", update status emoji
-3. `docs/docs/history/` — date-prefixed markdown for significant calculation/architecture changes
+3. `docs/history/` — date-prefixed markdown for significant calculation/architecture changes

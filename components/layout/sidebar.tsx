@@ -1,7 +1,6 @@
 "use client"
 
 import { AuthModal } from "@/components/auth/auth-modal"
-import { ProfileModal } from "@/components/auth/profile-modal"
 import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
@@ -45,7 +44,6 @@ interface SidebarProps {
 export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
   const pathname = usePathname()
   const [authModalOpen, setAuthModalOpen] = useState(false)
-  const [profileModalOpen, setProfileModalOpen] = useState(false)
 
   const isAnon = !user
   const email = user?.email
@@ -157,9 +155,11 @@ export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
               <DropdownMenuContent side="right" align="end" className="w-56">
                 <DropdownMenuLabel className="truncate">{email}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setProfileModalOpen(true)} className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Manage Account
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link href="/calculator/settings">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Manage Account
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">
@@ -173,9 +173,6 @@ export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
       </div>
 
       <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
-      {user && !isAnon && (
-        <ProfileModal open={profileModalOpen} onClose={() => setProfileModalOpen(false)} user={user} />
-      )}
     </aside>
   )
 }

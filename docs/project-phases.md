@@ -25,6 +25,93 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
+## 2026-08-08 (yet later)
+
+🔧 **Fix: `/auth/mfa` "Could not load your authentication factors." (dev-proxy redirect loop)**
+
+Third same-day follow-up on `feature/auth-hardening-2fa`, layered on top of the two
+entries below. A 2FA-enrolled user signing in landed on `/auth/mfa` and immediately saw
+an error instead of the TOTP field.
+
+- 🐛 **Root cause**: `lib/supabase/proxy.ts`'s `isMfaExempt` allowlist (which keeps the
+  `/auth/mfa` challenge page and its own API calls reachable while the AAL2 gate is
+  active) never included `/supabase/*` — the dev-only proxy path added earlier this
+  session (`app/supabase/[...path]/route.ts`). The challenge page's own
+  `supabase.auth.mfa.listFactors()` call now travels through `/supabase/auth/v1/user`,
+  which the same middleware intercepted and redirected back to `/auth/mfa` — a
+  redirect-to-self loop returning HTML where the Supabase client expected JSON.
+- ✅ **Fix**: one line — added `path.startsWith("/supabase/")` to `isMfaExempt`, with a
+  comment tying it to the same reasoning already documented for the
+  `/api/auth/recover` exemption.
+- 🎯 **Scope**: devcontainer-specific (production points `NEXT_PUBLIC_SUPABASE_URL` at
+  a real Supabase origin, so `/supabase/*` never matches there); fix is harmless in
+  production.
+- ✅ Reproduced end-to-end with a fresh test account before and after the fix (signup →
+  TOTP enrolment → sign-out → sign-in → `/auth/mfa`); confirmed the 307-to-self in the
+  network tab pre-fix and a clean factor load + successful challenge post-fix.
+- ✅ 789/789 tests passing, `npm run typecheck` clean, `npm run build` succeeds
+- 🎯 Routing-middleware bug fix, not calculation code — CLAUDE.md's unit-test rule
+  doesn't apply
+- 🎯 Full write-up: [history/2026-08-08-mfa-challenge-dev-proxy-redirect-loop-fix.md](history/2026-08-08-mfa-challenge-dev-proxy-redirect-loop-fix.md)
+
+## 2026-08-08 (later)
+
+🔧 **Local-dev fix: auth email confirmation/recovery links unreachable**
+
+Follow-up on the auth-hardening branch after the completion entry below. Supabase's local
+GoTrue instance hardcodes confirmation/recovery links in emails to
+`http://127.0.0.1:54321/auth/v1/verify?...` (from `[api] port`), which isn't reliably
+reachable from the browser in this devcontainer — clicking the link gave
+`ERR_CONNECTION_REFUSED`.
+
+- ✅ **New `supabase/templates/confirmation.html` / `recovery.html`** — route links through
+  the app's own origin instead (`{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=...`)
+- ✅ **`supabase/config.toml`** — registered the templates; `site_url` changed from
+  `http://127.0.0.1:3000` to `http://localhost:3000` to match the working proxy origin
+- ✅ **`app/supabase/[...path]/route.ts`** — proxy now forwards GoTrue's redirects
+  (`redirect: "manual"`) instead of following them internally, which had inlined a
+  differently-nonced page's HTML under this route and failed every script's CSP nonce
+  check; also strips `content-encoding`/`content-length` since `fetch()` already
+  decompresses the body
+- ✅ No app code changes needed beyond the proxy — `app/auth/callback/route.ts` already
+  handled the `token_hash`+`type` shape alongside the PKCE `code` shape
+- ✅ Verified end-to-end via Playwright + Mailpit for both signup-confirmation and
+  password-recovery flows (recovery correctly lands on `/auth/reset-password`)
+- ✅ 789/789 tests passing, `npm run typecheck` clean
+- 🎯 Not a calculation change — CLAUDE.md's unit-test rule doesn't apply
+- 🎯 Full write-up: [history/2026-08-08-local-dev-email-verification-fix.md](history/2026-08-08-local-dev-email-verification-fix.md)
+
+## 2026-08-08 (later still)
+
+🔧 **"Manage Account" moved from a 384px modal to the `/calculator/settings` page**
+
+Further follow-up on `feature/auth-hardening-2fa`, layered on top of the local-dev
+email-link fix above. The full account-management surface (change email/password,
+2FA/security, active sessions, account deletion, data export) previously lived inside
+`components/auth/profile-modal.tsx`, a `sm:max-w-sm` Dialog that scrolled internally —
+in violation of this project's modal-avoidance design rule and inconsistent with the
+app's own existing full-page settings pattern.
+
+- ✅ **New `components/auth/account-settings.tsx`** — `PageCard`-based, renders on
+  `/calculator/settings` via `components/pages/settings-page.tsx`; logic ported 1:1
+  from the old modal (same Zod schemas, same `ReauthenticateDialog` gate)
+- ✅ **`components/layout/sidebar.tsx`** — "Manage Account" now `Link`s to
+  `/calculator/settings` instead of opening `ProfileModal`
+- ✅ **Deleted `components/auth/profile-modal.tsx`** (replaced) and
+  `components/auth/user-menu.tsx` (found to be 100% dead code — zero imports anywhere)
+- ✅ Styling polish on `mfa-enrollment.tsx`, `security-section.tsx`, `session-list.tsx`
+  for full-page-width display (no behavior change)
+- 🐛 **Bug fix found during verification**: `reauthenticate-dialog.tsx` was missing the
+  Turnstile `captchaToken` required since `f8a24d6`, so every reauth attempt failed
+  server-side with `captcha_failed` and was misreported to the user as "That password
+  is not correct." Fixed by adding the same Turnstile pattern used in `auth-modal.tsx`.
+- ✅ Verified end-to-end via Playwright as a real signed-in user (including reproducing
+  the captcha bug before fixing it); 789/789 tests passing; `npm run typecheck` and
+  `npm run build` clean
+- 🎯 UI/UX rework plus one bug fix, not calculation code — CLAUDE.md's unit-test rule
+  doesn't apply
+- 🎯 Full write-up: [history/2026-08-08-account-settings-page-migration.md](history/2026-08-08-account-settings-page-migration.md)
+
 ## 2026-08-08
 
 ✅ **Auth-Hardening Phase Complete — 13 tasks, 1 critical + 4 important bugs fixed**

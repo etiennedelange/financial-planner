@@ -77,7 +77,13 @@ export async function updateSession(request: NextRequest) {
     // /api/auth/recover is the aal1 recovery-code redemption route — it must stay
     // reachable while the user is still gated, or the gate below would redirect the
     // fetch() call itself to /auth/mfa instead of letting the route handler run.
-    const isMfaExempt = path.startsWith("/auth/") || path === "/api/auth/recover"
+    // /supabase/* is the dev-only Supabase API proxy (app/supabase/[...path]/route.ts) —
+    // same reasoning applies: it's API traffic, not page content, and the MFA challenge
+    // page's own supabase-js calls (e.g. listFactors) go through it. Without this
+    // exemption those calls get redirected to /auth/mfa and receive HTML instead of
+    // JSON, which is exactly what they're trying to reach in the first place.
+    const isMfaExempt =
+      path.startsWith("/auth/") || path === "/api/auth/recover" || path.startsWith("/supabase/")
 
     if (needsSecondFactor && !isMfaExempt) {
       const url = request.nextUrl.clone()

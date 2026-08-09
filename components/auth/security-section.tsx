@@ -37,25 +37,25 @@ export function SecuritySection({ email }: { email: string }) {
 
   return (
     <PageCard label="Security" contentClassName="space-y-3">
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
       {factorId === null ? (
         <MfaEnrollment onEnrolled={refresh} />
       ) : (
-        <>
-          <p className="text-xs text-muted-foreground">
+        <div className="space-y-3 max-w-sm">
+          <p className="text-sm text-muted-foreground">
             Two-factor authentication is on. Sign-in requires a code from your authenticator app.
           </p>
           {remaining !== null && (
-            <p className={`text-xs ${remaining <= 2 ? "text-destructive" : "text-muted-foreground"}`}>
+            <p className={`text-sm ${remaining <= 2 ? "text-destructive" : "text-muted-foreground"}`}>
               {remaining} recovery {remaining === 1 ? "code" : "codes"} remaining
               {remaining <= 2 && " — disable and re-enrol to get a fresh set."}
             </p>
           )}
-          <Button variant="outline" className="w-full" onClick={() => setConfirmingDisable(true)}>
+          <Button variant="outline" size="sm" onClick={() => setConfirmingDisable(true)}>
             Disable Two-Factor Authentication
           </Button>
-        </>
+        </div>
       )}
 
       <TotpReauthDialog

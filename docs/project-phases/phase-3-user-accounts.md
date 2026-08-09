@@ -8,18 +8,19 @@
 - [x] **Supabase Auth integration** — `onAuthStateChange` listener in `SupabaseProvider`; `AuthContext` exposes current user to all components
 - [x] **Sign up flow** — `AuthModal` sign-up tab calls `supabase.auth.signUp()` with email/password; email confirmation required
 - [x] **Login flow** — `AuthModal` sign-in tab calls `signInWithPassword`; session change triggers `sessionId` update + DB sync
-- [x] **Logout** — `UserMenu` dropdown calls `signOut()`; `user` becomes null
+- [x] **Logout** — inline account-menu dropdown in `components/layout/sidebar.tsx` calls `signOut()`; `user` becomes null
 - [x] **Password reset** — `AuthModal` reset tab calls `resetPasswordForEmail` with redirect to `/auth/callback`; now requires TOTP challenge for 2FA-enrolled users
 - [x] **Auth callback route** — `app/auth/callback/route.ts` exchanges OAuth code for session; handles email confirmation + password reset redirects
-- [x] **User menu in header** — `UserMenu` component: shows "Sign In" button for logged-out users; shows email + "Sign Out" dropdown + "Manage Account" for authenticated users
-- [x] **Proxy (middleware)** — `proxy.ts` refreshes Supabase session on every request; enforces AAL (Authenticator Assurance Level) gating for 2FA
+- [x] **Local-dev email links fixed** — custom `supabase/templates/confirmation.html`/`recovery.html` route GoTrue's confirmation/recovery links through the app's own origin (`{{ .SiteURL }}/auth/callback?token_hash=...`) instead of the raw `127.0.0.1:54321` GoTrue `/verify` endpoint, which is unreachable from the browser in this devcontainer; `site_url` in `supabase/config.toml` aligned to `localhost:3000`; proxy (`app/supabase/[...path]/route.ts`) now forwards GoTrue redirects instead of following them internally, avoiding a CSP-nonce mismatch. See `docs/history/2026-08-08-local-dev-email-verification-fix.md`
+- [x] **"Manage Account" moved from modal to `/calculator/settings`** — `components/auth/account-settings.tsx` (new, `PageCard`-based) replaces the deleted `components/auth/profile-modal.tsx`; sidebar's "Manage Account" item now `Link`s to the settings page instead of opening a Dialog. Also deleted `components/auth/user-menu.tsx` (verified 100% dead code — zero imports; `sidebar.tsx` already had its own wired-up inline account menu). Fixed a real bug found during verification: `reauthenticate-dialog.tsx` was missing the Turnstile `captchaToken` required since commit `f8a24d6`, so every reauth attempt failed with `captcha_failed`, misreported to the user as a wrong password. See `docs/history/2026-08-08-account-settings-page-migration.md`
+- [x] **Proxy (middleware)** — `proxy.ts` refreshes Supabase session on every request; enforces AAL (Authenticator Assurance Level) gating for 2FA. `isMfaExempt` allowlist keeps the `/auth/mfa` challenge page and its API dependencies reachable while gated; fixed to also cover the dev-only `/supabase/*` proxy path, which was causing a redirect-to-self loop and "Could not load your authentication factors." on the challenge page. See `docs/history/2026-08-08-mfa-challenge-dev-proxy-redirect-loop-fix.md`
 - [x] **Server-side Supabase client** — `lib/supabase/server.ts` for use in Server Components and Route Handlers
 
 ### UI & Experience
 - [x] **Redesigned auth modal** — contextual mode-switching via footer links; branded Motion animation in header; inline "Forgot password?" link; status messages as pill banners
 - [x] **Finance animation** — `FinanceAnimation` (Motion-powered, 60fps): growing bars + animated trend line + pulsing dot; `StaticFinanceChart` (plain SVG, no deps) for static contexts
 - [x] **Favicon** — `app/icon.tsx` using Next.js `ImageResponse`; teal rounded-square with white bars + rising trend line + dot
-- [x] **Profile management modal** — `ProfileModal` with account security section (2FA, session management), account deletion (POPIA), and data export
+- [x] **Profile/account management page** — `components/auth/account-settings.tsx`, rendered on `/calculator/settings`, with account security section (2FA, session management), account deletion (POPIA), and data export. Previously a `ProfileModal` Dialog; moved to a full page — see "Manage Account" entry above.
 
 ### Mandatory Login & Password Policy
 - [x] **Anonymous sign-in removed** — `enable_anonymous_sign_ins = false` in config; all users must authenticate

@@ -151,7 +151,7 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://127.0.0.1:3000"
+site_url = "http://localhost:3000"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 # Wildcards below allow the app's own auth routes (/auth/callback, /auth/reset-password) —
 # without them GoTrue silently falls back to bare site_url, dropping the path and query
@@ -238,6 +238,20 @@ otp_expiry = 3600
 # pass = "env(SENDGRID_API_KEY)"
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
+
+# Custom templates route confirmation/recovery links through the app's own
+# origin (SiteURL) instead of GoTrue's own /verify endpoint. The default
+# ConfirmationURL points at http://127.0.0.1:<api.port> directly, which is
+# unreachable from the browser in devcontainer/Codespaces setups where that
+# port isn't forwarded 1:1 — the app's own origin already works because
+# app/auth/callback/route.ts verifies the token_hash server-side itself.
+[auth.email.template.confirmation]
+subject = "Confirm your email address"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "Reset your password"
+content_path = "./supabase/templates/recovery.html"
 
 # Uncomment to customize email template
 # [auth.email.template.invite]

@@ -28,13 +28,26 @@ async function proxy(
     method: request.method,
     headers,
     body,
+    // Supabase redirects (e.g. GoTrue's /verify -> redirect_to) often point
+    // back at this same Next.js app. Following them here would silently
+    // inline that page's already-rendered HTML — with its own CSP nonce
+    // baked into its script tags — under this route's URL, whose middleware
+    // stamps a different nonce on the response header. Every script then
+    // fails the browser's nonce check. Passing the 3xx straight through lets
+    // the browser do its own top-level navigation instead.
+    redirect: "manual",
     // @ts-expect-error duplex required for streaming request bodies
     duplex: "half",
   })
 
   const responseHeaders = new Headers(upstream.headers)
-  // Remove hop-by-hop headers
+  // Remove hop-by-hop headers. content-encoding/content-length are dropped
+  // too: fetch() transparently decompresses the body, so forwarding the
+  // original encoding/length headers describes bytes that no longer match
+  // what's actually being sent, and the browser fails to decode them.
   responseHeaders.delete("transfer-encoding")
+  responseHeaders.delete("content-encoding")
+  responseHeaders.delete("content-length")
 
   return new NextResponse(upstream.body, {
     status: upstream.status,

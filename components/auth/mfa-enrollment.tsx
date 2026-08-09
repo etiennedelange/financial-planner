@@ -36,12 +36,12 @@ export function MfaEnrollment({ onEnrolled }: MfaEnrollmentProps) {
 
   if (!enrollment) {
     return (
-      <div className="space-y-3">
-        <p className="text-xs text-muted-foreground">
+      <div className="space-y-3 max-w-sm">
+        <p className="text-sm text-muted-foreground">
           Add an authenticator app so a stolen password alone cannot reach your plan.
         </p>
-        {error && <p className="text-xs text-destructive">{error}</p>}
-        <Button onClick={start} disabled={loading} className="w-full">
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <Button onClick={start} disabled={loading} size="sm">
           {loading ? "Starting…" : "Set Up Two-Factor Authentication"}
         </Button>
       </div>
@@ -50,8 +50,8 @@ export function MfaEnrollment({ onEnrolled }: MfaEnrollmentProps) {
 
   return (
     <>
-      <div className="space-y-3">
-        <p className="text-xs text-muted-foreground">
+      <div className="space-y-3 max-w-sm">
+        <p className="text-sm text-muted-foreground">
           Scan this with your authenticator app, then enter the six-digit code it shows.
         </p>
         <div className="flex justify-center rounded-md border bg-background p-3">
@@ -61,13 +61,13 @@ export function MfaEnrollment({ onEnrolled }: MfaEnrollmentProps) {
           {enrollment.secret}
         </p>
         <div className="space-y-1">
-          <Label htmlFor="totp-code" className="text-xs font-medium">Six-digit code</Label>
+          <Label htmlFor="totp-code" className="text-sm font-medium">Six-digit code</Label>
           <Input id="totp-code" inputMode="numeric" autoComplete="one-time-code" maxLength={6}
             value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-            className={`h-8 text-sm ${error ? "border-destructive" : ""}`} />
-          {error && <p className="text-xs text-destructive">{error}</p>}
+            className={error ? "border-destructive" : ""} />
+          {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
-        <Button onClick={confirm} disabled={loading || code.length !== 6} className="w-full">
+        <Button onClick={confirm} disabled={loading || code.length !== 6} size="sm">
           {loading ? "Verifying…" : "Verify & Enable"}
         </Button>
       </div>

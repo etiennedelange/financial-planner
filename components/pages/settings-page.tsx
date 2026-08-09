@@ -2,6 +2,8 @@
 
 import { Button } from "@/components/ui/button"
 import { PageCard } from "@/components/ui/page-card"
+import { AccountSettings } from "@/components/auth/account-settings"
+import { useAuth } from "@/components/supabase-provider"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { exportPlan, parsePlanFile } from "@/lib/utils/plan-io"
 import { exportProjectionCsv } from "@/lib/utils/export-csv"
@@ -53,6 +55,7 @@ export function SettingsPage({ projection }: SettingsPageProps) {
   )
 
   const { theme, setTheme } = useTheme()
+  const { user } = useAuth()
   const importInputRef = useRef<HTMLInputElement>(null)
   const [importError, setImportError] = useState<string | null>(null)
   const [resetPending, setResetPending] = useState(false)
@@ -194,8 +197,8 @@ export function SettingsPage({ projection }: SettingsPageProps) {
           )}
       </PageCard>
 
-      {/* Danger Zone */}
-      <PageCard label="Danger Zone" labelVariant="destructive" className="border-destructive/40" contentClassName="space-y-3">
+      {/* Reset Plan Data: local plan state (distinct from account deletion below) */}
+      <PageCard label="Reset Plan Data" labelVariant="destructive" className="border-destructive/40" contentClassName="space-y-3">
           {resetPending ? (
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
@@ -217,6 +220,9 @@ export function SettingsPage({ projection }: SettingsPageProps) {
             </Button>
           )}
       </PageCard>
+
+      {/* Account (signed-in users only) */}
+      {user && <AccountSettings user={user} />}
     </div>
   )
 }

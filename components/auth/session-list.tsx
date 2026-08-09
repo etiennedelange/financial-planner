@@ -26,26 +26,26 @@ export function SessionList() {
     window.location.href = "/calculator"
   }
 
-  if (error) return <p className="text-xs text-destructive">{error}</p>
+  if (error) return <p className="text-sm text-destructive">{error}</p>
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 max-w-lg">
       <ul className="space-y-2">
         {sessions.map((s) => (
           <li key={s.id} className="flex items-start justify-between gap-3 rounded-md border px-3 py-2">
             <div className="min-w-0">
-              <p className="truncate text-xs font-medium">
+              <p className="truncate text-sm font-medium">
                 {s.user_agent ?? "Unknown device"}
                 {s.is_current && <span className="ml-2 text-primary">This device</span>}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 {s.ip ?? "unknown IP"} · last active {new Date(s.updated_at).toLocaleString("en-ZA")}
               </p>
             </div>
           </li>
         ))}
       </ul>
-      <Button variant="outline" className="w-full" onClick={signOutEverywhere}>
+      <Button variant="outline" size="sm" onClick={signOutEverywhere}>
         Sign Out Everywhere
       </Button>
     </div>

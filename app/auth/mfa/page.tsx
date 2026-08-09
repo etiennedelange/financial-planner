@@ -59,7 +59,7 @@ export default function MfaChallengePage() {
       // scenarioList. Edits made in that window are silently dropped, since
       // scheduleScenarioSync early-returns without an active scenario. A hard
       // load remounts the provider and re-syncs at the now-satisfied aal2.
-      // session-list.tsx and profile-modal.tsx force a reload for the same
+      // session-list.tsx and account-settings.tsx force a reload for the same
       // reason after changing auth state.
       window.location.href = "/calculator"
     } finally {
