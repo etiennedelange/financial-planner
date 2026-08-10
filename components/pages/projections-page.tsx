@@ -19,7 +19,7 @@ export function ProjectionsPage({ projection, simulationResult, isSimulating }: 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-lg font-semibold text-foreground">Projections</h1>
+        <div className="text-lg font-semibold text-foreground">Projections</div>
         <p className="text-sm text-muted-foreground">Your retirement outlook based on current inputs</p>
       </div>
 

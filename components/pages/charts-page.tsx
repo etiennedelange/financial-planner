@@ -16,7 +16,7 @@ import { Wallet } from "lucide-react"
 import Link from "next/link"
 
 export function ChartsPage() {
-  const { projection, simulationResult, isSimulating } = useCalculator()
+  const { projection, simulationResult, isSimulating, simulationError } = useCalculator()
 
   const {
     displayMode,
@@ -81,9 +81,10 @@ export function ChartsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-lg font-semibold text-foreground">Charts</h1>
-        <p className="text-sm text-muted-foreground">
-          Every visualization your plan can produce. Curate which of these appear on the main pages.
+        <div className="text-lg font-semibold text-foreground">Charts</div>
+        <p className="text-sm text-muted-foreground max-w-2xl">
+          Every visualization your plan can produce. Review each one, then jump
+          back to Overview or Projections to act on what you see.
         </p>
       </div>
 
@@ -97,6 +98,8 @@ export function ChartsPage() {
           currentAge={personalInfo.currentAge}
           retirementAge={personalInfo.retirementAge}
           isRunning={isSimulating}
+          hasError={simulationError}
+          hasAccounts={accounts.length > 0}
         />
         {projection && (
           <IncomeSustainabilityChart

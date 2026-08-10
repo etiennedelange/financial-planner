@@ -11,20 +11,22 @@ import type {
 } from "@/types"
 import type { WorkerRequest, WorkerResponse } from "./simulation.worker"
 
-type SimState = { result: SimulationResult | null; isRunning: boolean }
+type SimState = { result: SimulationResult | null; isRunning: boolean; hasError: boolean }
 type SimAction =
   | { type: "START" }
   | { type: "DONE"; result: SimulationResult }
   | { type: "ERROR" }
 
-function simReducer(state: SimState, action: SimAction): SimState {
+export const initialSimState: SimState = { result: null, isRunning: false, hasError: false }
+
+export function simReducer(state: SimState, action: SimAction): SimState {
   switch (action.type) {
     case "START":
-      return { result: state.result, isRunning: true }
+      return { result: state.result, isRunning: true, hasError: false }
     case "DONE":
-      return { result: action.result, isRunning: false }
+      return { result: action.result, isRunning: false, hasError: false }
     case "ERROR":
-      return { ...state, isRunning: false }
+      return { ...state, isRunning: false, hasError: true }
   }
 }
 
@@ -45,11 +47,8 @@ export function useMonteCarloWorker(
   numberOfRuns: number,
   marketAssumptions?: MarketAssumptions,
   enabled = true
-): { simulationResult: SimulationResult | null; isRunning: boolean } {
-  const [{ result, isRunning }, dispatch] = useReducer(simReducer, {
-    result: null,
-    isRunning: false,
-  })
+): { simulationResult: SimulationResult | null; isRunning: boolean; hasError: boolean } {
+  const [{ result, isRunning, hasError }, dispatch] = useReducer(simReducer, initialSimState)
 
   const workerRef = useRef<Worker | null>(null)
   const latestIdRef = useRef(0)
@@ -114,5 +113,6 @@ export function useMonteCarloWorker(
   return {
     simulationResult: isEmpty ? null : result,
     isRunning: isEmpty ? false : isRunning,
+    hasError: isEmpty ? false : hasError,
   }
 }

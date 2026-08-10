@@ -25,6 +25,35 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
+## 2026-08-10
+
+🎨 **Charts page hardened + clarified after design critique (27/40 → fixes)**
+
+An Impeccable critique of `/calculator/charts` flagged three P1 issues (dead high-stakes chart,
+false "curate" promise, buried/unconditionally-green success rate) and two P2 a11y/contrast gaps.
+All five addressed:
+
+- ✅ **Monte Carlo now runs on the charts route** — `calculator-context.tsx` enables the worker on
+  overview/charts/projections (was overview-only), so a direct load or reload of `/calculator/charts`
+  shows live "Will It Last?" data instead of a dead placeholder; also exposed `simulationError`
+  (`use-monte-carlo-worker.ts` gains a `hasError` state, reducer extracted + unit-tested)
+- ✅ **Honest empty states** — `monte-carlo-chart.tsx` now distinguishes no-accounts (with "Add
+  accounts" CTA), running, and worker-error states; the misleading "Add accounts and run simulation"
+  copy is gone
+- ✅ **False curation promise removed** — charts-page intro no longer claims you can "curate which
+  appear on the main pages" (no such control exists); copy rewritten honestly and capped to `max-w-2xl`
+- ✅ **Success rate promoted + colour-driven** — MC header now shows a `text-2xl` mono success figure
+  (was a 12px footnote) and the checkmark/rate colour follows `getSuccessRateStyle` (≥75 green /
+  60–75 warning / <60 destructive) instead of always teal; 10–90 percentile band now named in the
+  description
+- ✅ **Contrast fixes (both themes)** — dark `--muted-foreground` `220 12% 50% → 54%` (#7c8598),
+  light `220 12% 48% → 44%` (#636c7e); both clear 4.5:1 AA on card, page, and muted surfaces; the
+  `/70` opacity was dropped on the MC success line
+- ✅ **Single H1 per page** — top-bar keeps the `<h1>` (it is the only heading on 5/7 routes);
+  the duplicate content `<h1>`s on charts + projections pages demoted to styled divs
+- ✅ 810/810 tests passing (incl. new `simReducer` tests), `npm run typecheck` clean, `npm run build`
+  succeeds, coverage 93.9% overall
+
 ## 2026-08-09
 
 📊 **New: Charts page — Monte Carlo de-emphasised, all visualisations centralised**

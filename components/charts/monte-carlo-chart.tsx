@@ -9,8 +9,9 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import { formatCurrency } from "@/lib/utils/formatters"
+import { getSuccessRateStyle } from "@/lib/utils/success-rate"
 import type { SimulationResult } from "@/types"
-import { Activity, CheckCircle2, Loader2 } from "lucide-react"
+import { Activity, AlertTriangle, CheckCircle2, Loader2, Wallet } from "lucide-react"
 import { memo, useMemo } from "react"
 import {
   Area,
@@ -20,12 +21,16 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 interface MonteCarloChartProps {
   simulationResult: SimulationResult | null
   currentAge: number
   retirementAge: number
   isRunning?: boolean
+  hasError?: boolean
+  hasAccounts?: boolean
 }
 
 const chartConfig = {
@@ -45,6 +50,8 @@ export const MonteCarloChart = memo(function MonteCarloChart({
   currentAge,
   retirementAge,
   isRunning = false,
+  hasError = false,
+  hasAccounts = false,
 }: MonteCarloChartProps) {
   if (!simulationResult || simulationResult.percentiles.p50.length === 0) {
     return (
@@ -75,10 +82,23 @@ export const MonteCarloChart = memo(function MonteCarloChart({
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground/50" />
               <p className="text-sm text-muted-foreground">Running simulation…</p>
             </div>
+          ) : hasError ? (
+            <div className="relative flex flex-col items-center gap-2 text-center">
+              <AlertTriangle className="h-8 w-8 text-destructive/70" />
+              <p className="text-sm text-muted-foreground">Simulation didn&apos;t complete — try again.</p>
+            </div>
+          ) : !hasAccounts ? (
+            <div className="relative flex flex-col items-center gap-2 text-center">
+              <Wallet className="h-8 w-8 text-muted-foreground/30" />
+              <p className="text-sm text-muted-foreground">Add accounts to run the simulation</p>
+              <Button asChild size="sm" variant="outline">
+                <Link href="/calculator/accounts">Add accounts</Link>
+              </Button>
+            </div>
           ) : (
             <div className="relative flex flex-col items-center gap-2 text-center">
               <Activity className="h-8 w-8 text-muted-foreground/30" />
-              <p className="text-sm text-muted-foreground">Add accounts and run simulation</p>
+              <p className="text-sm text-muted-foreground">Simulation will run here once started</p>
             </div>
           )}
         </CardContent>
@@ -87,6 +107,8 @@ export const MonteCarloChart = memo(function MonteCarloChart({
   }
 
   const { percentiles } = simulationResult
+  const successRate = simulationResult.successRate
+  const rateStyle = getSuccessRateStyle(successRate)
 
   const data = useMemo(() => percentiles.p50.map((_, index) => ({
     age: currentAge + index,
@@ -102,13 +124,17 @@ export const MonteCarloChart = memo(function MonteCarloChart({
       <div className="px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-3 space-y-1">
         <SectionLabel>Will It Last?</SectionLabel>
         <p className="text-sm text-muted-foreground pl-3">
-          Median balance with 25–75th percentile range
+          Median balance with 25–75th and 10–90th percentile ranges
         </p>
-        <p className="pl-3 flex items-center gap-1.5 text-xs text-muted-foreground/70">
-          <CheckCircle2 className="h-3 w-3 text-chart-2" aria-hidden="true" />
-          {simulationResult.runs.length.toLocaleString()} simulations ·{" "}
-          {simulationResult.successRate.toFixed(0)}% success rate
-        </p>
+        <div className="pl-3 flex items-baseline gap-1.5">
+          <CheckCircle2 className={`h-3.5 w-3.5 self-center ${rateStyle.text}`} aria-hidden="true" />
+          <span className={`font-mono text-2xl font-semibold tabular-nums ${rateStyle.text}`}>
+            {successRate.toFixed(0)}%
+          </span>
+          <span className="text-xs text-muted-foreground">
+            success · {simulationResult.runs.length.toLocaleString()} simulations · {rateStyle.label.toLowerCase()}
+          </span>
+        </div>
       </div>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
         <ChartContainer config={chartConfig} className="h-[180px] md:h-[260px] w-full">

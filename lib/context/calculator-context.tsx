@@ -13,6 +13,7 @@ interface CalculatorContextValue {
   simulationResult: SimulationResult | null
   isSimulating: boolean
   isDeferred: boolean
+  simulationError: boolean
 }
 
 const CalculatorContext = createContext<CalculatorContextValue>({
@@ -20,6 +21,7 @@ const CalculatorContext = createContext<CalculatorContextValue>({
   simulationResult: null,
   isSimulating: false,
   isDeferred: false,
+  simulationError: false,
 })
 
 export function CalculatorProvider({ children }: { children: React.ReactNode }) {
@@ -42,14 +44,20 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
   const deferredAssumptions = useDeferredValue(assumptions)
   const deferredDrawdownConfig = useDeferredValue(drawdownConfig)
 
-  const { simulationResult, isRunning: isWorkerRunning } = useMonteCarloWorker(
+  // Run the simulation on every route that renders it, so a direct load or
+  // reload of those pages shows live data instead of a dead placeholder.
+  const simEnabled = pathname === "/calculator/overview" ||
+    pathname === "/calculator/charts" ||
+    pathname === "/calculator/projections"
+
+  const { simulationResult, isRunning: isWorkerRunning, hasError } = useMonteCarloWorker(
     deferredAccounts,
     deferredPersonalInfo,
     deferredRetirementGoals,
     deferredDrawdownConfig,
     1000,
     deferredAssumptions,
-    pathname === "/calculator/overview"
+    simEnabled
   )
 
   const isDeferred =
@@ -76,7 +84,7 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
   )
 
   return (
-    <CalculatorContext.Provider value={{ projection, simulationResult, isSimulating, isDeferred }}>
+    <CalculatorContext.Provider value={{ projection, simulationResult, isSimulating, isDeferred, simulationError: hasError }}>
       {children}
     </CalculatorContext.Provider>
   )

@@ -51,7 +51,7 @@ export function TopBar({ user }: TopBarProps) {
         </div>
       </div>
 
-      {/* Page title */}
+      {/* Page title — the single H1 for the current section (content pages must not duplicate it) */}
       <h1 className="font-mono text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
         {title}
       </h1>
