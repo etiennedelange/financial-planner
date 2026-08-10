@@ -12,8 +12,17 @@ import { ScenarioComparisonChart } from "@/components/charts/scenario-comparison
 import { CostOfDelayChart } from "@/components/charts/cost-of-delay-chart"
 import { Button } from "@/components/ui/button"
 import { PageCard } from "@/components/ui/page-card"
+import { buildPlanVerdict, type PlanVerdictTone } from "@/lib/utils/plan-verdict"
 import { Wallet } from "lucide-react"
 import Link from "next/link"
+
+const verdictToneStyles: Record<PlanVerdictTone, { text: string; icon: string }> = {
+  neutral: { text: "text-muted-foreground", icon: "text-muted-foreground" },
+  success: { text: "text-chart-2", icon: "text-chart-2" },
+  good: { text: "text-chart-4", icon: "text-chart-4" },
+  warning: { text: "text-warning", icon: "text-warning" },
+  danger: { text: "text-destructive", icon: "text-destructive" },
+}
 
 export function ChartsPage() {
   const { projection, simulationResult, isSimulating, simulationError } = useCalculator()
@@ -61,6 +70,15 @@ export function ChartsPage() {
     return { totalBalance, totalContribution, weightedReturn, weightedFees, avgEscalation }
   }, [accounts])
 
+  const verdict = useMemo(
+    () =>
+      buildPlanVerdict({
+        successRate: simulationResult?.successRate ?? null,
+        depletionAge: projection?.portfolioDepletionAge ?? null,
+      }),
+    [simulationResult, projection]
+  )
+
   if (accounts.length === 0) {
     return (
       <PageCard label="Charts" className="dashboard-card">
@@ -80,19 +98,21 @@ export function ChartsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <div className="text-lg font-semibold text-foreground">Charts</div>
-        <p className="text-sm text-muted-foreground max-w-2xl">
-          Every visualization your plan can produce. Review each one, then jump
-          back to Overview or Projections to act on what you see.
+      <p className="text-sm text-muted-foreground max-w-prose">
+        Every visualization your plan can produce. Review each one, then jump
+        back to Overview or Projections to act on what you see.
+      </p>
+
+      <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3">
+        <span className={`font-mono text-lg font-semibold tabular-nums ${verdictToneStyles[verdict.tone].text}`}>
+          {verdict.tone === "neutral" ? "—" : "◆"}
+        </span>
+        <p className={`text-sm font-medium ${verdictToneStyles[verdict.tone].text}`}>
+          {verdict.headline}
         </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <PortfolioGrowthChart
-          projections={projection?.yearlyProjections || []}
-          retirementAge={personalInfo.retirementAge}
-        />
         <MonteCarloChart
           simulationResult={simulationResult}
           currentAge={personalInfo.currentAge}
@@ -111,12 +131,19 @@ export function ChartsPage() {
             displayMode={displayMode}
           />
         )}
-        <SensitivityTornadoChart
-          accounts={accounts}
+        <PortfolioGrowthChart
+          projections={projection?.yearlyProjections || []}
+          retirementAge={personalInfo.retirementAge}
+        />
+        <CostOfDelayChart
+          currentSavings={totals.totalBalance}
+          monthlyContribution={totals.totalContribution}
           personalInfo={personalInfo}
           retirementGoals={retirementGoals}
-          drawdownConfig={drawdownConfig}
-          assumptions={assumptions}
+          expectedReturn={totals.weightedReturn}
+          fees={totals.weightedFees}
+          contributionEscalation={totals.avgEscalation}
+          compoundingMethod={assumptions.compoundingMethod}
         />
         <ScenarioComparisonChart
           currentSavings={totals.totalBalance}
@@ -129,15 +156,12 @@ export function ChartsPage() {
           compoundingMethod={assumptions.compoundingMethod}
           displayMode={displayMode}
         />
-        <CostOfDelayChart
-          currentSavings={totals.totalBalance}
-          monthlyContribution={totals.totalContribution}
+        <SensitivityTornadoChart
+          accounts={accounts}
           personalInfo={personalInfo}
           retirementGoals={retirementGoals}
-          expectedReturn={totals.weightedReturn}
-          fees={totals.weightedFees}
-          contributionEscalation={totals.avgEscalation}
-          compoundingMethod={assumptions.compoundingMethod}
+          drawdownConfig={drawdownConfig}
+          assumptions={assumptions}
         />
       </div>
     </div>

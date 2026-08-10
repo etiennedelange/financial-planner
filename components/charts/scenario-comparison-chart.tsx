@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/chart"
 import { compareScenarios } from "@/lib/calculations/scenario-comparison"
 import { formatCurrency } from "@/lib/utils/formatters"
+import { formatScenarioTooltip } from "@/lib/utils/chart-tooltip"
 import { deflate } from "@/lib/calculations/utils/money-time"
 import type { PersonalInfo, RetirementGoals, DrawdownConfig, CompoundingMethod } from "@/types"
 import { PieChart } from "lucide-react"
@@ -91,6 +92,9 @@ export const ScenarioComparisonChart = memo(function ScenarioComparisonChart({
         <SectionLabel>Investment Scenarios</SectionLabel>
         <p className="text-sm text-muted-foreground pl-3">
           {displayMode === "real" ? "Today's value" : "Future value"} · nest egg and success rate by strategy
+          {result.recommendedScenario && (
+            <span className="text-primary"> · {result[result.recommendedScenario].scenario} recommended</span>
+          )}
         </p>
       </div>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
@@ -128,9 +132,7 @@ export const ScenarioComparisonChart = memo(function ScenarioComparisonChart({
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  formatter={(value, name) =>
-                    name === "success" ? `${Number(value).toFixed(0)}%` : formatCurrency(Number(value) || 0)
-                  }
+                  formatter={(value, _name, item) => formatScenarioTooltip(value, item)}
                 />
               }
             />

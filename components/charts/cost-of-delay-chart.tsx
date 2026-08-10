@@ -34,7 +34,7 @@ interface CostOfDelayChartProps {
 }
 
 const chartConfig = {
-  cost: { label: "Cost of delay", color: "hsl(var(--warning))" },
+  cost: { label: "Cost of delay", color: "hsl(var(--destructive))" },
 } satisfies ChartConfig
 
 export const CostOfDelayChart = memo(function CostOfDelayChart({
@@ -129,9 +129,9 @@ export const CostOfDelayChart = memo(function CostOfDelayChart({
                 />
               }
             />
-            <Bar dataKey="cost" name="Cost of delay" fill="hsl(var(--warning))" radius={[3, 3, 0, 0]} maxBarSize={56} isAnimationActive={false}>
+            <Bar dataKey="cost" name="Cost of delay" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} maxBarSize={56} isAnimationActive={false}>
               {data.map((row) => (
-                <Cell key={row.name} fill={row.cost > 0 ? "hsl(var(--warning))" : "hsl(var(--muted))"} />
+                <Cell key={row.name} fill={row.cost > 0 ? "hsl(var(--destructive))" : "hsl(var(--muted))"} />
               ))}
             </Bar>
           </BarChart>

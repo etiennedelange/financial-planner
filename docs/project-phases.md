@@ -13,7 +13,7 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 | **Phase 1.6** | ✅ Complete | [Performance Optimization](project-phases/phase-1-6-performance-optimization.md) |
 | **Phase 1.7** | ✅ Complete | [Next 16 / React 19 / Tailwind v4 Modernization](project-phases/phase-1-7-modernization.md) |
 | **Phase 2** | 🔄 In Progress | [Supabase Integration](project-phases/phase-2-supabase.md) |
-| **Phase 3** | ✅ Complete | [User Accounts](project-phases/phase-3-user-accounts.md) |
+| **Phase 3** | ✅ Risk register resolved | [User Accounts](project-phases/phase-3-user-accounts.md) |
 | **Phase 4** | ✅ Complete | [Data Persistence](project-phases/phase-4-data-persistence.md) |
 | **Phase 5** | 🔄 In Progress | [Export Functionality](project-phases/phase-5-export-functionality.md) |
 | **Phase 6** | ✅ Complete | [Enhanced Tax Calculations](project-phases/phase-6-enhanced-tax.md) |
@@ -24,6 +24,33 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 | **Future** | 📋 Planned | [Future Enhancements](project-phases/future-enhancements.md) |
 
 ## Current Status Summary
+
+## 2026-08-10 (charts critique round 2)
+
+🎯 **Charts page second design-critique pass — truthful tooltips, keyboard focus, gallery hierarchy**
+
+A second Impeccable critique scored `/calculator/charts` 23/40. The prior pass fixed the dead MC
+chart, copy, and contrast; this pass fixed the tooltips that were **actively lying**, chart surfaces
+that were keyboard traps, and the flat gallery:
+
+- ✅ **Tooltip pipeline rebuilt** — new shared `lib/utils/chart-tooltip.ts`: `labelFormatter` now gets
+  the raw x-axis value (fixes "Age undefined" / "Age Portfolio Balance" headers), MC tooltip rows are
+  named ("Median: R 4 340 000"), and the scenario success rate renders as a percentage instead of
+  "R 100". `chart.tsx` imports the shared resolvers instead of owning a private copy.
+- ✅ **Keyboard focus restored** — removed `outline-none` on recharts surfaces, added a 2px teal
+  `:focus-visible` ring. Verified the accessibility layer genuinely navigates the tooltip via arrow
+  keys (the layer was never the problem — the invisible focus indicator was).
+- ✅ **Gallery hierarchy** — new page-level verdict strip (`lib/utils/plan-verdict.ts`, "Your plan
+  holds" / "Income runs out at age N"), cards reordered by decision impact, duplicated in-content
+  title removed.
+- ✅ **Red deltas** — negative bars in tornado + cost-of-delay switched from `--warning` amber to
+  `--destructive` Signal Red, honoring DESIGN.md.
+- ✅ **Polish** — scenario chart names the recommended strategy in its subtitle; MC median stroke
+  weighted and bands toned down.
+- ✅ Verification: 862/862 tests (22 new), `chart-tooltip.ts` 96% / `plan-verdict.ts` 93% coverage,
+  typecheck + build clean, no new lint errors, all fixes browser-verified including real-keyboard
+  tab → visible focus ring → arrow-key tooltip navigation.
+- 📚 Full write-up: [history/2026-08-10-charts-page-critique-fixes-round-2.md](history/2026-08-10-charts-page-critique-fixes-round-2.md)
 
 ## 2026-08-10 (evening)
 
@@ -47,7 +74,27 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
   fallback with digest → retry → recover), coverage unchanged (pre-existing branch shortfall)
 - 📚 Full write-up: [history/2026-08-10-next-16-3-upgrade-adoption.md](history/2026-08-10-next-16-3-upgrade-adoption.md)
 
+## 2026-08-10 (later)
+
+🔐 **All nine open risks in the Auth/2FA security risk register resolved**
+
+Every item from the 2026-08-10 risk register is fixed on `feature/auth-hardening-2fa`: same-origin validation on the auth callback's `next` redirect, 2FA-safe account deletion (TOTP elevation instead of a session-downgrading password reauth), an authenticated/validated/rate-limited `plan-narrative` AI endpoint, `next` upgraded to 16.3.0 (`pnpm audit` now 0 vulnerabilities, down from 16), rate-limited and atomically single-use recovery-code redemption, a startup check that fails production boot on missing/test-key Turnstile config, removal of the stray `package-lock.json`, and explicit session revocation before account deletion.
+
+- 📚 Full remediation record: [Auth and 2FA Risk Register § Remediation Record](security/auth-2fa-risk-register.md#remediation-record-2026-08-10)
+- ✅ Verification: 840/840 tests, typecheck clean, production build clean, `pnpm audit` clean, lint clean on all touched files
+- ⚠️ `pnpm run test:rls` was not re-run against a live Supabase instance in this pass — do so before the next deploy to confirm the new atomic-redemption migration
+- ⚠️ The in-memory rate limiter is per-instance and non-durable; fine for now, needs a shared store (e.g. Upstash Redis) before relying on it at scale
+
 ## 2026-08-10
+
+🔐 **Auth/2FA triple-check risk register added; Phase 3 reopened for remediation**
+
+The security review of `feature/auth-hardening-2fa` confirmed that the RLS/AAL boundary and recovery-code replacement gate are working, but the branch is not yet a commercial security sign-off. Open risks include an auth callback open redirect, broken 2FA account deletion, unauthenticated AI cost abuse, vulnerable dependency versions, an unthrottled and non-atomic recovery-code redemption path, missing-Turnstile configuration failure, and divergent npm/pnpm lockfiles.
+
+- 📚 Full register: [Auth and 2FA Risk Register](security/auth-2fa-risk-register.md)
+- 📚 Audit history: [2026-08-10 auth/2FA security audit](history/2026-08-10-auth-2fa-security-audit.md)
+- ✅ Verification: 810 tests, typecheck, RLS SQL tests, and Semgrep passed
+- ⚠️ `pnpm lint` remains non-clean (22 errors, 5 warnings); production build verification was interrupted
 
 🎨 **Charts page hardened + clarified after design critique (27/40 → fixes)**
 

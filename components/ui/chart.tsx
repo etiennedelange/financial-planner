@@ -11,6 +11,11 @@ import type { Payload, ValueType, NameType } from "recharts/types/component/Defa
 import type { LegendPayload, VerticalAlignmentType } from "recharts/types/component/DefaultLegendContent"
 
 import { cn } from "@/lib/utils"
+import {
+  getPayloadConfigFromPayload as resolvePayloadConfig,
+  resolveTooltipLabelValue,
+  type TooltipItemLike,
+} from "@/lib/utils/chart-tooltip"
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const
@@ -62,7 +67,7 @@ function ChartContainer({
         data-chart={chartId}
         ref={ref}
         className={cn(
-          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
+          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface:focus-visible]:outline [&_.recharts-surface:focus-visible]:outline-2 [&_.recharts-surface:focus-visible]:outline-offset-2 [&_.recharts-surface:focus-visible]:outline-ring [&_.recharts-surface:focus-visible]:outline-primary",
           className
         )}
         {...props}
@@ -146,13 +151,11 @@ function ChartTooltipContent({
         return null
       }
 
-      const [item] = payload
-      const key = `${labelKey || item?.dataKey || item?.name || "value"}`
-      const itemConfig = getPayloadConfigFromPayload(config, item, key)
-      const value =
-        !labelKey && typeof label === "string"
-          ? config[label as keyof typeof config]?.label || label
-          : itemConfig?.label
+      const value = resolveTooltipLabelValue(label, {
+        labelKey,
+        payload: payload as TooltipItemLike[],
+        config,
+      })
 
       if (labelFormatter) {
         return (
@@ -189,7 +192,7 @@ function ChartTooltipContent({
             .filter((item) => item.type !== "none")
             .map((item, index) => {
               const key = `${nameKey || item.name || item.dataKey || "value"}`
-              const itemConfig = getPayloadConfigFromPayload(config, item, key)
+              const itemConfig = resolvePayloadConfig(config, item, key)
               const indicatorColor = color || item.payload.fill || item.color
 
               return (

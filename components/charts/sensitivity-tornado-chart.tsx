@@ -131,7 +131,7 @@ export const SensitivityTornadoChart = memo(function SensitivityTornadoChart({
                   fill={
                     row.delta >= 0
                       ? "hsl(var(--chart-2))"
-                      : "hsl(var(--warning))"
+                      : "hsl(var(--destructive))"
                   }
                 />
               ))}

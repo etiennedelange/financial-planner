@@ -9,6 +9,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import { formatCurrency } from "@/lib/utils/formatters"
+import { formatPercentileTooltip } from "@/lib/utils/chart-tooltip"
 import { getSuccessRateStyle } from "@/lib/utils/success-rate"
 import type { SimulationResult } from "@/types"
 import { Activity, AlertTriangle, CheckCircle2, Loader2, Wallet } from "lucide-react"
@@ -35,8 +36,8 @@ interface MonteCarloChartProps {
 
 const chartConfig = {
   p50: { label: "Median",         color: "hsl(var(--chart-1))" },
-  band75: { label: "Likely range", color: "hsl(var(--chart-1))" },
-  band90: { label: "Possible range", color: "hsl(var(--chart-1))" },
+  p75: { label: "Likely range", color: "hsl(var(--chart-1))" },
+  p90: { label: "Possible range", color: "hsl(var(--chart-1))" },
 } satisfies ChartConfig
 
 /**
@@ -144,12 +145,12 @@ export const MonteCarloChart = memo(function MonteCarloChart({
           >
             <defs>
               <linearGradient id="mcBand90" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.06} />
-                <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.01} />
+                <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.04} />
+                <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.005} />
               </linearGradient>
               <linearGradient id="mcBand75" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.16} />
-                <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.05} />
+                <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.14} />
+                <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.04} />
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
@@ -170,7 +171,9 @@ export const MonteCarloChart = memo(function MonteCarloChart({
               content={
                 <ChartTooltipContent
                   labelFormatter={(age) => `Age ${age}`}
-                  formatter={(value) => formatCurrency(Number(value) || 0)}
+                  formatter={(value, _name, item) =>
+                    formatPercentileTooltip(value, item, chartConfig)
+                  }
                 />
               }
             />
@@ -212,7 +215,7 @@ export const MonteCarloChart = memo(function MonteCarloChart({
               type="monotone"
               dataKey="p50"
               stroke="hsl(var(--chart-1))"
-              strokeWidth={2}
+              strokeWidth={2.5}
               fill="none"
               dot={false}
               isAnimationActive={false}
