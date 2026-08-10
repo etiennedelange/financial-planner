@@ -30,6 +30,12 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
+// cacheComponents enables Partial Prefetching, which wants to prerender the
+// app shell at build time. This app is fully dynamic (see connection() below)
+// and the root layout reads request-time headers for the CSP nonce, so opt the
+// whole tree out of instant navigation and render on every request instead.
+export const instant = false
+
 export default async function RootLayout({
   children,
 }: {

@@ -9,6 +9,18 @@ const nextConfig = {
   // React Compiler — automatically memoises components and hooks
   reactCompiler: true,
 
+  // Instant Navigations (Next 16.3) — prefetch app shells so navigations
+  // between routes feel SPA-snappy. partialPrefetching requires cacheComponents.
+  cacheComponents: true,
+  partialPrefetching: true,
+
+  experimental: {
+    // Use the native Rust React Compiler inside Turbopack instead of the
+    // Babel transform (up to ~46% faster warm dev builds). Requires
+    // reactCompiler: true and Turbopack (dev/build default in Next 16).
+    turbopackRustReactCompiler: true,
+  },
+
   // Production optimizations
   compiler: {
     // Remove console.logs in production (keep errors and warnings)

@@ -84,6 +84,7 @@ export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
             <Link
               key={item.href}
               href={item.href}
+              prefetch
               aria-current={isActive ? "page" : undefined}
               className={cn(
                 "group relative flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-all duration-150",
@@ -117,6 +118,7 @@ export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
       <div className="px-3 pb-4 border-t border-border pt-3 space-y-0.5">
         <Link
           href="/calculator/settings"
+          prefetch
           aria-current={pathname === "/calculator/settings" ? "page" : undefined}
           className={cn(
             "group relative flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-all duration-150",

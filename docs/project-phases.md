@@ -25,6 +25,28 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
+## 2026-08-10 (evening)
+
+⚡ **Next.js 16.3 feature adoption — error boundaries, Rust React Compiler, Instant Navigations**
+
+`next` was already on 16.3.0; this pass adopted three things 16.3 shipped that the app wasn't using:
+
+- ✅ **Error boundaries (new)** — the app had zero `error.tsx` files. Added root
+  `app/error.tsx` + calculator-scoped `app/calculator/error.tsx` using the new 16.3 `retry()`
+  API (re-fetches the failed server-rendered children, replacing the old `reset`), sharing a
+  `components/error/error-fallback.tsx` built on `PageCard` + destructive label + digest + retry UI
+- ✅ **Native Rust React Compiler** — `experimental.turbopackRustReactCompiler` alongside the
+  existing `reactCompiler: true` (Babel transform retired; ~34–46% faster warm dev builds)
+- ✅ **Instant Navigations** — `cacheComponents: true` + `partialPrefetching: true` in
+  `next.config.js`, plus `prefetch` on sidebar/bottom-nav links for SPA-snappy tab switches
+- ✅ **`export const instant = false`** on the root layout — opts the fully-dynamic app (CSP nonce
+  via `connection()`/`headers()`) out of PPR shell prerendering, so existing dynamic behaviour and
+  CSP-nonce injection are preserved exactly (all routes still `ƒ` Dynamic)
+- ✅ Verification: build clean (config logs confirm all three features enabled), typecheck clean,
+  lint clean on touched files, 854/854 tests, error boundary exercised live in the browser (throw →
+  fallback with digest → retry → recover), coverage unchanged (pre-existing branch shortfall)
+- 📚 Full write-up: [history/2026-08-10-next-16-3-upgrade-adoption.md](history/2026-08-10-next-16-3-upgrade-adoption.md)
+
 ## 2026-08-10
 
 🎨 **Charts page hardened + clarified after design critique (27/40 → fixes)**
