@@ -42,7 +42,9 @@ else
   curl -fsSL https://opencode.ai/install | bash \
     || echo "    Warning: opencode install failed — run 'curl -fsSL https://opencode.ai/install | bash' manually"
 fi
-command -v opencode >/dev/null 2>&1 || echo 'export PATH="$HOME/.opencode/bin:$PATH"' >> ~/.profile
+if ! grep -q '.opencode/bin' ~/.bashrc 2>/dev/null; then
+  echo 'export PATH="$HOME/.opencode/bin:$PATH"' >> ~/.bashrc
+fi
 echo "    opencode $(opencode --version 2>/dev/null || echo 'not yet on PATH — reload shell')"
 
 # ─── uv + semgrep ──────────────────────────────────────────────────────────────
