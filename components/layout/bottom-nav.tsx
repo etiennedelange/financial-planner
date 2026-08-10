@@ -1,6 +1,6 @@
 "use client"
 
-import { LayoutDashboard, Receipt, Settings, SlidersHorizontal, TrendingUp, Wallet } from "lucide-react"
+import { BarChart3, LayoutDashboard, Receipt, Settings, SlidersHorizontal, TrendingUp, Wallet } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/calculator/plan", label: "Plan", icon: SlidersHorizontal },
   { href: "/calculator/expenses", label: "Expenses", icon: Receipt },
   { href: "/calculator/projections", label: "Projections", icon: TrendingUp },
+  { href: "/calculator/charts", label: "Charts", icon: BarChart3 },
   { href: "/calculator/settings", label: "Settings", icon: Settings },
 ]
 

@@ -31,6 +31,7 @@ export default function OverviewRoute() {
       totalMonthlyContributions={totalMonthlyContributions}
       desiredMonthlyIncome={retirementGoals.desiredMonthlyIncome}
       annualIncome={personalInfo.annualIncome}
+      hasAccounts={accounts.length > 0}
     />
   )
 }

@@ -25,6 +25,33 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 
 ## Current Status Summary
 
+## 2026-08-09
+
+📊 **New: Charts page — Monte Carlo de-emphasised, all visualisations centralised**
+
+UX review surfaced that the Overview carried two charts plotting the same thing (deterministic
+portfolio balance + Monte Carlo percentile fan) and the Monte Carlo sim — whose success rate was
+already surfaced twice (metrics grid + key insights) — was taking precedence over the Overview.
+
+- ✅ **New `/calculator/charts` route** hosting every visualisation the plan can produce as
+  standalone cards, so the user can later curate which appear on main pages: portfolio growth,
+  reworked "Will It Last?" MC median+band, income-vs-target sustainability, sensitivity tornado,
+  investment-scenario comparison, and cost-of-delay bars
+- ✅ **Overview de-cluttered** — chart grid removed; replaced with a quiet `SimulationRunStatus`
+  line proving the sim ran (scenario count + success rate + link to Charts) without a chart
+  taking precedence
+- ✅ **Monte Carlo fan reworked** into `Will It Last?` — median line in a tight 25–75 band with a
+  whisper of the 10–90 range; the run evidence (N simulations · success rate) is a muted header
+  line, not a competing surface
+- ✅ **New calc utils (tested, 16 tests)**: `income-sustainability.ts` (drawdown income vs
+  inflation-adjusted target, nominal/real) and `sensitivity-tornado.ts` (nest egg Δ per lever,
+  reusing the shared projection engine so it can't drift)
+- ✅ **New chart components**: `income-sustainability-chart`, `sensitivity-tornado-chart`,
+  `scenario-comparison-chart`, `cost-of-delay-chart`; reworked `monte-carlo-chart`
+- ✅ Nav wired everywhere: sidebar, bottom-nav, top-bar titles, command palette
+- ✅ 806/806 tests passing, `npm run typecheck` clean, `npm run build` succeeds, coverage above
+  thresholds (>90% statements/lines on calc files)
+
 ## 2026-08-08 (yet later)
 
 🔧 **Fix: `/auth/mfa` "Could not load your authentication factors." (dev-proxy redirect loop)**

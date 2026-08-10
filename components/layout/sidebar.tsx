@@ -13,6 +13,7 @@ import {
 import { createClient } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
 import {
+  BarChart3,
   LayoutDashboard,
   LogOut,
   Receipt,
@@ -33,6 +34,7 @@ const NAV_ITEMS: { href: string; label: string; icon: React.ElementType; showBad
   { href: "/calculator/plan", label: "Plan", icon: SlidersHorizontal },
   { href: "/calculator/expenses", label: "Expenses", icon: Receipt },
   { href: "/calculator/projections", label: "Projections", icon: TrendingUp },
+  { href: "/calculator/charts", label: "Charts", icon: BarChart3 },
 ]
 
 interface SidebarProps {

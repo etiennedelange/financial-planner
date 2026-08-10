@@ -4,8 +4,7 @@ import { DashboardMetricsGrid } from "@/components/dashboard/dashboard-metrics-g
 import { GettingStarted } from "@/components/dashboard/getting-started"
 import { KeyInsightsSummary } from "@/components/dashboard/key-insights-summary"
 import { PlanNarrativeCard } from "@/components/dashboard/plan-narrative-card"
-import { MonteCarloChart } from "@/components/charts/monte-carlo-chart"
-import { PortfolioGrowthChart } from "@/components/charts/portfolio-growth-chart"
+import { SimulationRunStatus } from "@/components/dashboard/simulation-run-status"
 import type { ProjectionResult, SimulationResult } from "@/types"
 
 interface OverviewPageProps {
@@ -20,6 +19,7 @@ interface OverviewPageProps {
   totalMonthlyContributions: number
   desiredMonthlyIncome: number
   annualIncome: number
+  hasAccounts: boolean
 }
 
 export function OverviewPage({
@@ -34,6 +34,7 @@ export function OverviewPage({
   totalMonthlyContributions,
   desiredMonthlyIncome,
   annualIncome,
+  hasAccounts,
 }: OverviewPageProps) {
   return (
     <div className="space-y-6">
@@ -49,18 +50,11 @@ export function OverviewPage({
         totalMonthlyContributions={totalMonthlyContributions}
       />
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <PortfolioGrowthChart
-          projections={projection?.yearlyProjections || []}
-          retirementAge={retirementAge}
-        />
-        <MonteCarloChart
-          simulationResult={simulationResult}
-          currentAge={currentAge}
-          retirementAge={retirementAge}
-          isRunning={isSimulating}
-        />
-      </div>
+      <SimulationRunStatus
+        simulationResult={simulationResult}
+        isSimulating={isSimulating}
+        hasAccounts={hasAccounts}
+      />
 
       {projection ? (
         <KeyInsightsSummary

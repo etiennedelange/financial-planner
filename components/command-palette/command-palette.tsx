@@ -10,6 +10,7 @@ import type { AccountType } from "@/types"
 import { formatCurrency } from "@/lib/utils/currency"
 import {
   BarChart2,
+  BarChart3,
   DollarSign,
   LayoutDashboard,
   ListChecks,
@@ -35,6 +36,7 @@ const NAV_ITEMS: CommandItem[] = [
   { id: "nav-plan",         label: "Plan",         group: "Navigate", href: "/calculator/plan",         icon: ListChecks },
   { id: "nav-expenses",     label: "Expenses",     group: "Navigate", href: "/calculator/expenses",     icon: DollarSign },
   { id: "nav-projections",  label: "Projections",  group: "Navigate", href: "/calculator/projections",  icon: BarChart2 },
+  { id: "nav-charts",       label: "Charts",       group: "Navigate", href: "/calculator/charts",       icon: BarChart3 },
   { id: "nav-settings",     label: "Settings",     group: "Navigate", href: "/calculator/settings",     icon: Settings },
 ]
 

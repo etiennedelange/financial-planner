@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/chart"
 import { formatCurrency } from "@/lib/utils/formatters"
 import type { SimulationResult } from "@/types"
-import { Activity, Loader2 } from "lucide-react"
+import { Activity, CheckCircle2, Loader2 } from "lucide-react"
 import { memo, useMemo } from "react"
 import {
   Area,
@@ -30,12 +30,16 @@ interface MonteCarloChartProps {
 
 const chartConfig = {
   p50: { label: "Median",         color: "hsl(var(--chart-1))" },
-  p75: { label: "Likely range",   color: "hsl(var(--chart-1))" },
-  p90: { label: "Possible range", color: "hsl(var(--chart-1))" },
-  p25: { label: "25th pct",       color: "hsl(var(--chart-1))" },
-  p10: { label: "10th pct",       color: "hsl(var(--chart-1))" },
+  band75: { label: "Likely range", color: "hsl(var(--chart-1))" },
+  band90: { label: "Possible range", color: "hsl(var(--chart-1))" },
 } satisfies ChartConfig
 
+/**
+ * "Will it last?" — the single portfolio-balance chart. A median line inside a
+ * tight 25th–75th percentile band, with the outer 10th–90th range as a whisper.
+ * The run evidence (how many simulations, success rate) is a quiet line in the
+ * header, not a competing surface.
+ */
 export const MonteCarloChart = memo(function MonteCarloChart({
   simulationResult,
   currentAge,
@@ -46,28 +50,18 @@ export const MonteCarloChart = memo(function MonteCarloChart({
     return (
       <Card className="dashboard-card shadow-none">
         <div className="px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-3 space-y-1">
-          <SectionLabel>Monte Carlo Projection</SectionLabel>
-          <p className="text-sm text-muted-foreground pl-3">Run simulation to see probability ranges</p>
+          <SectionLabel>Will It Last?</SectionLabel>
+          <p className="text-sm text-muted-foreground pl-3">Median portfolio balance across 1,000 market scenarios</p>
         </div>
         <CardContent className="relative flex h-[180px] md:h-[260px] items-center justify-center overflow-hidden">
-          {/* Ghost probability fan: 5 percentile lines fanning from current age */}
+          {/* Ghost median line fanning from current age */}
           <svg
             className="absolute inset-0 h-full w-full"
             viewBox="0 0 360 260"
             preserveAspectRatio="none"
             aria-hidden="true"
           >
-            {/* p90 – best case */}
-            <path d="M 0 248 Q 150 168 360 18"  fill="none" stroke="hsl(var(--chart-1))" strokeWidth="1"   strokeOpacity={0.08} />
-            {/* p75 */}
-            <path d="M 0 248 Q 150 192 360 68"  fill="none" stroke="hsl(var(--chart-1))" strokeWidth="1.5" strokeOpacity={0.15} />
-            {/* p50 median */}
-            <path d="M 0 248 Q 150 212 360 130" fill="none" stroke="hsl(var(--chart-1))" strokeWidth="2"   strokeOpacity={0.26} />
-            {/* p25 */}
-            <path d="M 0 248 Q 150 232 360 202" fill="none" stroke="hsl(var(--chart-1))" strokeWidth="1.5" strokeOpacity={0.15} />
-            {/* p10 – worst case */}
-            <path d="M 0 248 Q 150 244 360 248" fill="none" stroke="hsl(var(--chart-1))" strokeWidth="1"   strokeOpacity={0.08} />
-            {/* Retirement reference */}
+            <path d="M 0 248 Q 150 212 360 130" fill="none" stroke="hsl(var(--chart-1))" strokeWidth="2" strokeOpacity={0.22} />
             <line
               x1="210" y1="12" x2="210" y2="252"
               stroke="hsl(var(--muted-foreground))"
@@ -104,11 +98,16 @@ export const MonteCarloChart = memo(function MonteCarloChart({
   })), [percentiles, currentAge])
 
   return (
-    <Card className="dashboard-card shadow-none" role="figure" aria-label={`Monte Carlo simulation: ${simulationResult.runs.length.toLocaleString()} scenarios showing probability ranges from age ${currentAge} to life expectancy`}>
+    <Card className="dashboard-card shadow-none" role="figure" aria-label={`Portfolio balance across ${simulationResult.runs.length.toLocaleString()} market scenarios from age ${currentAge} to life expectancy`}>
       <div className="px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-3 space-y-1">
-        <SectionLabel>Monte Carlo Projection</SectionLabel>
+        <SectionLabel>Will It Last?</SectionLabel>
         <p className="text-sm text-muted-foreground pl-3">
-          Based on {simulationResult.runs.length.toLocaleString()} simulations
+          Median balance with 25–75th percentile range
+        </p>
+        <p className="pl-3 flex items-center gap-1.5 text-xs text-muted-foreground/70">
+          <CheckCircle2 className="h-3 w-3 text-chart-2" aria-hidden="true" />
+          {simulationResult.runs.length.toLocaleString()} simulations ·{" "}
+          {simulationResult.successRate.toFixed(0)}% success rate
         </p>
       </div>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
@@ -119,16 +118,12 @@ export const MonteCarloChart = memo(function MonteCarloChart({
           >
             <defs>
               <linearGradient id="mcBand90" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.08} />
-                <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.02} />
+                <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.06} />
+                <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.01} />
               </linearGradient>
               <linearGradient id="mcBand75" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.15} />
+                <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.16} />
                 <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.05} />
-              </linearGradient>
-              <linearGradient id="mcBand50" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.22} />
-                <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.06} />
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
@@ -166,7 +161,7 @@ export const MonteCarloChart = memo(function MonteCarloChart({
                 fontWeight: 500,
               }}
             />
-            {/* Outer band: 10th–90th percentile */}
+            {/* Outer whisper: 10th–90th percentile */}
             <Area
               type="monotone"
               dataKey="p90"
@@ -176,7 +171,7 @@ export const MonteCarloChart = memo(function MonteCarloChart({
               dot={false}
               isAnimationActive={false}
             />
-            {/* Inner band: 25th–75th percentile */}
+            {/* Tight band: 25th–75th percentile */}
             <Area
               type="monotone"
               dataKey="p75"
@@ -192,7 +187,7 @@ export const MonteCarloChart = memo(function MonteCarloChart({
               dataKey="p50"
               stroke="hsl(var(--chart-1))"
               strokeWidth={2}
-              fill="url(#mcBand50)"
+              fill="none"
               dot={false}
               isAnimationActive={false}
             />
