@@ -28,7 +28,9 @@ export interface TurnstileHandle {
  * replays unconditionally.
  *
  * Renders nothing when no site key is configured, so local development without
- * Turnstile keys still works.
+ * Turnstile keys still works. In production this same silent no-op would leave
+ * every auth form permanently blocked on a captchaToken that can never arrive —
+ * `instrumentation.ts` fails startup instead of letting that ship silently.
  */
 export const Turnstile = forwardRef<TurnstileHandle, { onToken: (token: string) => void }>(
 function Turnstile({ onToken }, handleRef) {

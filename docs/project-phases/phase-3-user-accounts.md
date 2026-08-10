@@ -1,4 +1,4 @@
-# Phase 3: User Accounts ✅ Complete
+# Phase 3: User Accounts ✅ Security risk register resolved
 
 **Goal:** Implement user authentication and profile management so users can sync their retirement plan across devices, with hardened security including mandatory login and optional 2FA.
 
@@ -46,6 +46,9 @@
 - **AAL gating**: Middleware applies UX-layer AAL gate (redirect to `/auth/mfa` if needed); RLS enforces the real boundary via `mfa_satisfied()` — a client that bypasses middleware still gets zero rows.
 - **Recovery codes over email**: Email-based account recovery is unilaterally strong; recovery codes provide a self-serve path without requiring email access. Both coexist: email recovery resets password, codes auto-delete TOTP.
 - **Single TOTP factor per user**: Only one TOTP factor supported per account. Backup devices must share the same secret or use recovery codes.
+
+### Security Risk Register Remediation (2026-08-10)
+- [x] **Resolved all nine open risks in the commercial security risk register** — same-origin validation for the auth callback's `next` redirect (`lib/auth/safe-redirect.ts`); 2FA-safe account deletion via TOTP elevation instead of a session-downgrading password reauth (`components/auth/account-settings.tsx`); authenticated, Zod-validated, rate-limited `plan-narrative` endpoint with tier selection disabled pending a real entitlement system (`app/api/plan-narrative/route.ts`, `lib/ai/plan-narrative-schema.ts`); `next`/`@next/bundle-analyzer`/`eslint-config-next` upgraded to 16.3.0 and a `pnpm-workspace.yaml` override closing the remaining dev-only `vite` advisories, bringing `pnpm audit` to 0 vulnerabilities; per-IP/per-user rate limiting on recovery-code redemption (`lib/security/rate-limit.ts`); an atomic conditional `UPDATE` for recovery-code redemption closing a double-spend race (`supabase/migrations/20260810000000_atomic_recovery_code_redemption.sql`); a startup check that fails production boot if Turnstile is missing or set to a published test key (`instrumentation.ts`); removal of the stray `package-lock.json` plus a `preinstall` guard restricting installs to pnpm; and explicit admin-API session revocation before account deletion. Full file-by-file detail in [Auth and 2FA Risk Register](../security/auth-2fa-risk-register.md#remediation-record-2026-08-10).
 
 ## Pending
 

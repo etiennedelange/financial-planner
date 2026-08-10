@@ -5,6 +5,7 @@ const getSession = vi.fn()
 const getAuthenticatorAssuranceLevel = vi.fn()
 const signOut = vi.fn()
 const deleteUser = vi.fn()
+const adminSignOut = vi.fn()
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: () =>
@@ -20,7 +21,7 @@ vi.mock('@/lib/supabase/server', () => ({
 
 vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({
-    auth: { admin: { deleteUser } },
+    auth: { admin: { deleteUser, signOut: adminSignOut } },
   }),
 }))
 
@@ -34,6 +35,7 @@ beforeEach(() => {
   getAuthenticatorAssuranceLevel.mockResolvedValue({ data: { currentLevel: 'aal1', nextLevel: 'aal1' } })
   signOut.mockResolvedValue({ error: null })
   deleteUser.mockResolvedValue({ error: null })
+  adminSignOut.mockResolvedValue({ error: null })
 })
 
 describe('DELETE /api/account/delete', () => {
@@ -96,5 +98,18 @@ describe('DELETE /api/account/delete', () => {
     expect(body).toEqual({ deleted: true })
     expect(deleteUser).toHaveBeenCalledWith('user-1')
     expect(signOut).toHaveBeenCalledWith({ scope: 'global' })
+  })
+
+  it('revokes all refresh tokens via the admin API before deleting the user', async () => {
+    getUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+
+    const callOrder: string[] = []
+    adminSignOut.mockImplementation(async () => { callOrder.push('signOut'); return { error: null } })
+    deleteUser.mockImplementation(async () => { callOrder.push('deleteUser'); return { error: null } })
+
+    await DELETE()
+
+    expect(adminSignOut).toHaveBeenCalledWith('user-1', 'global')
+    expect(callOrder).toEqual(['signOut', 'deleteUser'])
   })
 })

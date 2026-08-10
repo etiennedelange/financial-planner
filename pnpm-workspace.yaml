@@ -7,3 +7,6 @@ allowBuilds:
 overrides:
   "@types/react": "19.2.17"
   "@types/react-dom": "19.2.3"
+  # AUTH-004: dev-only transitive dep of vitest; GHSA-fx2h-pf6j-xcff /
+  # GHSA-v6wh-96g9-6wx3 (both Windows-only, but pin regardless).
+  vite: ">=8.0.16"

@@ -21,8 +21,11 @@ vi.mock('@supabase/supabase-js', () => ({
 
 import { POST } from './route'
 
-function makeRequest(body: unknown) {
-  return { json: async () => body } as unknown as Request
+function makeRequest(body: unknown, headers: Record<string, string> = {}) {
+  return {
+    json: async () => body,
+    headers: new Headers(headers),
+  } as unknown as Request
 }
 
 beforeEach(() => {
@@ -80,5 +83,31 @@ describe('POST /api/auth/recover', () => {
 
     expect(response.status).toBe(500)
     expect(body.recovered).toBeUndefined()
+  })
+
+  it('rejects a body larger than the declared limit before parsing it', async () => {
+    const response = await POST(makeRequest({ code: 'X' }, { 'content-length': '5000' }))
+    expect(response.status).toBe(413)
+    expect(rpc).not.toHaveBeenCalled()
+  })
+
+  it('rejects an oversized code string', async () => {
+    getUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    const response = await POST(makeRequest({ code: 'X'.repeat(100) }))
+    expect(response.status).toBe(400)
+    expect(rpc).not.toHaveBeenCalled()
+  })
+
+  it('rate-limits repeated attempts from the same IP', async () => {
+    getUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    rpc.mockResolvedValue({ data: false, error: null })
+
+    const ipHeaders = { 'x-forwarded-for': '203.0.113.9' }
+    let lastResponse
+    for (let i = 0; i < 11; i++) {
+      lastResponse = await POST(makeRequest({ code: 'WRONGCODE' }, ipHeaders))
+    }
+
+    expect(lastResponse!.status).toBe(429)
   })
 })

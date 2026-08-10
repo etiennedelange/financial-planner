@@ -1,7 +1,19 @@
 import { createClient } from "@/lib/supabase/server"
 import { createClient as createAdminClient } from "@supabase/supabase-js"
 import { normaliseRecoveryCode } from "@/lib/auth/recovery-codes"
+import { checkRateLimit } from "@/lib/security/rate-limit"
 import { NextResponse } from "next/server"
+
+const MAX_CODE_LENGTH = 64
+const RATE_LIMIT_PER_HOUR = 10
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000
+
+function tooManyRequests() {
+  return NextResponse.json(
+    { error: "Too many attempts. Try again later." },
+    { status: 429 },
+  )
+}
 
 /**
  * Redeeming a recovery code proves account ownership but cannot produce a
@@ -14,8 +26,26 @@ import { NextResponse } from "next/server"
  * authenticator from Settings once back in.
  */
 export async function POST(request: Request) {
-  const { code } = await request.json()
-  if (typeof code !== "string" || code.length === 0) {
+  const forwardedFor = request.headers.get("x-forwarded-for")
+  const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : "unknown"
+  const ipLimit = checkRateLimit(`recover:ip:${ip}`, RATE_LIMIT_PER_HOUR, RATE_LIMIT_WINDOW_MS)
+  if (!ipLimit.allowed) {
+    return tooManyRequests()
+  }
+
+  const contentLength = Number(request.headers.get("content-length") ?? "0")
+  if (contentLength > 1_000) {
+    return NextResponse.json({ error: "Request body too large" }, { status: 413 })
+  }
+
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
+  }
+  const { code } = body as { code?: unknown }
+  if (typeof code !== "string" || code.length === 0 || code.length > MAX_CODE_LENGTH) {
     return NextResponse.json({ error: "A recovery code is required" }, { status: 400 })
   }
 
@@ -23,6 +53,11 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
+  }
+
+  const userLimit = checkRateLimit(`recover:user:${user.id}`, RATE_LIMIT_PER_HOUR, RATE_LIMIT_WINDOW_MS)
+  if (!userLimit.allowed) {
+    return tooManyRequests()
   }
 
   const { data: redeemed, error: redeemError } = await supabase.rpc("redeem_recovery_code", {

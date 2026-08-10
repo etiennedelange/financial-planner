@@ -41,6 +41,17 @@ export async function DELETE() {
     auth: { autoRefreshToken: false, persistSession: false },
   })
 
+  // AUTH-009: revoke every refresh token for this user (invalidates auth.sessions
+  // rows) before the cascade delete removes the user row. Every route in this app
+  // authenticates via supabase.auth.getUser(), which re-verifies against Supabase
+  // Auth on each call rather than trusting a locally-decoded JWT — so a deleted
+  // user's access token stops working the moment the user row (and thus the
+  // lookup getUser() performs) is gone. This explicit sign-out is defense in
+  // depth for that guarantee, not a substitute for it: any future endpoint that
+  // decodes a JWT locally instead of calling getUser() would still trust a
+  // signature-valid but revoked token until its natural expiry.
+  await admin.auth.admin.signOut(user.id, "global")
+
   const { error } = await admin.auth.admin.deleteUser(user.id)
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })

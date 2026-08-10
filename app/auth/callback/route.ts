@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import type { EmailOtpType } from "@supabase/supabase-js"
+import { safeNext } from "@/lib/auth/safe-redirect"
 
 /**
  * Handles every email-link return path: signup confirmation, email change,
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
   const code = searchParams.get("code")
   const tokenHash = searchParams.get("token_hash")
   const type = searchParams.get("type") as EmailOtpType | null
-  const next = searchParams.get("next") ?? "/calculator"
+  const next = safeNext(searchParams.get("next"), origin)
 
   const supabase = await createClient()
   let failed = true

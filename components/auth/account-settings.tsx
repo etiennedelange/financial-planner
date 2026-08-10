@@ -11,9 +11,12 @@ import { Label } from "@/components/ui/label"
 import { ReauthenticateDialog } from "@/components/auth/reauthenticate-dialog"
 import { SecuritySection } from "@/components/auth/security-section"
 import { SessionList } from "@/components/auth/session-list"
+import { TotpReauthDialog } from "@/components/auth/totp-reauth-dialog"
 import { PageCard } from "@/components/ui/page-card"
 import { Download } from "lucide-react"
 import type { User } from "@supabase/supabase-js"
+import { listFactors } from "@/lib/auth/mfa"
+import { useEffect } from "react"
 
 const emailSchema = z.object({
   email: z.string().email("Enter a valid email address"),
@@ -47,6 +50,11 @@ export function AccountSettings({ user }: AccountSettingsProps) {
   const [deleteMsg, setDeleteMsg] = useState<string | null>(null)
   const [emailLoading, setEmailLoading] = useState(false)
   const [pwLoading, setPwLoading] = useState(false)
+  const [totpFactorId, setTotpFactorId] = useState<string | null>(null)
+
+  useEffect(() => {
+    listFactors().then((factors) => setTotpFactorId(factors[0]?.id ?? null)).catch(() => setTotpFactorId(null))
+  }, [])
 
   const emailForm = useForm<EmailForm>({ resolver: zodResolver(emailSchema) })
   const pwForm = useForm<PasswordForm>({ resolver: zodResolver(passwordSchema) })
@@ -153,8 +161,24 @@ export function AccountSettings({ user }: AccountSettingsProps) {
         </Button>
       </PageCard>
 
+      {/*
+        Deletion for a 2FA-enrolled user must not go through password
+        re-authentication: signInWithPassword() replaces the current session
+        with a fresh AAL1 one, downgrading a user who was already at AAL2.
+        The AAL2-gated delete endpoint then rejects that downgraded session.
+        elevateWithTotp() proves presence via the existing factor without
+        touching the session, so an already-AAL2 caller stays AAL2.
+      */}
+      <TotpReauthDialog
+        open={pendingAction?.kind === "delete" && totpFactorId !== null}
+        factorId={totpFactorId ?? ""}
+        action="delete your account permanently"
+        onCancel={() => setPendingAction(null)}
+        onConfirmed={() => { setPendingAction(null); void runDelete() }}
+      />
+
       <ReauthenticateDialog
-        open={pendingAction !== null}
+        open={pendingAction !== null && !(pendingAction.kind === "delete" && totpFactorId !== null)}
         email={user.email ?? ""}
         action={
           pendingAction?.kind === "email"
