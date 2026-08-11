@@ -17,27 +17,80 @@ export function toRealValue(
 }
 
 /**
- * Format currency value based on display mode
- * @param value - The monetary value to format
- * @param displayMode - Whether to show as 'nominal' or 'real'
- * @param yearsFromNow - Number of years in the future (for real value calculation)
- * @param inflationRate - Annual inflation rate (as decimal)
- * @returns Formatted currency string
+ * Formatting options for {@link formatCurrency}.
  */
+export interface FormatCurrencyOptions {
+  /** Compact notation (R1.2M / R350K / R1.5B) — used for chart axis ticks. */
+  compact?: boolean
+  /** Fraction digits for the full (non-compact) path. Default 0. */
+  decimals?: number
+  /** Display basis; 'real' deflates the value to today's Rands. Default 'nominal'. */
+  displayMode?: 'nominal' | 'real'
+  /** Years from now, used only when displayMode is 'real'. */
+  yearsFromNow?: number
+  /** Annual inflation rate (as decimal), used only when displayMode is 'real'. */
+  inflationRate?: number
+}
+
+/**
+ * The single source of truth for currency formatting.
+ *
+ * Two call shapes are supported so the historical positional API and the
+ * options-object API both resolve here:
+ *
+ *   formatCurrency(value)                          → "R1 250 000"
+ *   formatCurrency(value, 'real', 5, 0.055)        → deflated to today's Rands
+ *   formatCurrency(value, { compact: true })       → "R1.3M"
+ *   formatCurrency(value, { decimals: 2 })         → "R1 250 000.00"
+ *
+ * @param value - The monetary value to format
+ */
+export function formatCurrency(value: number, options?: FormatCurrencyOptions): string
 export function formatCurrency(
   value: number,
-  displayMode: 'nominal' | 'real' = 'nominal',
+  displayMode: 'nominal' | 'real',
+  yearsFromNow?: number,
+  inflationRate?: number
+): string
+export function formatCurrency(
+  value: number,
+  displayModeOrOptions: 'nominal' | 'real' | FormatCurrencyOptions = 'nominal',
   yearsFromNow: number = 0,
   inflationRate: number = 0.055
 ): string {
+  const options: FormatCurrencyOptions =
+    typeof displayModeOrOptions === 'string'
+      ? { displayMode: displayModeOrOptions, yearsFromNow, inflationRate }
+      : (displayModeOrOptions ?? {})
+
+  const {
+    compact = false,
+    decimals = 0,
+    displayMode = 'nominal',
+    yearsFromNow: fromNow = 0,
+    inflationRate: infl = 0.055,
+  } = options
+
   const displayValue =
-    displayMode === 'real' ? toRealValue(value, yearsFromNow, inflationRate) : value
+    displayMode === 'real' ? toRealValue(value, fromNow, infl) : value
+
+  if (compact) {
+    if (Math.abs(displayValue) >= 1_000_000_000) {
+      return `R${(displayValue / 1_000_000_000).toFixed(1)}B`
+    }
+    if (Math.abs(displayValue) >= 1_000_000) {
+      return `R${(displayValue / 1_000_000).toFixed(1)}M`
+    }
+    if (Math.abs(displayValue) >= 1_000) {
+      return `R${(displayValue / 1_000).toFixed(0)}K`
+    }
+  }
 
   return new Intl.NumberFormat('en-ZA', {
     style: 'currency',
     currency: 'ZAR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
   }).format(displayValue)
 }
 

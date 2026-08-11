@@ -38,7 +38,13 @@ export function PlanNarrativeCard() {
 
   useEffect(() => {
     const stored = localStorage.getItem(TIER_STORAGE_KEY)
-    if (stored && isModelTier(stored)) setTier(stored)
+    if (stored && isModelTier(stored)) {
+      // Deferred out of the effect's synchronous body — localStorage can't be
+      // read during render (SSR), and applying the stored tier async avoids a
+      // hydration mismatch while still hydrating the saved preference.
+      const id = requestAnimationFrame(() => setTier(stored))
+      return () => cancelAnimationFrame(id)
+    }
   }, [])
 
   const handleTierChange = (value: string) => {

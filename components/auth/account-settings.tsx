@@ -216,7 +216,7 @@ function StatusMessage({ message }: { message: { type: "success" | "error"; text
     <p className={`text-sm rounded-md px-3 py-2 ${
       message.type === "error"
         ? "bg-destructive/10 text-destructive"
-        : "bg-green-500/10 text-green-700 dark:text-green-400"
+        : "bg-success/10 text-success"
     }`}>
       {message.text}
     </p>

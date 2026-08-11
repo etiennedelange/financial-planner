@@ -4,7 +4,7 @@ import { calculateProjection } from "@/lib/calculations/projection-engine"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { formatCurrency } from "@/lib/utils/currency"
 import type { ProjectionResult } from "@/types"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo } from "react"
 import { useShallow } from "zustand/react/shallow"
 
 function pct(n: number) {
@@ -23,8 +23,6 @@ export function PrintClient() {
     }))
   )
 
-  const [ready, setReady] = useState(false)
-
   const plan = storeState
 
   const projection: ProjectionResult | null = useMemo(
@@ -41,15 +39,12 @@ export function PrintClient() {
     [plan]
   )
 
+  // Give the DOM a moment to paint before triggering the print dialog.
   useEffect(() => {
-    setReady(true)
-  }, [])
-
-  useEffect(() => {
-    if (!ready || !projection) return
+    if (!projection) return
     const t = setTimeout(() => window.print(), 600)
     return () => clearTimeout(t)
-  }, [ready, projection])
+  }, [projection])
 
   if (!projection) {
     return (

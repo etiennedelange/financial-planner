@@ -13,7 +13,7 @@ export function SecuritySection({ email }: { email: string }) {
   const [confirmingDisable, setConfirmingDisable] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const refresh = useCallback(async () => {
+  const load = useCallback(async () => {
     try {
       const factors = await listFactors()
       setFactorId(factors[0]?.id ?? null)
@@ -23,13 +23,18 @@ export function SecuritySection({ email }: { email: string }) {
     }
   }, [])
 
-  useEffect(() => { void refresh() }, [refresh])
+  // Defer the initial load out of the effect's synchronous body: the state
+  // updates land after the listFactors/recoveryCodesRemaining promises resolve.
+  useEffect(() => {
+    const id = requestAnimationFrame(() => { void load() })
+    return () => cancelAnimationFrame(id)
+  }, [load])
 
   async function disable() {
     if (!factorId) return
     try {
       await unenrollTotp(factorId)
-      await refresh()
+      await load()
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not disable two-factor authentication.")
     }
@@ -40,7 +45,7 @@ export function SecuritySection({ email }: { email: string }) {
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       {factorId === null ? (
-        <MfaEnrollment onEnrolled={refresh} />
+        <MfaEnrollment onEnrolled={load} />
       ) : (
         <div className="space-y-3 max-w-sm">
           <p className="text-sm text-muted-foreground">

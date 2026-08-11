@@ -18,7 +18,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import { compareScenarios } from "@/lib/calculations/scenario-comparison"
-import { formatCurrency } from "@/lib/utils/formatters"
+import { formatCurrency } from "@/lib/utils/currency"
 import { formatScenarioTooltip } from "@/lib/utils/chart-tooltip"
 import { deflate } from "@/lib/calculations/utils/money-time"
 import type { PersonalInfo, RetirementGoals, DrawdownConfig, CompoundingMethod } from "@/types"

@@ -7,11 +7,22 @@ import { AnimatePresence, motion } from "motion/react"
 
 import { Button } from "@/components/ui/button"
 
+// True after client hydration. Reading the resolved theme before mount on the
+// server would render the wrong icon for the current theme, so we keep the
+// server snapshot "false" and switch to the client value on hydration. Done via
+// useSyncExternalStore instead of a setState-in-effect so the first client
+// render already matches the theme.
+function useMounted() {
+  return React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  )
+}
+
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
-  const [mounted, setMounted] = React.useState(false)
-
-  React.useEffect(() => setMounted(true), [])
+  const mounted = useMounted()
 
   const isDark = mounted && resolvedTheme === "dark"
   const Icon = isDark ? Moon : Sun

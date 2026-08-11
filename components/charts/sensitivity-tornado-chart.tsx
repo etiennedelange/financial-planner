@@ -18,7 +18,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import { buildSensitivityTornado } from "@/lib/calculations/utils/sensitivity-tornado"
-import { formatCurrency } from "@/lib/utils/formatters"
+import { formatCurrency } from "@/lib/utils/currency"
 import type { Account, PersonalInfo, RetirementGoals, DrawdownConfig, MarketAssumptions } from "@/types"
 import { SlidersHorizontal } from "lucide-react"
 import { memo, useMemo } from "react"

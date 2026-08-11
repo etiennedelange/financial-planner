@@ -78,7 +78,26 @@ export function CommandPalette() {
   const navFiltered  = filtered.filter((i) => i.group === "Navigate")
   const acctFiltered = filtered.filter((i) => i.group === "Accounts")
 
-  useEffect(() => { setSelectedIndex(0) }, [query])
+  // Reset the highlighted item to the top whenever the query changes. Done as a
+  // guarded render-time adjustment (React's "adjust state when props change"
+  // pattern) rather than in an effect, so the list and selection never render
+  // one frame out of step.
+  const [prevQuery, setPrevQuery] = useState(query)
+  if (prevQuery !== query) {
+    setPrevQuery(query)
+    setSelectedIndex(0)
+  }
+
+  // When the palette opens, clear the previous query and reset selection. Same
+  // render-time adjustment as above; the input focus still needs an effect.
+  const [prevOpen, setPrevOpen] = useState(open)
+  if (open !== prevOpen) {
+    setPrevOpen(open)
+    if (open) {
+      setQuery("")
+      setSelectedIndex(0)
+    }
+  }
 
   // Global Cmd+K / Ctrl+K listener
   useEffect(() => {
@@ -99,12 +118,11 @@ export function CommandPalette() {
     return () => window.removeEventListener("open-command-palette", onOpen)
   }, [])
 
-  // Auto-focus + reset when opening
+  // Auto-focus the input when opening
   useEffect(() => {
     if (open) {
-      setQuery("")
-      setSelectedIndex(0)
-      setTimeout(() => inputRef.current?.focus(), 30)
+      const t = setTimeout(() => inputRef.current?.focus(), 30)
+      return () => clearTimeout(t)
     }
   }, [open])
 
@@ -172,7 +190,7 @@ export function CommandPalette() {
             {filtered.length === 0 ? (
               <p className="px-4 py-8 text-center text-sm text-muted-foreground">
                 No results for{" "}
-                <span className="font-medium text-foreground">"{query}"</span>
+                <span className="font-medium text-foreground">&quot;{query}&quot;</span>
               </p>
             ) : (
               <>

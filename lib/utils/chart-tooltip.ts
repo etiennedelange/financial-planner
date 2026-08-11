@@ -4,7 +4,7 @@
  * they cannot drift out of step with each other.
  */
 import type { ReactNode } from "react"
-import { formatCurrency } from "@/lib/utils/formatters"
+import { formatCurrency } from "@/lib/utils/currency"
 
 export interface TooltipConfigEntry {
   label?: ReactNode

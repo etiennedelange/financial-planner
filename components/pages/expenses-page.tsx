@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
 import { Check, ChevronDown, ChevronRight, Circle, CircleCheck, FolderPlus, Pencil, Plus, Trash2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -211,7 +211,19 @@ function GroupSection({
 }) {
   const [collapsed, setCollapsed] = useState(false)
   const [flashId, setFlashId] = useState<string | null>(null)
-  const prevExpenseLengthRef = useRef(expenses.length)
+  // Tracks the group's expense count across renders so a newly added row can
+  // flash. Kept as a guarded render-time adjustment (React's "adjust state when
+  // props change" pattern) rather than an effect + ref, so the flash and the
+  // row render in the same commit.
+  const [prevExpenseLength, setPrevExpenseLength] = useState(expenses.length)
+  if (expenses.length !== prevExpenseLength) {
+    const wasAdded = expenses.length > prevExpenseLength
+    setPrevExpenseLength(expenses.length)
+    if (wasAdded) {
+      const last = expenses[expenses.length - 1]
+      if (last) setFlashId(last.id)
+    }
+  }
   const groupTotal = expenses.reduce((s, e) => s + e.amount, 0)
 
   useEffect(() => {
@@ -219,16 +231,6 @@ function GroupSection({
     const t = setTimeout(() => setFlashId(null), 500)
     return () => clearTimeout(t)
   }, [flashId])
-
-  // Flash the newly added expense row
-  useEffect(() => {
-    const prev = prevExpenseLengthRef.current
-    prevExpenseLengthRef.current = expenses.length
-    if (expenses.length > prev) {
-      const last = expenses[expenses.length - 1]
-      if (last) setFlashId(last.id)
-    }
-  }, [expenses])
 
   return (
     <div className="border border-border rounded-md overflow-hidden">
@@ -372,10 +374,6 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
 }) {
   const [editIncome, setEditIncome] = useState(false)
   const [incomeInput, setIncomeInput] = useState(String(monthlyIncome))
-
-  useEffect(() => {
-    if (!editIncome) setIncomeInput(String(monthlyIncome))
-  }, [monthlyIncome, editIncome])
 
   const total = expenses.reduce((s, e) => s + e.amount, 0)
   const retirementTotal = expenses.filter((e) => e.inRetirement).reduce((s, e) => s + e.amount, 0)

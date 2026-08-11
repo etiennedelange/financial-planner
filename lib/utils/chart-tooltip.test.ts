@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { formatCurrency } from "@/lib/utils/formatters"
+import { formatCurrency } from "@/lib/utils/currency"
 import {
   resolveTooltipLabelValue,
   formatPercentileTooltip,

@@ -38,9 +38,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Request body too large" }, { status: 413 })
   }
 
+  // content-length is client-supplied and trivially spoofed (or absent under
+  // chunked encoding), so the real cap is the actual body read here — never
+  // trust the header for the size decision.
+  const rawBody = await request.text()
+  if (rawBody.length > 1_000) {
+    return NextResponse.json({ error: "Request body too large" }, { status: 413 })
+  }
+
   let body: unknown
   try {
-    body = await request.json()
+    body = JSON.parse(rawBody)
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }

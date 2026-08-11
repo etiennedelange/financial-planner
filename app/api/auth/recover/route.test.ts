@@ -24,6 +24,7 @@ import { POST } from './route'
 function makeRequest(body: unknown, headers: Record<string, string> = {}) {
   return {
     json: async () => body,
+    text: async () => JSON.stringify(body),
     headers: new Headers(headers),
   } as unknown as Request
 }

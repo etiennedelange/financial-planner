@@ -8,7 +8,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
-import { formatCurrency } from "@/lib/utils/formatters"
+import { formatCurrency } from "@/lib/utils/currency"
 import { formatPercentileTooltip } from "@/lib/utils/chart-tooltip"
 import { getSuccessRateStyle } from "@/lib/utils/success-rate"
 import type { SimulationResult } from "@/types"
@@ -54,6 +54,19 @@ export const MonteCarloChart = memo(function MonteCarloChart({
   hasError = false,
   hasAccounts = false,
 }: MonteCarloChartProps) {
+  const data = useMemo(() => {
+    const percentiles = simulationResult?.percentiles
+    if (!percentiles || percentiles.p50.length === 0) return []
+    return percentiles.p50.map((_, index) => ({
+      age: currentAge + index,
+      p10: percentiles.p10[index],
+      p25: percentiles.p25[index],
+      p50: percentiles.p50[index],
+      p75: percentiles.p75[index],
+      p90: percentiles.p90[index],
+    }))
+  }, [simulationResult, currentAge])
+
   if (!simulationResult || simulationResult.percentiles.p50.length === 0) {
     return (
       <Card className="dashboard-card shadow-none">
@@ -110,15 +123,6 @@ export const MonteCarloChart = memo(function MonteCarloChart({
   const { percentiles } = simulationResult
   const successRate = simulationResult.successRate
   const rateStyle = getSuccessRateStyle(successRate)
-
-  const data = useMemo(() => percentiles.p50.map((_, index) => ({
-    age: currentAge + index,
-    p10: percentiles.p10[index],
-    p25: percentiles.p25[index],
-    p50: percentiles.p50[index],
-    p75: percentiles.p75[index],
-    p90: percentiles.p90[index],
-  })), [percentiles, currentAge])
 
   return (
     <Card className="dashboard-card shadow-none" role="figure" aria-label={`Portfolio balance across ${simulationResult.runs.length.toLocaleString()} market scenarios from age ${currentAge} to life expectancy`}>

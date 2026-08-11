@@ -28,14 +28,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Too many requests. Try again later." }, { status: 429 })
   }
 
-  let rawBody: unknown
+  // content-length is client-supplied and trivially spoofed (or absent under
+  // chunked encoding), so the real cap is the actual body read here — never
+  // trust the header for the size decision.
+  const rawBody = await request.text()
+  if (rawBody.length > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: "Request body too large" }, { status: 413 })
+  }
+
+  let body: unknown
   try {
-    rawBody = await request.json()
+    body = JSON.parse(rawBody)
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }
 
-  const parsed = planNarrativeRequestSchema.safeParse(rawBody)
+  const parsed = planNarrativeRequestSchema.safeParse(body)
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid request body", issues: parsed.error.issues }, { status: 400 })
   }

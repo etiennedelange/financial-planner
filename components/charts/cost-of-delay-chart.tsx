@@ -17,7 +17,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import { calculateCostOfDelay } from "@/lib/calculations/cost-of-delay"
-import { formatCurrency } from "@/lib/utils/formatters"
+import { formatCurrency } from "@/lib/utils/currency"
 import type { PersonalInfo, RetirementGoals, CompoundingMethod } from "@/types"
 import { Clock } from "lucide-react"
 import { memo, useMemo } from "react"

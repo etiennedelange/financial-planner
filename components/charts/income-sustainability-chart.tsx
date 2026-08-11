@@ -17,7 +17,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import { buildIncomeSustainabilitySeries } from "@/lib/calculations/utils/income-sustainability"
-import { formatCurrency } from "@/lib/utils/formatters"
+import { formatCurrency } from "@/lib/utils/currency"
 import type { ProjectionResult } from "@/types"
 import { ArrowDownToLine } from "lucide-react"
 import { memo, useMemo } from "react"

@@ -21,12 +21,15 @@ export function SpringNumber({ value, format, className }: SpringNumberProps) {
 
   useEffect(() => {
     motionValue.set(value)
-    if (prefersReducedMotion) setDisplay(value)
-  }, [value, motionValue, prefersReducedMotion])
+  }, [value, motionValue])
 
   useMotionValueEvent(spring, "change", (latest) => {
-    if (!prefersReducedMotion) setDisplay(latest)
+    setDisplay(latest)
   })
 
-  return <span className={className}>{format(display)}</span>
+  // Reduced motion skips the spring entirely and shows the target value
+  // immediately; the spring keeps running but its output is ignored.
+  const shown = prefersReducedMotion ? value : display
+
+  return <span className={className}>{format(shown)}</span>
 }

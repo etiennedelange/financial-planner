@@ -3,8 +3,8 @@
 import { createClient } from "@/lib/supabase/client"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
-import { useRef, useState } from "react"
-import { useForm } from "react-hook-form"
+import { forwardRef, useRef, useState } from "react"
+import { useForm, useFormState } from "react-hook-form"
 import { z } from "zod/v4"
 import { Button } from "@/components/ui/button"
 import {
@@ -76,6 +76,13 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   const signupForm  = useForm<EmailPasswordForm>({ resolver: zodResolver(emailPasswordSchema) })
   const resetForm   = useForm<EmailForm>({ resolver: zodResolver(emailSchema) })
 
+  // Errors come from useFormState (per-form subscription) rather than reading
+  // formState directly during render — the React-Compiler-compatible pattern
+  // already used in account-form-dialog.
+  const { errors: signinErrors } = useFormState({ control: signinForm.control })
+  const { errors: signupErrors } = useFormState({ control: signupForm.control })
+  const { errors: resetErrors } = useFormState({ control: resetForm.control })
+
   function switchMode(next: Mode) {
     setMode(next)
     setMessage(null)
@@ -135,6 +142,18 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
   const { title, subtitle } = modeConfig[mode]
 
+  // Handle-submit bindings are built once per render — the documented RHF v7
+  // pattern (also used in account-form-dialog). React Compiler's react-hooks/refs
+  // rule flags calling handleSubmit() during render as a potential ref read; this
+  // is a known false positive on react-hook-form v7, which has no React Compiler
+  // support (added first-class in v8). Disabling the rule here is deliberate.
+  // eslint-disable-next-line react-hooks/refs
+  const submitSignIn = signinForm.handleSubmit(handleSignIn)
+  // eslint-disable-next-line react-hooks/refs
+  const submitSignUp = signupForm.handleSubmit(handleSignUp)
+  // eslint-disable-next-line react-hooks/refs
+  const submitReset = resetForm.handleSubmit(handleReset)
+
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-sm p-0 overflow-hidden gap-0">
@@ -152,9 +171,9 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
         {/* Form body */}
         <div className="px-6 py-5 space-y-4">
           {mode === "signin" && (
-            <form onSubmit={signinForm.handleSubmit(handleSignIn)} className="space-y-3">
+            <form onSubmit={submitSignIn} className="space-y-3">
               <Field label="Email" id="si-email" type="email" autoComplete="email"
-                error={signinForm.formState.errors.email?.message}
+                error={signinErrors.email?.message}
                 {...signinForm.register("email")} />
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
@@ -165,10 +184,10 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                   </button>
                 </div>
                 <Input id="si-pw" type="password" autoComplete="current-password"
-                  className={`h-8 text-sm ${signinForm.formState.errors.password ? "border-destructive" : ""}`}
+                  className={`h-8 text-sm ${signinErrors.password ? "border-destructive" : ""}`}
                   {...signinForm.register("password")} />
-                {signinForm.formState.errors.password && (
-                  <p className="text-xs text-destructive">{signinForm.formState.errors.password.message}</p>
+                {signinErrors.password && (
+                  <p className="text-xs text-destructive">{signinErrors.password.message}</p>
                 )}
               </div>
               <StatusMessage message={message} />
@@ -180,12 +199,12 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
           )}
 
           {mode === "signup" && (
-            <form onSubmit={signupForm.handleSubmit(handleSignUp)} className="space-y-3">
+            <form onSubmit={submitSignUp} className="space-y-3">
               <Field label="Email" id="su-email" type="email" autoComplete="email"
-                error={signupForm.formState.errors.email?.message}
+                error={signupErrors.email?.message}
                 {...signupForm.register("email")} />
               <Field label="Password" id="su-pw" type="password" autoComplete="new-password"
-                error={signupForm.formState.errors.password?.message}
+                error={signupErrors.password?.message}
                 {...signupForm.register("password")} />
               <StatusMessage message={message} />
               <Turnstile ref={turnstile} onToken={setCaptchaToken} />
@@ -196,9 +215,9 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
           )}
 
           {mode === "reset" && (
-            <form onSubmit={resetForm.handleSubmit(handleReset)} className="space-y-3">
+            <form onSubmit={submitReset} className="space-y-3">
               <Field label="Email" id="re-email" type="email" autoComplete="email"
-                error={resetForm.formState.errors.email?.message}
+                error={resetErrors.email?.message}
                 {...resetForm.register("email")} />
               <StatusMessage message={message} />
               <Turnstile ref={turnstile} onToken={setCaptchaToken} />
@@ -232,15 +251,28 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   )
 }
 
-function Field({ label, id, error, ...props }: { label: string; id: string; error?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+interface FieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label: string
+  id: string
+  error?: string
+}
+
+// forwardRef so react-hook-form's register() can hand its ref straight to the
+// underlying <input> (React extracts `ref` as a special prop instead of the
+// compiler seeing it read as a plain prop during render — the same shape as the
+// register() spreads in account-form-dialog).
+const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
+  { label, id, error, ...props },
+  ref
+) {
   return (
     <div className="space-y-1">
       <Label htmlFor={id} className="text-xs font-medium">{label}</Label>
-      <Input id={id} className={`h-8 text-sm ${error ? "border-destructive" : ""}`} {...props} />
+      <Input id={id} ref={ref} className={`h-8 text-sm ${error ? "border-destructive" : ""}`} {...props} />
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   )
-}
+})
 
 function StatusMessage({ message }: { message: { type: "success" | "error"; text: string } | null }) {
   if (!message) return null
@@ -248,7 +280,7 @@ function StatusMessage({ message }: { message: { type: "success" | "error"; text
     <p className={`text-sm rounded-md px-3 py-2 ${
       message.type === "error"
         ? "bg-destructive/10 text-destructive"
-        : "bg-green-500/10 text-green-700 dark:text-green-400"
+        : "bg-success/10 text-success"
     }`}>
       {message.text}
     </p>

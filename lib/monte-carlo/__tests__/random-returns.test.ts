@@ -3,7 +3,9 @@ import { randomNormal, generateReturnSequence, getPercentile, createSeededRandom
 
 describe('randomNormal', () => {
   it('should generate normally distributed random numbers', () => {
-    const samples = Array.from({ length: 1000 }, () => randomNormal(0, 1))
+    // Seeded rng so the sample statistics are exact, not a gamble on Math.random.
+    const rng = createSeededRandom(42)
+    const samples = Array.from({ length: 2000 }, () => randomNormal(0, 1, rng))
 
     // Calculate mean - should be close to 0
     const mean = samples.reduce((sum, x) => sum + x, 0) / samples.length
@@ -17,7 +19,8 @@ describe('randomNormal', () => {
   it('should respect provided mean and standard deviation', () => {
     const mean = 5
     const stdDev = 2
-    const samples = Array.from({ length: 100 }, () => randomNormal(mean, stdDev))
+    const rng = createSeededRandom(42)
+    const samples = Array.from({ length: 100 }, () => randomNormal(mean, stdDev, rng))
 
     const sampleMean = samples.reduce((sum, x) => sum + x, 0) / samples.length
     expect(Math.abs(sampleMean - mean)).toBeLessThan(0.5)
@@ -60,7 +63,9 @@ describe('generateReturnSequence', () => {
   })
 
   it('should have mean close to expected return', () => {
-    const returns = generateReturnSequence(0.12, 0.15, 1000)
+    // Seeded rng for reproducibility — otherwise a 1000-draw sample mean can
+    // occasionally drift outside the 0.05 window.
+    const returns = generateReturnSequence(0.12, 0.15, 1000, createSeededRandom(7))
     const mean = returns.reduce((sum, r) => sum + r, 0) / returns.length
 
     // Mean should be roughly close to expected return
@@ -68,7 +73,7 @@ describe('generateReturnSequence', () => {
   })
 
   it('should have volatility close to specified volatility', () => {
-    const returns = generateReturnSequence(0.10, 0.16, 1000)
+    const returns = generateReturnSequence(0.10, 0.16, 1000, createSeededRandom(11))
 
     // Calculate sample volatility
     const mean = returns.reduce((sum, r) => sum + r, 0) / returns.length

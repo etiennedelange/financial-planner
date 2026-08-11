@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, type Dispatch, type SetStateAction } from "react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -27,6 +27,20 @@ interface DrawdownStrategyFormProps {
   displayMode?: "nominal" | "real"
 }
 
+// Local editing state that snaps back to its source whenever the source value
+// changes (e.g. loading a different scenario). Done as a guarded render-time
+// adjustment — React's "adjust state when props change" pattern — instead of
+// setState-in-effect, so the slider and the store never disagree for a frame.
+function useSyncedState<T>(source: T): [T, Dispatch<SetStateAction<T>>] {
+  const [value, setValue] = useState(source)
+  const [prevSource, setPrevSource] = useState(source)
+  if (prevSource !== source) {
+    setPrevSource(source)
+    setValue(source)
+  }
+  return [value, setValue]
+}
+
 export function DrawdownStrategyForm({
   portfolioAtRetirement,
   displayMode = "nominal",
@@ -43,15 +57,10 @@ export function DrawdownStrategyForm({
 
   const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
 
-  const [localWithdrawalRate, setLocalWithdrawalRate] = useState(drawdownConfig.initialWithdrawalRate)
-  const [localLumpSum, setLocalLumpSum] = useState(drawdownConfig.lumpSumPercentage ?? 0)
-  const [localUpperGuardrail, setLocalUpperGuardrail] = useState(drawdownConfig.upperGuardrail ?? 20)
-  const [localLowerGuardrail, setLocalLowerGuardrail] = useState(drawdownConfig.lowerGuardrail ?? 20)
-
-  useEffect(() => { setLocalWithdrawalRate(drawdownConfig.initialWithdrawalRate) }, [drawdownConfig.initialWithdrawalRate])
-  useEffect(() => { setLocalLumpSum(drawdownConfig.lumpSumPercentage ?? 0) }, [drawdownConfig.lumpSumPercentage])
-  useEffect(() => { setLocalUpperGuardrail(drawdownConfig.upperGuardrail ?? 20) }, [drawdownConfig.upperGuardrail])
-  useEffect(() => { setLocalLowerGuardrail(drawdownConfig.lowerGuardrail ?? 20) }, [drawdownConfig.lowerGuardrail])
+  const [localWithdrawalRate, setLocalWithdrawalRate] = useSyncedState(drawdownConfig.initialWithdrawalRate)
+  const [localLumpSum, setLocalLumpSum] = useSyncedState(drawdownConfig.lumpSumPercentage ?? 0)
+  const [localUpperGuardrail, setLocalUpperGuardrail] = useSyncedState(drawdownConfig.upperGuardrail ?? 20)
+  const [localLowerGuardrail, setLocalLowerGuardrail] = useSyncedState(drawdownConfig.lowerGuardrail ?? 20)
 
   const showMinMax = drawdownConfig.strategy === "variable_percentage" || drawdownConfig.strategy === "guardrails"
   const showGuardrailBands = drawdownConfig.strategy === "guardrails"

@@ -18,7 +18,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import type { YearlyProjection } from "@/types"
-import { formatCurrency } from "@/lib/utils/formatters"
+import { formatCurrency } from "@/lib/utils/currency"
 import { memo, useMemo } from "react"
 
 interface PortfolioGrowthChartProps {
@@ -37,6 +37,13 @@ export const PortfolioGrowthChart = memo(function PortfolioGrowthChart({
   projections,
   retirementAge,
 }: PortfolioGrowthChartProps) {
+  const data = useMemo(() => projections.map((p) => ({
+    age: p.age,
+    balance: p.endingBalance,
+    contributions: p.contributions,
+    withdrawals: p.withdrawals,
+  })), [projections])
+
   if (projections.length === 0) {
     return (
       <Card className="dashboard-card shadow-none">
@@ -88,13 +95,6 @@ export const PortfolioGrowthChart = memo(function PortfolioGrowthChart({
       </Card>
     )
   }
-
-  const data = useMemo(() => projections.map((p) => ({
-    age: p.age,
-    balance: p.endingBalance,
-    contributions: p.contributions,
-    withdrawals: p.withdrawals,
-  })), [projections])
 
   return (
     <Card className="dashboard-card shadow-none" role="figure" aria-label={`Portfolio balance projection from age ${projections[0].age} to ${projections[projections.length - 1].age}`}>
