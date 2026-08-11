@@ -71,6 +71,7 @@
 - **Evidence:** `components/auth/turnstile.tsx:69` renders nothing when `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is absent, while the sign-in, sign-up, reset, and reauthentication buttons require `captchaToken` before submission.
 - **Impact:** A deployment missing the public site key silently makes authentication unusable. The test key in `.env.example` masks this during local development.
 - **Remediation:** Fail deployment health checks when production Turnstile configuration is incomplete, or make the client behavior match an explicitly disabled server-side CAPTCHA mode. Update the stale component comment and add an environment-matrix test.
+- **Deployment note (2026-08-11):** Production Cloudflare widget created (site key `0x4AAAAAAENVcI5snagBAJ2G`, recorded in `.env.example`). Remaining setup lives outside the repo: hosting-platform env vars (`NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`, set before `next build`), the same secret in the hosted Supabase dashboard CAPTCHA settings, and the production domain on the widget's hostname allowlist. Local dev intentionally keeps the always-pass test pair so local Supabase captcha validation keeps working.
 
 ### AUTH-008: npm and pnpm lockfiles have diverged
 

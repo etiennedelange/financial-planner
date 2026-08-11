@@ -50,8 +50,6 @@ next-env.d.ts
 
 .claude/settings.local.json
 
-Uitgawes.xlsx
-
 .claude/worktrees
 
 /.worktrees

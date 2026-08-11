@@ -1,16 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { listFactors } from "@/lib/auth/mfa"
+import { listFactors, unenrollAbandonedFactors } from "@/lib/auth/mfa"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PageCard } from "@/components/ui/page-card"
 
 export default function MfaChallengePage() {
-  const router = useRouter()
   const [factorId, setFactorId] = useState<string | null>(null)
   const [mode, setMode] = useState<"totp" | "recovery">("totp")
   const [value, setValue] = useState("")
@@ -19,12 +17,20 @@ export default function MfaChallengePage() {
 
   useEffect(() => {
     listFactors()
-      .then((factors) => {
-        if (factors.length === 0) router.replace("/calculator")
-        else setFactorId(factors[0].id)
+      .then(async (factors) => {
+        if (factors.length === 0) {
+          // The middleware redirected here because the session's cached AAL
+          // still counts an abandoned (unverified) factor. Clean it up so the
+          // next request's AAL check no longer sees a reason to gate — the
+          // hard navigation below re-runs middleware against the fresh state.
+          await unenrollAbandonedFactors().catch(() => {})
+          window.location.href = "/calculator"
+        } else {
+          setFactorId(factors[0].id)
+        }
       })
       .catch(() => setError("Could not load your authentication factors."))
-  }, [router])
+  }, [])
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()

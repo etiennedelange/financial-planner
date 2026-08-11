@@ -19,6 +19,7 @@ import {
   verifyEnrollment,
   listFactors,
   unenrollTotp,
+  unenrollAbandonedFactors,
   currentAal,
   recoveryCodesRemaining,
   elevateWithTotp,
@@ -85,7 +86,20 @@ describe('verifyEnrollment', () => {
 describe('listFactors', () => {
   it('returns only verified TOTP factors', async () => {
     mfa.listFactors.mockResolvedValue({
-      data: { totp: [{ id: 'f1', friendly_name: 'Phone' }] }, error: null,
+      data: { totp: [{ id: 'f1', friendly_name: 'Phone', status: 'verified' }] }, error: null,
+    })
+    await expect(listFactors()).resolves.toEqual([{ id: 'f1', friendlyName: 'Phone' }])
+  })
+
+  it('excludes abandoned (unverified) factors from the result', async () => {
+    mfa.listFactors.mockResolvedValue({
+      data: {
+        totp: [
+          { id: 'f1', friendly_name: 'Phone', status: 'verified' },
+          { id: 'f2', friendly_name: null, status: 'unverified' },
+        ],
+      },
+      error: null,
     })
     await expect(listFactors()).resolves.toEqual([{ id: 'f1', friendlyName: 'Phone' }])
   })
@@ -93,6 +107,49 @@ describe('listFactors', () => {
   it('returns an empty list when nothing is enrolled', async () => {
     mfa.listFactors.mockResolvedValue({ data: { totp: [] }, error: null })
     await expect(listFactors()).resolves.toEqual([])
+  })
+})
+
+describe('unenrollAbandonedFactors', () => {
+  it('unenrolls every unverified factor and leaves verified ones alone', async () => {
+    mfa.listFactors.mockResolvedValue({
+      data: {
+        totp: [
+          { id: 'f1', friendly_name: 'Phone', status: 'verified' },
+          { id: 'f2', friendly_name: null, status: 'unverified' },
+          { id: 'f3', friendly_name: null, status: 'unverified' },
+        ],
+      },
+      error: null,
+    })
+    mfa.unenroll.mockResolvedValue({ error: null })
+
+    await unenrollAbandonedFactors()
+
+    expect(mfa.unenroll).toHaveBeenCalledTimes(2)
+    expect(mfa.unenroll).toHaveBeenCalledWith({ factorId: 'f2' })
+    expect(mfa.unenroll).toHaveBeenCalledWith({ factorId: 'f3' })
+  })
+
+  it('does nothing when there are no abandoned factors', async () => {
+    mfa.listFactors.mockResolvedValue({
+      data: { totp: [{ id: 'f1', friendly_name: 'Phone', status: 'verified' }] }, error: null,
+    })
+    await unenrollAbandonedFactors()
+    expect(mfa.unenroll).not.toHaveBeenCalled()
+  })
+
+  it('throws when Supabase rejects listing factors', async () => {
+    mfa.listFactors.mockResolvedValue({ data: null, error: { message: 'not authenticated' } })
+    await expect(unenrollAbandonedFactors()).rejects.toThrow('not authenticated')
+  })
+
+  it('throws when an unenrol call fails', async () => {
+    mfa.listFactors.mockResolvedValue({
+      data: { totp: [{ id: 'f2', friendly_name: null, status: 'unverified' }] }, error: null,
+    })
+    mfa.unenroll.mockResolvedValue({ error: { message: 'aal2 required' } })
+    await expect(unenrollAbandonedFactors()).rejects.toThrow('aal2 required')
   })
 })
 

@@ -5,7 +5,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { enrollTotp, verifyEnrollment, type TotpEnrollment } from "@/lib/auth/mfa"
+import { enrollTotp, unenrollTotp, verifyEnrollment, type TotpEnrollment } from "@/lib/auth/mfa"
 import { RecoveryCodesDialog } from "./recovery-codes-dialog"
 
 interface MfaEnrollmentProps {
@@ -31,6 +31,16 @@ export function MfaEnrollment({ onEnrolled }: MfaEnrollmentProps) {
     setLoading(true); setError(null)
     try { setCodes(await verifyEnrollment(enrollment.factorId, code)) }
     catch (e) { setError(e instanceof Error ? e.message : "Could not verify the code") }
+    finally { setLoading(false) }
+  }
+
+  async function cancel() {
+    if (!enrollment) return
+    setLoading(true); setError(null)
+    try {
+      await unenrollTotp(enrollment.factorId)
+      setEnrollment(null); setCode("")
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not cancel enrolment") }
     finally { setLoading(false) }
   }
 
@@ -67,9 +77,14 @@ export function MfaEnrollment({ onEnrolled }: MfaEnrollmentProps) {
             className={error ? "border-destructive" : ""} />
           {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
-        <Button onClick={confirm} disabled={loading || code.length !== 6} size="sm">
-          {loading ? "Verifying…" : "Verify & Enable"}
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={confirm} disabled={loading || code.length !== 6} size="sm">
+            {loading ? "Verifying…" : "Verify & Enable"}
+          </Button>
+          <Button onClick={cancel} disabled={loading} size="sm" variant="outline">
+            Cancel
+          </Button>
+        </div>
       </div>
 
       <RecoveryCodesDialog

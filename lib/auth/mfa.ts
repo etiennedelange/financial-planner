@@ -49,7 +49,31 @@ export async function verifyEnrollment(factorId: string, code: string): Promise<
 export async function listFactors(): Promise<{ id: string; friendlyName: string | null }[]> {
   const { data, error } = await createClient().auth.mfa.listFactors()
   if (error) throw new Error(error.message)
-  return (data.totp ?? []).map((f) => ({ id: f.id, friendlyName: f.friendly_name ?? null }))
+  // "unverified" means enrol() was called but verifyEnrollment() never completed
+  // (e.g. the user closed the tab before entering a code) — that factor has no
+  // recovery codes and was never confirmed, so it must not count as "2FA is on".
+  return (data.totp ?? [])
+    .filter((f) => f.status === "verified")
+    .map((f) => ({ id: f.id, friendlyName: f.friendly_name ?? null }))
+}
+
+/**
+ * Unenrols any abandoned (never-verified) TOTP factors for the current user.
+ * Supabase's own AAL calculation treats an unverified factor as making aal2
+ * reachable, so an abandoned enrolment attempt can strand a user at the MFA
+ * challenge screen for a factor they never finished setting up. Called from
+ * the enrolment UI's cancel path and as a self-healing backstop on the
+ * challenge page itself.
+ */
+export async function unenrollAbandonedFactors(): Promise<void> {
+  const supabase = createClient()
+  const { data, error } = await supabase.auth.mfa.listFactors()
+  if (error) throw new Error(error.message)
+  const abandoned = (data.totp ?? []).filter((f) => f.status !== "verified")
+  for (const factor of abandoned) {
+    const { error: unenrollError } = await supabase.auth.mfa.unenroll({ factorId: factor.id })
+    if (unenrollError) throw new Error(unenrollError.message)
+  }
 }
 
 /**
