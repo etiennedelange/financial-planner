@@ -142,7 +142,7 @@ These functions didn't accept or use the `compoundingMethod` parameter:
 
 ## Documentation Created
 
-### 1. `docs/history/project-phases.md` (Updated)
+### 1. `docs/project-phases.md` (Updated)
 **Added:**
 - Phase 1.5: Testing & Validation Framework
 - 6 prioritized tasks (P0, P1, P2)
@@ -158,7 +158,7 @@ These functions didn't accept or use the `compoundingMethod` parameter:
 - P2: Display mode tests (Medium)
 - P2: Validation script (Medium)
 
-### 2. `docs/history/testing-and-validation-plan.md` (Created)
+### 2. `docs/history/2026-01-05-testing-and-validation-plan.md` (Created)
 **Contains:**
 - Complete implementation guide (500+ lines)
 - Vitest setup with latest best practices (2026)
@@ -285,9 +285,9 @@ formatCurrency(value, 'real', yearsFromNow, inflationRate)
 - `components/results/insights-panel.tsx`
 
 ### Documentation (4 files)
-- `docs/history/project-phases.md` (updated)
+- `docs/project-phases.md` (updated)
 - `CLAUDE.md` (updated)
-- `docs/history/testing-and-validation-plan.md` (created)
+- `docs/history/2026-01-05-testing-and-validation-plan.md` (created)
 - `docs/history/QUICK_START_TESTING.md` (created)
 - `docs/history/2026-01-05-insights-tab-fix-and-testing-framework.md` (this file)
 
@@ -343,8 +343,8 @@ formatCurrency(value, 'real', yearsFromNow, inflationRate)
 
 ## References
 
-- **Testing Plan:** `docs/history/testing-and-validation-plan.md`
+- **Testing Plan:** `docs/history/2026-01-05-testing-and-validation-plan.md`
 - **Quick Start Guide:** `docs/history/QUICK_START_TESTING.md`
-- **Project Phases:** `docs/history/project-phases.md`
+- **Project Phases:** `docs/project-phases.md`
 - **Development Guide:** `CLAUDE.md`
 - **Previous Session:** `docs/history/2026-01-02-calculation-fixes-and-ui-improvements.md`

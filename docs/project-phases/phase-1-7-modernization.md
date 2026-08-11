@@ -274,6 +274,6 @@ All five deferred items resolved:
 
 ## Status
 
-**Documentation:** See `docs/history/2026-04-11-technical-design-review.md` for the full audit findings, step ordering rationale, and production perf comparison tables.
+**Documentation:** See `docs/history/2026-04-11-dependency-upgrade-to-latest.md` for the full audit findings, step ordering rationale, and production perf comparison tables.
 
 **Status:** ✅ Complete (2026-04-11). All 6 steps landed. Production perf result vs baseline: interactive TBT **597ms → 533ms (-10.7%)**, longTaskMs **847ms → 783ms (-7.6%)**. No regression on empty-scenario metrics. See `perf/after-prod-interactive.json` for full numbers.

@@ -143,8 +143,14 @@ Design rules:
 
 Locked teal accent + light/dark mode (no color-theme switching). Full details: `docs/THEMING.md`.
 
-## Phase Docs (update after every meaningful change)
+## Documentation Rules
 
-1. `docs/project-phases/` — mark tasks complete, update pending list
-2. `docs/project-phases.md` — add dated entry to "Current Status Summary", update status emoji
-3. `docs/history/` — date-prefixed markdown for significant calculation/architecture changes
+**Meaningful change** = calculation/architecture/security change, completed phase task, or bug fix touching >2 files. Typos, copy, and comment-only changes are exempt.
+
+After a meaningful change, update all three tiers — detail lives in exactly ONE place:
+
+1. `docs/history/YYYY-MM-DD-<slug>.md` — the ONLY full write-up: what changed, why, verification
+2. `docs/project-phases/<phase>.md` — flip checkboxes, update pending list, link to the history file; don't repeat its content
+3. `docs/project-phases.md` — one-line Recent Activity entry (date + title + history link); keep the latest 10, drop the oldest. Status emoji only when a phase's status actually changes
+
+Full conventions: `docs/README.md`

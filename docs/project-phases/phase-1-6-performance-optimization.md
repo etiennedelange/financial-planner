@@ -116,4 +116,4 @@
   - Slow component detection
   - **Impact:** Visibility into production performance
 
-**Documentation:** See `docs/history/2026-01-15-performance-optimization.md`
+**Documentation:** This file is the record for the 2026-01-15 quick-wins round (no separate history file was created).
