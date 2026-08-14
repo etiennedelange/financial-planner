@@ -10,6 +10,7 @@ import {
 } from "recharts"
 import { Card, CardContent } from "@/components/ui/card"
 import { SectionLabel } from "@/components/ui/section-label"
+import { ChartDataTable } from "@/components/ui/chart-data-table"
 import { TrendingUp } from "lucide-react"
 import {
   ChartContainer,
@@ -51,7 +52,7 @@ export const PortfolioGrowthChart = memo(function PortfolioGrowthChart({
           <SectionLabel>Portfolio Growth Over Time</SectionLabel>
           <p className="text-sm text-muted-foreground pl-3">Deterministic projection of portfolio value</p>
         </div>
-        <CardContent className="relative flex h-[180px] md:h-[260px] items-center justify-center overflow-hidden">
+        <CardContent className="relative flex h-(--chart-height-compact) md:h-(--chart-height-full) items-center justify-center overflow-hidden">
           {/* Ghost growth curve: accumulates to retirement, gentle withdrawal after */}
           <svg
             className="absolute inset-0 h-full w-full"
@@ -105,7 +106,7 @@ export const PortfolioGrowthChart = memo(function PortfolioGrowthChart({
         </p>
       </div>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
-        <ChartContainer config={chartConfig} className="h-[180px] md:h-[260px] w-full">
+        <ChartContainer config={chartConfig} className="h-(--chart-height-compact) md:h-(--chart-height-full) w-full">
           <AreaChart
             data={data}
             margin={{ top: 16, right: 16, left: 0, bottom: 0 }}
@@ -165,6 +166,16 @@ export const PortfolioGrowthChart = memo(function PortfolioGrowthChart({
           </AreaChart>
         </ChartContainer>
       </CardContent>
+      <ChartDataTable
+        columns={[
+          { key: "age", label: "Age", align: "right" },
+          { key: "balance", label: "Ending balance", align: "right", format: (v) => formatCurrency(Number(v)) },
+          { key: "contributions", label: "Contributions", align: "right", format: (v) => formatCurrency(Number(v)) },
+          { key: "withdrawals", label: "Withdrawals", align: "right", format: (v) => formatCurrency(Number(v)) },
+        ]}
+        rows={data}
+        caption={`Portfolio balance from age ${projections[0].age} to ${projections[projections.length - 1].age}`}
+      />
     </Card>
   )
 })

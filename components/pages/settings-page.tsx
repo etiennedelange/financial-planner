@@ -58,6 +58,7 @@ export function SettingsPage({ projection }: SettingsPageProps) {
   const { user } = useAuth()
   const importInputRef = useRef<HTMLInputElement>(null)
   const [importError, setImportError] = useState<string | null>(null)
+  const [importing, setImporting] = useState(false)
   const [resetPending, setResetPending] = useState(false)
 
   const handleExportPlan = () => {
@@ -70,11 +71,14 @@ export function SettingsPage({ projection }: SettingsPageProps) {
     e.target.value = ""
     if (!file) return
     setImportError(null)
+    setImporting(true)
     try {
       const { plan } = await parsePlanFile(file)
       loadPlan(plan)
     } catch (err) {
       setImportError(err instanceof Error ? err.message : "Import failed.")
+    } finally {
+      setImporting(false)
     }
   }
 
@@ -187,9 +191,9 @@ export function SettingsPage({ projection }: SettingsPageProps) {
               <Download className="mr-2 h-4 w-4" />
               Export Plan
             </Button>
-            <Button variant="outline" size="sm" onClick={() => importInputRef.current?.click()}>
+            <Button variant="outline" size="sm" onClick={() => importInputRef.current?.click()} disabled={importing}>
               <Upload className="mr-2 h-4 w-4" />
-              Import Plan
+              {importing ? "Importing…" : "Import Plan"}
             </Button>
           </div>
           {importError && (

@@ -50,7 +50,7 @@ export function FloatingActionBar({ primary, secondary, hint, className }: Float
   return (
     <div
       className={cn(
-        "fixed z-30 left-0 right-0 md:left-[220px]",
+        "fixed z-30 left-0 right-0 md:left-(--sidebar-width)",
         "bottom-14 md:bottom-0",
         "border-t border-border bg-card/90 backdrop-blur-sm",
         "transition-transform duration-200 ease-out",

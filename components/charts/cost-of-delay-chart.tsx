@@ -10,6 +10,7 @@ import {
 } from "recharts"
 import { Card, CardContent } from "@/components/ui/card"
 import { SectionLabel } from "@/components/ui/section-label"
+import { ChartDataTable } from "@/components/ui/chart-data-table"
 import {
   ChartContainer,
   ChartTooltip,
@@ -82,7 +83,7 @@ export const CostOfDelayChart = memo(function CostOfDelayChart({
             Nest egg lost by delaying the start of saving
           </p>
         </div>
-        <CardContent className="flex h-[180px] md:h-[260px] items-center justify-center gap-2 text-center">
+        <CardContent className="flex h-(--chart-height-compact) md:h-(--chart-height-full) items-center justify-center gap-2 text-center">
           <Clock className="h-8 w-8 text-muted-foreground/30" />
           <p className="text-sm text-muted-foreground">Add contributions to see the cost of delay</p>
         </CardContent>
@@ -99,7 +100,7 @@ export const CostOfDelayChart = memo(function CostOfDelayChart({
         </p>
       </div>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
-        <ChartContainer config={chartConfig} className="h-[180px] md:h-[260px] w-full">
+        <ChartContainer config={chartConfig} className="h-(--chart-height-compact) md:h-(--chart-height-full) w-full">
           <BarChart
             data={data}
             margin={{ top: 16, right: 16, left: 0, bottom: 0 }}
@@ -137,6 +138,15 @@ export const CostOfDelayChart = memo(function CostOfDelayChart({
           </BarChart>
         </ChartContainer>
       </CardContent>
+      <ChartDataTable
+        columns={[
+          { key: "name", label: "Delay", align: "left" },
+          { key: "cost", label: "Nest egg lost", align: "right", format: (v) => formatCurrency(Number(v)) },
+          { key: "pct", label: "Lost (%)", align: "right", format: (v) => `${Number(v).toFixed(1)}%` },
+        ]}
+        rows={data}
+        caption="Nest egg lost by delaying the start of saving"
+      />
     </Card>
   )
 })

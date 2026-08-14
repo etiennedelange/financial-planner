@@ -11,6 +11,7 @@ import {
 } from "recharts"
 import { Card, CardContent } from "@/components/ui/card"
 import { SectionLabel } from "@/components/ui/section-label"
+import { ChartDataTable } from "@/components/ui/chart-data-table"
 import {
   ChartContainer,
   ChartTooltip,
@@ -98,7 +99,7 @@ export const ScenarioComparisonChart = memo(function ScenarioComparisonChart({
         </p>
       </div>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
-        <ChartContainer config={chartConfig} className="h-[180px] md:h-[260px] w-full">
+        <ChartContainer config={chartConfig} className="h-(--chart-height-compact) md:h-(--chart-height-full) w-full">
           <BarChart
             data={data}
             margin={{ top: 16, right: 16, left: 0, bottom: 0 }}
@@ -169,6 +170,15 @@ export const ScenarioComparisonChart = memo(function ScenarioComparisonChart({
           </BarChart>
         </ChartContainer>
       </CardContent>
+      <ChartDataTable
+        columns={[
+          { key: "name", label: "Scenario", align: "left" },
+          { key: "nestEgg", label: "Nest egg", align: "right", format: (v) => formatCurrency(Number(v)) },
+          { key: "success", label: "Success rate", align: "right", format: (v) => `${Number(v).toFixed(1)}%` },
+        ]}
+        rows={data}
+        caption={`Nest egg and success probability by investment strategy (${displayMode === "real" ? "today's value" : "future value"})`}
+      />
     </Card>
   )
 })

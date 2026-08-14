@@ -2,6 +2,7 @@
 
 import { calculateProjection } from "@/lib/calculations/projection-engine"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { useAuth } from "@/components/supabase-provider"
 import { formatCurrency } from "@/lib/utils/currency"
 import type { ProjectionResult } from "@/types"
 import { useEffect, useMemo } from "react"
@@ -12,6 +13,20 @@ function pct(n: number) {
 }
 
 export function PrintClient() {
+  const { isLoaded: authLoaded } = useAuth()
+
+  // /print is a standalone route outside the /calculator layout. Two async
+  // sources feed the store here and both must settle before we render:
+  //  1. The store's own persist rehydrate() (localStorage) — only ever called
+  //     from the /calculator layout otherwise, so kick it off ourselves.
+  //  2. SupabaseProvider.syncFromDb() — the root layout wraps this page, but
+  //     the initial render happens before that async sync lands.
+  // `authLoaded` flips true only after getUser() + both syncs settle, so gating
+  // on it (rather than a local loading flag) avoids the flash of a wrong state.
+  useEffect(() => {
+    useCalculatorStore.persist.rehydrate()
+  }, [])
+
   const storeState = useCalculatorStore(
     useShallow((s) => ({
       accounts: s.accounts,
@@ -45,6 +60,14 @@ export function PrintClient() {
     const t = setTimeout(() => window.print(), 600)
     return () => clearTimeout(t)
   }, [projection])
+
+  if (!authLoaded) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
+        Loading your plan…
+      </div>
+    )
+  }
 
   if (!projection) {
     return (

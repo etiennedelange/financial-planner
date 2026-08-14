@@ -50,15 +50,15 @@ function EditRow({
         className="h-7 text-sm flex-1 min-w-0" autoFocus />
       <Input value={amount} onChange={(e) => setAmount(e.target.value)} onKeyDown={onKey}
         className="h-7 text-sm w-28 text-right font-mono" placeholder="0" />
-      <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" onClick={commit} aria-label="Save expense">
+      <Button size="icon-sm" variant="ghost" className="text-primary" onClick={commit} aria-label="Save expense">
         <Check className="h-3.5 w-3.5" />
       </Button>
-      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onCancel} aria-label="Cancel edit">
+      <Button size="icon-sm" variant="ghost" onClick={onCancel} aria-label="Cancel edit">
         <X className="h-3.5 w-3.5" />
       </Button>
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" aria-label="Delete expense">
+          <Button size="icon-sm" variant="ghost" className="text-destructive" aria-label="Delete expense">
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </AlertDialogTrigger>
@@ -110,10 +110,10 @@ function AddExpenseRow({
         className="h-7 text-sm flex-1 min-w-0" placeholder="Expense name" autoFocus />
       <Input value={amount} onChange={(e) => setAmount(e.target.value)} onKeyDown={onKey}
         className="h-7 text-sm w-28 text-right font-mono" placeholder="0" />
-      <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" onClick={commit} aria-label="Save expense">
+      <Button size="icon-sm" variant="ghost" className="text-primary" onClick={commit} aria-label="Save expense">
         <Check className="h-3.5 w-3.5" />
       </Button>
-      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onCancel} aria-label="Cancel">
+      <Button size="icon-sm" variant="ghost" onClick={onCancel} aria-label="Cancel">
         <X className="h-3.5 w-3.5" />
       </Button>
     </div>
@@ -149,10 +149,10 @@ function AddGroupRow({ onSave, onCancel }: { onSave: (name: string, color: strin
           </button>
         ))}
       </div>
-      <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" onClick={commit} aria-label="Save group">
+      <Button size="icon-sm" variant="ghost" className="text-primary" onClick={commit} aria-label="Save group">
         <Check className="h-3.5 w-3.5" />
       </Button>
-      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onCancel} aria-label="Cancel">
+      <Button size="icon-sm" variant="ghost" onClick={onCancel} aria-label="Cancel">
         <X className="h-3.5 w-3.5" />
       </Button>
     </div>
@@ -251,9 +251,9 @@ function GroupSection({
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
-              size="icon"
+              size="icon-sm"
               variant="ghost"
-              className="h-7 w-7 mr-2 shrink-0 opacity-0 group-hover/header:opacity-60 hover:!opacity-100 focus:opacity-60 transition-opacity"
+              className="mr-2 shrink-0 opacity-0 group-hover/header:opacity-60 hover:!opacity-100 focus:opacity-60 transition-opacity"
               aria-label={`Delete group ${group.name}`}
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -408,7 +408,7 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
                 <Input value={incomeInput} onChange={(e) => setIncomeInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") saveIncome(); if (e.key === "Escape") setEditIncome(false) }}
                   className="h-6 w-28 text-right text-sm font-mono" autoFocus />
-                <Button size="icon" variant="ghost" className="h-6 w-6 text-primary" onClick={saveIncome} aria-label="Save income">
+                <Button size="icon-sm" variant="ghost" className="text-primary" onClick={saveIncome} aria-label="Save income">
                   <Check className="h-3 w-3" />
                 </Button>
               </div>

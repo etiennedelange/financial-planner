@@ -29,6 +29,10 @@ One line per work session, newest first, capped at the latest 10 entries — whe
 arrives, delete the oldest. Full detail lives in the linked history files, never here.
 Rules: [docs/README.md](README.md).
 
+## 2026-08-14 — Phase 9.3 UI polish: CSS vars, loading states, chart data tables
+
+All open 9.3 Medium/Low items done: `--sidebar-width` + `--chart-height-*` tokens, `icon-sm` button variant, import/submit/print loading states (fixed latent `/print` hydration bug), reusable collapsible chart data tables for a11y, SA-context Zod messages, dead `success-gauge.tsx` deleted. 4 items audited as already resolved. 867 tests. → [history](history/2026-08-14-phase-9-3-ui-polish.md)
+
 ## 2026-08-14 — Phase 9.1 tax rules validated against Budget Tax Guide 2026/2027
 
 All four open 9.1 items resolved as documentation: TFSA re-contribution room moot (no post-retirement contributions), s6A medical credit has no minimum contribution (premise was wrong), DWT documented as a known simplification (20% rate confirmed), spending-phase multipliers sourced (US spending-smile research, no SA equivalent). 867 tests. → [history](history/2026-08-14-phase-9-1-tax-rules-validation.md)
@@ -65,13 +69,9 @@ New GoTrue confirmation/recovery templates route links through the app origin; t
 
 Full account surface (email/password, 2FA, sessions, deletion, export) rebuilt as a `PageCard` settings page; dead `user-menu.tsx` deleted; fixed the missing Turnstile token that broke reauthentication. → [history](history/2026-08-08-account-settings-page-migration.md)
 
-## 2026-08-08 — Auth-hardening phase complete
-
-13 tasks: mandatory login, optional TOTP 2FA enforced at the RLS layer, session management, POPIA self-service deletion/export, per-request CSP nonces, Turnstile bot protection. 1 critical + 4 important bugs fixed; 789 tests. → [phase 3](project-phases/phase-3-user-accounts.md)
-
 ---
 
-*Older activity (2026-01 → 2026-07-26): see the dated files in [history/](history/) and the checkbox records in [project-phases/](project-phases/).*
+*Older activity (2026-01 → 2026-08-08): see the dated files in [history/](history/) and the checkbox records in [project-phases/](project-phases/).*
 
 ## Maintaining This File
 

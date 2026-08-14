@@ -20,12 +20,12 @@ import { COMPOUNDING_METHOD_DESCRIPTIONS, COMPOUNDING_METHOD_LABELS } from "@/ty
 import type { CompoundingMethod } from "@/types"
 
 const schema = z.object({
-  equityReturn: z.number().min(0).max(30),
-  bondReturn: z.number().min(0).max(20),
-  cashReturn: z.number().min(0).max(15),
-  equityVolatility: z.number().min(0).max(40),
-  bondVolatility: z.number().min(0).max(20),
-  inflationRate: z.number().min(0).max(20),
+  equityReturn: z.number({ error: "Enter an equity return" }).min(0, "Equity return must be between 0% and 30%").max(30, "Equity return must be between 0% and 30%"),
+  bondReturn: z.number({ error: "Enter a bond return" }).min(0, "Bond return must be between 0% and 20%").max(20, "Bond return must be between 0% and 20%"),
+  cashReturn: z.number({ error: "Enter a cash return" }).min(0, "Cash return must be between 0% and 15%").max(15, "Cash return must be between 0% and 15%"),
+  equityVolatility: z.number({ error: "Enter equity volatility" }).min(0, "Equity volatility must be between 0% and 40%").max(40, "Equity volatility must be between 0% and 40%"),
+  bondVolatility: z.number({ error: "Enter bond volatility" }).min(0, "Bond volatility must be between 0% and 20%").max(20, "Bond volatility must be between 0% and 20%"),
+  inflationRate: z.number({ error: "Enter an inflation rate" }).min(0, "Inflation rate must be between 0% and 20%").max(20, "Inflation rate must be between 0% and 20%"),
 })
 
 type FormData = z.infer<typeof schema>

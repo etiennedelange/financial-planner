@@ -17,8 +17,8 @@ import { InfoTooltip } from "@/components/ui/info-tooltip"
 import { FieldError } from "@/components/ui/field-error"
 
 const schema = z.object({
-  desiredMonthlyIncome: z.number().min(0),
-  legacyAmount: z.number().min(0),
+  desiredMonthlyIncome: z.number({ error: "Enter your desired monthly income" }).min(0, "Desired monthly income cannot be negative"),
+  legacyAmount: z.number({ error: "Enter a legacy amount" }).min(0, "Legacy amount cannot be negative"),
 })
 
 type FormData = z.infer<typeof schema>

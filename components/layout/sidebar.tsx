@@ -55,7 +55,7 @@ export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
   }
 
   return (
-    <aside className="fixed left-0 top-0 z-30 hidden md:flex h-screen w-[220px] flex-col bg-background border-r border-border">
+    <aside className="fixed left-0 top-0 z-30 hidden md:flex h-screen w-(--sidebar-width) flex-col bg-background border-r border-border">
       {/* Wordmark */}
       <div className="px-4 pt-5 pb-4 border-b border-border">
         <div className="flex items-center gap-2.5">

@@ -17,10 +17,10 @@ import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import { formatCurrency } from "@/lib/utils/currency"
 
 const schema = z.object({
-  currentAge: z.number().min(18).max(100),
-  retirementAge: z.number().min(40).max(100),
-  lifeExpectancy: z.number().min(60).max(120),
-  annualIncome: z.number().min(0),
+  currentAge: z.number({ error: "Enter your current age" }).min(18, "Age must be between 18 and 100").max(100, "Age must be between 18 and 100"),
+  retirementAge: z.number({ error: "Enter a retirement age" }).min(40, "Retirement age must be between 40 and 100").max(100, "Retirement age must be between 40 and 100"),
+  lifeExpectancy: z.number({ error: "Enter a life expectancy" }).min(60, "Life expectancy must be between 60 and 120").max(120, "Life expectancy must be between 60 and 120"),
+  annualIncome: z.number({ error: "Enter your annual income" }).min(0, "Annual income cannot be negative"),
 }).superRefine((data, ctx) => {
   if (data.retirementAge <= data.currentAge) {
     ctx.addIssue({

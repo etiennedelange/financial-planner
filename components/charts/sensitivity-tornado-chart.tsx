@@ -11,6 +11,7 @@ import {
 } from "recharts"
 import { Card, CardContent } from "@/components/ui/card"
 import { SectionLabel } from "@/components/ui/section-label"
+import { ChartDataTable } from "@/components/ui/chart-data-table"
 import {
   ChartContainer,
   ChartTooltip,
@@ -73,7 +74,7 @@ export const SensitivityTornadoChart = memo(function SensitivityTornadoChart({
             How each lever moves your projected nest egg
           </p>
         </div>
-        <CardContent className="flex h-[180px] md:h-[260px] items-center justify-center gap-2 text-center">
+        <CardContent className="flex h-(--chart-height-compact) md:h-(--chart-height-full) items-center justify-center gap-2 text-center">
           <SlidersHorizontal className="h-8 w-8 text-muted-foreground/30" />
           <p className="text-sm text-muted-foreground">Add accounts to see sensitivity</p>
         </CardContent>
@@ -90,7 +91,7 @@ export const SensitivityTornadoChart = memo(function SensitivityTornadoChart({
         </p>
       </div>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
-        <ChartContainer config={chartConfig} className="h-[180px] md:h-[260px] w-full">
+        <ChartContainer config={chartConfig} className="h-(--chart-height-compact) md:h-(--chart-height-full) w-full">
           <BarChart
             data={data}
             layout="vertical"
@@ -139,6 +140,14 @@ export const SensitivityTornadoChart = memo(function SensitivityTornadoChart({
           </BarChart>
         </ChartContainer>
       </CardContent>
+      <ChartDataTable
+        columns={[
+          { key: "label", label: "Lever", align: "left" },
+          { key: "delta", label: "Change in nest egg", align: "right", format: (v) => formatCurrency(Number(v)) },
+        ]}
+        rows={data}
+        caption="Change in projected nest egg when each lever is pulled"
+      />
     </Card>
   )
 })

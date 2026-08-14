@@ -378,26 +378,27 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
             >
               <Button
                 variant="ghost"
-                size="icon"
-                className="h-6 w-6"
+                size="icon-sm"
                 onClick={() => onEdit(account)}
                 aria-label="Edit account"
               >
-                <Pencil className="h-3 w-3" />
+                <Pencil className="h-3.5 w-3.5" />
               </Button>
               <Button
                 variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                size="icon-sm"
+                className="text-muted-foreground hover:text-destructive"
                 onClick={() => setDeleteOpen(true)}
                 aria-label="Delete account"
               >
-                <Trash2 className="h-3 w-3" />
+                <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
-            <button
+            <Button
               type="button"
-              className="flex items-center justify-center h-6 w-6 flex-none rounded hover:bg-accent/50 focus:outline-none focus:ring-2 focus:ring-ring"
+              variant="ghost"
+              size="icon-sm"
+              className="flex-none"
               onClick={(e) => {
                 e.stopPropagation()
                 toggle()
@@ -416,7 +417,7 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
                 )}
                 aria-hidden
               />
-            </button>
+            </Button>
           </div>
         </m.div>
 

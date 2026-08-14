@@ -47,12 +47,12 @@ const accountSchema = z.object({
     "tfsa",
     "discretionary",
   ]),
-  currentBalance: z.number().min(0, "Balance must be positive"),
-  monthlyContribution: z.number().min(0),
-  expectedReturn: z.number().min(0).max(30),
-  annualFees: z.number().min(0).max(5),
-  contributionEscalation: z.number().min(0).max(20),
-  tfsaContributionsToDate: z.number().min(0).max(SA_TAX_LIMITS.tfsaLifetimeLimit).optional(),
+  currentBalance: z.number({ error: "Enter a balance" }).min(0, "Balance must be positive"),
+  monthlyContribution: z.number({ error: "Enter a monthly contribution" }).min(0, "Monthly contribution cannot be negative"),
+  expectedReturn: z.number({ error: "Enter an expected return" }).min(0, "Expected return must be between 0% and 30%").max(30, "Expected return must be between 0% and 30%"),
+  annualFees: z.number({ error: "Enter annual fees" }).min(0, "Annual fees must be between 0% and 5%").max(5, "Annual fees must be between 0% and 5%"),
+  contributionEscalation: z.number({ error: "Enter contribution escalation" }).min(0, "Escalation must be between 0% and 20%").max(20, "Escalation must be between 0% and 20%"),
+  tfsaContributionsToDate: z.number({ error: "Enter contributions to date" }).min(0, "Contributions cannot be negative").max(SA_TAX_LIMITS.tfsaLifetimeLimit, `Max lifetime limit is R${SA_TAX_LIMITS.tfsaLifetimeLimit.toLocaleString()}`).optional(),
 })
 
 type AccountFormData = z.infer<typeof accountSchema>
@@ -323,6 +323,7 @@ interface Step2Props {
 }
 
 function Step2({ form, onBack, impactStrip }: Step2Props) {
+  const isSubmitting = form.formState.isSubmitting
   return (
     <div className="space-y-4">
       <PerformanceFields form={form} />
@@ -331,7 +332,9 @@ function Step2({ form, onBack, impactStrip }: Step2Props) {
         <Button type="button" variant="ghost" size="sm" onClick={onBack}>
           ← Back
         </Button>
-        <Button type="submit">Add Account</Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Adding…" : "Add Account"}
+        </Button>
       </div>
     </div>
   )
@@ -348,6 +351,7 @@ function EditForm({
   onCancel: () => void
   impactStrip: React.ReactNode
 }) {
+  const isSubmitting = form.formState.isSubmitting
   return (
     <div className="space-y-5">
       <EssentialFields form={form} />
@@ -359,7 +363,9 @@ function EditForm({
         <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit">Update Account</Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Saving…" : "Update Account"}
+        </Button>
       </div>
     </div>
   )

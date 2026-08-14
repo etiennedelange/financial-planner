@@ -2,6 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { SectionLabel } from "@/components/ui/section-label"
+import { ChartDataTable } from "@/components/ui/chart-data-table"
 import {
   ChartContainer,
   ChartTooltip,
@@ -74,7 +75,7 @@ export const MonteCarloChart = memo(function MonteCarloChart({
           <SectionLabel>Will It Last?</SectionLabel>
           <p className="text-sm text-muted-foreground pl-3">Median portfolio balance across 1,000 market scenarios</p>
         </div>
-        <CardContent className="relative flex h-[180px] md:h-[260px] items-center justify-center overflow-hidden">
+        <CardContent className="relative flex h-(--chart-height-compact) md:h-(--chart-height-full) items-center justify-center overflow-hidden">
           {/* Ghost median line fanning from current age */}
           <svg
             className="absolute inset-0 h-full w-full"
@@ -142,7 +143,7 @@ export const MonteCarloChart = memo(function MonteCarloChart({
         </div>
       </div>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
-        <ChartContainer config={chartConfig} className="h-[180px] md:h-[260px] w-full">
+        <ChartContainer config={chartConfig} className="h-(--chart-height-compact) md:h-(--chart-height-full) w-full">
           <AreaChart
             data={data}
             margin={{ top: 16, right: 16, left: 0, bottom: 0 }}
@@ -227,6 +228,18 @@ export const MonteCarloChart = memo(function MonteCarloChart({
           </AreaChart>
         </ChartContainer>
       </CardContent>
+      <ChartDataTable
+        columns={[
+          { key: "age", label: "Age", align: "right" },
+          { key: "p10", label: "10th pct", align: "right", format: (v) => formatCurrency(Number(v)) },
+          { key: "p25", label: "25th pct", align: "right", format: (v) => formatCurrency(Number(v)) },
+          { key: "p50", label: "Median", align: "right", format: (v) => formatCurrency(Number(v)) },
+          { key: "p75", label: "75th pct", align: "right", format: (v) => formatCurrency(Number(v)) },
+          { key: "p90", label: "90th pct", align: "right", format: (v) => formatCurrency(Number(v)) },
+        ]}
+        rows={data}
+        caption={`Portfolio balance percentiles across ${simulationResult.runs.length.toLocaleString()} simulated scenarios from age ${currentAge}`}
+      />
     </Card>
   )
 })

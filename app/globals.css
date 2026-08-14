@@ -52,6 +52,11 @@
   --spacing-88: 22rem;
   --spacing-100: 25rem;
 
+  /* Layout dimensions */
+  --sidebar-width: 220px;
+  --chart-height-compact: 180px;
+  --chart-height-full: 260px;
+
   /* Animations */
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
@@ -100,6 +105,11 @@
     --chart-3: 133 47% 68%;
     --chart-4: 220 75% 58%;
     --chart-5: 0 65% 52%;
+
+    /* Layout dimensions */
+    --sidebar-width: 220px;
+    --chart-height-compact: 180px;
+    --chart-height-full: 260px;
   }
 
   /* ── Dark theme: deep navy + teal ── */
