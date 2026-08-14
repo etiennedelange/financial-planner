@@ -15,6 +15,7 @@ import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import { getSpendingPhaseMultiplier } from "@/lib/calculations/utils/spending-phase"
 import { calculateMonthlyReturn } from "@/lib/calculations/utils/projection"
+import { finiteOrZero, safePositiveDivide, sanitizeAccounts } from "@/lib/calculations/utils/invariant-guards"
 import { calculateIncomeTaxWithRebates, calculateLumpSumCommutation } from "@/lib/calculations/retirement-tax"
 import { calculateInitialWithdrawal, calculateNextWithdrawal } from "@/lib/calculations/utils/drawdown-withdrawal"
 
@@ -48,15 +49,18 @@ function simulateSingleRun(
 ): SimulationRun {
   const totalYears = yearsToRetirement + yearsInRetirement
 
+  // NaN/Infinity inputs must not poison the simulation arithmetic (Phase 9.1).
+  const safeAccounts = sanitizeAccounts(accounts)
+
   // Track each account's balance and cost basis separately during accumulation
-  const accountBalances = accounts.map(acc => acc.currentBalance)
-  const accountCostBases = accounts.map(acc => acc.currentBalance)
-  const accountMonthlyContributions = accounts.map(acc => acc.monthlyContribution)
+  const accountBalances = safeAccounts.map(acc => acc.currentBalance)
+  const accountCostBases = safeAccounts.map(acc => acc.currentBalance)
+  const accountMonthlyContributions = safeAccounts.map(acc => acc.monthlyContribution)
 
   // Generate return sequences for each account based on their expected return.
   // Full totalYears length so the same per-account sequence can be reused for the
   // drawdown phase (indices [yearsToRetirement, totalYears)) below.
-  const accountReturns = accounts.map(acc => {
+  const accountReturns = safeAccounts.map(acc => {
     const netReturn = (acc.expectedReturn - acc.annualFees) / 100
     // Use per-account volatility (0 for cash/fixed accounts, or proportional to return)
     const accVolatility = acc.expectedReturn === 0 ? 0 : volatility
@@ -69,8 +73,8 @@ function simulateSingleRun(
   // Accumulation phase - project each account separately
   for (let year = 0; year < yearsToRetirement; year++) {
     // Project each account individually
-    for (let accIdx = 0; accIdx < accounts.length; accIdx++) {
-      const acc = accounts[accIdx]
+    for (let accIdx = 0; accIdx < safeAccounts.length; accIdx++) {
+      const acc = safeAccounts[accIdx]
       const annualReturn = accountReturns[accIdx][year]
       const accEscalation = acc.contributionEscalation / 100
 
@@ -100,7 +104,7 @@ function simulateSingleRun(
 
   // Lump sum commutation is only available on pension/RA/preservation balances, and SA
   // law caps it at one-third of the retirement-fund interest — mirrors projection-engine.ts.
-  const pensionBalanceAtRetirement = accounts.reduce(
+  const pensionBalanceAtRetirement = safeAccounts.reduce(
     (sum, acc, idx) => (PENSION_TYPES.includes(acc.type) ? sum + accountBalances[idx] : sum),
     0
   )
@@ -116,7 +120,7 @@ function simulateSingleRun(
 
   // Build per-account drawdown state with post-lump-sum balances (only pension-type
   // accounts are reduced by the commutation fraction)
-  const drawdownAccounts: DrawdownAccount[] = accounts.map((acc, idx) => {
+  const drawdownAccounts: DrawdownAccount[] = safeAccounts.map((acc, idx) => {
     const fraction = PENSION_TYPES.includes(acc.type) ? lumpSumFraction : 0
     return {
       type: acc.type,
@@ -191,7 +195,7 @@ function simulateSingleRun(
     for (const acc of drawdownAccounts) {
       if (acc.type !== 'discretionary' || remaining <= 0 || acc.balance <= 0) continue
       const take = Math.min(remaining, acc.balance)
-      const gainFraction = Math.max(0, Math.min(1, (acc.balance - acc.costBasis) / acc.balance))
+      const gainFraction = Math.max(0, Math.min(1, safePositiveDivide(acc.balance - acc.costBasis, acc.balance)))
       capitalGainRealized += take * gainFraction
       acc.costBasis = Math.max(0, acc.costBasis - take * (1 - gainFraction))
       acc.balance -= take
@@ -302,25 +306,49 @@ export function runMonteCarloSimulation(
   config: SimulationConfig,
   marketAssumptions?: MarketAssumptions
 ): SimulationResult {
+  // NaN ages fail `x < 0` comparisons, so a NaN age would poison yearsToRetirement
+  // and every downstream division. Route non-finite ages through the empty result
+  // rather than degrading to a plausible-looking simulation (Phase 9.1).
+  const agesFinite =
+    Number.isFinite(personalInfo.currentAge) &&
+    Number.isFinite(personalInfo.retirementAge) &&
+    Number.isFinite(personalInfo.lifeExpectancy)
+
+  const currentAge = finiteOrZero(personalInfo.currentAge)
+  const retirementAge = finiteOrZero(personalInfo.retirementAge)
+  const lifeExpectancy = finiteOrZero(personalInfo.lifeExpectancy)
+
   // Handle empty accounts
   if (accounts.length === 0) {
     return {
       runs: [],
       successRate: 0,
       percentiles: { p10: [], p25: [], p50: [], p75: [], p90: [] },
-      medianDepletionAge: personalInfo.retirementAge,
+      medianDepletionAge: retirementAge,
       averageFinalBalance: 0,
     }
   }
 
-  const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
-  const yearsInRetirement = personalInfo.lifeExpectancy - personalInfo.retirementAge
+  const yearsToRetirement = retirementAge - currentAge
+  const yearsInRetirement = lifeExpectancy - retirementAge
   const totalYears = yearsToRetirement + yearsInRetirement
-  const inflationRate = retirementGoals.inflationRate / 100
+  const inflationRate = finiteOrZero(retirementGoals.inflationRate) / 100
+
+  // Non-finite or inverted ages cannot be simulated meaningfully — return the empty
+  // result the same way the empty-accounts path does.
+  if (!agesFinite || yearsToRetirement < 0 || yearsInRetirement < 0) {
+    return {
+      runs: [],
+      successRate: 0,
+      percentiles: { p10: [], p25: [], p50: [], p75: [], p90: [] },
+      medianDepletionAge: retirementAge,
+      averageFinalBalance: 0,
+    }
+  }
 
   // Use volatility from market assumptions if provided, otherwise use default
   const volatility = marketAssumptions
-    ? marketAssumptions.equityVolatility / 100
+    ? finiteOrZero(marketAssumptions.equityVolatility) / 100
     : SA_DEFAULTS.equityVolatility
 
   // Use compounding method from market assumptions, default to nominal for backward compatibility

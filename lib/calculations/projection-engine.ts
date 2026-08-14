@@ -5,7 +5,12 @@ import { calculateIncomeTaxWithRebates, calculateLumpSumCommutation, calculateEx
 import { getSpendingPhaseMultiplier } from "./utils/spending-phase"
 import { calculateMonthlyReturn } from "./utils/projection"
 import { deflate, escalate } from "./utils/money-time"
-import { assertNonNegativeBalance } from "./utils/invariant-guards"
+import {
+  assertNonNegativeBalance,
+  finiteOrZero,
+  safePositiveDivide,
+  sanitizeAccounts,
+} from "./utils/invariant-guards"
 import { calculateInitialWithdrawal, calculateNextWithdrawal } from "./utils/drawdown-withdrawal"
 import type {
   Account,
@@ -108,14 +113,17 @@ export function runAccumulationPhase(
 ): AccumulationResult {
   const rows: YearlyProjection[] = []
 
+  // NaN/Infinity inputs must not poison the compounding arithmetic (Phase 9.1).
+  const safeAccounts = sanitizeAccounts(accounts)
+
   // Track each account's balance and cost basis separately
-  const accountBalances = accounts.map(acc => acc.currentBalance)
-  const accountMonthlyContributions = accounts.map(acc => acc.monthlyContribution)
+  const accountBalances = safeAccounts.map(acc => acc.currentBalance)
+  const accountMonthlyContributions = safeAccounts.map(acc => acc.monthlyContribution)
   // Cost basis tracks original value + contributions for CGT calculation on discretionary accounts
-  const accountCostBases = accounts.map(acc => acc.currentBalance)
+  const accountCostBases = safeAccounts.map(acc => acc.currentBalance)
 
   // TFSA contribution tracking: lifetime cap starts from user-supplied contributions-to-date
-  const tfsaLifetimeUsed = accounts.map(acc =>
+  const tfsaLifetimeUsed = safeAccounts.map(acc =>
     acc.type === 'tfsa' ? (acc.tfsaContributionsToDate ?? 0) : 0
   )
 
@@ -123,7 +131,7 @@ export function runAccumulationPhase(
   // Income is escalated with inflation each year so the deduction limit grows in line
   // with contributions (both expressed in nominal terms).
   let accumulatedExcessCredit = 0
-  let totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
+  let totalBalance = safeAccounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
 
   for (let year = 0; year < yearsToRetirement; year++) {
     const age = personalInfo.currentAge + year
@@ -135,11 +143,11 @@ export function runAccumulationPhase(
     let tfsaExcessContribution = 0 // Track excess TFSA contributions for penalty calculation
 
     // Reset annual TFSA contribution tracker each year
-    const tfsaYearlyUsed = accounts.map(() => 0)
+    const tfsaYearlyUsed = safeAccounts.map(() => 0)
 
     // Project each account individually
-    for (let accIdx = 0; accIdx < accounts.length; accIdx++) {
-      const acc = accounts[accIdx]
+    for (let accIdx = 0; accIdx < safeAccounts.length; accIdx++) {
+      const acc = safeAccounts[accIdx]
       const accNetReturn = (acc.expectedReturn - acc.annualFees) / 100
       const accMonthlyReturn = calculateMonthlyReturn(accNetReturn, compoundingMethod)
       const accMonthlyFeeRate = Math.pow(1 + acc.annualFees / 100, 1 / 12) - 1
@@ -265,8 +273,21 @@ export function runDrawdownPhase(
   let totalMedicalAidContributions = 0
   let totalGrossWithdrawals = 0
 
+  // NaN/Infinity inputs must not poison the drawdown arithmetic (Phase 9.1).
+  // The gainFraction division below divides by balance, so a NaN balance would otherwise
+  // leak NaN into the CGT/tax computation for the whole year.
+  const safeRetirementAge = finiteOrZero(personalInfo.retirementAge)
+  const safeYearsToRetirement = finiteOrZero(yearsToRetirement)
+  const safeInflationRate = finiteOrZero(inflationRate)
+  for (const acc of drawdownAccounts) {
+    acc.balance = finiteOrZero(acc.balance)
+    acc.costBasis = finiteOrZero(acc.costBasis)
+    acc.netReturn = finiteOrZero(acc.netReturn)
+    acc.feeRate = finiteOrZero(acc.feeRate)
+  }
+
   for (let year = 0; year < yearsInRetirement; year++) {
-    const age = personalInfo.retirementAge + year
+    const age = safeRetirementAge + year
     let currentTotal = drawdownAccounts.reduce((s, a) => s + a.balance, 0)
     const startingBalance = currentTotal
 
@@ -275,7 +296,7 @@ export function runDrawdownPhase(
       // Zero out all account balances when portfolio depletes so finalBalance calculation is correct
       drawdownAccounts.forEach(acc => { acc.balance = 0 })
       rows.push({
-        year: yearsToRetirement + year + 1,
+        year: safeYearsToRetirement + year + 1,
         age,
         startingBalance: 0,
         contributions: 0,
@@ -321,8 +342,8 @@ export function runDrawdownPhase(
         annualWithdrawal,
         currentTotal,
         drawdownConfig,
-        yearsToRetirement + year,
-        inflationRate
+        safeYearsToRetirement + year,
+        safeInflationRate
       )
     }
 
@@ -351,7 +372,7 @@ export function runDrawdownPhase(
     for (const acc of drawdownAccounts) {
       if (acc.type !== 'discretionary' || remaining <= 0 || acc.balance <= 0) continue
       const take = Math.min(remaining, acc.balance)
-      const gainFraction = Math.max(0, Math.min(1, (acc.balance - acc.costBasis) / acc.balance))
+      const gainFraction = Math.max(0, Math.min(1, safePositiveDivide(acc.balance - acc.costBasis, acc.balance)))
       const gainTaken = take * gainFraction
       capitalGainRealized += gainTaken
       acc.costBasis = Math.max(0, acc.costBasis - take * (1 - gainFraction))
@@ -391,7 +412,7 @@ export function runDrawdownPhase(
     // grow faster than CPI
     const medicalAidContribution =
       (drawdownConfig.monthlyMedicalAid ?? 0) *
-      Math.pow(1 + SA_DEFAULTS.medicalInflation, yearsToRetirement + year) *
+      Math.pow(1 + SA_DEFAULTS.medicalInflation, safeYearsToRetirement + year) *
       12
     const netIncome = totalWithdrawal - incomeTax - medicalAidContribution
 
@@ -415,7 +436,7 @@ export function runDrawdownPhase(
     totalMedicalAidContributions += medicalAidContribution
 
     rows.push({
-      year: yearsToRetirement + year + 1,
+      year: safeYearsToRetirement + year + 1,
       age,
       startingBalance,
       contributions: 0,
@@ -428,7 +449,7 @@ export function runDrawdownPhase(
       netIncome,
       // Clamp protects rendering; the guard ensures it cannot also hide a defect.
       endingBalance: Math.max(0, assertNonNegativeBalance(currentTotal, `drawdown year at age ${age}`)),
-      inflationAdjustedWithdrawal: deflate(totalWithdrawal, yearsToRetirement + year, inflationRate),
+      inflationAdjustedWithdrawal: deflate(totalWithdrawal, safeYearsToRetirement + year, safeInflationRate),
       tfsaWithdrawal,
       discretionaryWithdrawal,
       pensionWithdrawal,
@@ -556,20 +577,46 @@ export function calculateProjection(
   drawdownConfig: DrawdownConfig,
   assumptions?: MarketAssumptions
 ): ProjectionResult {
-  const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
-  const yearsInRetirement = personalInfo.lifeExpectancy - personalInfo.retirementAge
-  const inflationRate = retirementGoals.inflationRate / 100
+  // NaN ages fail `x < 0` comparisons (NaN < 0 is false), so a NaN age used to slip
+  // straight past the guard below and poison every subsequent division. Detect
+  // non-finite ages explicitly and route them through the same empty-result path as
+  // inverted ages. `finiteOrZero` guards the values that *can* sensibly degrade to 0
+  // (income, inflation, balances) without producing a silent wrong answer.
+  const agesFinite =
+    Number.isFinite(personalInfo.currentAge) &&
+    Number.isFinite(personalInfo.retirementAge) &&
+    Number.isFinite(personalInfo.lifeExpectancy)
+
+  const currentAge = finiteOrZero(personalInfo.currentAge)
+  const retirementAge = finiteOrZero(personalInfo.retirementAge)
+  const lifeExpectancy = finiteOrZero(personalInfo.lifeExpectancy)
+  const annualIncome = finiteOrZero(personalInfo.annualIncome)
+
+  const yearsToRetirement = retirementAge - currentAge
+  const yearsInRetirement = lifeExpectancy - retirementAge
+  const inflationRate = finiteOrZero(retirementGoals.inflationRate) / 100
+
+  // Sanitized copy of personalInfo with finite ages, so row ages stay finite.
+  const safePersonalInfo: PersonalInfo = {
+    ...personalInfo,
+    currentAge,
+    retirementAge,
+    lifeExpectancy,
+    annualIncome,
+  }
 
   // Invalid/inverted ages (retirementAge before currentAge, or lifeExpectancy
   // before retirementAge) — the input forms guard against this with Zod, but
   // calculateProjection can be called directly (tests, debug tools, imports).
-  if (yearsToRetirement < 0 || yearsInRetirement < 0) {
-    return buildEmptyProjectionResult(personalInfo, retirementGoals, yearsInRetirement)
+  // Non-finite ages take the same degenerate path rather than degrading to a
+  // plausible-looking projection (Phase 9.1).
+  if (!agesFinite || yearsToRetirement < 0 || yearsInRetirement < 0) {
+    return buildEmptyProjectionResult(safePersonalInfo, retirementGoals, yearsInRetirement)
   }
 
   // Handle case with no accounts
   if (accounts.length === 0) {
-    return buildEmptyProjectionResult(personalInfo, retirementGoals, yearsInRetirement)
+    return buildEmptyProjectionResult(safePersonalInfo, retirementGoals, yearsInRetirement)
   }
 
   const compoundingMethod = assumptions?.compoundingMethod || 'nominal'
@@ -577,7 +624,7 @@ export function calculateProjection(
   // ---- Phase 1: accumulation ----
   const accumulation = runAccumulationPhase(
     accounts,
-    personalInfo,
+    safePersonalInfo,
     yearsToRetirement,
     inflationRate,
     compoundingMethod
@@ -644,7 +691,7 @@ export function calculateProjection(
 
   const drawdown = runDrawdownPhase(
     drawdownAccounts,
-    personalInfo,
+    safePersonalInfo,
     retirementGoals,
     drawdownConfig,
     yearsToRetirement,

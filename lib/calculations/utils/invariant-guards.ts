@@ -10,7 +10,12 @@
  *
  * The guard below closes that gap: the clamp stays (so a bug cannot render as a negative
  * portfolio), but a negative value now raises before it can be clamped.
+ *
+ * Phase 9.1 added `finiteOrZero` / `safePositiveDivide` / `sanitizeAccounts`: NaN/Infinity
+ * inputs (direct engine calls, debug tools, malformed saved plans) must not poison every
+ * downstream division into NaN/Infinity — they degrade to a safe finite value instead.
  */
+import type { Account } from "@/types"
 
 /**
  * Assert that a balance has not gone negative, then return it unchanged.
@@ -39,4 +44,57 @@ export function assertNonNegativeBalance(value: number, context: string): number
     )
   }
   return value
+}
+
+/**
+ * Return 0 for non-finite input, else the value unchanged.
+ *
+ * Used at the engine entry points so a NaN/Infinity input (direct API/test usage,
+ * debug tools, malformed saved plans) cannot poison every downstream division
+ * into NaN. Matches the money-time convention: a broken input degrades to a safe
+ * zero rather than throwing or propagating.
+ */
+export function finiteOrZero(value: number): number {
+  return Number.isFinite(value) ? value : 0
+}
+
+/**
+ * Guarded division: returns `fallback` (default 0) when the denominator is not
+ * positive-finite, preventing the division from producing NaN/±Infinity.
+ *
+ * Used at the engine division points that previously divided unconditionally
+ * (e.g. `gainFraction` at projection-engine) — a zero or NaN denominator there
+ * used to leak NaN into the CGT/tax arithmetic for the whole year.
+ */
+export function safePositiveDivide(
+  numerator: number,
+  denominator: number,
+  fallback: number = 0
+): number {
+  return Number.isFinite(numerator) && Number.isFinite(denominator) && denominator > 0
+    ? numerator / denominator
+    : fallback
+}
+
+/**
+ * Return a copy of `accounts` with every non-finite numeric field coerced to 0.
+ *
+ * Applied at the engine entry points so a NaN/Infinity balance, return, fee, or
+ * escalation (direct API/test usage, debug tools, malformed saved plans) cannot
+ * poison the compounding arithmetic. Finite values pass through unchanged, so
+ * this never alters the output for valid inputs.
+ */
+export function sanitizeAccounts(accounts: Account[]): Account[] {
+  return accounts.map((acc) => ({
+    ...acc,
+    currentBalance: finiteOrZero(acc.currentBalance),
+    monthlyContribution: finiteOrZero(acc.monthlyContribution),
+    expectedReturn: finiteOrZero(acc.expectedReturn),
+    annualFees: finiteOrZero(acc.annualFees),
+    contributionEscalation: finiteOrZero(acc.contributionEscalation),
+    tfsaContributionsToDate:
+      acc.tfsaContributionsToDate === undefined
+        ? undefined
+        : finiteOrZero(acc.tfsaContributionsToDate),
+  }))
 }

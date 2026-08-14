@@ -29,6 +29,10 @@ One line per work session, newest first, capped at the latest 10 entries — whe
 arrives, delete the oldest. Full detail lives in the linked history files, never here.
 Rules: [docs/README.md](README.md).
 
+## 2026-08-14 — NaN/Infinity guards; coverage gap closed
+
+Non-finite engine inputs (NaN balance/return/age, 0% withdrawal rate) no longer poison divisions into NaN/±Infinity: new `finiteOrZero`/`safePositiveDivide`/`sanitizeAccounts` guards in `invariant-guards.ts`, applied across both engines + optimal-contribution; non-finite ages route through the empty result. 40 new tests; branches 84.61% → 85.1% (global coverage red resolved). Supabase error-context item audited as already resolved. 898 tests. → [history](history/2026-08-14-phase-9-1-nan-infinity-guards.md)
+
 ## 2026-08-14 — Phase 9.3 UI polish: CSS vars, loading states, chart data tables
 
 All open 9.3 Medium/Low items done: `--sidebar-width` + `--chart-height-*` tokens, `icon-sm` button variant, import/submit/print loading states (fixed latent `/print` hydration bug), reusable collapsible chart data tables for a11y, SA-context Zod messages, dead `success-gauge.tsx` deleted. 4 items audited as already resolved. 867 tests. → [history](history/2026-08-14-phase-9-3-ui-polish.md)
@@ -64,10 +68,6 @@ The `isMfaExempt` allowlist now covers the dev-only `/supabase/*` proxy path —
 ## 2026-08-08 — Local-dev auth email links fixed
 
 New GoTrue confirmation/recovery templates route links through the app origin; the dev proxy forwards redirects manually instead of following them. Verified end-to-end via Playwright + Mailpit. → [history](history/2026-08-08-local-dev-email-verification-fix.md)
-
-## 2026-08-08 — Account management moved from modal to `/calculator/settings`
-
-Full account surface (email/password, 2FA, sessions, deletion, export) rebuilt as a `PageCard` settings page; dead `user-menu.tsx` deleted; fixed the missing Turnstile token that broke reauthentication. → [history](history/2026-08-08-account-settings-page-migration.md)
 
 ---
 

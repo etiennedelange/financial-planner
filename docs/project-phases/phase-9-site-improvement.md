@@ -29,8 +29,8 @@ _Identified 2026-06-07 via parallel agent audit (UI/UX, calculations, test cover
 
 ### Medium Priority
 - [ ] **Hardcoded thresholds to constants** — spending phase year breakpoints, scenario comparison success thresholds (`>=70%`, `>=75%` in `scenario-comparison.ts:268,279`), binary search precision (`R100` in `optimal-contribution.ts:77`)
-- [ ] **NaN/Infinity guards** — no defensive checks before returning calculation results; add at key division points (e.g., `gainFraction` at `projection-engine.ts:406`)
-- [ ] **Supabase error context** — `accounts.ts:50-59` returns empty array on error without logging; distinguish "no data" from "error"
+- [x] **NaN/Infinity guards** (2026-08-14) — non-finite inputs (direct engine calls, debug tools, malformed saved plans) used to poison every downstream division into NaN/±Infinity. Added `finiteOrZero`, `safePositiveDivide`, and `sanitizeAccounts` to `lib/calculations/utils/invariant-guards.ts`; applied at the entry points of `calculateProjection`, `runAccumulationPhase`, `runDrawdownPhase`, `runMonteCarloSimulation`, and `calculateOptimalContribution`, plus the `gainFraction` divisions. Non-finite ages now route through the degenerate empty result (same as inverted ages) instead of silently projecting from age 0; non-finite balances/returns degrade to 0; a 0% (or non-finite) withdrawal rate no longer yields `targetNestEgg: Infinity`. 20 new tests (17 helper + 3 in `nan-infinity-guards.test.ts`). Coverage gap closed: branches 84.61% → 85.1%.
+- [x] **Supabase error context** (2026-08-14) — audited against current code: already resolved. `accounts.ts`/`expenses.ts`/`scenarios.ts` all `throw error` on failure (the "returns empty array" premise was stale — it has thrown since Phase 4); `fetchScenario` returns `null` only for `PGRST116` (no rows); no-data returns `[]`/`null` while errors throw, and stores log via `console.error`. No code change needed; existing tests already cover error paths.
 
 ---
 
