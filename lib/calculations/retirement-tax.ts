@@ -17,6 +17,13 @@ export interface RetirementTaxConfig {
 /**
  * Calculate the annual s6A medical aid tax credit.
  * Credits reduce tax payable directly (not a deduction from income).
+ *
+ * NOTE (2026-08-14): there is NO minimum contribution level required to claim the s6A
+ * credit — it is a flat monthly amount per covered person for members who paid the
+ * contributions. The 3x/4x and 7.5%-of-taxable-income thresholds in the Act apply to the
+ * separate additional medical expenses credit (s6B), which this app does not model. Do not
+ * add a contribution-floor validation.
+ *
  * @param dependants Number of additional beneficiaries (0 = member only)
  */
 export function calculateMedicalAidTaxCredit(dependants: number = 0): number {

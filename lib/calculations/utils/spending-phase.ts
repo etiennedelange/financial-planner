@@ -10,6 +10,12 @@
  * - Slow-Go (Years 15-25): Reduced activity and travel (80%)
  * - No-Go (Years 25+): Less active, but higher medical costs (70% base + medical premium)
  *
+ * SOURCE CAVEAT (documented 2026-08-14): the 100/80/70 thresholds derive from US-centric
+ * "retirement spending smile" research (see link below); no directly equivalent SA-specific
+ * retirement-spending panel study is publicly cited. The medical premium component uses SA
+ * medical inflation (9%) running above CPI (5.5%) — see SA_DEFAULTS.medicalInflation. These
+ * are planning heuristics, not tax-law figures.
+ *
  * @see https://www.kitces.com/blog/retirement-spending-smile-2/
  */
 

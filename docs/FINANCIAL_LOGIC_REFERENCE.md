@@ -182,6 +182,16 @@ deductionLimit = min(annualIncome × 0.275, 430,000)
 **Critical rule:** The lifetime limit tracks *contributions only*, not investment growth. A TFSA
 balance may legally exceed R500,000 if growth pushes it there.
 
+**Re-contribution room (drawdown) — resolved 2026-08-14 as not-applicable in this model:**
+Under s12T, amounts *withdrawn* from a TFSA are added back to the **lifetime** contribution limit
+in the **following** tax year (withdrawn amounts may be re-contributed, still subject to the
+annual R46,000 limit). The Phase 9.1 audit flagged that this room is never tracked in drawdown.
+That item is moot here: the projection engines make **no contributions after retirement**
+(contributions exist only in the accumulation phase), so there is nothing to constrain or to
+restore. `tfsaContributionsToDate` is correctly read-only in drawdown. If a future feature adds
+post-retirement contributions, the lifetime-used tracker must be restored from withdrawals on a
+one-tax-year lag before enforcing the limits.
+
 ### 1.7 Medical Aid Tax Credits (Section 6A)
 
 These are **direct reductions of tax payable** (not income deductions).
@@ -191,6 +201,14 @@ These are **direct reductions of tax payable** (not income deductions).
 | Principal member | 376 |
 | First additional beneficiary | 376 |
 | Each further beneficiary | 254 |
+
+**No minimum contribution threshold (resolved 2026-08-14):** the s6A medical scheme fees tax
+credit is a flat monthly amount per covered person, claimable by the member who paid the
+contributions — there is **no minimum contribution level** required to qualify. SARS Budget Tax
+Guide 2026/2027 states the credit "can be used only by the individual who paid the contributions"
+with no floor. The Phase 9.1 audit premise ("SA requires minimum contribution level to claim s6A
+credit") was incorrect. The 3×/4×-of-credit and 7.5%-of-taxable-income thresholds in the guide
+apply to the separate *additional* medical expenses credit (s6B), which this app does not model.
 
 ```typescript
 function calculateMedicalAidTaxCredit(dependants: number = 0): number {
@@ -654,6 +672,17 @@ for pension accounts (balance > 0, remaining > 0):
   balance -= take; remaining -= take
 ```
 
+**Dividend withholding tax (DWT) — documented simplification (resolved 2026-08-14):**
+SA imposes a final 20% dividends tax (SARS Budget Tax Guide 2026/2027: "dividends tax, at a rate
+of 20%, must be withheld by the entities paying the dividends") on dividends received by
+individuals from South African companies. The engines deliberately do **not** model it: every
+account's `expectedReturn` is treated as 100% capital appreciation, so no dividend stream is
+recognised and no DWT is deducted. This is a known simplification — modelling it would require a
+dividend-yield assumption splitting each account's total return into dividend + capital
+appreciation components, which would change every projection. It also only strictly applies to
+`discretionary` accounts held in the individual's name (retirement funds and TFSAs are
+DWT-exempt wrappers). Decision: documented, not modelled.
+
 #### 3c. Section 11F Credit in Drawdown
 
 ```typescript
@@ -1052,7 +1081,16 @@ function calculateMedicalInflationPremium({ retirementAge, lifeExpectancy,
 ## 12. Spending Phase Model
 
 Based on the empirical "Go-Go / Slow-Go / No-Go" retirement spending pattern
-(ref: Kitces, "The Retirement Spending Smile").
+(ref: Kitces, "The Retirement Spending Smile" — https://www.kitces.com/blog/retirement-spending-smile-2/).
+
+**Source caveat (documented 2026-08-14):** the 100% / 80% / 70% phase thresholds come from
+US-centric retirement research (Kitces' summary of the empirical "spending smile" literature:
+spending declines from the early-active years through mid-retirement, then rises again late in
+retirement as healthcare costs dominate). No directly equivalent SA-specific retirement-spending
+panel study is publicly cited; the model applies the same shape to SA retirees. The medical
+premium component (rising 1.5% p.a. after year 25) is an approximation of the late-life spending
+uptick using SA medical inflation (9%) running above CPI (5.5%) — see `SA_DEFAULTS.medicalInflation`.
+These are planning heuristics, not tax-law figures.
 
 | Phase | Years in Retirement | Multiplier | Rationale |
 |---|---|---|---|
@@ -1254,6 +1292,22 @@ These rules are non-obvious and easy to get wrong:
     takes over from year 1 onward and is what makes the four strategies actually diverge —
     don't confuse the two when debugging early-vs-later-year withdrawal amounts.
 
+19. **No post-retirement contributions**: the engines never contribute after retirement, so
+    TFSA re-contribution room (s12T: withdrawn amounts return to the lifetime limit next tax
+    year) is never tracked. If contributions are ever added to drawdown, that room must be
+    restored before enforcing limits.
+
+20. **s6A credit has no minimum contribution**: the medical scheme fees tax credit is a flat
+    amount per covered person. Do not add a contribution-floor validation — there is no such
+    requirement in the Income Tax Act (only s6B's additional-expenses credit has thresholds,
+    and it is not modelled).
+
+21. **Dividend withholding tax is not modelled**: `expectedReturn` is treated as 100% capital
+    appreciation. SA's 20% dividends tax is a documented simplification (see §3b), not a bug.
+
+22. **Spending-phase multipliers are planning heuristics**: 100%/80%/70% + the 1.5%-p.a.
+    medical premium derive from US spending-smile research, not an SA statute (see §12).
+
 ---
 
 ## 17. Annual Tax Year Update Checklist
@@ -1264,7 +1318,7 @@ When SARS releases new budget figures, update these values in a single config fi
 - [ ] Lump sum tax table (check all 4 tiers: threshold, rate, previousTax)
 - [ ] Tax rebates — primary, secondary, tertiary
 - [ ] Tax-free thresholds — under 65, 65–74, 75+
-- [ ] TFSA limits: annual (currently R36,000) and lifetime (currently R500,000)
+- [ ] TFSA limits: annual (currently R46,000) and lifetime (currently R500,000)
 - [ ] Section 11F: deduction rate (currently 27.5%) and annual cap (currently R430,000)
 - [ ] Medical aid credits: principal member, first dependant, additional dependants
 

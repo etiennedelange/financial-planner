@@ -29,6 +29,10 @@ One line per work session, newest first, capped at the latest 10 entries — whe
 arrives, delete the oldest. Full detail lives in the linked history files, never here.
 Rules: [docs/README.md](README.md).
 
+## 2026-08-14 — Phase 9.1 tax rules validated against Budget Tax Guide 2026/2027
+
+All four open 9.1 items resolved as documentation: TFSA re-contribution room moot (no post-retirement contributions), s6A medical credit has no minimum contribution (premise was wrong), DWT documented as a known simplification (20% rate confirmed), spending-phase multipliers sourced (US spending-smile research, no SA equivalent). 867 tests. → [history](history/2026-08-14-phase-9-1-tax-rules-validation.md)
+
 ## 2026-08-10 — Charts critique round 2: truthful tooltips, keyboard focus, gallery hierarchy
 
 Tooltip pipeline rebuilt in shared `lib/utils/chart-tooltip.ts` (no more "Age undefined" or "R 100" success rates), 2px teal `:focus-visible` ring on chart surfaces, page-level verdict strip, negative deltas moved to Signal Red. 862 tests. → [history](history/2026-08-10-charts-page-critique-fixes-round-2.md)
@@ -65,17 +69,9 @@ Full account surface (email/password, 2FA, sessions, deletion, export) rebuilt a
 
 13 tasks: mandatory login, optional TOTP 2FA enforced at the RLS layer, session management, POPIA self-service deletion/export, per-request CSP nonces, Turnstile bot protection. 1 critical + 4 important bugs fixed; 789 tests. → [phase 3](project-phases/phase-3-user-accounts.md)
 
-## 2026-07-26 — Phase 10 complete: engine deduplication, type-safe money, seeded MC
-
-Three copies of the withdrawal function became one shared export; branded `Rands<B>` money units; seeded Monte Carlo (flaky → deterministic); golden-output harnesses for both engines. Also fixed the replacement-ratio inflation bug and unrecorded final-year depletion. 698 tests. → [history](history/2026-07-26-audit-batch-1-fixes.md) · [phase 10](project-phases/phase-10-calculation-simplification.md)
-
-## 2026-07-11 — Debug window redesign + P0/P1 calculation fixes via TDD
-
-Debug window moved to a centered Dialog. Fixed ~5x overstated "today's Rands" income, structurally-zero shortfall, medical aid escalating at 5.5% instead of 9%, Box-Muller `log(0)`, MC 0-runs NaN, negative cost-of-delay, and added TFSA excess-contribution penalty tracking. SARS constants verified against the Budget 2026 PDF. → [P0/P1 fixes](history/2026-07-11-p0-p1-fixes.md) · [audit](history/2026-07-11-multiagent-audit-p0-fixes-and-tax-config-verification.md)
-
 ---
 
-*Older activity (2026-01 → 2026-07-06): see the dated files in [history/](history/) and the checkbox records in [project-phases/](project-phases/).*
+*Older activity (2026-01 → 2026-07-26): see the dated files in [history/](history/) and the checkbox records in [project-phases/](project-phases/).*
 
 ## Maintaining This File
 

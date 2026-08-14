@@ -88,9 +88,23 @@ export const TFSA_LIMITS_CONFIG = {
 // Medical aid tax credits (s6A of the Income Tax Act)
 // These are direct reductions of tax payable, not deductions from income.
 // Source: SARS Budget Tax Guide 2026/2027
+//
+// NOTE (2026-08-14): no minimum contribution level is required to claim these flat
+// credits. The 3x/4x and 7.5%-of-taxable-income thresholds apply to the s6B additional
+// medical expenses credit, which this app does not model.
 // ---------------------------------------------------------------------------
 export const MEDICAL_AID_CREDITS_CONFIG = {
   primaryMemberMonthly:      376, // Principal member
   firstDependantMonthly:     376, // First additional beneficiary
   additionalDependantMonthly: 254, // Each further beneficiary
 } as const
+
+// ---------------------------------------------------------------------------
+// Dividend withholding tax (DWT) — documented simplification, NOT modelled.
+// SARS Budget Tax Guide 2026/2027: dividends paid by resident companies to individuals
+// attract a final 20% dividends tax, withheld at source. The engines treat every account's
+// expectedReturn as 100% capital appreciation, so no dividend stream is recognised and no
+// DWT is deducted. Only discretionary accounts held in the individual's name would be
+// affected (retirement funds and TFSAs are DWT-exempt wrappers). Modelling it would require
+// a dividend-yield assumption splitting total return into dividend + capital components.
+// ---------------------------------------------------------------------------
