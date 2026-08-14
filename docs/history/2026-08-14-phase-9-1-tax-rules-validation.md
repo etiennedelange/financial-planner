@@ -1,4 +1,4 @@
-# Phase 9.1 — Tax-rule validation against SARS Budget Tax Guide 2026/2027
+# Phase 9 §9.1 (High): Tax-rule validation against SARS Budget Tax Guide 2026/2027
 
 ## What changed
 

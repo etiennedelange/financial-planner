@@ -1,4 +1,4 @@
-# Phase 9.1 Critical: Calculation Correctness & Deduplication
+# Phase 9 §9.1 (Critical): Calculation Correctness & Deduplication
 
 **Date:** 2026-06-20
 **Author:** Claude
