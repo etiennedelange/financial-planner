@@ -13,14 +13,15 @@ import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useShallow } from "zustand/react/shallow"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 import { FieldError } from "@/components/ui/field-error"
-import { SA_TAX_LIMITS } from "@/lib/constants/limits"
+import { MAX_MONETARY_AMOUNT, SA_TAX_LIMITS } from "@/lib/constants/limits"
+import { useBoundedMonetary } from "@/lib/hooks/use-bounded-monetary"
 import { formatCurrency } from "@/lib/utils/currency"
 
 const schema = z.object({
   currentAge: z.number({ error: "Enter your current age" }).min(18, "Age must be between 18 and 100").max(100, "Age must be between 18 and 100"),
   retirementAge: z.number({ error: "Enter a retirement age" }).min(40, "Retirement age must be between 40 and 100").max(100, "Retirement age must be between 40 and 100"),
   lifeExpectancy: z.number({ error: "Enter a life expectancy" }).min(60, "Life expectancy must be between 60 and 120").max(120, "Life expectancy must be between 60 and 120"),
-  annualIncome: z.number({ error: "Enter your annual income" }).min(0, "Annual income cannot be negative"),
+  annualIncome: z.number({ error: "Enter your annual income" }).min(0, "Annual income cannot be negative").max(MAX_MONETARY_AMOUNT, "Enter a realistic amount (R1 trillion or less)"),
 }).superRefine((data, ctx) => {
   if (data.retirementAge <= data.currentAge) {
     ctx.addIssue({
@@ -63,11 +64,16 @@ export function PersonalInfoForm() {
   // Watch all fields and update store on change
   const watchedValues = watch()
 
+  // Physically block monetary input above the cap — the field can never hold it.
+  const { onChange: annualIncomeOnChange, ...annualIncomeRegister } = register("annualIncome", { valueAsNumber: true })
+  const guardAnnualIncome = useBoundedMonetary(watchedValues.annualIncome ?? personalInfo.annualIncome)
+
   useEffect(() => {
     const subscription = watch((value) => {
-      if (value.currentAge !== undefined) {
-        setPersonalInfo(value as FormData)
-      }
+      // Only propagate valid values to the store — an invalid (e.g. absurdly
+      // large) input must never reach the calculations.
+      const parsed = schema.safeParse(value)
+      if (parsed.success) setPersonalInfo(parsed.data)
     })
     return () => subscription.unsubscribe()
   }, [watch, setPersonalInfo])
@@ -163,9 +169,13 @@ export function PersonalInfoForm() {
               id="annualIncome"
               type="number"
               min="0"
+              max={MAX_MONETARY_AMOUNT}
               step="any"
-              {...register("annualIncome", { valueAsNumber: true })}
+              {...annualIncomeRegister}
+              onChange={(e) => guardAnnualIncome.onChange(e, annualIncomeOnChange)}
+              onBeforeInput={guardAnnualIncome.onBeforeInput}
             />
+            <FieldError message={errors.annualIncome?.message} />
             <AnimatePresence initial={false}>
               {watchedValues.annualIncome > 0 ? (
                 <motion.p

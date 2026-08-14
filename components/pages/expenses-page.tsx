@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useExpensesStore } from "@/lib/store/expenses-store"
 import { formatCurrency } from "@/lib/utils/currency"
+import { clampMonetaryAmount } from "@/lib/utils/monetary"
+import { useBoundedMonetary } from "@/lib/hooks/use-bounded-monetary"
 import { GROUP_COLOR_OPTIONS, type Expense, type ExpenseGroup } from "@/types/expenses"
 import { cn } from "@/lib/utils"
 
@@ -34,9 +36,11 @@ function EditRow({
   const [name, setName] = useState(expense.name)
   const [amount, setAmount] = useState(String(expense.amount))
 
+  const guardAmount = useBoundedMonetary(amount)
+
   const commit = () => {
     const parsed = parseFloat(amount.replace(/\s/g, ""))
-    onSave(name.trim() || expense.name, isNaN(parsed) ? expense.amount : parsed)
+    onSave(name.trim() || expense.name, isNaN(parsed) ? expense.amount : clampMonetaryAmount(parsed))
   }
 
   const onKey = (e: React.KeyboardEvent) => {
@@ -48,7 +52,8 @@ function EditRow({
     <div className="flex items-center gap-1.5 px-3 py-1.5 bg-accent/60 rounded-sm border border-border">
       <Input value={name} onChange={(e) => setName(e.target.value)} onKeyDown={onKey}
         className="h-7 text-sm flex-1 min-w-0" autoFocus />
-      <Input value={amount} onChange={(e) => setAmount(e.target.value)} onKeyDown={onKey}
+      <Input value={amount} onChange={(e) => guardAmount.onChange(e, (ev) => setAmount(ev.target.value))} onKeyDown={onKey}
+        onBeforeInput={guardAmount.onBeforeInput}
         className="h-7 text-sm w-28 text-right font-mono" placeholder="0" />
       <Button size="icon-sm" variant="ghost" className="text-primary" onClick={commit} aria-label="Save expense">
         <Check className="h-3.5 w-3.5" />
@@ -93,10 +98,12 @@ function AddExpenseRow({
   const [name, setName] = useState("")
   const [amount, setAmount] = useState("")
 
+  const guardAmount = useBoundedMonetary(amount)
+
   const commit = () => {
     if (!name.trim()) { onCancel(); return }
     const parsed = parseFloat(amount.replace(/\s/g, ""))
-    onSave(name.trim(), isNaN(parsed) ? 0 : parsed)
+    onSave(name.trim(), isNaN(parsed) ? 0 : clampMonetaryAmount(parsed))
   }
 
   const onKey = (e: React.KeyboardEvent) => {
@@ -108,7 +115,8 @@ function AddExpenseRow({
     <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 rounded-sm border border-primary/25">
       <Input value={name} onChange={(e) => setName(e.target.value)} onKeyDown={onKey}
         className="h-7 text-sm flex-1 min-w-0" placeholder="Expense name" autoFocus />
-      <Input value={amount} onChange={(e) => setAmount(e.target.value)} onKeyDown={onKey}
+      <Input value={amount} onChange={(e) => guardAmount.onChange(e, (ev) => setAmount(ev.target.value))} onKeyDown={onKey}
+        onBeforeInput={guardAmount.onBeforeInput}
         className="h-7 text-sm w-28 text-right font-mono" placeholder="0" />
       <Button size="icon-sm" variant="ghost" className="text-primary" onClick={commit} aria-label="Save expense">
         <Check className="h-3.5 w-3.5" />
@@ -375,6 +383,8 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
   const [editIncome, setEditIncome] = useState(false)
   const [incomeInput, setIncomeInput] = useState(String(monthlyIncome))
 
+  const guardIncome = useBoundedMonetary(incomeInput)
+
   const total = expenses.reduce((s, e) => s + e.amount, 0)
   const retirementTotal = expenses.filter((e) => e.inRetirement).reduce((s, e) => s + e.amount, 0)
   const surplus = monthlyIncome - total
@@ -390,7 +400,7 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
 
   const saveIncome = () => {
     const parsed = parseFloat(incomeInput.replace(/[\s,]/g, ""))
-    if (!isNaN(parsed) && parsed > 0) onSetIncome(parsed)
+    if (!isNaN(parsed) && parsed > 0) onSetIncome(clampMonetaryAmount(parsed))
     else setIncomeInput(String(monthlyIncome))
     setEditIncome(false)
   }
@@ -405,8 +415,9 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
             </div>
             {editIncome ? (
               <div className="flex items-center gap-1">
-                <Input value={incomeInput} onChange={(e) => setIncomeInput(e.target.value)}
+                <Input value={incomeInput} onChange={(e) => guardIncome.onChange(e, (ev) => setIncomeInput(ev.target.value))}
                   onKeyDown={(e) => { if (e.key === "Enter") saveIncome(); if (e.key === "Escape") setEditIncome(false) }}
+                  onBeforeInput={guardIncome.onBeforeInput}
                   className="h-6 w-28 text-right text-sm font-mono" autoFocus />
                 <Button size="icon-sm" variant="ghost" className="text-primary" onClick={saveIncome} aria-label="Save income">
                   <Check className="h-3 w-3" />

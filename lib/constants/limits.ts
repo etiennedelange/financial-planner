@@ -7,6 +7,17 @@ import {
   CGT_ANNUAL_EXCLUSION_CONFIG,
 } from './tax-year.config'
 
+/**
+ * Absolute ceiling for any single monetary input in Rands (R1 trillion).
+ *
+ * Kept ~9,000x below `Number.MAX_SAFE_INTEGER` (9,007,199,254,740,991) so every
+ * accepted value round-trips through an IEEE-754 double with zero precision loss,
+ * while still leaving headroom far beyond any plausible personal portfolio.
+ * Absurd inputs (e.g. a 40-digit figure pasted into an input) are rejected here
+ * rather than silently corrupting every downstream calculation.
+ */
+export const MAX_MONETARY_AMOUNT = 1_000_000_000_000
+
 export const SA_TAX_LIMITS = {
   // Pension/RA contribution limits
   pensionRaDeductionRate: RETIREMENT_CONTRIBUTION_LIMITS_CONFIG.pensionRaDeductionRate,

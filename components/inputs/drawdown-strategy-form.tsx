@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/select"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { formatCurrency } from "@/lib/utils/currency"
+import { useBoundedMonetary } from "@/lib/hooks/use-bounded-monetary"
+import { MAX_MONETARY_AMOUNT } from "@/lib/constants/limits"
 import { useShallow } from "zustand/react/shallow"
 import { DRAWDOWN_STRATEGY_LABELS } from "@/types"
 import type { DrawdownStrategy } from "@/types"
@@ -61,6 +63,11 @@ export function DrawdownStrategyForm({
   const [localLumpSum, setLocalLumpSum] = useSyncedState(drawdownConfig.lumpSumPercentage ?? 0)
   const [localUpperGuardrail, setLocalUpperGuardrail] = useSyncedState(drawdownConfig.upperGuardrail ?? 20)
   const [localLowerGuardrail, setLocalLowerGuardrail] = useSyncedState(drawdownConfig.lowerGuardrail ?? 20)
+
+  // Physically block monetary input above the cap.
+  const guardMinimumWithdrawal = useBoundedMonetary(drawdownConfig.minimumWithdrawal)
+  const guardMaximumWithdrawal = useBoundedMonetary(drawdownConfig.maximumWithdrawal)
+  const guardMedicalAid = useBoundedMonetary(drawdownConfig.monthlyMedicalAid ?? "")
 
   const showMinMax = drawdownConfig.strategy === "variable_percentage" || drawdownConfig.strategy === "guardrails"
   const showGuardrailBands = drawdownConfig.strategy === "guardrails"
@@ -204,11 +211,13 @@ export function DrawdownStrategyForm({
                       id="minimumWithdrawal"
                       type="number"
                       min="0"
+                      max={MAX_MONETARY_AMOUNT}
                       step="any"
                       value={drawdownConfig.minimumWithdrawal}
-                      onChange={(e) =>
-                        setDrawdownConfig({ minimumWithdrawal: Number(e.target.value) })
-                      }
+                      onChange={(e) => guardMinimumWithdrawal.onChange(e, (ev) =>
+                        setDrawdownConfig({ minimumWithdrawal: Number(ev.target.value) })
+                      )}
+                      onBeforeInput={guardMinimumWithdrawal.onBeforeInput}
                     />
                   </div>
 
@@ -224,11 +233,13 @@ export function DrawdownStrategyForm({
                       id="maximumWithdrawal"
                       type="number"
                       min="0"
+                      max={MAX_MONETARY_AMOUNT}
                       step="any"
                       value={drawdownConfig.maximumWithdrawal}
-                      onChange={(e) =>
-                        setDrawdownConfig({ maximumWithdrawal: Number(e.target.value) })
-                      }
+                      onChange={(e) => guardMaximumWithdrawal.onChange(e, (ev) =>
+                        setDrawdownConfig({ maximumWithdrawal: Number(ev.target.value) })
+                      )}
+                      onBeforeInput={guardMaximumWithdrawal.onBeforeInput}
                     />
                   </div>
                 </div>
@@ -312,14 +323,17 @@ export function DrawdownStrategyForm({
                 id="monthlyMedicalAid"
                 type="number"
                 min="0"
+                max={MAX_MONETARY_AMOUNT}
                 step="100"
                 placeholder="0"
                 value={drawdownConfig.monthlyMedicalAid ?? ""}
-                onChange={(e) =>
+                onChange={(e) => guardMedicalAid.onChange(e, (ev) => {
+                  const v = ev.target.value
                   setDrawdownConfig({
-                    monthlyMedicalAid: e.target.value === "" ? undefined : Number(e.target.value),
+                    monthlyMedicalAid: v === "" ? undefined : Number(v),
                   })
-                }
+                })}
+                onBeforeInput={guardMedicalAid.onBeforeInput}
               />
             </div>
 

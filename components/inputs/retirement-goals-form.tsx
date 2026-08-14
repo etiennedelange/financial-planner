@@ -15,10 +15,12 @@ import { formatCurrency } from "@/lib/utils/currency"
 import { escalate, percentToRate } from "@/lib/calculations/utils/money-time"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 import { FieldError } from "@/components/ui/field-error"
+import { MAX_MONETARY_AMOUNT } from "@/lib/constants/limits"
+import { useBoundedMonetary } from "@/lib/hooks/use-bounded-monetary"
 
 const schema = z.object({
-  desiredMonthlyIncome: z.number({ error: "Enter your desired monthly income" }).min(0, "Desired monthly income cannot be negative"),
-  legacyAmount: z.number({ error: "Enter a legacy amount" }).min(0, "Legacy amount cannot be negative"),
+  desiredMonthlyIncome: z.number({ error: "Enter your desired monthly income" }).min(0, "Desired monthly income cannot be negative").max(MAX_MONETARY_AMOUNT, "Enter a realistic amount (R1 trillion or less)"),
+  legacyAmount: z.number({ error: "Enter a legacy amount" }).min(0, "Legacy amount cannot be negative").max(MAX_MONETARY_AMOUNT, "Enter a realistic amount (R1 trillion or less)"),
 })
 
 type FormData = z.infer<typeof schema>
@@ -48,11 +50,18 @@ export function RetirementGoalsForm() {
 
   const watchedValues = watch()
 
+  // Physically block monetary input above the cap — the fields can never hold it.
+  const { onChange: desiredIncomeOnChange, ...desiredIncomeRegister } = register("desiredMonthlyIncome", { valueAsNumber: true })
+  const guardDesiredIncome = useBoundedMonetary(watchedValues.desiredMonthlyIncome ?? retirementGoals.desiredMonthlyIncome)
+  const { onChange: legacyAmountOnChange, ...legacyAmountRegister } = register("legacyAmount", { valueAsNumber: true })
+  const guardLegacyAmount = useBoundedMonetary(watchedValues.legacyAmount ?? retirementGoals.legacyAmount)
+
   useEffect(() => {
     const subscription = watch((value) => {
-      if (value.desiredMonthlyIncome !== undefined) {
-        setRetirementGoals(value as FormData)
-      }
+      // Only propagate valid values to the store — an invalid (e.g. absurdly
+      // large) input must never reach the calculations.
+      const parsed = schema.safeParse(value)
+      if (parsed.success) setRetirementGoals(parsed.data)
     })
     return () => subscription.unsubscribe()
   }, [watch, setRetirementGoals])
@@ -105,8 +114,11 @@ export function RetirementGoalsForm() {
             id="desiredMonthlyIncome"
             type="number"
             min="0"
+            max={MAX_MONETARY_AMOUNT}
             step="any"
-            {...register("desiredMonthlyIncome", { valueAsNumber: true })}
+            {...desiredIncomeRegister}
+            onChange={(e) => guardDesiredIncome.onChange(e, desiredIncomeOnChange)}
+            onBeforeInput={guardDesiredIncome.onBeforeInput}
           />
           <FieldError message={errors.desiredMonthlyIncome?.message} />
           <AnimatePresence initial={false}>
@@ -135,8 +147,11 @@ export function RetirementGoalsForm() {
             id="legacyAmount"
             type="number"
             min="0"
+            max={MAX_MONETARY_AMOUNT}
             step="any"
-            {...register("legacyAmount", { valueAsNumber: true })}
+            {...legacyAmountRegister}
+            onChange={(e) => guardLegacyAmount.onChange(e, legacyAmountOnChange)}
+            onBeforeInput={guardLegacyAmount.onBeforeInput}
           />
           <AnimatePresence initial={false}>
             {watchedValues.legacyAmount > 0 && (

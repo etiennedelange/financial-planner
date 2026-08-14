@@ -363,3 +363,42 @@ describe("useExpensesStore", () => {
     })
   })
 })
+
+describe("persist migration v1 → v2 (monetary cap)", () => {
+  const absurd = 8.798456465498799e39
+
+  const migrate = useExpensesStore.persist.getOptions().migrate
+
+  it("clamps stale absurd expense amounts and income on rehydrate", () => {
+    const migrated = migrate!(
+      {
+        monthlyIncome: absurd,
+        expenses: [{ ...mockExpense, amount: absurd }],
+      } as unknown,
+      1
+    ) as { monthlyIncome: number; expenses: { amount: number }[] }
+
+    expect(migrated.monthlyIncome).toBe(1_000_000_000_000)
+    expect(migrated.expenses[0].amount).toBe(1_000_000_000_000)
+  })
+
+  it("preserves finite values untouched", () => {
+    const migrated = migrate!(
+      {
+        monthlyIncome: 56500,
+        expenses: [{ ...mockExpense, amount: 15000 }],
+      } as unknown,
+      1
+    ) as { monthlyIncome: number; expenses: { amount: number }[] }
+
+    expect(migrated.monthlyIncome).toBe(56500)
+    expect(migrated.expenses[0].amount).toBe(15000)
+  })
+
+  it("handles incomplete persisted state with safe fallbacks", () => {
+    const migrated = migrate!({} as unknown, 1) as { monthlyIncome: number; expenses: { amount: number }[] }
+
+    expect(migrated.monthlyIncome).toBe(0)
+    expect(migrated.expenses).toEqual([])
+  })
+})

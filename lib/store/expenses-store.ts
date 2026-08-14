@@ -13,6 +13,7 @@ import {
 } from "@/lib/supabase/expenses"
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
+import { clampMonetaryAmount } from "@/lib/utils/monetary"
 
 const groupSyncTimers = new Map<string, ReturnType<typeof setTimeout>>()
 const expenseSyncTimers = new Map<string, ReturnType<typeof setTimeout>>()
@@ -188,6 +189,22 @@ export const useExpensesStore = create<ExpensesState>()(
 
       setMonthlyIncome: (income) => set({ monthlyIncome: income }),
     }),
-    { name: "expenses-store-v2", skipHydration: true }
+    { name: "expenses-store-v2", skipHydration: true,
+      version: 2,
+      // Sanitize expense amounts / income persisted before the input bounds fix
+      // (R1 trillion cap): stale absurd values are clamped on rehydrate so they can
+      // neither break layout nor skew the 4% rule target. Version 1 predates the cap.
+      migrate: (persistedState) => {
+        const s = persistedState as ExpensesState
+        return {
+          ...s,
+          monthlyIncome: clampMonetaryAmount(s.monthlyIncome ?? 0),
+          expenses: (s.expenses ?? []).map((e) => ({
+            ...e,
+            amount: clampMonetaryAmount(e.amount ?? 0),
+          })),
+        }
+      },
+    }
   )
 )

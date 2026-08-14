@@ -29,6 +29,10 @@ One line per work session, newest first, capped at the latest 10 entries — whe
 arrives, delete the oldest. Full detail lives in the linked history files, never here.
 Rules: [docs/README.md](README.md).
 
+## 2026-08-14 — Monetary inputs physically reject absurdly large numbers
+
+Unbounded monetary fields (annual income, retirement goals, account balances/contributions, drawdown withdrawals, medical aid, expenses) accepted values far past `Number.MAX_SAFE_INTEGER`, which lost precision, poisoned calculations, and overflowed the input padding. New `MAX_MONETARY_AMOUNT` (R1 trillion) + `isAllowedMonetaryInput`; `useBoundedMonetary` blocks over-cap input before it enters the DOM (`beforeinput`), so holding a key just stops adding digits; stores persist `version: 2` + `migrate` to clamp stale pre-fix data. 920 tests. → [history](history/2026-08-14-input-max-bounds.md)
+
 ## 2026-08-14 — NaN/Infinity guards; coverage gap closed
 
 Non-finite engine inputs (NaN balance/return/age, 0% withdrawal rate) no longer poison divisions into NaN/±Infinity: new `finiteOrZero`/`safePositiveDivide`/`sanitizeAccounts` guards in `invariant-guards.ts`, applied across both engines + optimal-contribution; non-finite ages route through the empty result. 40 new tests; branches 84.61% → 85.1% (global coverage red resolved). Supabase error-context item audited as already resolved. 898 tests. → [history](history/2026-08-14-phase-9-1-nan-infinity-guards.md)
@@ -64,10 +68,6 @@ All visualisations centralised on `/calculator/charts` (portfolio growth, Will I
 ## 2026-08-08 — Fix: `/auth/mfa` dev-proxy redirect loop
 
 The `isMfaExempt` allowlist now covers the dev-only `/supabase/*` proxy path — a one-line fix for the redirect-to-self that broke the TOTP challenge page in the devcontainer. → [history](history/2026-08-08-mfa-challenge-dev-proxy-redirect-loop-fix.md)
-
-## 2026-08-08 — Local-dev auth email links fixed
-
-New GoTrue confirmation/recovery templates route links through the app origin; the dev proxy forwards redirects manually instead of following them. Verified end-to-end via Playwright + Mailpit. → [history](history/2026-08-08-local-dev-email-verification-fix.md)
 
 ---
 

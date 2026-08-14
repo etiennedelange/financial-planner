@@ -33,7 +33,8 @@ import { ACCOUNT_TYPE_LABELS } from "@/types"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 import { PortfolioImpactStrip } from "@/components/accounts/portfolio-impact-strip"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
-import { SA_TAX_LIMITS } from "@/lib/constants/limits"
+import { MAX_MONETARY_AMOUNT, SA_TAX_LIMITS } from "@/lib/constants/limits"
+import { useBoundedMonetary } from "@/lib/hooks/use-bounded-monetary"
 
 // ─── Schema ─────────────────────────────────────────────────────────────────
 
@@ -47,8 +48,8 @@ const accountSchema = z.object({
     "tfsa",
     "discretionary",
   ]),
-  currentBalance: z.number({ error: "Enter a balance" }).min(0, "Balance must be positive"),
-  monthlyContribution: z.number({ error: "Enter a monthly contribution" }).min(0, "Monthly contribution cannot be negative"),
+  currentBalance: z.number({ error: "Enter a balance" }).min(0, "Balance must be positive").max(MAX_MONETARY_AMOUNT, "Enter a realistic balance (R1 trillion or less)"),
+  monthlyContribution: z.number({ error: "Enter a monthly contribution" }).min(0, "Monthly contribution cannot be negative").max(MAX_MONETARY_AMOUNT, "Enter a realistic contribution (R1 trillion or less)"),
   expectedReturn: z.number({ error: "Enter an expected return" }).min(0, "Expected return must be between 0% and 30%").max(30, "Expected return must be between 0% and 30%"),
   annualFees: z.number({ error: "Enter annual fees" }).min(0, "Annual fees must be between 0% and 5%").max(5, "Annual fees must be between 0% and 5%"),
   contributionEscalation: z.number({ error: "Enter contribution escalation" }).min(0, "Escalation must be between 0% and 20%").max(20, "Escalation must be between 0% and 20%"),
@@ -108,8 +109,14 @@ function StepHeader({ step }: { step: 1 | 2 }) {
 type FormRef = ReturnType<typeof useForm<AccountFormData>>
 
 function EssentialFields({ form }: { form: FormRef }) {
-  const { register, control } = form
+  const { register, control, watch } = form
   const { errors } = useFormState({ control })
+
+  // Physically block monetary input above the cap.
+  const { onChange: balanceOnChange, ...balanceRegister } = register("currentBalance", { valueAsNumber: true })
+  const guardBalance = useBoundedMonetary(watch("currentBalance") ?? 0)
+  const { onChange: contributionOnChange, ...contributionRegister } = register("monthlyContribution", { valueAsNumber: true })
+  const guardContribution = useBoundedMonetary(watch("monthlyContribution") ?? 0)
 
   return (
     <div className="space-y-4">
@@ -157,8 +164,11 @@ function EssentialFields({ form }: { form: FormRef }) {
             id="af-balance"
             type="number"
             min="0"
+            max={MAX_MONETARY_AMOUNT}
             step="any"
-            {...register("currentBalance", { valueAsNumber: true })}
+            {...balanceRegister}
+            onChange={(e) => guardBalance.onChange(e, balanceOnChange)}
+            onBeforeInput={guardBalance.onBeforeInput}
           />
           {errors.currentBalance && (
             <p className="text-xs text-destructive">{errors.currentBalance.message}</p>
@@ -170,8 +180,11 @@ function EssentialFields({ form }: { form: FormRef }) {
             id="af-monthly"
             type="number"
             min="0"
+            max={MAX_MONETARY_AMOUNT}
             step="any"
-            {...register("monthlyContribution", { valueAsNumber: true })}
+            {...contributionRegister}
+            onChange={(e) => guardContribution.onChange(e, contributionOnChange)}
+            onBeforeInput={guardContribution.onBeforeInput}
           />
         </div>
       </div>
@@ -183,6 +196,10 @@ function PerformanceFields({ form }: { form: FormRef }) {
   const { register, watch, control } = form
   const { errors } = useFormState({ control })
   const selectedType = watch("type")
+
+  // Physically block TFSA contribution input above the lifetime limit.
+  const { onChange: tfsaOnChange, ...tfsaRegister } = register("tfsaContributionsToDate", { valueAsNumber: true })
+  const guardTfsa = useBoundedMonetary(watch("tfsaContributionsToDate") ?? "", SA_TAX_LIMITS.tfsaLifetimeLimit)
 
   return (
     <div className="space-y-4">
@@ -263,7 +280,9 @@ function PerformanceFields({ form }: { form: FormRef }) {
             max={SA_TAX_LIMITS.tfsaLifetimeLimit}
             step="1000"
             placeholder="e.g. 180000"
-            {...register("tfsaContributionsToDate", { valueAsNumber: true })}
+            {...tfsaRegister}
+            onChange={(e) => guardTfsa.onChange(e, tfsaOnChange)}
+            onBeforeInput={guardTfsa.onBeforeInput}
           />
           <p className="text-xs text-muted-foreground">
             Cumulative amount contributed to all TFSAs since 2015 (not current balance). Used to enforce the R500 000 lifetime limit.

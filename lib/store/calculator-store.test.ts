@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest"
-import { useCalculatorStore } from "./calculator-store"
+import { useCalculatorStore, type CalculatorState } from "./calculator-store"
 import * as accountsApi from "@/lib/supabase/accounts"
 import * as scenariosApi from "@/lib/supabase/scenarios"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
@@ -485,5 +485,80 @@ describe('local-only mode (no session)', () => {
       annualFees: 0.75,
     })
     expect(useCalculatorStore.getState().accounts).toHaveLength(1)
+  })
+})
+
+describe('persist migration v1 → v2 (monetary cap)', () => {
+  const absurd = 8.798456465498799e39
+
+  const migrate = useCalculatorStore.persist.getOptions().migrate
+
+  it('clamps stale absurd monetary values on rehydrate', () => {
+    const migrated = migrate!(
+      {
+        personalInfo: { currentAge: 35, retirementAge: 65, lifeExpectancy: 90, annualIncome: absurd },
+        retirementGoals: { desiredMonthlyIncome: absurd, inflationRate: 5.5, legacyAmount: absurd },
+        drawdownConfig: { strategy: 'fixed_percentage', initialWithdrawalRate: 4, minimumWithdrawal: absurd, maximumWithdrawal: absurd, lumpSumPercentage: 0 },
+        accounts: [{ ...mockAccount, currentBalance: absurd, monthlyContribution: absurd }],
+      } as unknown,
+      1
+    ) as CalculatorState
+
+    expect(migrated.personalInfo.annualIncome).toBe(1_000_000_000_000)
+    expect(migrated.retirementGoals.desiredMonthlyIncome).toBe(1_000_000_000_000)
+    expect(migrated.retirementGoals.legacyAmount).toBe(1_000_000_000_000)
+    expect(migrated.drawdownConfig.minimumWithdrawal).toBe(1_000_000_000_000)
+    expect(migrated.drawdownConfig.maximumWithdrawal).toBe(1_000_000_000_000)
+    expect(migrated.accounts[0].currentBalance).toBe(1_000_000_000_000)
+    expect(migrated.accounts[0].monthlyContribution).toBe(1_000_000_000_000)
+  })
+
+  it('preserves finite values and optional undefined fields untouched', () => {
+    const migrated = migrate!(
+      {
+        personalInfo: { currentAge: 35, retirementAge: 65, lifeExpectancy: 90, annualIncome: 600000 },
+        retirementGoals: { desiredMonthlyIncome: 30000, inflationRate: 5.5, legacyAmount: 0 },
+        drawdownConfig: { strategy: 'fixed_percentage', initialWithdrawalRate: 4, minimumWithdrawal: 15000, maximumWithdrawal: 60000, lumpSumPercentage: 0 },
+        accounts: [{ ...mockAccount, tfsaContributionsToDate: undefined }],
+      } as unknown,
+      1
+    ) as CalculatorState
+
+    expect(migrated.personalInfo.annualIncome).toBe(600000)
+    expect(migrated.retirementGoals.desiredMonthlyIncome).toBe(30000)
+    expect(migrated.drawdownConfig.minimumWithdrawal).toBe(15000)
+    expect(migrated.accounts[0].tfsaContributionsToDate).toBeUndefined()
+  })
+
+  it('handles incomplete persisted state with safe fallbacks', () => {
+    const migrated = migrate!(
+      {
+        personalInfo: {},
+        retirementGoals: {},
+        drawdownConfig: {},
+      } as unknown,
+      1
+    ) as CalculatorState
+
+    expect(migrated.personalInfo.annualIncome).toBe(0)
+    expect(migrated.retirementGoals.desiredMonthlyIncome).toBe(0)
+    expect(migrated.retirementGoals.legacyAmount).toBe(0)
+    expect(migrated.drawdownConfig.minimumWithdrawal).toBe(0)
+    expect(migrated.drawdownConfig.maximumWithdrawal).toBe(0)
+    expect(migrated.drawdownConfig.monthlyMedicalAid).toBeUndefined()
+    expect(migrated.accounts).toEqual([])
+  })
+
+  it('clamps present optional monetary fields', () => {
+    const migrated = migrate!(
+      {
+        drawdownConfig: { monthlyMedicalAid: absurd },
+        accounts: [{ ...mockAccount, tfsaContributionsToDate: absurd }],
+      } as unknown,
+      1
+    ) as CalculatorState
+
+    expect(migrated.drawdownConfig.monthlyMedicalAid).toBe(1_000_000_000_000)
+    expect(migrated.accounts[0].tfsaContributionsToDate).toBe(1_000_000_000_000)
   })
 })

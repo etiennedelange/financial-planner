@@ -20,6 +20,7 @@ import type {
 } from "@/types"
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
+import { clampMonetaryAmount } from "@/lib/utils/monetary"
 
 let scenarioSyncTimer: ReturnType<typeof setTimeout> | null = null
 let dbSyncInProgress = false
@@ -40,8 +41,7 @@ function scheduleScenarioSync() {
   }, 800)
 }
 
-interface CalculatorState {
-  accounts: Account[]
+export interface CalculatorState {  accounts: Account[]
   personalInfo: PersonalInfo
   retirementGoals: RetirementGoals
   assumptions: MarketAssumptions
@@ -293,6 +293,43 @@ export const useCalculatorStore = create<CalculatorState>()(
     {
       name: "retirement-calculator-storage",
       skipHydration: true,
+      version: 2,
+      // Sanitize monetary fields persisted before the input bounds fix (R1 trillion
+      // cap): stale absurd values are clamped on rehydrate so they can neither break
+      // layout nor poison calculations. Version 1 data predates the cap.
+      migrate: (persistedState) => {
+        const s = persistedState as CalculatorState
+        return {
+          ...s,
+          personalInfo: {
+            ...s.personalInfo,
+            annualIncome: clampMonetaryAmount(s.personalInfo?.annualIncome ?? 0),
+          },
+          retirementGoals: {
+            ...s.retirementGoals,
+            desiredMonthlyIncome: clampMonetaryAmount(s.retirementGoals?.desiredMonthlyIncome ?? 0),
+            legacyAmount: clampMonetaryAmount(s.retirementGoals?.legacyAmount ?? 0),
+          },
+          drawdownConfig: {
+            ...s.drawdownConfig,
+            minimumWithdrawal: clampMonetaryAmount(s.drawdownConfig?.minimumWithdrawal ?? 0),
+            maximumWithdrawal: clampMonetaryAmount(s.drawdownConfig?.maximumWithdrawal ?? 0),
+            monthlyMedicalAid:
+              s.drawdownConfig?.monthlyMedicalAid == null
+                ? undefined
+                : clampMonetaryAmount(s.drawdownConfig.monthlyMedicalAid),
+          },
+          accounts: (s.accounts ?? []).map((a) => ({
+            ...a,
+            currentBalance: clampMonetaryAmount(a.currentBalance ?? 0),
+            monthlyContribution: clampMonetaryAmount(a.monthlyContribution ?? 0),
+            tfsaContributionsToDate:
+              a.tfsaContributionsToDate == null
+                ? undefined
+                : clampMonetaryAmount(a.tfsaContributionsToDate),
+          })),
+        }
+      },
       partialize: (state) => ({
         sessionId: state.sessionId,
         activeScenarioId: state.activeScenarioId,
