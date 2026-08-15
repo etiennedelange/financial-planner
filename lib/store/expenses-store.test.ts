@@ -32,7 +32,7 @@ const mockExpense2 = {
 describe("useExpensesStore", () => {
   beforeEach(() => {
     useExpensesStore.setState({
-      sessionId: null,
+      identity: { kind: "guest" },
       groups: [],
       expenses: [],
       monthlyIncome: 56500,
@@ -47,7 +47,7 @@ describe("useExpensesStore", () => {
   describe("Initialization", () => {
     it("should initialize with default values", () => {
       const state = useExpensesStore.getState()
-      expect(state.sessionId).toBe(null)
+      expect(state.identity).toEqual({ kind: "guest" })
       expect(state.groups).toEqual([])
       expect(state.expenses).toEqual([])
       expect(state.monthlyIncome).toBe(56500)
@@ -56,15 +56,15 @@ describe("useExpensesStore", () => {
 
   describe("Session management", () => {
     it("should set session ID", () => {
-      useExpensesStore.getState().setSessionId("session-123")
-      expect(useExpensesStore.getState().sessionId).toBe("session-123")
+      useExpensesStore.getState().setIdentity({ kind: "user", userId: "session-123" })
+      expect(useExpensesStore.getState().identity).toEqual({ kind: "user", userId: "session-123" })
     })
   })
 
   describe("Group operations", () => {
     it("should add new group", () => {
       vi.spyOn(expensesApi, "upsertGroup").mockResolvedValue(undefined)
-      useExpensesStore.getState().setSessionId("session-1")
+      useExpensesStore.getState().setIdentity({ kind: "user", userId: "session-1" })
 
       useExpensesStore.getState().addGroup("Housing", "#818cf8")
 
@@ -85,7 +85,7 @@ describe("useExpensesStore", () => {
 
     it("should update group name and color", () => {
       vi.spyOn(expensesApi, "upsertGroup").mockResolvedValue(undefined)
-      useExpensesStore.setState({ groups: [mockGroup], sessionId: "session-1" })
+      useExpensesStore.setState({ groups: [mockGroup], identity: { kind: "user", userId: "session-1" } })
 
       useExpensesStore.getState().updateGroup("group-1", { name: "Accommodation", color: "#60a5fa" })
 
@@ -136,7 +136,7 @@ describe("useExpensesStore", () => {
     it("should add new expense to group", () => {
       vi.spyOn(expensesApi, "upsertGroup").mockResolvedValue(undefined)
       vi.spyOn(expensesApi, "upsertExpense").mockResolvedValue(undefined)
-      useExpensesStore.getState().setSessionId("session-1")
+      useExpensesStore.getState().setIdentity({ kind: "user", userId: "session-1" })
 
       useExpensesStore.getState().addExpense("group-1", "Rent", 15000)
 
@@ -159,7 +159,7 @@ describe("useExpensesStore", () => {
     it("should update expense details", () => {
       vi.spyOn(expensesApi, "upsertGroup").mockResolvedValue(undefined)
       vi.spyOn(expensesApi, "upsertExpense").mockResolvedValue(undefined)
-      useExpensesStore.setState({ expenses: [mockExpense], sessionId: "session-1" })
+      useExpensesStore.setState({ expenses: [mockExpense], identity: { kind: "user", userId: "session-1" } })
 
       useExpensesStore.getState().updateExpense("expense-1", { amount: 16000, name: "Monthly Rent" })
 
@@ -183,7 +183,7 @@ describe("useExpensesStore", () => {
     it("should toggle inRetirement flag", () => {
       vi.spyOn(expensesApi, "upsertGroup").mockResolvedValue(undefined)
       vi.spyOn(expensesApi, "upsertExpense").mockResolvedValue(undefined)
-      useExpensesStore.setState({ expenses: [mockExpense], sessionId: "session-1" })
+      useExpensesStore.setState({ expenses: [mockExpense], identity: { kind: "user", userId: "session-1" } })
 
       useExpensesStore.getState().toggleRetirement("expense-1")
 
@@ -196,7 +196,7 @@ describe("useExpensesStore", () => {
 
     it("should assign sort order based on group position", () => {
       vi.spyOn(expensesApi, "upsertExpense").mockResolvedValue(undefined)
-      useExpensesStore.setState({ expenses: [mockExpense], sessionId: "session-1" })
+      useExpensesStore.setState({ expenses: [mockExpense], identity: { kind: "user", userId: "session-1" } })
 
       useExpensesStore.getState().addExpense("group-1", "Utilities", 2000)
 
@@ -243,7 +243,7 @@ describe("useExpensesStore", () => {
 
     it("should clear DB when session exists", () => {
       useExpensesStore.setState({
-        sessionId: "session-1",
+        identity: { kind: "user", userId: "session-1" },
         groups: [mockGroup],
         expenses: [mockExpense],
       })
@@ -277,7 +277,7 @@ describe("useExpensesStore", () => {
       await useExpensesStore.getState().syncFromDb("session-1")
 
       const state = useExpensesStore.getState()
-      expect(state.sessionId).toBe("session-1")
+      expect(state.identity).toEqual({ kind: "user", userId: "session-1" })
       expect(state.groups).toEqual([mockGroup])
       expect(state.expenses).toEqual([mockExpense])
     })
@@ -307,7 +307,7 @@ describe("useExpensesStore", () => {
   describe("Concurrent operations", () => {
     it("should handle multiple group additions", () => {
       vi.spyOn(expensesApi, "upsertGroup").mockResolvedValue(undefined)
-      useExpensesStore.getState().setSessionId("session-1")
+      useExpensesStore.getState().setIdentity({ kind: "user", userId: "session-1" })
 
       useExpensesStore.getState().addGroup("Housing", "#818cf8")
       useExpensesStore.getState().addGroup("Utilities", "#60a5fa")
@@ -413,7 +413,7 @@ describe("useExpensesStore persist rehydrate", () => {
       "expenses-store-v2:guest",
       JSON.stringify({
         state: {
-          sessionId: null,
+          identity: { kind: "guest" },
           groups: [mockGroup],
           expenses: [mockExpense, mockExpense2],
           monthlyIncome: 80000,
@@ -432,6 +432,6 @@ describe("useExpensesStore persist rehydrate", () => {
     const stored = JSON.parse(localStorage.getItem("expenses-store-v2:guest")!)
     expect(stored.state.monthlyIncome).toBe(95000)
 
-    useExpensesStore.setState({ sessionId: null, groups: [], expenses: [], monthlyIncome: 56500 })
+    useExpensesStore.setState({ identity: { kind: "guest" }, groups: [], expenses: [], monthlyIncome: 56500 })
   })
 })

@@ -71,7 +71,7 @@ describe("useCalculatorStore", () => {
       retirementGoals: { desiredMonthlyIncome: 30000, inflationRate: 5.5, legacyAmount: 0 },
       assumptions: { equityReturn: 10.5, bondReturn: 8, cashReturn: 3, equityVolatility: 16, bondVolatility: 8, inflationRate: 5.5, compoundingMethod: "nominal" },
       drawdownConfig: { strategy: "fixed_percentage", initialWithdrawalRate: 4, minimumWithdrawal: 15000, maximumWithdrawal: 60000, lumpSumPercentage: 0 },
-      sessionId: null,
+      identity: { kind: "guest" },
       activeScenarioId: null,
       scenarioList: [],
       displayMode: "nominal",
@@ -86,7 +86,7 @@ describe("useCalculatorStore", () => {
   describe("Initialization", () => {
     it("should initialize with default values", () => {
       const state = useCalculatorStore.getState()
-      expect(state.sessionId).toBe(null)
+      expect(state.identity).toEqual({ kind: "guest" })
       expect(state.activeScenarioId).toBe(null)
       expect(state.accounts).toEqual([])
       expect(state.scenarioList).toEqual([])
@@ -97,15 +97,18 @@ describe("useCalculatorStore", () => {
 
   describe("Session & ID management", () => {
     it("should set session ID", () => {
-      useCalculatorStore.getState().setSessionId("session-123")
-      expect(useCalculatorStore.getState().sessionId).toBe("session-123")
+      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-123" })
+      expect(useCalculatorStore.getState().identity).toEqual({
+        kind: "user",
+        userId: "session-123",
+      })
     })
   })
 
   describe("Account operations", () => {
     it("should add account to state and DB", () => {
       vi.spyOn(accountsApi, "upsertAccount").mockResolvedValue(undefined)
-      useCalculatorStore.getState().setSessionId("session-1")
+      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
       useCalculatorStore.getState().addAccount(mockAccount)
 
       const state = useCalculatorStore.getState()
@@ -124,7 +127,7 @@ describe("useCalculatorStore", () => {
 
     it("should update account in state and DB", () => {
       vi.spyOn(accountsApi, "upsertAccount").mockResolvedValue(undefined)
-      useCalculatorStore.getState().setSessionId("session-1")
+      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
       useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
       useCalculatorStore.getState().addAccount(mockAccount)
 
@@ -148,7 +151,7 @@ describe("useCalculatorStore", () => {
     it("should seed accounts with new IDs", () => {
       vi.spyOn(accountsApi, "upsertAccount").mockResolvedValue(undefined)
       vi.spyOn(accountsApi, "deleteAccount").mockResolvedValue(undefined)
-      useCalculatorStore.getState().setSessionId("session-1")
+      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
       useCalculatorStore.setState({ activeScenarioId: "scenario-1", accounts: [] })
 
       const seedData = [
@@ -166,7 +169,7 @@ describe("useCalculatorStore", () => {
   describe("Personal settings updates", () => {
     it("should update personal info and schedule sync", () => {
       vi.useFakeTimers()
-      useCalculatorStore.getState().setSessionId("session-1")
+      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
       useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
       vi.spyOn(scenariosApi, "updateScenario").mockResolvedValue(undefined)
 
@@ -180,7 +183,7 @@ describe("useCalculatorStore", () => {
 
     it("should update retirement goals and schedule sync", () => {
       vi.useFakeTimers()
-      useCalculatorStore.getState().setSessionId("session-1")
+      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
       useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
       vi.spyOn(scenariosApi, "updateScenario").mockResolvedValue(undefined)
 
@@ -194,7 +197,7 @@ describe("useCalculatorStore", () => {
 
     it("should update assumptions and schedule sync", () => {
       vi.useFakeTimers()
-      useCalculatorStore.getState().setSessionId("session-1")
+      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
       useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
       vi.spyOn(scenariosApi, "updateScenario").mockResolvedValue(undefined)
 
@@ -208,7 +211,7 @@ describe("useCalculatorStore", () => {
 
     it("should update drawdown config and schedule sync", () => {
       vi.useFakeTimers()
-      useCalculatorStore.getState().setSessionId("session-1")
+      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
       useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
       vi.spyOn(scenariosApi, "updateScenario").mockResolvedValue(undefined)
 
@@ -222,7 +225,7 @@ describe("useCalculatorStore", () => {
 
     it("should update display mode and schedule sync", () => {
       vi.useFakeTimers()
-      useCalculatorStore.getState().setSessionId("session-1")
+      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
       useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
       vi.spyOn(scenariosApi, "updateScenario").mockResolvedValue(undefined)
 
@@ -269,7 +272,7 @@ describe("useCalculatorStore", () => {
       useCalculatorStore.setState({
         personalInfo: { ...useCalculatorStore.getState().personalInfo, currentAge: 55 },
         accounts: [mockAccount],
-        sessionId: "session-123",
+        identity: { kind: "user", userId: "session-123" },
       })
 
       useCalculatorStore.getState().resetToDefaults()
@@ -277,13 +280,13 @@ describe("useCalculatorStore", () => {
       const state = useCalculatorStore.getState()
       expect(state.personalInfo.currentAge).toBe(SA_DEFAULTS.defaultCurrentAge)
       expect(state.accounts).toHaveLength(0)
-      expect(state.sessionId).toBe(null)
+      expect(state.identity).toEqual({ kind: "guest" })
     })
   })
 
   describe("Scenario operations", () => {
     beforeEach(() => {
-      useCalculatorStore.getState().setSessionId("session-1")
+      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
     })
 
     it("should switch to existing scenario", async () => {
@@ -367,7 +370,7 @@ describe("useCalculatorStore", () => {
 
   describe("syncFromDb", () => {
     beforeEach(() => {
-      useCalculatorStore.getState().setSessionId("session-1")
+      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
     })
 
     it("should sync existing scenarios list", async () => {
@@ -436,7 +439,7 @@ describe("useCalculatorStore", () => {
     })
 
     it("should skip sync if no session ID", async () => {
-      useCalculatorStore.setState({ sessionId: null })
+      useCalculatorStore.setState({ identity: { kind: "guest" } })
       vi.spyOn(scenariosApi, "listScenarios").mockResolvedValue([])
 
       await useCalculatorStore.getState().syncFromDb()
@@ -448,7 +451,7 @@ describe("useCalculatorStore", () => {
   describe("Sync timing", () => {
     it("should debounce multiple updates", () => {
       vi.useFakeTimers()
-      useCalculatorStore.getState().setSessionId("session-1")
+      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
       useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
       vi.spyOn(scenariosApi, "updateScenario").mockResolvedValue(undefined)
 
@@ -465,14 +468,14 @@ describe("useCalculatorStore", () => {
 })
 
 describe('local-only mode (no session)', () => {
-  it('does not attempt a DB read when sessionId is null', async () => {
-    useCalculatorStore.setState({ sessionId: null, activeScenarioId: null })
+  it('does not attempt a DB read when identity is guest', async () => {
+    useCalculatorStore.setState({ identity: { kind: "guest" }, activeScenarioId: null })
     await useCalculatorStore.getState().syncFromDb()
     expect(useCalculatorStore.getState().activeScenarioId).toBeNull()
   })
 
   it('keeps account edits in memory when signed out', () => {
-    useCalculatorStore.setState({ sessionId: null, accounts: [] })
+    useCalculatorStore.setState({ identity: { kind: "guest" }, accounts: [] })
     useCalculatorStore.getState().addAccount({
       id: 'acc-local-1',
       name: 'Local RA',
@@ -573,7 +576,7 @@ describe('persist write-gate (auth-before-rehydrate clobber regression)', () => 
   })
 
   const persistedSnapshot = {
-    sessionId: null,
+    identity: { kind: "guest" },
     activeScenarioId: null,
     personalInfo: { currentAge: 45, retirementAge: 65, lifeExpectancy: 90, annualIncome: 600000 },
     retirementGoals: { desiredMonthlyIncome: 30000, inflationRate: 5.5, legacyAmount: 0 },
@@ -621,7 +624,7 @@ describe('persist write-gate (auth-before-rehydrate clobber regression)', () => 
 
     // SupabaseProvider races the layout: auth-driven setSessionId fires first
     // while the store is still holding its pre-hydration defaults.
-    freshStore.getState().setSessionId(null)
+    freshStore.getState().setIdentity({ kind: "guest" })
 
     await freshStore.persist.rehydrate()
 

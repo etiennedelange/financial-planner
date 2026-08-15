@@ -21,13 +21,15 @@ import type {
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import { createGatedPersistStorage } from "@/lib/store/persist-gate"
+import type { PersistenceScope } from "@/lib/store/persistence-scope"
 import { clampMonetaryAmount } from "@/lib/utils/monetary"
 
 // See persist-gate.ts: writes are held back until the first rehydrate() settles,
 // so auth-driven set() calls that race the layout's manual rehydrate can never
 // clobber the user's persisted plan with the pre-hydration defaults.
+// NOTE: `identity` is deliberately NOT persisted — the storage key encodes the
+// scope (see persistence-scope.ts), so the payload needs no owner marker.
 type PersistedCalculatorState = {
-  sessionId: string | null
   activeScenarioId: string | null
   personalInfo: PersonalInfo
   assumptions: MarketAssumptions
@@ -62,12 +64,12 @@ export interface CalculatorState {  accounts: Account[]
   retirementGoals: RetirementGoals
   assumptions: MarketAssumptions
   drawdownConfig: DrawdownConfig
-  sessionId: string | null
+  identity: PersistenceScope
   activeScenarioId: string | null
   scenarioList: ScenarioMeta[]
   displayMode: "nominal" | "real"
 
-  setSessionId: (id: string | null) => void
+  setIdentity: (scope: PersistenceScope) => void
   syncFromDb: () => Promise<void>
   addAccount: (account: Account) => void
   seedAccounts: (accounts: Omit<Account, "id">[]) => void
@@ -129,7 +131,7 @@ const defaultSettings = {
 
 const initialState = {
   accounts: [] as Account[],
-  sessionId: null as string | null,
+  identity: { kind: "guest" } as PersistenceScope,
   activeScenarioId: null as string | null,
   scenarioList: [] as ScenarioMeta[],
   ...defaultSettings,
@@ -140,12 +142,13 @@ export const useCalculatorStore = create<CalculatorState>()(
     (set) => ({
       ...initialState,
 
-      setSessionId: (id) => set({ sessionId: id }),
+      setIdentity: (scope) => set({ identity: scope }),
 
       syncFromDb: async () => {
         if (dbSyncInProgress) return
         dbSyncInProgress = true
-        const { sessionId, activeScenarioId } = useCalculatorStore.getState()
+        const { identity, activeScenarioId } = useCalculatorStore.getState()
+        const sessionId = identity.kind === "user" ? identity.userId : null
         if (!sessionId) { dbSyncInProgress = false; return }
 
         try {
@@ -263,8 +266,9 @@ export const useCalculatorStore = create<CalculatorState>()(
       },
 
       createNewScenario: async (name) => {
-        const { sessionId, personalInfo, retirementGoals, assumptions, drawdownConfig, displayMode, accounts } =
+        const { identity, personalInfo, retirementGoals, assumptions, drawdownConfig, displayMode, accounts } =
           useCalculatorStore.getState()
+        const sessionId = identity.kind === "user" ? identity.userId : null
         if (!sessionId) return
         const scenarioId = await createScenario(sessionId, name, {
           personalInfo,
@@ -349,7 +353,8 @@ export const useCalculatorStore = create<CalculatorState>()(
         }
       },
       partialize: (state) => ({
-        sessionId: state.sessionId,
+        // NOTE: identity is deliberately NOT persisted — the storage key
+        // encodes the scope, so the payload needs no owner marker.
         activeScenarioId: state.activeScenarioId,
         personalInfo: state.personalInfo,
         assumptions: state.assumptions,

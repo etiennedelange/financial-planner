@@ -109,12 +109,13 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
         if (!current) {
           // Signed out: the app runs entirely from localStorage.
-          // Both stores no-op their DB writes while sessionId is null.
-          useCalculatorStore.getState().setSessionId(null)
+          // Both stores no-op their DB writes while identity is guest.
+          useCalculatorStore.getState().setIdentity({ kind: "guest" })
           return
         }
-        useCalculatorStore.getState().setSessionId(current.id)
-        useExpensesStore.getState().setSessionId(current.id)
+        const scope = { kind: "user", userId: current.id } as const
+        useCalculatorStore.getState().setIdentity(scope)
+        useExpensesStore.getState().setIdentity(scope)
       },
       claimLocalData: async (userId: string) => {
         // Snapshot local state BEFORE any sync overwrites it. The coordinator

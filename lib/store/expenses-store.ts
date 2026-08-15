@@ -14,6 +14,7 @@ import {
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import { createGatedPersistStorage } from "@/lib/store/persist-gate"
+import type { PersistenceScope } from "@/lib/store/persistence-scope"
 import { clampMonetaryAmount } from "@/lib/utils/monetary"
 
 const groupSyncTimers = new Map<string, ReturnType<typeof setTimeout>>()
@@ -23,8 +24,9 @@ let syncInProgress = false
 // See persist-gate.ts: writes are held back until the first rehydrate() settles,
 // so auth-driven set() calls that race the layout's manual rehydrate can never
 // clobber the user's persisted expenses with the pre-hydration defaults.
+// NOTE: `identity` is deliberately NOT persisted — the storage key encodes the
+// scope (see persistence-scope.ts), so the payload needs no owner marker.
 type PersistedExpensesState = {
-  sessionId: string | null
   groups: ExpenseGroup[]
   expenses: Expense[]
   monthlyIncome: number
@@ -56,13 +58,13 @@ function scheduleExpenseSync(expense: Expense, group: ExpenseGroup, sessionId: s
 }
 
 interface ExpensesState {
-  sessionId: string | null
+  identity: PersistenceScope
   groups: ExpenseGroup[]
   expenses: Expense[]
   monthlyIncome: number
 
-  setSessionId: (id: string) => void
-  syncFromDb: (sessionId: string) => Promise<void>
+  setIdentity: (scope: PersistenceScope) => void
+  syncFromDb: (userId: string) => Promise<void>
   loadSampleData: () => void
   clearAll: () => void
 
@@ -81,19 +83,19 @@ interface ExpensesState {
 export const useExpensesStore = create<ExpensesState>()(
   persist(
     (set, get) => ({
-      sessionId: null,
+      identity: { kind: "guest" } as PersistenceScope,
       groups: [],
       expenses: [],
       monthlyIncome: 56500,
 
-      setSessionId: (id) => set({ sessionId: id }),
+      setIdentity: (scope) => set({ identity: scope }),
 
-      syncFromDb: async (sessionId) => {
+      syncFromDb: async (userId) => {
         if (syncInProgress) return
         syncInProgress = true
         try {
-          set({ sessionId })
-          const { groups, expenses } = await fetchExpenses(sessionId)
+          set({ identity: { kind: "user", userId } })
+          const { groups, expenses } = await fetchExpenses(userId)
           set({ groups, expenses })
         } finally {
           syncInProgress = false
@@ -101,29 +103,32 @@ export const useExpensesStore = create<ExpensesState>()(
       },
 
       loadSampleData: () => {
-        const { sessionId } = get()
+        const { identity } = get()
+        const userId = identity.kind === "user" ? identity.userId : null
         const { groups: seedGroups, expenses: seedExpensesList } = generateSeedData()
         set({ groups: seedGroups, expenses: seedExpensesList })
         // Clear existing DB rows then seed — fire-and-forget, don't block UI.
         // clearAllExpenses cascades to expenses via FK, so one query is enough.
-        if (sessionId) {
-          clearAllExpenses(sessionId)
-            .then(() => seedExpensesDb(sessionId))
+        if (userId) {
+          clearAllExpenses(userId)
+            .then(() => seedExpensesDb(userId))
             .catch(console.error)
         }
       },
 
       clearAll: () => {
-        const { sessionId } = get()
+        const { identity } = get()
+        const userId = identity.kind === "user" ? identity.userId : null
         set({ groups: [], expenses: [] })
         // One bulk delete; cascade removes all child expenses automatically.
-        if (sessionId) {
-          clearAllExpenses(sessionId).catch(console.error)
+        if (userId) {
+          clearAllExpenses(userId).catch(console.error)
         }
       },
 
       addGroup: (name, color) => {
-        const { sessionId } = get()
+        const { identity } = get()
+        const userId = identity.kind === "user" ? identity.userId : null
         const group: ExpenseGroup = {
           id: crypto.randomUUID(),
           name,
@@ -131,16 +136,17 @@ export const useExpensesStore = create<ExpensesState>()(
           sortOrder: get().groups.length,
         }
         set((s) => ({ groups: [...s.groups, group] }))
-        if (sessionId) scheduleGroupSync(group, sessionId)
+        if (userId) scheduleGroupSync(group, userId)
       },
 
       updateGroup: (id, patch) => {
-        const { sessionId } = get()
+        const { identity } = get()
+        const userId = identity.kind === "user" ? identity.userId : null
         set((s) => ({
           groups: s.groups.map((g) => (g.id === id ? { ...g, ...patch } : g)),
         }))
         const updated = get().groups.find((g) => g.id === id)
-        if (updated && sessionId) scheduleGroupSync(updated, sessionId)
+        if (updated && userId) scheduleGroupSync(updated, userId)
       },
 
       removeGroup: (id) => {
@@ -152,7 +158,8 @@ export const useExpensesStore = create<ExpensesState>()(
       },
 
       addExpense: (groupId, name, amount) => {
-        const { sessionId } = get()
+        const { identity } = get()
+        const userId = identity.kind === "user" ? identity.userId : null
         const expense: Expense = {
           id: crypto.randomUUID(),
           groupId,
@@ -162,21 +169,22 @@ export const useExpensesStore = create<ExpensesState>()(
           sortOrder: get().expenses.filter((e) => e.groupId === groupId).length,
         }
         set((s) => ({ expenses: [...s.expenses, expense] }))
-        if (sessionId) {
+        if (userId) {
           const group = get().groups.find((g) => g.id === groupId)
-          if (group) scheduleExpenseSync(expense, group, sessionId)
+          if (group) scheduleExpenseSync(expense, group, userId)
         }
       },
 
       updateExpense: (id, patch) => {
-        const { sessionId } = get()
+        const { identity } = get()
+        const userId = identity.kind === "user" ? identity.userId : null
         set((s) => ({
           expenses: s.expenses.map((e) => (e.id === id ? { ...e, ...patch } : e)),
         }))
         const updated = get().expenses.find((e) => e.id === id)
-        if (updated && sessionId) {
+        if (updated && userId) {
           const group = get().groups.find((g) => g.id === updated.groupId)
-          if (group) scheduleExpenseSync(updated, group, sessionId)
+          if (group) scheduleExpenseSync(updated, group, userId)
         }
       },
 
@@ -186,16 +194,17 @@ export const useExpensesStore = create<ExpensesState>()(
       },
 
       toggleRetirement: (id) => {
-        const { sessionId } = get()
+        const { identity } = get()
+        const userId = identity.kind === "user" ? identity.userId : null
         set((s) => ({
           expenses: s.expenses.map((e) =>
             e.id === id ? { ...e, inRetirement: !e.inRetirement } : e
           ),
         }))
         const updated = get().expenses.find((e) => e.id === id)
-        if (updated && sessionId) {
+        if (updated && userId) {
           const group = get().groups.find((g) => g.id === updated.groupId)
-          if (group) scheduleExpenseSync(updated, group, sessionId)
+          if (group) scheduleExpenseSync(updated, group, userId)
         }
       },
 
