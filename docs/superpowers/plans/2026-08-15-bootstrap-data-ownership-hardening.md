@@ -4,12 +4,13 @@
 
 **Goal:** Replace overlapping hydration, auth, and database-sync timing fixes with one serialized bootstrap flow and explicit guest/user data ownership.
 
-**Architecture:** `SupabaseProvider` will own one bootstrap coordinator. The coordinator hydrates both Zustand stores once, resolves the verified auth identity, checks MFA assurance, chooses guest-claim versus server-wins behaviour, and exposes one readiness state. Auth callbacks will only enqueue events; stores will reject stale or unauthenticated remote writes. Persistence will use explicit guest and user scopes so one account's local cache cannot silently become another account's claim.
+**Architecture:** `SupabaseProvider` will own one bootstrap coordinator. The coordinator hydrates both Zustand stores once *per persistence scope* (guest first, then user-scoped once identity resolves), resolves the verified auth identity, checks MFA assurance, chooses guest-claim versus server-wins behaviour, and exposes one readiness state. Auth callbacks will only enqueue events; stores will reject stale or unauthenticated remote writes. Persistence will use explicit guest and user scopes so one account's local cache cannot silently become another account's claim.
 
 ## Design Decisions (resolved during review)
 
-- **Identity model.** `identity: PersistenceScope` (`{ kind: "guest" }` or `{ kind: "user"; userId: string }`) is the single source of truth for who owns a store instance. It is set only by the coordinator via `setIdentity` and is not itself persisted inside the scoped payload — the storage *key* encodes the scope. The legacy `sessionId` field is removed; its ~40 read sites migrate to `identity.userId` (nullable). Store write-guards capture `identity.userId` + `activeScenarioId` when a write is scheduled and re-check both at fire time, so writes need no generation value.
+- **Identity model.** `identity: PersistenceScope` (`{ kind: "guest" }` or `{ kind: "user"; userId: string }`) is the single source of truth for who owns a store instance. It is set only by the coordinator via `setIdentity` and is not itself persisted inside the scoped payload — the storage *key* encodes the scope. The legacy `sessionId` field is removed; its read sites migrate to `identity.userId` (nullable) — 68 non-test source references plus 21 in tests (67 code refs + 1 comment), of which the 16 `sessionId`/`session_id` references in `lib/supabase/expenses.ts` are the DB layer's `session_id` column contract and are excluded from the rename (Task 4 Step 1). Store write-guards capture `identity.userId` + `activeScenarioId` when a write is scheduled and re-check both at fire time, so writes need no generation value.
 - **Hydration happens once *per scope*, not once.** Scoped storage keys depend on identity, but identity is not known until `getUser()` resolves — so the first hydration can only ever be guest-scoped, and an authenticated session requires a second, user-scoped hydration. The machine therefore has two hydration states (`hydratingGuest` → … → `hydratingUser`). The "hydrate exactly once" criterion is replaced by: **exactly one hydration per scope, and never more than one hydration in flight at a time.** Task 2's harness asserts that shape, not a single call.
+- **AUTH_EVENTs arriving mid-hydration are captured, never cancelling.** The listener is registered *before* `start()` (Task 2 Steps 2-3), so supabase-js's `INITIAL_SESSION` commonly arrives while `hydratingGuest` is still running. If the top-level `AUTH_EVENT → .authenticating` re-target applied from there, XState would cancel the in-flight guest hydration — the one-time legacy migration would be aborted mid-copy, the guest scope never set, and legacy payloads silently stranded until a later load happened not to race. The two hydration states therefore each define a **target-less `AUTH_EVENT` capture handler** (actions only, no `target`): the event is assigned into `context.pendingEvent` with a `generation` bump and the state is not exited, so the hydration and migration always run to completion. On the startup path the capture is redundant with the machine's own `getUser()` flow; it is load-bearing when a sign-out, or a second user's sign-in, arrives while the user-scoped rehydrate is in flight — without capture the event would be dropped and the app left hydrated as a user the session no longer is. After the hydration settles, the machine re-resolves identity (`authenticating`), hydrates a superseding user's scope before applying anything, and routes a held null-user event (sign-out) through `applyingTransition` so cleanup is not skipped; the claim/sync guard additionally requires a non-null `userId` so a captured null-user event falls through to `ready` instead of reaching `syncing`. The legacy-migration bullet below is protected by this capture.
 - **Legacy migration runs pre-auth, in `hydratingGuest`.** It does not need the current user id: a legacy payload is routed by the `sessionId` *inside its own payload*, so classification is self-contained. This is why the circularity in the hydration ordering does not extend to the legacy migration.
 - **Transition generation is coordinator-only, and XState does not replace it.** XState cancels the invoked *actor* when a state is exited, but it cannot cancel a `fetchScenario` promise already in flight inside a store — that promise still resolves and would still write. The machine therefore `assign`s an incrementing `generation` on every `AUTH_EVENT`, and passes it to sync functions (`syncFromDb(userId, generation)`, `syncExpensesFromDb(userId, generation)`); no store action reads it directly, so there is no store↔coordinator import cycle. Note this is a *different* mechanism from the store write-guards in the decision above: write-guards re-check `identity.userId` + `activeScenarioId` and need no generation; sync *reads* need the generation to drop a late response.
 - **MFA assurance reads are token-aware.** The `currentAal` dependency must call `getAuthenticatorAssuranceLevel(access_token)` (the live `getUser(jwt)` path), never the argument-less cookie-cached form that can report a removed factor as still making `aal2` reachable (see `lib/supabase/proxy.ts`).
@@ -50,7 +51,7 @@
 | File | Responsibility |
 | --- | --- |
 | `lib/auth/bootstrap-machine.ts` | XState machine: bootstrap and auth-transition states, guards, actor stubs |
-| `lib/auth/bootstrap-machine.test.ts` | State-chart tests: reachable states, guards, superseded-transition cancellation |
+| `lib/auth/bootstrap-machine.test.ts` | State-chart tests: reachable states, guards, superseded-transition cancellation, hydration-state event capture |
 | `lib/auth/bootstrap-coordinator.ts` | Thin wrapper adapting the machine actor to the `BootstrapCoordinator` surface (`getState`, `start`, `enqueueAuthEvent`, `flush`) |
 | `lib/auth/bootstrap-coordinator.test.ts` | Deterministic tests for hydration, auth ordering, MFA gating, and stale transitions |
 | `lib/store/persistence-scope.ts` | Guest/user persistence-scope types and scoped storage-key policy |
@@ -102,12 +103,12 @@
 
 Replace the hand-rolled `generation` counter and `queue[]`/`drain()` loop with XState's native mechanisms:
 
-- A single top-level `on: { AUTH_EVENT: { target: ".authenticating", actions: assign(...) } }` handler means a new event arriving mid-transition re-enters `authenticating` directly; XState cancels the in-flight `invoke` for the state being left. This is the state-chart equivalent of the `gen !== generation` check that guarded every `commit()` call in the plain version — verify this behavior directly in `bootstrap-machine.test.ts` rather than re-deriving it by hand.
+- A single top-level `on: { AUTH_EVENT: { target: ".authenticating", actions: assign(...) } }` handler means a new event arriving mid-transition re-enters `authenticating` directly; XState cancels the in-flight `invoke` for the state being left. This is the state-chart equivalent of the `gen !== generation` check that guarded every `commit()` call in the plain version — verify this behavior directly in `bootstrap-machine.test.ts` rather than re-deriving it by hand. It applies from every state *except* the two hydration states, which override it with target-less capture handlers (see Step 3).
 - XState serializes event processing per-actor by default, so no explicit `queue[]`/`drain()` loop is needed for "process one auth event at a time, only after the callback returns."
-- `mfa-required` becomes a real state (`mfaRequired`) with its own `on: { MFA_ELEVATED: "checkingAal" }` transition, not an early-return branch inside one large function.
+- `mfa-required` becomes a real resting state (`mfaRequired`) instead of an early-return branch inside one large function — but with **no `MFA_ELEVATED` event**: elevation triggers a full navigation and the actor is rebuilt by the provider remount (see Design Decisions). Do not add an event nothing sends.
 - The `CLAIM_EVENT_TYPES.has(type)` skip (`TOKEN_REFRESHED`/`USER_UPDATED`/`PASSWORD_RECOVERY` must not claim or sync) must be expressed as a **guard on the transition into the `syncing` state**, not hidden inside the `claimAndSync` actor — this keeps the skip visible in the chart and independently testable.
 
-A working sketch of the machine shape lives at `docs/sketches/bootstrap-machine-sketch.ts` (illustrative only, not wired up — use it as a starting point, not a copy-paste source, since it does not yet implement the `pendingEvent`-driven `claimAndSync` input contract precisely).
+A working sketch of the machine shape lives at `docs/sketches/bootstrap-machine-sketch.ts` (illustrative only, not wired up — the actors' bodies are stubs — but its state chart and guards match the machine spec in Step 3; use it as a starting point rather than a copy-paste source).
 
 Define the coordinator dependency contract in `bootstrap-machine.ts` so the test fixture and provider use the same names (this contract is unchanged from the non-XState version — only its consumer, the machine's `actors` map, differs):
 
@@ -127,12 +128,16 @@ interface AuthEvent {
 }
 
 interface BootstrapDependencies {
-  hydrateStores: () => Promise<void>
+  // One per scope, not one total: the guest scope is hydrated before identity is
+  // known; the user scope is re-hydrated after getUser() resolves.
+  hydrateGuestScope: () => Promise<void> // legacy-key migration + setScope(guest) + hydrate both stores
+  hydrateUserScope: (userId: string) => Promise<void> // setScope(user) + rehydrate both stores
   getUser: () => Promise<User | null>
   // MUST be token-aware: getAuthenticatorAssuranceLevel(access_token), not the
   // argument-less cookie-cached form (which can report a removed factor as still
   // making aal2 reachable). See lib/supabase/proxy.ts.
   currentAal: () => Promise<{ current: string | null; next: string | null }>
+  // Must be a no-op for INITIAL_SESSION with a null user (signed-out reload).
   applyAuthTransition: (event: AuthEvent, generation: number) => Promise<void>
   claimLocalData: (userId: string, source: "guest" | "user" | "legacy-unknown") => Promise<void>
   syncFromDb: (userId: string, generation: number) => Promise<void>
@@ -163,13 +168,13 @@ interface BootstrapState {
 
 - [ ] **Step 1: Write the failing coordinator tests.**
 
-Create a `makeDependencies()` fixture that implements `BootstrapDependencies`, records each dependency call in an `events` array, and returns deferred promises for hydration, AAL, claim, and sync. Import `User` from `@supabase/supabase-js`. Cover these cases:
+Create a `makeDependencies()` fixture that implements `BootstrapDependencies`, records each dependency call in an `events` array, and returns deferred promises for guest/user hydration, AAL, claim, and sync — the two hydration deferrals must be individually controllable, because two of the cases below enqueue events while a hydration is genuinely pending. Import `User` from `@supabase/supabase-js`. Cover these cases:
 
 ```typescript
 it("hydrates before resolving auth or claiming local data", async () => {
   const events: string[] = []
   const dependencies = makeDependencies({
-    hydrateStores: async () => { events.push("hydrate") },
+    hydrateGuestScope: async () => { events.push("hydrate") },
     getUser: async () => { events.push("getUser"); return null },
   })
 
@@ -271,7 +276,7 @@ it("still processes an auth event after an error", async () => {
 
 it("does not report ready when hydration or sync fails", async () => {
   const dependencies = makeDependencies({
-    hydrateStores: async () => { throw new Error("storage unavailable") },
+    hydrateGuestScope: async () => { throw new Error("storage unavailable") },
   })
   const coordinator = createBootstrapCoordinator(dependencies)
 
@@ -292,6 +297,44 @@ it("does not re-claim or re-sync on a token refresh", async () => {
   expect(dependencies.claimLocalData).toHaveBeenCalledTimes(1)
   expect(dependencies.syncFromDb).toHaveBeenCalledTimes(1)
 })
+
+it("captures an auth event during guest hydration instead of cancelling the migration", async () => {
+  // The listener is registered before start() (Task 2 Step 2), so INITIAL_SESSION
+  // typically lands while hydratingGuest is still running. Hold guest hydration
+  // pending, enqueue mid-flight, then let it settle.
+  const dependencies = makeDependencies()
+  const coordinator = createBootstrapCoordinator(dependencies)
+  const startPromise = coordinator.start()
+
+  coordinator.enqueueAuthEvent({ type: "INITIAL_SESSION", userId: null, hasSession: false })
+  await startPromise
+
+  // Guest hydration (legacy migration, setScope(guest), store hydration) ran to
+  // completion exactly once — the event was captured, not a re-target.
+  expect(dependencies.hydrateGuestScope).toHaveBeenCalledTimes(1)
+  expect(coordinator.getState().phase).toBe("ready")
+  expect(dependencies.claimLocalData).not.toHaveBeenCalled()
+})
+
+it("applies a SIGNED_OUT that arrived during user-scoped hydration", async () => {
+  const dependencies = makeDependencies({
+    getUser: async () => ({ id: "user-a" } as User),
+  })
+  const coordinator = createBootstrapCoordinator(dependencies)
+  const startPromise = coordinator.start()
+  // User A's rehydrate is held pending; sign-out lands mid-flight and is captured.
+  coordinator.enqueueAuthEvent({ type: "SIGNED_OUT", userId: null, hasSession: false })
+  await startPromise
+
+  // Sign-out cleanup ran via applyingTransition — a captured event is applied
+  // after the hydration settles, never dropped — and nothing claimed or synced.
+  expect(dependencies.applyAuthTransition).toHaveBeenCalledWith(
+    expect.objectContaining({ type: "SIGNED_OUT" }),
+    expect.any(Number)
+  )
+  expect(dependencies.syncFromDb).not.toHaveBeenCalled()
+  expect(coordinator.getState().phase).toBe("ready")
+})
 ```
 
 - [ ] **Step 2: Run the focused tests and confirm they fail for the missing coordinator behaviour.**
@@ -309,12 +352,13 @@ This is a larger state set than `BootstrapPhase` has members, because scoping fo
 The machine must:
 
 - Invoke `hydrateGuestScope` on entry to `hydratingGuest`: run the one-time legacy-key migration, set the guest scope, then hydrate both stores. Transition to `authenticating` on success, `error` on failure. This scope is guest because identity is not yet known.
-- Invoke `getUser()` (`resolveIdentity`) in `authenticating`; a null user goes straight to `ready` (guest scope is already hydrated), a verified user goes to `hydratingUser`.
-- Invoke `hydrateUserScope` in `hydratingUser`: `setScope({kind:"user",userId})` then `rehydrate()`. This is the second, user-scoped hydration — expected and required, not a duplicate.
-- Invoke `applyAuthTransition(event, generation)` in `applyingTransition`. This state exists specifically so the dependency is actually wired; an earlier draft of this plan declared `applyAuthTransition` in the contract and asserted it in a test without ever invoking it.
-- Invoke `currentAal()` in `checkingAal`; guard the transition to `mfaRequired` on `current === "aal1" && next === "aal2"`. Otherwise guard the transition into `syncing` on the event type: only `SIGNED_IN`/`INITIAL_SESSION` invoke `claimAndSync` (claim then sync, sequenced, never concurrent); `TOKEN_REFRESHED`/`USER_UPDATED`/`PASSWORD_RECOVERY` fall through to `ready` without invoking anything.
+- Invoke `getUser()` (`resolveIdentity`) in `authenticating`. A verified user whose scope is not yet hydrated goes to `hydratingUser` (assigning `userId`); a verified user whose scope is already hydrated — tracked in `context.hydratedUserId`, assigned on `hydratingUser` entry — goes straight to `applyingTransition`. A null user goes to `ready` only when **no `pendingEvent` is held**: a captured event (e.g. `SIGNED_OUT` arriving mid-hydration) routes through `applyingTransition` even for a null user, so sign-out cleanup is not skipped.
+- Invoke `hydrateUserScope` in `hydratingUser`: `setScope({kind:"user",userId})` then `rehydrate()`. This is the second, user-scoped hydration — expected and required, not a duplicate. Its `onDone` branches on the `scopeStillCurrent` guard (`pendingEvent == null`, or the captured event names the hydrated user): applying is then safe immediately; otherwise re-enter `authenticating` so `getUser()` re-resolves the session and a superseding user's scope is hydrated *before* anything is applied — and the `hydratedUserId` guard in `authenticating` stops that re-resolution from re-hydrating an already-hydrated scope, which would loop.
+- Invoke `applyAuthTransition(event, generation)` in `applyingTransition`. This state exists specifically so the dependency is actually wired; an earlier draft of this plan declared `applyAuthTransition` in the contract and asserted it in a test without ever invoking it. On entry, normalise `context.pendingEvent` to the synthetic `INITIAL_SESSION` when nothing was captured, so the downstream claim/sync guard reads the same value on the startup and event paths.
+- Invoke `currentAal()` in `checkingAal`; guard the transition to `mfaRequired` on `current === "aal1" && next === "aal2"`. Otherwise guard the transition into `syncing` on the event type: only `SIGNED_IN`/`INITIAL_SESSION` invoke `claimAndSync` (claim then sync, sequenced, never concurrent); `TOKEN_REFRESHED`/`USER_UPDATED`/`PASSWORD_RECOVERY` fall through to `ready` without invoking anything. The `syncing` guard also requires `context.userId != null` — a captured null-user event must fall through to `ready`, never reach `syncing`.
 - Treat `mfaRequired` as a resting state with **no outgoing `MFA_ELEVATED` transition** — elevation triggers a full navigation and the actor is rebuilt by the provider remount (see Design Decisions). Do not add an event nothing sends.
-- Handle a top-level `AUTH_EVENT` from any state — **including `error`** — by re-targeting `.authenticating`, assigning the new event into context, and incrementing `context.generation`. Leaving the current state stops its in-flight `invoke`, so a superseded transition cannot commit. The incremented generation covers what actor cancellation cannot: promises already in flight inside the stores.
+- Handle a top-level `AUTH_EVENT` from any state **except the two hydration states** — **including `error`** — by re-targeting `.authenticating`, assigning the new event into context, and incrementing `context.generation`. Leaving the current state stops its in-flight `invoke`, so a superseded transition cannot commit. The incremented generation covers what actor cancellation cannot: promises already in flight inside the stores.
+- **`hydratingGuest` and `hydratingUser` override that handler with a target-less capture** (actions only, no `target`): the event is assigned into `context.pendingEvent` with a `generation` bump and the state is not exited, so the in-flight hydration — including the one-time legacy migration in `hydratingGuest` — always runs to completion. This is load-bearing, not defensive: the listener is registered before `start()`, so supabase-js's `INITIAL_SESSION` typically arrives while guest hydration is still running, and a re-target there would cancel the hydration and strand the legacy keys unmigrated (see Design Decisions). The capture also makes a mid-hydration `SIGNED_OUT` or user switch impossible to lose: it is applied via `applyingTransition` (or via a re-entered `authenticating`, for a superseding user) once the hydration settles.
 - Keep `error` as an ordinary state, **not `type: "final"`** — a final state stops the actor permanently, so a transient sync failure could never be recovered from without a full page reload.
 - Cache the actor's initial `start()` via the coordinator wrapper (next step), not inside the machine itself — the machine has no notion of "called twice."
 
@@ -458,7 +502,7 @@ The coordinator calls `setScope` before each `rehydrate()`. Writes stay gated un
 
 - [ ] **Step 3: Migrate the legacy un-scoped keys once.**
 
-Implement `lib/store/legacy-scope-migration.ts`, run inside the machine's `hydratingGuest` state (it needs no authenticated identity — see Design Decisions). Read the legacy keys (`retirement-calculator-storage`, `expenses-store-v2`): a non-null `sessionId` copies into that user's scoped key; `sessionId: null` moves to the ambiguous-legacy holding area (fed to `legacy-local-plan-prompt`), never straight into `claimLocalData`. Delete the legacy key only after a successful copy; on failure leave it intact for retry.
+Implement `lib/store/legacy-scope-migration.ts`, run inside the machine's `hydratingGuest` state (it needs no authenticated identity — see Design Decisions). The `hydratingGuest` capture handler guarantees an early auth event cannot cancel this migration mid-copy. Read the legacy keys (`retirement-calculator-storage`, `expenses-store-v2`): a non-null `sessionId` copies into that user's scoped key; `sessionId: null` moves to the ambiguous-legacy holding area (fed to `legacy-local-plan-prompt`), never straight into `claimLocalData`. Delete the legacy key only after a successful copy; on failure leave it intact for retry.
 
 **If you bump `version`, carry the existing migration forward.** Both stores are already `version: 2` (`calculator-store.ts:313`, `expenses-store.ts:206`) with a load-bearing `migrate` that clamps monetary fields to the R1 trillion cap. A bump to 3 must still apply that clamp to any payload arriving at v1, or pre-cap absurd values resurface and can poison calculations. Add a test that a v1 legacy payload with an out-of-range `annualIncome` is still clamped after migrating into a scoped key. Note the copy preserves the payload's own `version`, so the simplest correct option is **not** to bump at all — decide explicitly rather than by default.
 
@@ -488,7 +532,27 @@ Expected: user A's local cache is never returned as user B's guest claim, and ea
 - Consumes: explicit `PersistenceScope` and transition generations from Tasks 1 and 3.
 - Produces: identity-safe store actions and sync functions that accept explicit user context.
 
-- [ ] **Step 1: Add failing tests for stale and unauthenticated writes.**
+- [ ] **Step 1: Mechanical rename, in its own commit, with no behaviour change.**
+
+Replace `sessionId`/`setSessionId` with `identity`/`setIdentity` and migrate all read sites to `identity.userId`. **Scope: 68 non-test source references plus 21 in tests** (verified by `grep -rn "sessionId" --include=*.ts --include=*.tsx lib components app e2e` — 67 code references plus 1 comment; an earlier draft of this plan estimated "~40", which understates it by roughly 1.7×). **Excluded from the rename:** the 16 `sessionId`/`session_id` references in `lib/supabase/expenses.ts`, which are the storage layer's contract with the Postgres `session_id` column and its session-id parameters — the store-field rename must not touch them (renaming the column is a DB migration, out of scope). The value shapes transform at the store boundary — `sessionId: null` becomes `identity: { kind: "guest" }`, a string id becomes `{ kind: "user", userId }` — and reads preserve the old null semantics (`identity.userId ?? null`), so no consumer behaviour changes.
+
+Commit this separately and confirm `npm run test` is green *before* Step 2. A rename this wide bundled into a behavioural change makes the behavioural diff effectively unreviewable.
+
+- [ ] **Step 2: Add the identity transition semantics.**
+
+A sign-out transition must clear `identity`, `activeScenarioId`, and `scenarioList`, cancel pending timers — the calculator store's `scenarioSyncTimer` and the expenses store's `groupSyncTimers` and `expenseSyncTimers` maps — switch persistence to the guest scope, and **remove the signed-out user's scoped keys** (`retirement-calculator-storage:user:<userId>`, `expenses-store-v2:user:<userId>`) so a shared device does not accumulate every past account's plan. A sign-in transition must set the user scope before loading server data.
+
+- [ ] **Step 3: Guard every remote mutation.**
+
+Capture the user ID and scenario ID before scheduling a write. Re-check both immediately before the request. Apply this to scenario updates, account add/update/remove, expense group delete, expense delete, and all debounced sync functions.
+
+- [ ] **Step 4: Make sync functions explicit and stale-safe.**
+
+Pass `userId` (and `generation`, for the coordinator-driven path) into calculator sync rather than reading a mutable `identity` internally. Before applying fetched data, verify the user and transition generation still match. Replace the single-boolean `dbSyncInProgress`/`syncInProgress` flags with a per-(`userId`, `generation`) in-flight map so a re-run for the same identity does not duplicate fetches.
+
+- [ ] **Step 5: Add the stale and unauthenticated-write suite as the acceptance gate.**
+
+Written last, not first, deliberately: every test below calls the post-rename API (`setIdentity`, `syncFromDb("user-a")`) that Steps 1-4 create, so a tests-first ordering would leave the suite red — a TS error, not just a failing assertion — through three commits and break the Step 1 green gate. Tasks 1 and 3 still get genuine TDD; this suite is the anti-regression acceptance contract for Steps 2-4: if sign-out stops clearing, a guard stops re-checking, or a sync stops validating, one of these tests fails.
 
 Use `vi.useFakeTimers()` in the store test setup and mock the existing Supabase helpers. Cover:
 
@@ -549,25 +613,7 @@ it("does not commit user A's sync after switching to user B", async () => {
 
 Define `deferredScenarioFor(userId)` and `resolveScenarioFor(userId)` in the store test fixture. `deferredScenarioFor` must return a promise whose resolution is controlled by the test, so the user switch happens while user A's fetch is still pending.
 
-- [ ] **Step 2a: Mechanical rename, in its own commit, with no behaviour change.**
-
-Replace `sessionId`/`setSessionId` with `identity`/`setIdentity` and migrate all read sites to `identity.userId`. **Scope: 67 non-test source references plus 21 in tests** (verified by `grep -rn "sessionId" --include=*.ts --include=*.tsx lib components app e2e`) — an earlier draft of this plan estimated "~40", which understates it by roughly 1.7×.
-
-Commit this separately and confirm `npm run test` is green *before* Step 2b. A rename this wide bundled into a behavioural change makes the behavioural diff effectively unreviewable.
-
-- [ ] **Step 2b: Add the identity transition semantics.**
-
-A sign-out transition must clear `identity`, `activeScenarioId`, and `scenarioList`, cancel pending timers — including the expenses store's `groupSyncTimers` and `expenseSyncTimers` maps — switch persistence to the guest scope, and **remove the signed-out user's scoped keys** (`retirement-calculator-storage:user:<userId>`, `expenses-store-v2:user:<userId>`) so a shared device does not accumulate every past account's plan. A sign-in transition must set the user scope before loading server data.
-
-- [ ] **Step 3: Guard every remote mutation.**
-
-Capture the user ID and scenario ID before scheduling a write. Re-check both immediately before the request. Apply this to scenario updates, account add/update/remove, expense group delete, expense delete, and all debounced sync functions.
-
-- [ ] **Step 4: Make sync functions explicit and stale-safe.**
-
-Pass `userId` (and `generation`, for the coordinator-driven path) into calculator sync rather than reading a mutable `identity` internally. Before applying fetched data, verify the user and transition generation still match. Replace the single-boolean `dbSyncInProgress`/`syncInProgress` flags with a per-(`userId`, `generation`) in-flight map so a re-run for the same identity does not duplicate fetches.
-
-- [ ] **Step 5: Run store tests and coverage.**
+- [ ] **Step 6: Run store tests and coverage.**
 
 Run: `npm run test -- lib/store/calculator-store.test.ts lib/store/expenses-store.test.ts`
 
@@ -658,7 +704,7 @@ Then audit the **seven** journeys that call `clearState`/`seedState`/`getState` 
 
 Cover slow localStorage hydration plus auth initialization, signed-out reload, signed-in reload, user A to user B switching, sign-out followed by local edits, MFA sign-in, and `/print` loading through the root bootstrap.
 
-Add two cases the earlier draft omitted: **a signed-out reload leaves no `…:user:<userId>` key behind** (the eviction criterion from Task 4 Step 2b), and **cross-tab sign-out** — supabase-js broadcasts auth changes across tabs, so a second tab must process `SIGNED_OUT` through the normal coordinator path rather than keeping a live user-scoped store.
+Add two cases the earlier draft omitted: **a signed-out reload leaves no `…:user:<userId>` key behind** (the eviction criterion from Task 4 Step 2), and **cross-tab sign-out** — supabase-js broadcasts auth changes across tabs, so a second tab must process `SIGNED_OUT` through the normal coordinator path rather than keeping a live user-scoped store.
 
 - [ ] **Step 4: Run the focused browser journeys.**
 
@@ -696,6 +742,7 @@ Expected: all checks pass, modified store files remain above the project coverag
 - No auth callback performs asynchronous Supabase/database work.
 - No route calls store `persist.rehydrate()` independently.
 - Each store hydrates exactly once per scope, with never more than one hydration in flight.
+- An auth event arriving while a hydration state is in flight is captured and applied after the hydration settles — it never cancels the hydration or the one-time legacy migration.
 - A bootstrap error leaves the coordinator able to process later auth events (the `error` state is not final).
 - Every dependency in `BootstrapDependencies` is invoked by some machine state.
 - Sign-out removes the signed-out user's scoped storage keys.

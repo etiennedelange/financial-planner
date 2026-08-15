@@ -20,6 +20,16 @@ Rationale: the plan's own generation-check mechanism (re-verify `gen !== generat
 
 The coordinator's external surface (`getState`, `start`, `enqueueAuthEvent`, `flush`, `BootstrapState`) is unchanged, via a thin `bootstrap-coordinator.ts` adapter over the machine actor, so Tasks 2-6 of the implementation plan required no changes. A non-authoritative sketch of the machine shape lives at `docs/sketches/bootstrap-machine-sketch.ts`.
 
+## Addendum: post-review revision (2026-08-15)
+
+The implementation plan was revised after a plan review. Changes:
+
+- **AUTH_EVENT capture during hydration.** The top-level `AUTH_EVENT → authenticating` re-target now applies only outside the two hydration states; `hydratingGuest`/`hydratingUser` capture mid-hydration events with target-less handlers so the one-time legacy migration and the in-flight hydration always run to completion (the listener registers before `start()`, so supabase's `INITIAL_SESSION` typically arrives mid-guest-hydration). A captured event is applied after the hydration settles — `applyingTransition` directly when it names the hydrated user, `authenticating` (re-resolve identity, re-hydrate the superseding scope) otherwise; a held null-user event still routes through `applyingTransition`, and the claim/sync guard requires a non-null `userId`.
+- **Task 4 reordered.** The mechanical `sessionId → identity` rename is now Step 1 (with its own green-suite gate), followed by transition semantics, write guards, and explicit sync signatures; the stale/unauthenticated-write test suite moved to the final Step 5 as the acceptance gate, because those tests target the post-rename API and could not be the first artifact.
+- **Rename carve-out.** The 16 `sessionId`/`session_id` references in `lib/supabase/expenses.ts` are the DB layer's `session_id` column contract and are excluded from the rename. The design-decision summary's "~40 read sites" was corrected to the verified 68 non-test + 21 test references.
+- **Dependency contract renamed** to `hydrateGuestScope`/`hydrateUserScope` (per-scope hydration, matching the machine's actors); the sign-out timer list now names the calculator store's `scenarioSyncTimer` explicitly.
+- **Sketch updated to match.** `MFA_ELEVATED` removed (elevation exits by remount), capture handlers and `hydratedUserId` added, and the claim/sync guard fixed: it previously read `context.pendingEvent`, which is null on the startup path — the first sign-in's claim would never have run. The sketch now also types its setup callbacks, reducing its typecheck errors to just the not-yet-installed `xstate` import.
+
 ## Status
 
 Planned only. No application code, database schema, or runtime behaviour was changed by this planning entry.
