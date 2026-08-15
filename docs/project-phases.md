@@ -21,6 +21,7 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 | **Phase 8** | ✅ Complete | [Expense Tracker](project-phases/phase-8-expense-tracker.md) |
 | **Phase 9** | 🔄 In Progress | [Site-Wide Improvement](project-phases/phase-9-site-improvement.md) |
 | **Phase 10** | ✅ Complete | [Calculation Simplification](project-phases/phase-10-calculation-simplification.md) — all steps done; engine deduplicated, money units type-safe, MC seeded |
+| **Phase 11** | 📋 Planned | [Dead Code Cleanup](project-phases/phase-11-dead-code-cleanup.md) — knip-verified unused files/deps/exports |
 | **Future** | 📋 Planned | [Future Enhancements](project-phases/future-enhancements.md) |
 
 ## Recent Activity
@@ -28,6 +29,10 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 One line per work session, newest first, capped at the latest 10 entries — when an 11th
 arrives, delete the oldest. Full detail lives in the linked history files, never here.
 Rules: [docs/README.md](README.md).
+
+## 2026-08-15 — Phase 11 planned: knip-verified dead code cleanup
+
+`npx knip` findings hand-verified by grep; 8 unused files, `@radix-ui/react-tabs` (only used by the unused `tabs.tsx`), ~33 truly dead exports/types and 11 internal-only symbols to un-export are catalogued as a checklist. Excluded after verification: `SelectGroup` (false positive — used by `account-form-dialog.tsx`), `money-basis.type-test.ts` (intentional, exercised by `npm run typecheck`), `tailwindcss`/`tw-animate-css` (consumed via postcss/globals.css). → [phase 11](project-phases/phase-11-dead-code-cleanup.md)
 
 ## 2026-08-15 — Bootstrap and data ownership hardening implemented
 
@@ -64,10 +69,6 @@ Tooltip pipeline rebuilt in shared `lib/utils/chart-tooltip.ts` (no more "Age un
 ## 2026-08-10 — Next.js 16.3 feature adoption
 
 Added root + calculator error boundaries using the new `retry()` API, enabled the native Rust React Compiler, and turned on Instant Navigations (`cacheComponents` + `partialPrefetching`); root layout opts out via `instant = false`. 854 tests. → [history](history/2026-08-10-next-16-3-upgrade-adoption.md)
-
-## 2026-08-10 — Auth/2FA: all nine open risks resolved
-
-Same-origin validation on auth-callback redirects, 2FA-safe account deletion, rate-limited `plan-narrative` endpoint, atomic single-use recovery codes, Turnstile startup check, `pnpm audit` clean. 840 tests. → [remediation record](security/auth-2fa-risk-register.md#remediation-record-2026-08-10)
 
 ---
 
