@@ -106,6 +106,9 @@ importers:
       vaul:
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      xstate:
+        specifier: ^5.32.5
+        version: 5.32.5
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -3647,6 +3650,9 @@ packages:
       utf-8-validate:
         optional: true
 
+  xstate@5.32.5:
+    resolution: {integrity: sha512-ULazi1oe6wGrXl0Frb6otSlkm5HLifbbVTkMk5kkSKqz4TkxJaVpnl6jOJwKeid3ORPxYyZQgNLUSYX9q65SIA==}
+
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
 
@@ -7156,6 +7162,8 @@ snapshots:
   ws@7.5.13: {}
 
   ws@8.21.3: {}
+
+  xstate@5.32.5: {}
 
   yallist@3.1.1: {}
 
