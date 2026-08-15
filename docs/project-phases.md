@@ -29,6 +29,10 @@ One line per work session, newest first, capped at the latest 10 entries — whe
 arrives, delete the oldest. Full detail lives in the linked history files, never here.
 Rules: [docs/README.md](README.md).
 
+## 2026-08-15 — Bootstrap and data ownership hardening implemented
+
+Phase 9.4 shipped: one XState bootstrap coordinator owns hydration (once per guest/user scope), verified auth, MFA gating, claim, and sync; the auth listener is a pure event forwarder. Explicit `guest`/`user:<id>` persistence scopes with one-time legacy-key migration and sign-out eviction; remote writes guarded by identity+generation re-checks; claim takes an explicit `ClaimSource`; `/print` and the layout consume provider readiness. 985/985 tests, coverage gate green, journeys 08 (MFA) and 09 (bootstrap) pass e2e. → [implementation record](history/2026-08-15-bootstrap-data-ownership-hardening.md) · [plan](superpowers/plans/2026-08-15-bootstrap-data-ownership-hardening.md)
+
 ## 2026-08-15 — High-priority plan: bootstrap and data ownership hardening
 
 Phase 9.4 now tracks the architecture work needed to replace overlapping hydration/auth paths with serialized bootstrap, MFA-safe sync, explicit guest/user persistence scopes, and guarded remote writes. → [plan](superpowers/plans/2026-08-15-bootstrap-data-ownership-hardening.md) · [planning record](history/2026-08-15-bootstrap-data-ownership-hardening-plan.md)
@@ -65,13 +69,7 @@ Added root + calculator error boundaries using the new `retry()` API, enabled th
 
 Same-origin validation on auth-callback redirects, 2FA-safe account deletion, rate-limited `plan-narrative` endpoint, atomic single-use recovery codes, Turnstile startup check, `pnpm audit` clean. 840 tests. → [remediation record](security/auth-2fa-risk-register.md#remediation-record-2026-08-10)
 
-## 2026-08-10 — Auth/2FA risk register filed; charts page hardened
-
-Triple-check security audit opened 9 risks (resolved the same day, above). Charts fixes: MC worker now runs on `/calculator/charts`, honest empty states, success rate promoted and colour-driven, AA contrast on both themes, single H1 per page. 810 tests. → [risk register](security/auth-2fa-risk-register.md) · [audit](history/2026-08-10-auth-2fa-security-audit.md) · [charts fixes](history/2026-08-10-charts-page-critique-fixes.md)
-
 ---
-
-*Older activity (2026-01 → 2026-08-08): see the dated files in [history/](history/) and the checkbox records in [project-phases/](project-phases/).*
 
 *Older activity (2026-01 → 2026-08-08): see the dated files in [history/](history/) and the checkbox records in [project-phases/](project-phases/).*
 

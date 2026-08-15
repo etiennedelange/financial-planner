@@ -58,4 +58,4 @@
 
 ## High-Priority Post-Completion Follow-up
 
-- [ ] **Bootstrap and data ownership hardening** — centralize auth/bootstrap ordering, prevent pre-MFA protected sync, and isolate guest/user local state. Tracked in Phase 9.4: [implementation plan](../superpowers/plans/2026-08-15-bootstrap-data-ownership-hardening.md) · [planning record](../history/2026-08-15-bootstrap-data-ownership-hardening-plan.md)
+- [x] **Bootstrap and data ownership hardening** (2026-08-15) — auth/bootstrap ordering centralized in one XState coordinator, pre-MFA protected sync prevented, guest/user local state isolated with explicit persistence scopes. Tracked in Phase 9.4: [implementation plan](../superpowers/plans/2026-08-15-bootstrap-data-ownership-hardening.md) · [planning record](../history/2026-08-15-bootstrap-data-ownership-hardening-plan.md) · [implementation record](../history/2026-08-15-bootstrap-data-ownership-hardening.md)

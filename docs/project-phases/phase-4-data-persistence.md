@@ -25,4 +25,4 @@
 
 ## High-Priority Post-Completion Follow-up
 
-- [ ] **Bootstrap and data ownership hardening** — make hydration single-owner, prevent stale or signed-out remote writes, and separate guest/user persistence scopes. Tracked in Phase 9.4: [implementation plan](../superpowers/plans/2026-08-15-bootstrap-data-ownership-hardening.md) · [planning record](../history/2026-08-15-bootstrap-data-ownership-hardening-plan.md)
+- [x] **Bootstrap and data ownership hardening** (2026-08-15) — hydration is single-owner (one XState coordinator, once per scope), stale or signed-out remote writes are rejected by identity+generation guards, and guest/user persistence scopes are explicit. Tracked in Phase 9.4: [implementation plan](../superpowers/plans/2026-08-15-bootstrap-data-ownership-hardening.md) · [planning record](../history/2026-08-15-bootstrap-data-ownership-hardening-plan.md) · [implementation record](../history/2026-08-15-bootstrap-data-ownership-hardening.md)
