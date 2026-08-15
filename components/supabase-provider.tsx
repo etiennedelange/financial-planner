@@ -32,6 +32,16 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
     async function init() {
       try {
+        // Hydrate persisted localStorage BEFORE any auth-driven store write.
+        // The calculator layout also calls rehydrate() for its reveal gate, but
+        // this provider's setSessionId can otherwise race it — and zustand
+        // persist writes to storage on every set(), so an early setSessionId
+        // would persist the pre-hydration DEFAULT state and wipe the plan.
+        await Promise.all([
+          useCalculatorStore.persist.rehydrate(),
+          useExpensesStore.persist.rehydrate(),
+        ])
+
         // getUser() verifies the token with the auth server.
         // getSession() trusts the cookie unverified — do not substitute it.
         const { data: { user: current } } = await supabase.auth.getUser()

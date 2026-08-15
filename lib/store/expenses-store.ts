@@ -13,11 +13,23 @@ import {
 } from "@/lib/supabase/expenses"
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
+import { createGatedPersistStorage } from "@/lib/store/persist-gate"
 import { clampMonetaryAmount } from "@/lib/utils/monetary"
 
 const groupSyncTimers = new Map<string, ReturnType<typeof setTimeout>>()
 const expenseSyncTimers = new Map<string, ReturnType<typeof setTimeout>>()
 let syncInProgress = false
+
+// See persist-gate.ts: writes are held back until the first rehydrate() settles,
+// so auth-driven set() calls that race the layout's manual rehydrate can never
+// clobber the user's persisted expenses with the pre-hydration defaults.
+type PersistedExpensesState = {
+  sessionId: string | null
+  groups: ExpenseGroup[]
+  expenses: Expense[]
+  monthlyIncome: number
+}
+const storage = createGatedPersistStorage<PersistedExpensesState>()
 
 function scheduleGroupSync(group: ExpenseGroup, sessionId: string) {
   const existing = groupSyncTimers.get(group.id)
@@ -189,8 +201,10 @@ export const useExpensesStore = create<ExpensesState>()(
 
       setMonthlyIncome: (income) => set({ monthlyIncome: income }),
     }),
-    { name: "expenses-store-v2", skipHydration: true,
+    { name: "expenses-store-v2", storage,
+      skipHydration: true,
       version: 2,
+      onRehydrateStorage: () => () => storage?.release(),
       // Sanitize expense amounts / income persisted before the input bounds fix
       // (R1 trillion cap): stale absurd values are clamped on rehydrate so they can
       // neither break layout nor skew the 4% rule target. Version 1 predates the cap.

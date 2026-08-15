@@ -402,3 +402,36 @@ describe("persist migration v1 → v2 (monetary cap)", () => {
     expect(migrated.expenses).toEqual([])
   })
 })
+
+describe("useExpensesStore persist rehydrate", () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  it("restores persisted expenses on rehydrate and persists later writes", async () => {
+    localStorage.setItem(
+      "expenses-store-v2",
+      JSON.stringify({
+        state: {
+          sessionId: null,
+          groups: [mockGroup],
+          expenses: [mockExpense, mockExpense2],
+          monthlyIncome: 80000,
+        },
+        version: 2,
+      })
+    )
+
+    await useExpensesStore.persist.rehydrate()
+
+    expect(useExpensesStore.getState().groups).toEqual([mockGroup])
+    expect(useExpensesStore.getState().expenses).toHaveLength(2)
+    expect(useExpensesStore.getState().monthlyIncome).toBe(80000)
+
+    useExpensesStore.getState().setMonthlyIncome(95000)
+    const stored = JSON.parse(localStorage.getItem("expenses-store-v2")!)
+    expect(stored.state.monthlyIncome).toBe(95000)
+
+    useExpensesStore.setState({ sessionId: null, groups: [], expenses: [], monthlyIncome: 56500 })
+  })
+})

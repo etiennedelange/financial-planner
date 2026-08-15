@@ -562,3 +562,92 @@ describe('persist migration v1 → v2 (monetary cap)', () => {
     expect(migrated.accounts[0].tfsaContributionsToDate).toBe(1_000_000_000_000)
   })
 })
+
+describe('persist write-gate (auth-before-rehydrate clobber regression)', () => {
+  // A fresh module gives a fresh store whose gate is still closed — mirroring
+  // the first page load where SupabaseProvider's setSessionId races the
+  // layout's manual rehydrate().
+  beforeEach(() => {
+    localStorage.clear()
+    vi.resetModules()
+  })
+
+  const persistedSnapshot = {
+    sessionId: null,
+    activeScenarioId: null,
+    personalInfo: { currentAge: 45, retirementAge: 65, lifeExpectancy: 90, annualIncome: 600000 },
+    retirementGoals: { desiredMonthlyIncome: 30000, inflationRate: 5.5, legacyAmount: 0 },
+    assumptions: {
+      equityReturn: 10.5,
+      bondReturn: 8,
+      cashReturn: 3,
+      equityVolatility: 16,
+      bondVolatility: 8,
+      inflationRate: 5.5,
+      compoundingMethod: 'nominal',
+    },
+    drawdownConfig: {
+      strategy: 'fixed_percentage',
+      initialWithdrawalRate: 4,
+      minimumWithdrawal: 15000,
+      maximumWithdrawal: 60000,
+      lumpSumPercentage: 0,
+      upperGuardrail: 20,
+      lowerGuardrail: 20,
+    },
+    displayMode: 'nominal',
+    accounts: [
+      {
+        id: 'persisted-1',
+        name: 'Persisted RA',
+        provider: 'Allan Gray',
+        type: 'retirement_annuity' as const,
+        currentBalance: 250000,
+        monthlyContribution: 4000,
+        contributionEscalation: 6,
+        expectedReturn: 11,
+        annualFees: 0.75,
+      },
+    ],
+  }
+
+  it('survives a setSessionId fired before the layout rehydrate reads storage', async () => {
+    localStorage.setItem(
+      'retirement-calculator-storage',
+      JSON.stringify({ state: persistedSnapshot, version: 2 })
+    )
+
+    const { useCalculatorStore: freshStore } = await import('./calculator-store')
+
+    // SupabaseProvider races the layout: auth-driven setSessionId fires first
+    // while the store is still holding its pre-hydration defaults.
+    freshStore.getState().setSessionId(null)
+
+    await freshStore.persist.rehydrate()
+
+    // The persisted plan must have survived the setSessionId write.
+    expect(freshStore.getState().personalInfo.currentAge).toBe(45)
+    expect(freshStore.getState().accounts).toHaveLength(1)
+    expect(freshStore.getState().accounts[0].name).toBe('Persisted RA')
+
+    // And localStorage must still hold the plan, not the pre-hydration defaults.
+    const stored = JSON.parse(localStorage.getItem('retirement-calculator-storage')!)
+    expect(stored.state.personalInfo.currentAge).toBe(45)
+    expect(stored.state.accounts).toHaveLength(1)
+  })
+
+  it('persists subsequent writes once rehydrate has settled', async () => {
+    localStorage.setItem(
+      'retirement-calculator-storage',
+      JSON.stringify({ state: { ...persistedSnapshot, accounts: [] }, version: 2 })
+    )
+
+    const { useCalculatorStore: freshStore } = await import('./calculator-store')
+
+    await freshStore.persist.rehydrate()
+    freshStore.getState().setPersonalInfo({ currentAge: 52 })
+
+    const stored = JSON.parse(localStorage.getItem('retirement-calculator-storage')!)
+    expect(stored.state.personalInfo.currentAge).toBe(52)
+  })
+})

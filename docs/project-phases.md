@@ -29,6 +29,10 @@ One line per work session, newest first, capped at the latest 10 entries — whe
 arrives, delete the oldest. Full detail lives in the linked history files, never here.
 Rules: [docs/README.md](README.md).
 
+## 2026-08-15 — Persisted plan wiped on reload; pre-hydration writes gated
+
+Both stores use `skipHydration` + a layout-driven `rehydrate()`, and zustand persist writes to storage on every `set()`; `SupabaseProvider`'s `setSessionId` fired before rehydrate's read settled, persisting the pre-hydration defaults over the saved plan (signed-in reloads masked it via `syncFromDb`; signed-out reloads lost the plan permanently). New `createGatedPersistStorage` drops writes until the first rehydrate settles; `SupabaseProvider.init()` awaits rehydrate before auth writes. 7 new tests incl. a regression test that fails without the gate; 926/926 tests. → [history](history/2026-08-15-persist-write-gate.md)
+
 ## 2026-08-14 — Monetary inputs physically reject absurdly large numbers
 
 Unbounded monetary fields (annual income, retirement goals, account balances/contributions, drawdown withdrawals, medical aid, expenses) accepted values far past `Number.MAX_SAFE_INTEGER`, which lost precision, poisoned calculations, and overflowed the input padding. New `MAX_MONETARY_AMOUNT` (R1 trillion) + `isAllowedMonetaryInput`; `useBoundedMonetary` blocks over-cap input before it enters the DOM (`beforeinput`), so holding a key just stops adding digits; stores persist `version: 2` + `migrate` to clamp stale pre-fix data. 920 tests. → [history](history/2026-08-14-input-max-bounds.md)
@@ -65,11 +69,9 @@ Triple-check security audit opened 9 risks (resolved the same day, above). Chart
 
 All visualisations centralised on `/calculator/charts` (portfolio growth, Will It Last?, income sustainability, sensitivity tornado, scenario comparison, cost of delay); Overview keeps only a quiet sim-status line. New tested calc utils `income-sustainability.ts` + `sensitivity-tornado.ts`. 806 tests. → [history](history/2026-08-09-charts-page-monte-carlo-demoted.md)
 
-## 2026-08-08 — Fix: `/auth/mfa` dev-proxy redirect loop
-
-The `isMfaExempt` allowlist now covers the dev-only `/supabase/*` proxy path — a one-line fix for the redirect-to-self that broke the TOTP challenge page in the devcontainer. → [history](history/2026-08-08-mfa-challenge-dev-proxy-redirect-loop-fix.md)
-
 ---
+
+*Older activity (2026-01 → 2026-08-08): see the dated files in [history/](history/) and the checkbox records in [project-phases/](project-phases/).*
 
 *Older activity (2026-01 → 2026-08-08): see the dated files in [history/](history/) and the checkbox records in [project-phases/](project-phases/).*
 

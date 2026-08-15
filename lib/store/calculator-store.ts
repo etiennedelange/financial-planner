@@ -20,7 +20,23 @@ import type {
 } from "@/types"
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
+import { createGatedPersistStorage } from "@/lib/store/persist-gate"
 import { clampMonetaryAmount } from "@/lib/utils/monetary"
+
+// See persist-gate.ts: writes are held back until the first rehydrate() settles,
+// so auth-driven set() calls that race the layout's manual rehydrate can never
+// clobber the user's persisted plan with the pre-hydration defaults.
+type PersistedCalculatorState = {
+  sessionId: string | null
+  activeScenarioId: string | null
+  personalInfo: PersonalInfo
+  assumptions: MarketAssumptions
+  retirementGoals: RetirementGoals
+  drawdownConfig: DrawdownConfig
+  displayMode: "nominal" | "real"
+  accounts: Account[]
+}
+const storage = createGatedPersistStorage<PersistedCalculatorState>()
 
 let scenarioSyncTimer: ReturnType<typeof setTimeout> | null = null
 let dbSyncInProgress = false
@@ -292,8 +308,10 @@ export const useCalculatorStore = create<CalculatorState>()(
     }),
     {
       name: "retirement-calculator-storage",
+      storage,
       skipHydration: true,
       version: 2,
+      onRehydrateStorage: () => () => storage?.release(),
       // Sanitize monetary fields persisted before the input bounds fix (R1 trillion
       // cap): stale absurd values are clamped on rehydrate so they can neither break
       // layout nor poison calculations. Version 1 data predates the cap.
