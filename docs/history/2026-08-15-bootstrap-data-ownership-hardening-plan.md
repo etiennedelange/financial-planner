@@ -18,7 +18,7 @@ Task 1 (the bootstrap coordinator contract) was revised to implement its state m
 
 Rationale: the plan's own generation-check mechanism (re-verify `gen !== generation` before every `commit()`) is exactly what XState's per-actor event serialization plus automatic cancellation of a superseded state's in-flight `invoke` gives for free, and `mfa-required` becomes a real state instead of an early-return branch. This was chosen over introducing WatermelonDB for offline storage, which was rejected as the wrong tool — WatermelonDB targets large indexed relational datasets, not the single-JSON-blob-per-user shape of the calculator and expenses stores.
 
-The coordinator's external surface (`getState`, `start`, `enqueueAuthEvent`, `flush`, `BootstrapState`) is unchanged, via a thin `bootstrap-coordinator.ts` adapter over the machine actor, so Tasks 2-6 of the implementation plan required no changes. A non-authoritative sketch of the machine shape lives at `docs/sketches/bootstrap-machine-sketch.ts`.
+The coordinator's external surface (`getState`, `start`, `enqueueAuthEvent`, `flush`, `BootstrapState`) is unchanged, via a thin `bootstrap-coordinator.ts` adapter over the machine actor, so Tasks 2-6 of the implementation plan required no changes. A non-authoritative sketch of the machine shape lived at `docs/sketches/bootstrap-machine-sketch.ts`; it was deleted after the implementation landed (the shipped machine in `lib/auth/bootstrap-machine.ts` is the single source of truth).
 
 ## Addendum: post-review revision (2026-08-15)
 
