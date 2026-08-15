@@ -96,6 +96,7 @@ describe("useExpensesStore", () => {
 
     it("should remove group and its expenses", () => {
       vi.spyOn(expensesApi, "deleteGroup").mockResolvedValue(undefined)
+      useExpensesStore.getState().setIdentity({ kind: "user", userId: "session-1" })
       useExpensesStore.setState({
         groups: [mockGroup],
         expenses: [mockExpense, mockExpense2],
@@ -170,6 +171,7 @@ describe("useExpensesStore", () => {
 
     it("should remove single expense", () => {
       vi.spyOn(expensesApi, "deleteExpense").mockResolvedValue(undefined)
+      useExpensesStore.getState().setIdentity({ kind: "user", userId: "session-1" })
       useExpensesStore.setState({ expenses: [mockExpense, mockExpense2] })
 
       useExpensesStore.getState().removeExpense("expense-1")
@@ -269,6 +271,8 @@ describe("useExpensesStore", () => {
 
   describe("syncFromDb", () => {
     it("should fetch and load expenses from DB", async () => {
+      // The coordinator sets identity (hydrateUserScope) before calling sync.
+      useExpensesStore.getState().setIdentity({ kind: "user", userId: "session-1" })
       vi.spyOn(expensesApi, "fetchExpenses").mockResolvedValue({
         groups: [mockGroup],
         expenses: [mockExpense],
@@ -433,5 +437,112 @@ describe("useExpensesStore persist rehydrate", () => {
     expect(stored.state.monthlyIncome).toBe(95000)
 
     useExpensesStore.setState({ identity: { kind: "guest" }, groups: [], expenses: [], monthlyIncome: 56500 })
+  })
+})
+
+describe("identity transitions and stale-write guards (expenses)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.clearAllMocks()
+    useExpensesStore.setState({
+      identity: { kind: "guest" },
+      groups: [],
+      expenses: [],
+      monthlyIncome: 56500,
+    })
+  })
+
+  it("does not delete a previous user's expense after sign-out", () => {
+    useExpensesStore.getState().setIdentity({ kind: "guest" })
+    useExpensesStore.getState().removeExpense("user-a-expense")
+
+    expect(expensesApi.deleteExpense).not.toHaveBeenCalled()
+  })
+
+  it("does not delete a previous user's group after sign-out", () => {
+    useExpensesStore.getState().setIdentity({ kind: "guest" })
+    useExpensesStore.getState().removeGroup("user-a-group")
+
+    expect(expensesApi.deleteGroup).not.toHaveBeenCalled()
+  })
+
+  it("cancels pending expense sync timers on sign-out", async () => {
+    useExpensesStore.getState().setIdentity({ kind: "user", userId: "user-a" })
+    useExpensesStore.getState().addGroup("Groceries", "#000000")
+    const group = useExpensesStore.getState().groups[0]
+    useExpensesStore.getState().setIdentity({ kind: "guest" })
+    await vi.advanceTimersByTimeAsync(1000)
+
+    expect(expensesApi.upsertGroup).not.toHaveBeenCalled()
+    expect(group).toBeTruthy()
+  })
+
+  it("does not commit user A's expense sync after switching to user B", async () => {
+    let resolveFetch!: (value: { groups: typeof mockGroup[]; expenses: typeof mockExpense[] }) => void
+    vi.spyOn(expensesApi, "fetchExpenses").mockReturnValue(
+      new Promise((resolve) => {
+        resolveFetch = resolve
+      })
+    )
+
+    useExpensesStore.getState().setIdentity({ kind: "user", userId: "user-a" })
+    const sync = useExpensesStore.getState().syncFromDb("user-a")
+    // User B supersedes user A while A's fetch is still pending.
+    useExpensesStore.getState().setIdentity({ kind: "user", userId: "user-b" })
+    resolveFetch({ groups: [mockGroup], expenses: [mockExpense] })
+    await sync
+
+    expect(useExpensesStore.getState().identity).toEqual({ kind: "user", userId: "user-b" })
+    expect(useExpensesStore.getState().groups).toEqual([])
+  })
+
+  it("rejects a stale generation's late response", async () => {
+    // Generation 1 and 2 fetch different payloads; the newer generation must
+    // win, and generation 1's late resolution must not overwrite it.
+    const gen1Deferred = { resolve: null as null | ((v: unknown) => void), promise: null as null | Promise<unknown> }
+    gen1Deferred.promise = new Promise((resolve) => {
+      gen1Deferred.resolve = resolve
+    })
+    const gen2Payload = { groups: [mockGroup], expenses: [mockExpense] }
+    vi.spyOn(expensesApi, "fetchExpenses")
+      .mockReturnValueOnce(gen1Deferred.promise as never)
+      .mockResolvedValueOnce(gen2Payload)
+
+    useExpensesStore.getState().setIdentity({ kind: "user", userId: "user-a" })
+    const sync1 = useExpensesStore.getState().syncFromDb("user-a", 1)
+    // A newer transition for the same user supersedes generation 1.
+    const sync2 = useExpensesStore.getState().syncFromDb("user-a", 2)
+    await sync2
+    // Generation 1's fetch resolves late — it must be dropped.
+    gen1Deferred.resolve!({ groups: [], expenses: [] })
+    await sync1
+
+    expect(useExpensesStore.getState().groups).toEqual([mockGroup])
+  })
+})
+
+describe("expense sync owner re-check", () => {
+  it("drops a debounced expense sync when the owner changed at fire time", async () => {
+    vi.useFakeTimers()
+    vi.clearAllMocks()
+    useExpensesStore.setState({ identity: { kind: "user", userId: "user-a" }, groups: [mockGroup], expenses: [] })
+    useExpensesStore.getState().addExpense("group-1", "Rent", 15000)
+    // Owner signs out before the 800ms debounce fires.
+    useExpensesStore.getState().setIdentity({ kind: "guest" })
+
+    await vi.advanceTimersByTimeAsync(1000)
+
+    expect(expensesApi.upsertExpense).not.toHaveBeenCalled()
+    expect(expensesApi.upsertGroup).not.toHaveBeenCalled()
+  })
+
+  it("skips the DB seed when signed out", () => {
+    vi.clearAllMocks()
+    useExpensesStore.setState({ identity: { kind: "guest" }, groups: [], expenses: [] })
+
+    useExpensesStore.getState().loadSampleData()
+
+    expect(expensesApi.clearAllExpenses).not.toHaveBeenCalled()
+    expect(expensesApi.seedExpenses).not.toHaveBeenCalled()
   })
 })

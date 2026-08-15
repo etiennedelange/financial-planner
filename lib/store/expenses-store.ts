@@ -14,12 +14,23 @@ import {
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import { createGatedPersistStorage } from "@/lib/store/persist-gate"
-import type { PersistenceScope } from "@/lib/store/persistence-scope"
+import {
+  evictUserScopedKeys,
+  registerStorageBaseName,
+  setScope,
+  type PersistenceScope,
+} from "@/lib/store/persistence-scope"
 import { clampMonetaryAmount } from "@/lib/utils/monetary"
+
+// Sign-out must be able to evict this store's user-scoped keys.
+registerStorageBaseName("expenses-store-v2")
 
 const groupSyncTimers = new Map<string, ReturnType<typeof setTimeout>>()
 const expenseSyncTimers = new Map<string, ReturnType<typeof setTimeout>>()
-let syncInProgress = false
+// Per-(userId, generation) in-flight sync map: a re-run for the same identity
+// does not duplicate fetches; a newer generation supersedes an older one.
+const syncInFlight = new Map<string, Promise<void>>()
+let latestGeneration = 0
 
 // See persist-gate.ts: writes are held back until the first rehydrate() settles,
 // so auth-driven set() calls that race the layout's manual rehydrate can never
@@ -37,8 +48,12 @@ function scheduleGroupSync(group: ExpenseGroup, sessionId: string) {
   const existing = groupSyncTimers.get(group.id)
   if (existing) clearTimeout(existing)
   groupSyncTimers.set(group.id, setTimeout(() => {
-    upsertGroup(sessionId, group).catch(console.error)
     groupSyncTimers.delete(group.id)
+    // Re-check the owner at fire time: a sign-out between schedule and fire
+    // must not upsert under a previous user's identity.
+    const { identity } = useExpensesStore.getState()
+    if (identity.kind !== "user" || identity.userId !== sessionId) return
+    upsertGroup(sessionId, group).catch(console.error)
   }, 800))
 }
 
@@ -46,6 +61,10 @@ function scheduleExpenseSync(expense: Expense, group: ExpenseGroup, sessionId: s
   const existing = expenseSyncTimers.get(expense.id)
   if (existing) clearTimeout(existing)
   expenseSyncTimers.set(expense.id, setTimeout(async () => {
+    expenseSyncTimers.delete(expense.id)
+    // Re-check the owner at fire time (see scheduleGroupSync).
+    const { identity } = useExpensesStore.getState()
+    if (identity.kind !== "user" || identity.userId !== sessionId) return
     try {
       // Group must exist before expense due to FK constraint — upsert is idempotent.
       await upsertGroup(sessionId, group)
@@ -53,7 +72,6 @@ function scheduleExpenseSync(expense: Expense, group: ExpenseGroup, sessionId: s
     } catch (e) {
       console.error(e)
     }
-    expenseSyncTimers.delete(expense.id)
   }, 800))
 }
 
@@ -64,7 +82,7 @@ interface ExpensesState {
   monthlyIncome: number
 
   setIdentity: (scope: PersistenceScope) => void
-  syncFromDb: (userId: string) => Promise<void>
+  syncFromDb: (userId: string, generation?: number) => Promise<void>
   loadSampleData: () => void
   clearAll: () => void
 
@@ -88,18 +106,51 @@ export const useExpensesStore = create<ExpensesState>()(
       expenses: [],
       monthlyIncome: 56500,
 
-      setIdentity: (scope) => set({ identity: scope }),
-
-      syncFromDb: async (userId) => {
-        if (syncInProgress) return
-        syncInProgress = true
-        try {
-          set({ identity: { kind: "user", userId } })
-          const { groups, expenses } = await fetchExpenses(userId)
-          set({ groups, expenses })
-        } finally {
-          syncInProgress = false
+      setIdentity: (scope) => {
+        const prev = get().identity
+        set({ identity: scope })
+        // Sign-out transition: cancel pending sync timers, switch persistence
+        // back to the guest scope, and evict the signed-out user's scoped keys.
+        if (scope.kind === "guest" && prev.kind === "user") {
+          for (const timer of groupSyncTimers.values()) clearTimeout(timer)
+          for (const timer of expenseSyncTimers.values()) clearTimeout(timer)
+          groupSyncTimers.clear()
+          expenseSyncTimers.clear()
+          setScope({ kind: "guest" })
+          evictUserScopedKeys(prev.userId)
         }
+      },
+
+      // userId + generation are explicit: the coordinator passes the transition
+      // generation so a late response can be dropped at the store, not just by
+      // actor cancellation.
+      syncFromDb: (userId: string, generation = 0) => {
+        const key = `${userId}:${generation}`
+        const existing = syncInFlight.get(key)
+        if (existing) return existing
+
+        latestGeneration = Math.max(latestGeneration, generation)
+
+        // The in-flight entry is registered BEFORE the async body runs (via
+        // Promise.resolve().then) so a synchronous early-return can never leave
+        // a stale completed promise behind.
+        const promise = Promise.resolve().then(async () => {
+          try {
+            const { groups, expenses } = await fetchExpenses(userId)
+
+            // Stale check before committing: the same user must still own the
+            // store, and no newer generation may have superseded this one.
+            const current = get().identity
+            if (current.kind !== "user" || current.userId !== userId || generation < latestGeneration) {
+              return
+            }
+            set({ identity: { kind: "user", userId }, groups, expenses })
+          } finally {
+            syncInFlight.delete(key)
+          }
+        })
+        syncInFlight.set(key, promise)
+        return promise
       },
 
       loadSampleData: () => {
@@ -150,11 +201,17 @@ export const useExpensesStore = create<ExpensesState>()(
       },
 
       removeGroup: (id) => {
+        const { identity } = get()
+        const userId = identity.kind === "user" ? identity.userId : null
         set((s) => ({
           groups: s.groups.filter((g) => g.id !== id),
           expenses: s.expenses.filter((e) => e.groupId !== id),
         }))
-        deleteGroup(id).catch(console.error)
+        // Only delete remotely while still signed in as the owner.
+        const current = get().identity
+        if (current.kind === "user" && current.userId === userId && userId != null) {
+          deleteGroup(id).catch(console.error)
+        }
       },
 
       addExpense: (groupId, name, amount) => {
@@ -189,8 +246,14 @@ export const useExpensesStore = create<ExpensesState>()(
       },
 
       removeExpense: (id) => {
+        const { identity } = get()
+        const userId = identity.kind === "user" ? identity.userId : null
         set((s) => ({ expenses: s.expenses.filter((e) => e.id !== id) }))
-        deleteExpense(id).catch(console.error)
+        // Only delete remotely while still signed in as the owner.
+        const current = get().identity
+        if (current.kind === "user" && current.userId === userId && userId != null) {
+          deleteExpense(id).catch(console.error)
+        }
       },
 
       toggleRetirement: (id) => {

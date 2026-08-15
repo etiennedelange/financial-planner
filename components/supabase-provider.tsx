@@ -133,12 +133,12 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
           expenses: exp.expenses,
         })
       },
-      syncFromDb: async (userId: string) => {
-        await useCalculatorStore.getState().syncFromDb()
-        await useExpensesStore.getState().syncFromDb(userId)
+      syncFromDb: async (userId: string, generation: number) => {
+        await useCalculatorStore.getState().syncFromDb(userId, generation)
+        await useExpensesStore.getState().syncFromDb(userId, generation)
       },
-      syncExpensesFromDb: async (userId: string) => {
-        await useExpensesStore.getState().syncFromDb(userId)
+      syncExpensesFromDb: async (userId: string, generation: number) => {
+        await useExpensesStore.getState().syncFromDb(userId, generation)
       },
     }
     return createBootstrapCoordinator(dependencies)

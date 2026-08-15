@@ -40,3 +40,18 @@ export function scopedKeyFor(baseName: string, scope: PersistenceScope): string 
 export function keyForActiveScope(baseName: string): string {
   return scopedKeyFor(baseName, activeScope)
 }
+
+// Stores register their persistence base names so sign-out can evict the
+// signed-out user's scoped keys across every store.
+const registeredBaseNames = new Set<string>()
+
+export function registerStorageBaseName(baseName: string): void {
+  registeredBaseNames.add(baseName)
+}
+
+/** Removes every user-scoped key for `userId` across all registered stores. */
+export function evictUserScopedKeys(userId: string): void {
+  for (const baseName of registeredBaseNames) {
+    window.localStorage.removeItem(scopedKeyFor(baseName, { kind: "user", userId }))
+  }
+}

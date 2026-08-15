@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest"
 import { useCalculatorStore, type CalculatorState } from "./calculator-store"
+// Bare side-effect import: the expenses store registers its base name with the
+// scope registry at module load, which evictUserScopedKeys iterates on sign-out.
+// (A named import would be tree-shaken since the test never uses its bindings.)
+import "@/lib/store/expenses-store"
 import * as accountsApi from "@/lib/supabase/accounts"
 import * as scenariosApi from "@/lib/supabase/scenarios"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
@@ -139,6 +143,7 @@ describe("useCalculatorStore", () => {
 
     it("should remove account from state and DB", () => {
       vi.spyOn(accountsApi, "deleteAccount").mockResolvedValue(undefined)
+      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
       useCalculatorStore.setState({ accounts: [mockAccount] })
 
       useCalculatorStore.getState().removeAccount("acc-1")
@@ -378,7 +383,7 @@ describe("useCalculatorStore", () => {
       vi.spyOn(scenariosApi, "fetchScenario").mockResolvedValue(mockScenarioData)
       vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([mockAccount])
 
-      await useCalculatorStore.getState().syncFromDb()
+      await useCalculatorStore.getState().syncFromDb("session-1")
 
       const state = useCalculatorStore.getState()
       expect(state.scenarioList).toHaveLength(1)
@@ -390,7 +395,7 @@ describe("useCalculatorStore", () => {
       const createScenario = vi.spyOn(scenariosApi, "createScenario")
       vi.spyOn(scenariosApi, "listScenarios").mockResolvedValue([])
 
-      await useCalculatorStore.getState().syncFromDb()
+      await useCalculatorStore.getState().syncFromDb("session-1")
 
       const state = useCalculatorStore.getState()
       expect(state.activeScenarioId).toBeNull()
@@ -406,7 +411,7 @@ describe("useCalculatorStore", () => {
       vi.spyOn(scenariosApi, "fetchScenario").mockResolvedValue(mockScenarioData)
       vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([])
 
-      await useCalculatorStore.getState().syncFromDb()
+      await useCalculatorStore.getState().syncFromDb("session-1")
 
       const state = useCalculatorStore.getState()
       expect(state.activeScenarioId).toBe("scenario-1")
@@ -417,7 +422,7 @@ describe("useCalculatorStore", () => {
       vi.spyOn(scenariosApi, "fetchScenario").mockResolvedValue(mockScenarioData)
       vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([])
 
-      await useCalculatorStore.getState().syncFromDb()
+      await useCalculatorStore.getState().syncFromDb("session-1")
 
       const state = useCalculatorStore.getState()
       expect(state.activeScenarioId).toBe("scenario-1")
@@ -430,19 +435,19 @@ describe("useCalculatorStore", () => {
         return []
       })
 
-      const promise1 = useCalculatorStore.getState().syncFromDb()
-      const promise2 = useCalculatorStore.getState().syncFromDb()
+      const promise1 = useCalculatorStore.getState().syncFromDb("session-1")
+      const promise2 = useCalculatorStore.getState().syncFromDb("session-1")
 
       await Promise.all([promise1, promise2])
 
       expect(scenariosApi.listScenarios).toHaveBeenCalledTimes(1)
     })
 
-    it("should skip sync if no session ID", async () => {
+    it("should not sync if identity does not match the requested user", async () => {
       useCalculatorStore.setState({ identity: { kind: "guest" } })
       vi.spyOn(scenariosApi, "listScenarios").mockResolvedValue([])
 
-      await useCalculatorStore.getState().syncFromDb()
+      await useCalculatorStore.getState().syncFromDb("session-1")
 
       expect(scenariosApi.listScenarios).not.toHaveBeenCalled()
     })
@@ -470,7 +475,7 @@ describe("useCalculatorStore", () => {
 describe('local-only mode (no session)', () => {
   it('does not attempt a DB read when identity is guest', async () => {
     useCalculatorStore.setState({ identity: { kind: "guest" }, activeScenarioId: null })
-    await useCalculatorStore.getState().syncFromDb()
+    await useCalculatorStore.getState().syncFromDb("session-1")
     expect(useCalculatorStore.getState().activeScenarioId).toBeNull()
   })
 
@@ -652,5 +657,205 @@ describe('persist write-gate (auth-before-rehydrate clobber regression)', () => 
 
     const stored = JSON.parse(localStorage.getItem('retirement-calculator-storage:guest')!)
     expect(stored.state.personalInfo.currentAge).toBe(52)
+  })
+})
+
+describe("identity transitions and stale-write guards", () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.clearAllMocks()
+    useCalculatorStore.setState({
+      accounts: [],
+      identity: { kind: "guest" },
+      activeScenarioId: null,
+      scenarioList: [],
+    })
+  })
+
+  it("clears active scenario metadata on sign-out", () => {
+    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-a" })
+    useCalculatorStore.setState({ activeScenarioId: "scenario-1", scenarioList: [mockScenarioMeta] })
+
+    useCalculatorStore.getState().setIdentity({ kind: "guest" })
+
+    expect(useCalculatorStore.getState()).toEqual(
+      expect.objectContaining({ identity: { kind: "guest" }, activeScenarioId: null, scenarioList: [] })
+    )
+  })
+
+  it("does not update the previous user's scenario after sign-out", async () => {
+    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-a" })
+    useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
+    useCalculatorStore.getState().setDrawdownConfig({ initialWithdrawalRate: 4.5 })
+    useCalculatorStore.getState().setIdentity({ kind: "guest" })
+    await vi.advanceTimersByTimeAsync(1000)
+
+    expect(scenariosApi.updateScenario).not.toHaveBeenCalled()
+  })
+
+  it("does not delete a previous user's account from a signed-out store", () => {
+    useCalculatorStore.getState().setIdentity({ kind: "guest" })
+    useCalculatorStore.getState().removeAccount("user-a-account")
+
+    expect(accountsApi.deleteAccount).not.toHaveBeenCalled()
+  })
+
+  it("evicts the signed-out user's scoped storage keys", () => {
+    localStorage.setItem("retirement-calculator-storage:user:user-a", JSON.stringify({ state: {} }))
+    localStorage.setItem("expenses-store-v2:user:user-a", JSON.stringify({ state: {} }))
+    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-a" })
+
+    useCalculatorStore.getState().setIdentity({ kind: "guest" })
+
+    expect(localStorage.getItem("retirement-calculator-storage:user:user-a")).toBeNull()
+    expect(localStorage.getItem("expenses-store-v2:user:user-a")).toBeNull()
+  })
+
+  it("does not commit user A's sync after switching to user B", async () => {
+    let resolveFetch!: (value: typeof mockScenarioData | null) => void
+    vi.spyOn(scenariosApi, "listScenarios").mockResolvedValue([mockScenarioMeta])
+    vi.spyOn(scenariosApi, "fetchScenario").mockReturnValue(
+      new Promise<typeof mockScenarioData | null>((resolve) => {
+        resolveFetch = resolve
+      })
+    )
+    vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([])
+
+    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-a" })
+    const sync = useCalculatorStore.getState().syncFromDb("user-a")
+    // User B supersedes user A while A's fetch is still pending.
+    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-b" })
+    resolveFetch(mockScenarioData)
+    await sync
+
+    // A's late response must not have been committed under user B.
+    expect(useCalculatorStore.getState().identity).toEqual({ kind: "user", userId: "user-b" })
+    expect(useCalculatorStore.getState().activeScenarioId).toBeNull()
+  })
+})
+
+describe("sync null-data path", () => {
+  it("uses the first scenario when fetchScenario returns null", async () => {
+    vi.clearAllMocks()
+    vi.useRealTimers()
+    useCalculatorStore.setState({ identity: { kind: "user", userId: "session-1" }, activeScenarioId: null })
+    vi.spyOn(scenariosApi, "listScenarios").mockResolvedValue([mockScenarioMeta])
+    vi.spyOn(scenariosApi, "fetchScenario").mockResolvedValue(null)
+    vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([])
+
+    await useCalculatorStore.getState().syncFromDb("session-1")
+
+    expect(useCalculatorStore.getState().activeScenarioId).toBe("scenario-1")
+  })
+})
+
+describe("write-guard abort paths", () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.clearAllMocks()
+    useCalculatorStore.setState({
+      accounts: [],
+      identity: { kind: "guest" },
+      activeScenarioId: null,
+      scenarioList: [],
+    })
+  })
+
+  it("drops a debounced scenario sync when the user switched (no cancel)", async () => {
+    // Unlike sign-out (which cancels the timer), a user switch must rely on the
+    // fire-time re-check: user A schedules, user B takes over, the timer fires.
+    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-a" })
+    useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
+    useCalculatorStore.getState().setDrawdownConfig({ initialWithdrawalRate: 4.5 })
+    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-b" })
+
+    await vi.advanceTimersByTimeAsync(1000)
+
+    expect(scenariosApi.updateScenario).not.toHaveBeenCalled()
+  })
+
+  it("rejects a stale generation's late sync response", async () => {
+    const gen1Deferred = {
+      resolve: null as null | ((v: typeof mockScenarioMeta[]) => void),
+    }
+    vi.spyOn(scenariosApi, "listScenarios")
+      .mockReturnValueOnce(
+        new Promise<typeof mockScenarioMeta[]>((resolve) => {
+          gen1Deferred.resolve = resolve
+        })
+      )
+      .mockResolvedValueOnce([mockScenarioMeta])
+    vi.spyOn(scenariosApi, "fetchScenario").mockResolvedValue(mockScenarioData)
+    vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([])
+
+    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-a" })
+    const sync1 = useCalculatorStore.getState().syncFromDb("user-a", 1)
+    // A newer generation for the same user supersedes generation 1.
+    const sync2 = useCalculatorStore.getState().syncFromDb("user-a", 2)
+    await sync2
+    gen1Deferred.resolve!([mockScenarioMeta])
+    await sync1
+
+    // Generation 2's result is committed; generation 1's late response dropped.
+    expect(useCalculatorStore.getState().activeScenarioId).toBe("scenario-1")
+  })
+
+  it("skips the seed's DB chain when the user changed mid-flight", async () => {
+    vi.spyOn(accountsApi, "deleteAccount").mockResolvedValue(undefined)
+    vi.spyOn(accountsApi, "upsertAccount").mockResolvedValue(undefined)
+    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-a" })
+    useCalculatorStore.setState({ activeScenarioId: "scenario-1", accounts: [mockAccount] })
+
+    useCalculatorStore.getState().seedAccounts([mockAccount])
+    // User B takes over before the delete chain resolves.
+    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-b" })
+    await Promise.resolve()
+    await Promise.resolve()
+
+    // The user's own delete chain may start (cleanup of their own accounts);
+    // the guard prevents INSERTING the new accounts under the stale identity.
+    expect(accountsApi.upsertAccount).not.toHaveBeenCalled()
+  })
+
+  it("refuses to create a scenario from a signed-out store", async () => {
+    vi.spyOn(scenariosApi, "createScenario").mockResolvedValue("scenario-new")
+    useCalculatorStore.getState().setIdentity({ kind: "guest" })
+
+    useCalculatorStore.getState().createNewScenario("My Plan")
+
+    expect(scenariosApi.createScenario).not.toHaveBeenCalled()
+  })
+
+  it("refuses to rename a scenario from a signed-out store", async () => {
+    vi.spyOn(scenariosApi, "renameScenario").mockResolvedValue(undefined)
+    useCalculatorStore.setState({ scenarioList: [mockScenarioMeta] })
+
+    useCalculatorStore.getState().renameScenario("scenario-1", "New Name")
+
+    expect(scenariosApi.renameScenario).not.toHaveBeenCalled()
+  })
+
+  it("refuses to delete a scenario from a signed-out store", async () => {
+    vi.spyOn(scenariosApi, "deleteScenario").mockResolvedValue(undefined)
+    useCalculatorStore.setState({ scenarioList: [mockScenarioMeta] })
+
+    useCalculatorStore.getState().deleteScenario("scenario-1")
+
+    expect(scenariosApi.deleteScenario).not.toHaveBeenCalled()
+  })
+
+  it("refuses to delete a scenario once the user changed mid-await", async () => {
+    vi.spyOn(scenariosApi, "deleteScenario").mockResolvedValue(undefined)
+    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-a" })
+    useCalculatorStore.setState({
+      scenarioList: [mockScenarioMeta, { ...mockScenarioMeta, id: "scenario-2" }],
+    })
+
+    const pending = useCalculatorStore.getState().deleteScenario("scenario-1")
+    // User B takes over while the delete is in flight.
+    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-b" })
+    await pending
+
+    expect(useCalculatorStore.getState().scenarioList).toHaveLength(2)
   })
 })
