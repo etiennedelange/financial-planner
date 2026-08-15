@@ -221,4 +221,66 @@ describe("createBootstrapCoordinator", () => {
     expect(dependencies.syncFromDb).not.toHaveBeenCalled()
     expect(coordinator.getState().phase).toBe("ready")
   })
+
+  describe("provider dependency harness — one hydration per scope", () => {
+    // The provider wires hydrateGuestScope/hydrateUserScope to rehydrate both
+    // stores. Two-phase hydration means a signed-in startup must hydrate the
+    // stores exactly twice (guest scope first, user scope second) — and never
+    // have two hydrations in flight simultaneously, or one scope's rehydrate
+    // could overwrite the other's read.
+    function harness(getUser: () => Promise<User | null>) {
+      const hydrations: string[] = []
+      let inFlight = 0
+      let maxInFlight = 0
+      const dependencies = makeDependencies({
+        getUser,
+        hydrateGuestScope: async () => {
+          hydrations.push("guest")
+          inFlight += 1
+          maxInFlight = Math.max(maxInFlight, inFlight)
+          await Promise.resolve()
+          inFlight -= 1
+        },
+        hydrateUserScope: async () => {
+          hydrations.push("user")
+          inFlight += 1
+          maxInFlight = Math.max(maxInFlight, inFlight)
+          await Promise.resolve()
+          inFlight -= 1
+        },
+      })
+      return { dependencies, counts: () => ({ hydrations, maxInFlight }) }
+    }
+
+    it("hydrates the guest scope once for a signed-out startup", async () => {
+      const { counts, dependencies } = harness(async () => null)
+      const coordinator = createBootstrapCoordinator(dependencies)
+      await coordinator.start()
+
+      expect(counts().hydrations).toEqual(["guest"])
+      expect(counts().maxInFlight).toBe(1)
+    })
+
+    it("hydrates guest then user scope, never concurrently, for a signed-in startup", async () => {
+      const { counts, dependencies } = harness(async () => ({ id: "user-a" } as User))
+      const coordinator = createBootstrapCoordinator(dependencies)
+      await coordinator.start()
+
+      // Exactly one hydration per scope — not "hydrate exactly once" total.
+      expect(counts().hydrations).toEqual(["guest", "user"])
+      expect(counts().maxInFlight).toBe(1)
+    })
+
+    it("does not add a third hydration for React StrictMode's double start()", async () => {
+      const { counts, dependencies } = harness(async () => ({ id: "user-a" } as User))
+      const coordinator = createBootstrapCoordinator(dependencies)
+
+      // React 19 StrictMode double-invokes effects in dev; both calls must share
+      // the same cached startup promise and never restart the actor.
+      await Promise.all([coordinator.start(), coordinator.start()])
+
+      expect(counts().hydrations).toEqual(["guest", "user"])
+      expect(counts().maxInFlight).toBe(1)
+    })
+  })
 })

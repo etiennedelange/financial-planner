@@ -9,9 +9,10 @@ const mfa = {
   getAuthenticatorAssuranceLevel: vi.fn(),
 }
 const rpc = vi.fn()
+const auth = { mfa, getSession: vi.fn() }
 
 vi.mock('@/lib/supabase/client', () => ({
-  createClient: () => ({ auth: { mfa }, rpc }),
+  createClient: () => ({ auth, rpc }),
 }))
 
 import {
@@ -161,14 +162,20 @@ describe('unenrollTotp', () => {
 })
 
 describe('currentAal', () => {
-  it('returns the current and next assurance levels', async () => {
+  it('returns the current and next assurance levels from the live token', async () => {
+    auth.getSession.mockResolvedValue({ data: { session: { access_token: 'token-1' } }, error: null })
     mfa.getAuthenticatorAssuranceLevel.mockResolvedValue({
       data: { currentLevel: 'aal1', nextLevel: 'aal2' }, error: null,
     })
     await expect(currentAal()).resolves.toEqual({ current: 'aal1', next: 'aal2' })
+    // Token-aware: the live access token must reach the AAL call, never the
+    // argument-less cookie-cached form (which can report a removed factor as
+    // still making aal2 reachable).
+    expect(mfa.getAuthenticatorAssuranceLevel).toHaveBeenCalledWith('token-1')
   })
 
   it('throws when Supabase rejects the request', async () => {
+    auth.getSession.mockResolvedValue({ data: { session: null }, error: null })
     mfa.getAuthenticatorAssuranceLevel.mockResolvedValue({ data: null, error: { message: 'not authenticated' } })
     await expect(currentAal()).rejects.toThrow('not authenticated')
   })

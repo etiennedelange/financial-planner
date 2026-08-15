@@ -101,7 +101,13 @@ export async function unenrollTotp(factorId: string): Promise<void> {
 }
 
 export async function currentAal(): Promise<{ current: string | null; next: string | null }> {
-  const { data, error } = await createClient().auth.mfa.getAuthenticatorAssuranceLevel()
+  const supabase = createClient()
+  // MUST be token-aware: pass the live access token so getAuthenticatorAssuranceLevel
+  // takes the getUser(jwt) path. The argument-less cookie-cached form computes
+  // nextLevel from the session's own cached user.factors and never notices a factor
+  // an admin action removed since then (see lib/supabase/proxy.ts for the same fix).
+  const { data: { session } } = await supabase.auth.getSession()
+  const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(session?.access_token)
   if (error) throw new Error(error.message)
   return { current: data.currentLevel, next: data.nextLevel }
 }

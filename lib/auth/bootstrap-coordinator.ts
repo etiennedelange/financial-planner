@@ -143,16 +143,23 @@ export function createBootstrapCoordinator(dependencies: BootstrapDependencies):
     return startPromise
   }
 
+  const stateListeners = new Set<(state: BootstrapState) => void>()
+  let lastState: BootstrapState = { phase: "idle", userId: null, error: null }
+
+  function emitState() {
+    lastState = {
+      phase: started ? phaseOf(getActor().getSnapshot()) : "idle",
+      userId: started ? (getActor().getSnapshot().context.userId ?? null) : null,
+      error: started ? (getActor().getSnapshot().context.error ?? null) : null,
+    }
+    for (const listener of stateListeners) listener(lastState)
+  }
+
+  if (!actor) actor = createActor(machine)
+  const emitter = actor.subscribe(() => emitState())
+
   return {
-    getState: (): BootstrapState => {
-      if (!started) return { phase: "idle", userId: null, error: null }
-      const snapshot = getActor().getSnapshot()
-      return {
-        phase: phaseOf(snapshot),
-        userId: snapshot.context.userId ?? null,
-        error: snapshot.context.error ?? null,
-      }
-    },
+    getState: () => lastState,
 
     start,
 
@@ -165,5 +172,11 @@ export function createBootstrapCoordinator(dependencies: BootstrapDependencies):
     },
 
     flush,
+
+    subscribe: (listener: (state: BootstrapState) => void) => {
+      stateListeners.add(listener)
+      listener(lastState)
+      return () => stateListeners.delete(listener)
+    },
   }
 }

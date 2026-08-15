@@ -13,20 +13,12 @@ function pct(n: number) {
 }
 
 export function PrintClient() {
-  const { isLoaded: authLoaded } = useAuth()
+  const { isLoaded: authLoaded, phase, error } = useAuth()
 
-  // /print is a standalone route outside the /calculator layout. Two async
-  // sources feed the store here and both must settle before we render:
-  //  1. The store's own persist rehydrate() (localStorage) — only ever called
-  //     from the /calculator layout otherwise, so kick it off ourselves.
-  //  2. SupabaseProvider.syncFromDb() — the root layout wraps this page, but
-  //     the initial render happens before that async sync lands.
-  // `authLoaded` flips true only after getUser() + both syncs settle, so gating
-  // on it (rather than a local loading flag) avoids the flash of a wrong state.
-  useEffect(() => {
-    useCalculatorStore.persist.rehydrate()
-  }, [])
-
+  // /print is a standalone route outside the /calculator layout. The root
+  // SupabaseProvider is the single bootstrap owner: it hydrates the stores
+  // (guest scope, then user scope once identity resolves) and syncs server
+  // data before `isLoaded` flips true — no store rehydrate() is called here.
   const storeState = useCalculatorStore(
     useShallow((s) => ({
       accounts: s.accounts,
@@ -62,6 +54,35 @@ export function PrintClient() {
   }, [projection])
 
   if (!authLoaded) {
+    // Distinct failure states so a broken bootstrap cannot silently hang the
+    // print route behind an infinite spinner.
+    if (phase === "error") {
+      return (
+        <div className="flex min-h-screen flex-col items-center justify-center gap-2 text-muted-foreground">
+          <p>Bootstrap failed and your plan could not be loaded.</p>
+          <p className="text-sm">{error?.message ?? "Unknown error"}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
+          >
+            Reload
+          </button>
+        </div>
+      )
+    }
+    if (phase === "mfa-required") {
+      return (
+        <div className="flex min-h-screen flex-col items-center justify-center gap-2 text-muted-foreground">
+          <p>Two-factor verification is required before this plan can be printed.</p>
+          <button
+            onClick={() => { window.location.href = "/auth/mfa" }}
+            className="mt-2 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
+          >
+            Verify now
+          </button>
+        </div>
+      )
+    }
     return (
       <div className="flex min-h-screen items-center justify-center text-muted-foreground">
         Loading your plan…

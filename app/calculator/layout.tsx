@@ -7,7 +7,6 @@ import { AppShell } from "@/components/layout/app-shell"
 import { useAuth } from "@/components/supabase-provider"
 import { CalculatorProvider, useCalculator } from "@/lib/context/calculator-context"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
-import { useExpensesStore } from "@/lib/store/expenses-store"
 import { Toaster } from "@/components/ui/toaster"
 
 export default function CalculatorLayout({ children }: { children: React.ReactNode }) {
@@ -42,18 +41,12 @@ function CalculatorShell({ children }: { children: React.ReactNode }) {
 
   const [shell, dispatch] = useReducer(shellReducer, shellInitialState)
 
+  // SupabaseProvider is the single bootstrap owner: hydration (guest scope,
+  // and user scope after identity resolves) and server sync all settle before
+  // `isLoaded` flips true. No store rehydrate() is called from the layout.
   useEffect(() => {
-    // Mark stores ready once rehydrate() has settled; the reveal effect below
-    // then unlocks content once deferred projection/simulation values land.
-    let active = true
-    void Promise.all([
-      useCalculatorStore.persist.rehydrate(),
-      useExpensesStore.persist.rehydrate(),
-    ]).then(() => {
-      if (active) dispatch({ type: "STORES_READY" })
-    })
-    return () => { active = false }
-  }, [])
+    if (isLoaded) dispatch({ type: "STORES_READY" })
+  }, [isLoaded])
 
   // Reveal content once the store is rehydrated AND deferred values have caught
   // up. This prevents CLS: content stays invisible while the layout stabilises,

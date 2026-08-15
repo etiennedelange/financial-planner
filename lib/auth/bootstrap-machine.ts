@@ -54,6 +54,9 @@ export interface BootstrapCoordinator {
   start: () => Promise<void>
   enqueueAuthEvent: (event: AuthEvent) => void
   flush: () => Promise<void>
+  // Subscribe to phase/userId/error changes — SupabaseProvider maps this onto
+  // AuthContext so consumers re-render as the bootstrap advances.
+  subscribe: (listener: (state: BootstrapState) => void) => () => void
 }
 
 // TOKEN_REFRESHED / USER_UPDATED / PASSWORD_RECOVERY must never claim or sync.

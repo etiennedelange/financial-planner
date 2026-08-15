@@ -1,129 +1,170 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useEffect, useMemo, useState } from "react"
 import type { User } from "@supabase/supabase-js"
+import { createBootstrapCoordinator } from "@/lib/auth/bootstrap-coordinator"
+import type { AuthEvent, AuthEventType, BootstrapDependencies } from "@/lib/auth/bootstrap-machine"
+import { currentAal } from "@/lib/auth/mfa"
 import { createClient } from "@/lib/supabase/client"
 import { claimLocalData } from "@/lib/supabase/claim"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useExpensesStore } from "@/lib/store/expenses-store"
+import type { BootstrapPhase } from "@/lib/auth/bootstrap-machine"
 
-interface AuthContext {
+interface AuthContextValue {
   user: User | null
+  phase: BootstrapPhase
+  error: Error | null
   isLoaded: boolean
 }
 
-const AuthContext = createContext<AuthContext>({ user: null, isLoaded: false })
+const AuthContext = createContext<AuthContextValue>({
+  user: null,
+  phase: "idle",
+  error: null,
+  isLoaded: false,
+})
 
 export function useAuth() {
   return useContext(AuthContext)
 }
 
+// One browser client per page load, created lazily: the coordinator's actors
+// (which start after the effect registers the listener) and the listener itself
+// must share the same instance so auth state stays consistent between them.
+let supabaseClient: ReturnType<typeof createClient> | null = null
+function getSupabase() {
+  if (!supabaseClient) supabaseClient = createClient()
+  return supabaseClient
+}
+
+/**
+ * SupabaseProvider is the single bootstrap owner.
+ *
+ * All hydration, auth verification, MFA gating, claim, and server sync run inside
+ * one XState coordinator (lib/auth/bootstrap-coordinator.ts). The auth listener
+ * registered here is a pure forwarder: it captures only the event type and whether
+ * a session exists, and enqueues it into the coordinator. It must never call a
+ * Supabase method, call a store, or mutate React state — anything asynchronous
+ * happens inside the coordinator's actors, after the callback has returned.
+ */
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
-  const setSessionId = useCalculatorStore((s) => s.setSessionId)
-  const syncFromDb = useCalculatorStore((s) => s.syncFromDb)
-  const sessionId = useCalculatorStore((s) => s.sessionId)
-  const syncExpensesFromDb = useExpensesStore((s) => s.syncFromDb)
-
   const [user, setUser] = useState<User | null>(null)
-  const [isLoaded, setIsLoaded] = useState(false)
 
-  useEffect(() => {
-    const supabase = createClient()
-
-    async function init() {
-      try {
-        // Hydrate persisted localStorage BEFORE any auth-driven store write.
-        // The calculator layout also calls rehydrate() for its reveal gate, but
-        // this provider's setSessionId can otherwise race it — and zustand
-        // persist writes to storage on every set(), so an early setSessionId
-        // would persist the pre-hydration DEFAULT state and wipe the plan.
+  // The coordinator is created once per provider instance. Its dependencies
+  // close over setUser (stable) and the store getState functions (stable), and
+  // rehydrate/persist helpers that are safe to reference at any time.
+  const coordinator = useMemo(() => {
+    const supabase = getSupabase()
+    const dependencies: BootstrapDependencies = {
+      // Legacy-key migration + scope switching land in Task 3; until then the
+      // guest hydration is the only hydration and reads the un-scoped keys.
+      hydrateGuestScope: async () => {
         await Promise.all([
           useCalculatorStore.persist.rehydrate(),
           useExpensesStore.persist.rehydrate(),
         ])
-
+      },
+      // Task 3 makes this rehydrate user-scoped. Between Task 2 and Task 3 the
+      // app hydrates exactly once into the un-scoped key (see plan: "Do not ship
+      // from the Task 2 / Task 3 boundary").
+      hydrateUserScope: async () => {},
+      getUser: async () => {
         // getUser() verifies the token with the auth server.
         // getSession() trusts the cookie unverified — do not substitute it.
-        const { data: { user: current } } = await supabase.auth.getUser()
+        const { data } = await supabase.auth.getUser()
+        return data.user
+      },
+      currentAal,
+      applyAuthTransition: async (event: AuthEvent) => {
+        // The listener only forwards event type + session presence; the verified
+        // user is resolved here, outside the auth callback (never await Supabase
+        // inside onAuthStateChange — it deadlocks against its own init promise).
+        const current =
+          event.userId != null ? (await supabase.auth.getUser()).data.user : null
+
+        setUser(current)
 
         if (!current) {
           // Signed out: the app runs entirely from localStorage.
           // Both stores no-op their DB writes while sessionId is null.
-          setUser(null)
-          setSessionId(null)
+          useCalculatorStore.getState().setSessionId(null)
           return
         }
-
-        setUser(current)
-        if (current.id !== useCalculatorStore.getState().sessionId) {
-          setSessionId(current.id)
-        }
-        await syncFromDb()
-        await syncExpensesFromDb(current.id)
-      } catch (err) {
-        console.error("Supabase init failed:", err)
-      } finally {
-        setIsLoaded(true)
-      }
+        useCalculatorStore.getState().setSessionId(current.id)
+        useExpensesStore.getState().setSessionId(current.id)
+      },
+      claimLocalData: async (userId: string) => {
+        // Snapshot local state BEFORE any sync overwrites it. The coordinator
+        // calls claim before sync (never concurrently).
+        const calc = useCalculatorStore.getState()
+        const exp = useExpensesStore.getState()
+        await claimLocalData(userId, {
+          personalInfo: calc.personalInfo,
+          retirementGoals: calc.retirementGoals,
+          assumptions: calc.assumptions,
+          drawdownConfig: calc.drawdownConfig,
+          displayMode: calc.displayMode,
+          accounts: calc.accounts,
+          expenseGroups: exp.groups,
+          expenses: exp.expenses,
+        })
+      },
+      syncFromDb: async (userId: string) => {
+        await useCalculatorStore.getState().syncFromDb()
+        await useExpensesStore.getState().syncFromDb(userId)
+      },
+      syncExpensesFromDb: async (userId: string) => {
+        await useExpensesStore.getState().syncFromDb(userId)
+      },
     }
+    return createBootstrapCoordinator(dependencies)
+  }, [])
 
-    init()
+  const [phase, setPhase] = useState<BootstrapPhase>("idle")
+  const [error, setError] = useState<Error | null>(null)
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      const newUser = session?.user ?? null
-      setUser(newUser)
+  useEffect(() => {
+    const supabase = getSupabase()
 
-      if (!newUser) {
-        setSessionId(null)
-        return
-      }
-      if (newUser.id === useCalculatorStore.getState().sessionId) return
-
-      // Snapshot local state BEFORE any sync overwrites it.
-      const calc = useCalculatorStore.getState()
-      const exp = useExpensesStore.getState()
-
-      setSessionId(newUser.id)
-
-      // Deferred: the Supabase client is still resolving its own internal
-      // initialization while this callback runs (it's invoked from inside
-      // `_recoverAndRefresh`/`_initialize`). Any call in here that awaits
-      // another Supabase method (claimLocalData/syncFromDb go through
-      // Postgrest, which fetches the session via the same client) would wait
-      // on that same initialization promise and deadlock forever. Supabase's
-      // own docs warn against awaiting Supabase calls inside
-      // onAuthStateChange for this reason — defer with setTimeout instead.
-      setTimeout(async () => {
-        // A second auth event (e.g. rapid sign-out-then-sign-in as a different
-        // user) may have already fired and moved sessionId on before this
-        // deferred block runs — bail rather than write this stale snapshot
-        // under a user the app has already left behind.
-        if (useCalculatorStore.getState().sessionId !== newUser.id) return
-
-        try {
-          await claimLocalData(newUser.id, {
-            personalInfo: calc.personalInfo,
-            retirementGoals: calc.retirementGoals,
-            assumptions: calc.assumptions,
-            drawdownConfig: calc.drawdownConfig,
-            displayMode: calc.displayMode,
-            accounts: calc.accounts,
-            expenseGroups: exp.groups,
-            expenses: exp.expenses,
-          })
-        } catch (err) {
-          // Local state is untouched; the next sign-in retries.
-          console.error("Claiming local data failed:", err)
-        }
-
-        if (useCalculatorStore.getState().sessionId !== newUser.id) return
-        await syncFromDb()
-        await syncExpensesFromDb(newUser.id)
-      }, 0)
+    // Register the listener BEFORE starting the coordinator: supabase-js's
+    // INITIAL_SESSION typically arrives while the guest hydration is still
+    // running, and the machine captures it (never cancelling the hydration).
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      const type = event as AuthEventType
+      coordinator.enqueueAuthEvent({
+        type,
+        userId: session?.user?.id ?? null,
+        hasSession: session != null,
+      })
     })
 
-    return () => subscription.unsubscribe()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    // Start the coordinator after listener registration. StrictMode's double
+    // effect shares the cached startup promise (see bootstrap-coordinator.ts).
+    coordinator.start().catch((err) => {
+      console.error("Bootstrap failed:", err)
+    })
 
-  return <AuthContext.Provider value={{ user, isLoaded }}>{children}</AuthContext.Provider>
+    const unsubscribe = coordinator.subscribe((state) => {
+      setPhase(state.phase)
+      setError(state.error)
+    })
+
+    return () => {
+      subscription.unsubscribe()
+      unsubscribe()
+    }
+  }, [coordinator])
+
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      user,
+      phase,
+      error,
+      isLoaded: phase === "ready",
+    }),
+    [user, phase, error]
+  )
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
