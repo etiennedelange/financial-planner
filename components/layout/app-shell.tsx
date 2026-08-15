@@ -14,7 +14,9 @@ interface AppShellProps {
 
 export function AppShell({ accountCount, user, isLoaded, children }: AppShellProps) {
   return (
-    <div className="flex h-screen overflow-hidden">
+    // data-bootstrap-phase exposes the coordinator's readiness to e2e tests
+    // (state-manager's waitForHydration polls it instead of a blind sleep).
+    <div className="flex h-screen overflow-hidden" data-bootstrap-phase={isLoaded ? "ready" : "loading"}>
       {/* Sidebar — desktop only */}
       <Sidebar accountCount={accountCount} user={user} isLoaded={isLoaded} />
 

@@ -22,30 +22,45 @@ export interface CalculatorState {
 /**
  * StateManager - Utility for manipulating localStorage state in Playwright tests
  *
- * The SA Retirement Calculator uses Zustand with localStorage persistence.
+ * The SA Retirement Calculator uses Zustand with localStorage persistence,
+ * scoped per identity (guest or user:<id>) — see lib/store/persistence-scope.ts.
  * This helper provides methods to seed, clear, and inspect state for testing.
  *
- * LocalStorage key: 'retirement-calculator-storage'
+ * LocalStorage keys:
+ *   retirement-calculator-storage:guest | :user:<userId>
+ *   expenses-store-v2:guest | :user:<userId>
  */
 export class StateManager {
   constructor(private page: Page) {}
 
   /**
-   * Clear all localStorage state (for fresh start)
+   * Clear every scoped key for both stores (guest + all users), so journeys
+   * cannot leak state into each other.
    */
   async clearState() {
     await this.page.evaluate(() => {
-      localStorage.removeItem('retirement-calculator-storage')
+      const prefix = ['retirement-calculator-storage', 'expenses-store-v2']
+      const keysToRemove: string[] = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && prefix.some((p) => key === p || key.startsWith(`${p}:`))) {
+          keysToRemove.push(key)
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k))
     })
   }
 
   /**
-   * Seed state with predefined data
-   * Merges with existing state to avoid overwriting unrelated fields
+   * Seed state with predefined data into the guest scope (the default for
+   * signed-out journeys). Merges with existing state to avoid overwriting
+   * unrelated fields. Kept in sync with the stores' current version (2) so
+   * seeded payloads rehydrate via the normal path rather than the migrate
+   * clamp.
    */
   async seedState(state: Partial<CalculatorState>) {
     await this.page.evaluate((stateData) => {
-      const storageKey = 'retirement-calculator-storage'
+      const storageKey = 'retirement-calculator-storage:guest'
       const existing = localStorage.getItem(storageKey)
       const parsed = existing ? JSON.parse(existing) : { state: {} }
 
@@ -54,28 +69,33 @@ export class StateManager {
         storageKey,
         JSON.stringify({
           state: { ...parsed.state, ...stateData },
-          version: 0,
+          version: 2,
         })
       )
     }, state)
   }
 
   /**
-   * Get current state from localStorage
+   * Get current state from localStorage (guest scope)
    */
   async getState(): Promise<CalculatorState | null> {
     return await this.page.evaluate(() => {
-      const storage = localStorage.getItem('retirement-calculator-storage')
+      const storage = localStorage.getItem('retirement-calculator-storage:guest')
       return storage ? JSON.parse(storage).state : null
     })
   }
 
   /**
-   * Wait for Zustand to rehydrate state from localStorage
-   * Call this after seeding state and reloading the page
+   * Wait for the bootstrap coordinator to reach ready, signalled via the
+   * data-bootstrap-phase attribute on the app shell. Replaces the previous
+   * blind sleep — a fixed timeout cannot distinguish 'still hydrating' from
+   * 'ready but slow', which two-phase (guest, then user) hydration makes
+   * strictly more fragile.
    */
-  async waitForHydration(timeoutMs = 1000) {
-    await this.page.waitForTimeout(timeoutMs)
+  async waitForHydration(timeoutMs = 10000) {
+    await this.page.waitForSelector('[data-bootstrap-phase="ready"]', {
+      timeout: timeoutMs,
+    })
   }
 
   /**

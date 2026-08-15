@@ -84,7 +84,9 @@ export function PrintClient() {
       )
     }
     return (
-      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
+      // data-bootstrap-phase mirrors the app-shell signal so e2e journeys can
+      // wait for the /print bootstrap without a blind sleep.
+      <div data-bootstrap-phase="loading" className="flex min-h-screen items-center justify-center text-muted-foreground">
         Loading your plan…
       </div>
     )
@@ -92,7 +94,7 @@ export function PrintClient() {
 
   if (!projection) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
+      <div data-bootstrap-phase="ready" className="flex min-h-screen items-center justify-center text-muted-foreground">
         No projection data. Add accounts before printing.
       </div>
     )
@@ -159,7 +161,7 @@ export function PrintClient() {
         </button>
       </div>
 
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 20px" }}>
+      <div data-bootstrap-phase="ready" style={{ maxWidth: 900, margin: "0 auto", padding: "24px 20px" }}>
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <div>
