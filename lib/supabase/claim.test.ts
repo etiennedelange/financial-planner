@@ -13,7 +13,7 @@ import { cloneAccounts, fetchAccounts } from './accounts'
 import { migrateExpensesToSession } from './expenses'
 import { claimLocalData } from './claim'
 
-const PENDING_CLAIM_KEY = 'rc-pending-claim-scenario-id'
+const PENDING_CLAIM_KEY = 'rc-pending-claim-scenario-id:user-1'
 
 const localState = {
   personalInfo: { currentAge: 35, retirementAge: 65, lifeExpectancy: 90, annualIncome: 600000 },
@@ -47,7 +47,7 @@ describe('claimLocalData', () => {
       vi.mocked(createScenario).mockImplementation(async (_u, _n, _d, _c, id) => id!)
       vi.mocked(cloneAccounts).mockResolvedValue(localState.accounts as never)
 
-      const result = await claimLocalData('user-1', localState as never)
+      const result = await claimLocalData('user-1', localState as never, 'guest')
 
       expect(result.claimed).toBe(true)
       const scenarioId = (result as { claimed: true; scenarioId: string }).scenarioId
@@ -71,7 +71,7 @@ describe('claimLocalData', () => {
       vi.mocked(createScenario).mockImplementation(async (_u, _n, _d, _c, id) => id!)
       vi.mocked(cloneAccounts).mockResolvedValue(localState.accounts as never)
 
-      await claimLocalData('user-1', localState as never)
+      await claimLocalData('user-1', localState as never, 'guest')
 
       expect(localStorage.getItem(PENDING_CLAIM_KEY)).toBeNull()
     })
@@ -80,7 +80,7 @@ describe('claimLocalData', () => {
       vi.mocked(listScenarios).mockResolvedValue([])
       vi.mocked(createScenario).mockRejectedValue(new Error('network down'))
 
-      await expect(claimLocalData('user-1', localState as never)).rejects.toThrow('network down')
+      await expect(claimLocalData('user-1', localState as never, 'guest')).rejects.toThrow('network down')
 
       const [, , , , generatedId] = vi.mocked(createScenario).mock.calls[0]
       expect(generatedId).toBeTruthy()
@@ -94,7 +94,7 @@ describe('claimLocalData', () => {
         { id: 'existing', name: 'My Plan', updatedAt: '2026-01-01T00:00:00Z', claimComplete: true },
       ])
 
-      const result = await claimLocalData('user-1', localState as never)
+      const result = await claimLocalData('user-1', localState as never, 'guest')
 
       expect(result).toEqual({ claimed: false, reason: 'server-has-data' })
       expect(createScenario).not.toHaveBeenCalled()
@@ -113,7 +113,7 @@ describe('claimLocalData', () => {
       vi.mocked(fetchAccounts).mockResolvedValue([])
       vi.mocked(cloneAccounts).mockResolvedValue(localState.accounts as never)
 
-      const result = await claimLocalData('user-1', localState as never)
+      const result = await claimLocalData('user-1', localState as never, 'guest')
 
       expect(result).toEqual({ claimed: true, scenarioId: 'incomplete-scenario' })
       expect(createScenario).not.toHaveBeenCalled()
@@ -132,7 +132,7 @@ describe('claimLocalData', () => {
       ])
       vi.mocked(fetchAccounts).mockResolvedValue(localState.accounts as never)
 
-      const result = await claimLocalData('user-1', localState as never)
+      const result = await claimLocalData('user-1', localState as never, 'guest')
 
       expect(result).toEqual({ claimed: true, scenarioId: 'incomplete-scenario' })
       expect(cloneAccounts).not.toHaveBeenCalled()
@@ -150,9 +150,25 @@ describe('claimLocalData', () => {
       vi.mocked(fetchAccounts).mockResolvedValue([])
       vi.mocked(cloneAccounts).mockResolvedValue(localState.accounts as never)
 
-      await claimLocalData('user-1', localState as never)
+      await claimLocalData('user-1', localState as never, 'guest')
 
       expect(localStorage.getItem(PENDING_CLAIM_KEY)).toBeNull()
+    })
+
+    it('does not resume an incomplete claim parked under a different user', async () => {
+      // The pending marker is per-user: another account's parked claim id is
+      // invisible to this one, so it cannot be resumed or overwritten.
+      localStorage.setItem('rc-pending-claim-scenario-id:user-2', 'incomplete-scenario')
+      vi.mocked(listScenarios).mockResolvedValue([
+        { id: 'incomplete-scenario', name: 'My Plan', updatedAt: '2026-01-01T00:00:00Z', claimComplete: false },
+      ])
+
+      const result = await claimLocalData('user-1', localState as never, 'guest')
+
+      expect(result).toEqual({ claimed: false, reason: 'server-has-data' })
+      expect(fetchAccounts).not.toHaveBeenCalled()
+      expect(cloneAccounts).not.toHaveBeenCalled()
+      expect(markScenarioClaimComplete).not.toHaveBeenCalled()
     })
 
     it('does not resume an incomplete claim that belongs to a different device', async () => {
@@ -161,7 +177,7 @@ describe('claimLocalData', () => {
         { id: 'incomplete-scenario', name: 'My Plan', updatedAt: '2026-01-01T00:00:00Z', claimComplete: false },
       ])
 
-      const result = await claimLocalData('user-1', localState as never)
+      const result = await claimLocalData('user-1', localState as never, 'guest')
 
       expect(result).toEqual({ claimed: false, reason: 'server-has-data' })
       expect(fetchAccounts).not.toHaveBeenCalled()
@@ -176,13 +192,13 @@ describe('claimLocalData', () => {
       vi.mocked(cloneAccounts).mockResolvedValue([] as never)
       vi.mocked(listScenarios).mockResolvedValueOnce([])
 
-      const first = await claimLocalData('user-1', localState as never)
+      const first = await claimLocalData('user-1', localState as never, 'guest')
       const scenarioId = (first as { claimed: true; scenarioId: string }).scenarioId
 
       vi.mocked(listScenarios).mockResolvedValueOnce([
         { id: scenarioId, name: 'My Plan', updatedAt: '2026-01-01T00:00:00Z', claimComplete: true },
       ])
-      const second = await claimLocalData('user-1', localState as never)
+      const second = await claimLocalData('user-1', localState as never, 'guest')
 
       expect(second).toEqual({ claimed: false, reason: 'server-has-data' })
       expect(createScenario).toHaveBeenCalledTimes(1)
@@ -192,7 +208,7 @@ describe('claimLocalData', () => {
       vi.mocked(listScenarios).mockResolvedValue([])
       vi.mocked(createScenario).mockRejectedValue(new Error('network down'))
 
-      await expect(claimLocalData('user-1', localState as never)).rejects.toThrow('network down')
+      await expect(claimLocalData('user-1', localState as never, 'guest')).rejects.toThrow('network down')
       expect(migrateExpensesToSession).not.toHaveBeenCalled()
     })
 
@@ -202,11 +218,56 @@ describe('claimLocalData', () => {
       vi.mocked(cloneAccounts).mockResolvedValue([] as never)
 
       const result = await claimLocalData(
-        'user-1', { ...localState, expenseGroups: [], expenses: [] } as never,
+        'user-1', { ...localState, expenseGroups: [], expenses: [] } as never, 'guest',
       )
 
       expect(result.claimed).toBe(true)
       expect((result as { claimed: true; scenarioId: string }).scenarioId).toBeTruthy()
+    })
+  })
+
+  describe('claim source ownership', () => {
+    it('rejects a user-owned snapshot (re-auth of an existing identity) without writing', async () => {
+      vi.mocked(listScenarios).mockResolvedValue([])
+
+      const result = await claimLocalData('user-1', localState as never, 'user')
+
+      expect(result).toEqual({ claimed: false, reason: 'not-guest-owned' })
+      expect(createScenario).not.toHaveBeenCalled()
+      expect(cloneAccounts).not.toHaveBeenCalled()
+      expect(migrateExpensesToSession).not.toHaveBeenCalled()
+      expect(localStorage.getItem(PENDING_CLAIM_KEY)).toBeNull()
+    })
+
+    it('rejects ambiguous legacy state until the prompt completes', async () => {
+      vi.mocked(listScenarios).mockResolvedValue([])
+
+      const result = await claimLocalData('user-1', localState as never, 'legacy-unknown')
+
+      expect(result).toEqual({ claimed: false, reason: 'legacy-ambiguous' })
+      expect(createScenario).not.toHaveBeenCalled()
+      expect(localStorage.getItem(PENDING_CLAIM_KEY)).toBeNull()
+    })
+
+    it('keeps user A and user B pending claims in separate keys', async () => {
+      localStorage.setItem('rc-pending-claim-scenario-id:user-1', 'scenario-a')
+      localStorage.setItem('rc-pending-claim-scenario-id:user-2', 'scenario-b')
+
+      vi.mocked(listScenarios).mockResolvedValue([
+        { id: 'scenario-b', name: 'My Plan', updatedAt: '2026-01-01T00:00:00Z', claimComplete: false },
+      ])
+      vi.mocked(fetchAccounts).mockResolvedValue([])
+      vi.mocked(cloneAccounts).mockResolvedValue(localState.accounts as never)
+
+      // User 1 signing in must NOT see user 2's parked claim id.
+      const result = await claimLocalData('user-1', localState as never, 'guest')
+
+      expect(result).toEqual({ claimed: false, reason: 'server-has-data' })
+      expect(fetchAccounts).not.toHaveBeenCalled()
+      expect(cloneAccounts).not.toHaveBeenCalled()
+      expect(markScenarioClaimComplete).not.toHaveBeenCalled()
+      // And user 2's key is untouched.
+      expect(localStorage.getItem('rc-pending-claim-scenario-id:user-2')).toBe('scenario-b')
     })
   })
 })

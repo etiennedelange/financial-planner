@@ -117,21 +117,27 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         useCalculatorStore.getState().setIdentity(scope)
         useExpensesStore.getState().setIdentity(scope)
       },
-      claimLocalData: async (userId: string) => {
+      claimLocalData: async (userId: string, source: "guest" | "user" | "legacy-unknown") => {
         // Snapshot local state BEFORE any sync overwrites it. The coordinator
-        // calls claim before sync (never concurrently).
+        // calls claim before sync (never concurrently). The source is the
+        // ownership claim — the coordinator only ever claims guest-owned
+        // startup snapshots, and claim.ts rejects any other source.
         const calc = useCalculatorStore.getState()
         const exp = useExpensesStore.getState()
-        await claimLocalData(userId, {
-          personalInfo: calc.personalInfo,
-          retirementGoals: calc.retirementGoals,
-          assumptions: calc.assumptions,
-          drawdownConfig: calc.drawdownConfig,
-          displayMode: calc.displayMode,
-          accounts: calc.accounts,
-          expenseGroups: exp.groups,
-          expenses: exp.expenses,
-        })
+        await claimLocalData(
+          userId,
+          {
+            personalInfo: calc.personalInfo,
+            retirementGoals: calc.retirementGoals,
+            assumptions: calc.assumptions,
+            drawdownConfig: calc.drawdownConfig,
+            displayMode: calc.displayMode,
+            accounts: calc.accounts,
+            expenseGroups: exp.groups,
+            expenses: exp.expenses,
+          },
+          source
+        )
       },
       syncFromDb: async (userId: string, generation: number) => {
         await useCalculatorStore.getState().syncFromDb(userId, generation)

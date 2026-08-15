@@ -61,7 +61,10 @@ export async function signOut(page: Page) {
 }
 
 /**
- * Enrols TOTP from the Manage Account dialog for the currently signed-in user.
+ * Enrols TOTP from the Manage Account flow for the currently signed-in user.
+ * "Manage Account" navigates to /calculator/settings — a route, not a modal —
+ * so the enrolment UI renders inline on that page; the recovery-codes dialog is
+ * the only role="dialog" in the flow.
  * Returns the shared secret (for minting live codes) and the recovery codes.
  */
 export async function enrollTotp(page: Page): Promise<{ secret: string; recoveryCodes: string[] }> {
@@ -70,14 +73,15 @@ export async function enrollTotp(page: Page): Promise<{ secret: string; recovery
   await page.getByRole("menuitem", { name: /manage account/i }).click()
   await page.getByRole("button", { name: /set up two-factor/i }).click()
 
-  const dialog = page.getByRole("dialog")
-  // .break-all is unique to the enrolment secret — plain ".font-mono" also
-  // matches the "Security" SectionLabel heading rendered above it.
-  const rawSecret = await dialog.locator("p.font-mono.break-all").innerText()
+  // The enrolment secret renders inline on the settings page. .break-all is
+  // unique to it — plain ".font-mono" also matches the "Security" SectionLabel
+  // heading rendered above it.
+  const rawSecret = await page.locator("p.font-mono.break-all").innerText()
   const secret = rawSecret.trim()
   await page.getByLabel("Six-digit code").fill(await generate({ secret }))
   await page.getByRole("button", { name: /verify & enable/i }).click()
 
+  const dialog = page.getByRole("dialog")
   const codeCells = dialog.locator(".font-mono span")
   await expect(codeCells).toHaveCount(10)
   const recoveryCodes = await codeCells.allInnerTexts()
@@ -87,12 +91,8 @@ export async function enrollTotp(page: Page): Promise<{ secret: string; recovery
   await page.getByRole("button", { name: /^download$/i }).click()
   await page.getByRole("button", { name: /i've saved them/i }).click()
 
-  // The Manage Account dialog stays open after enrolment (only the nested
-  // recovery-codes dialog closes) — dismiss it before the sidebar's account
-  // menu is reachable again. Scope to [data-state="open"]: the just-closed
-  // recovery-codes dialog is still in the DOM mid-exit-animation.
+  // The recovery-codes dialog closes after saving; the settings page remains.
   const openDialog = page.locator('[role="dialog"][data-state="open"]')
-  await openDialog.getByRole("button", { name: "Close" }).click()
   await expect(openDialog).toHaveCount(0)
 
   return { secret, recoveryCodes }

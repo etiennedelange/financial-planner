@@ -27,7 +27,7 @@ export default defineConfig({
   outputDir: './e2e/output/test-results',
 
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: process.env.BASE_URL ?? "http://localhost:3000",
     screenshot: 'on',
     trace: 'on',
     video: 'on',
@@ -64,7 +64,7 @@ export default defineConfig({
   // Development server configuration
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:3000',
+    url: process.env.BASE_URL ?? 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },

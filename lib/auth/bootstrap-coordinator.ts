@@ -67,6 +67,10 @@ export function createBootstrapCoordinator(dependencies: BootstrapDependencies):
           // that is the only moment guest-owned data exists. A live SIGNED_IN event
           // is a re-auth of an already-active session and must not claim — the
           // claim/sync guard additionally requires a userId change for that path.
+          // The source is the caller's ownership claim: the startup snapshot is
+          // guest-owned by construction, so every claim here is "guest". The
+          // claimLocalData dependency passes it to lib/supabase/claim.ts which
+          // rejects any non-guest source outright.
           if (input.event.type === "INITIAL_SESSION") {
             await dependencies.claimLocalData(input.userId, "guest")
           }

@@ -15,11 +15,21 @@ export interface LocalSnapshot {
   expenses: Expense[]
 }
 
+export type ClaimSource = "guest" | "user" | "legacy-unknown"
+
 export type ClaimResult =
   | { claimed: true; scenarioId: string }
-  | { claimed: false; reason: "server-has-data" | "nothing-local" }
+  | {
+      claimed: false
+      reason: "server-has-data" | "nothing-local" | "not-guest-owned" | "legacy-ambiguous"
+    }
 
-const PENDING_CLAIM_KEY = "rc-pending-claim-scenario-id"
+// Per-user scope: one account's in-flight claim is never read or resumed by
+// another (a shared device signing in as a second user would otherwise find the
+// first user's incomplete scenario id and clone ITS OWN accounts into it).
+function pendingClaimKey(userId: string): string {
+  return `rc-pending-claim-scenario-id:${userId}`
+}
 
 /**
  * Migrates a signed-out visitor's localStorage work into their account on first sign-in.
@@ -29,6 +39,13 @@ const PENDING_CLAIM_KEY = "rc-pending-claim-scenario-id"
  * browser must never have server data overwritten by whatever is in that browser. There is
  * deliberately no merge — two divergent retirement plans have no correct merge, and guessing
  * produces numbers the user cannot explain.
+ *
+ * The `source` argument is the caller's ownership claim, made explicit at every call site:
+ * only `source === "guest"` may enter the automatic claim path. A call site that cannot
+ * prove the snapshot is guest-owned must not pass `"guest"`. `"user"` (a re-auth of an
+ * existing identity) returns server-wins without copying local state; `"legacy-unknown"`
+ * (ambiguous pre-scoping state with no attributable user) is not claimable until the user
+ * chooses through legacy-local-plan-prompt, which converts it to the guest scope first.
  *
  * Resumable, not just interruptible — and ownership-checked, not just presence-checked. The
  * scenario row `claimLocalData` creates starts with `claim_complete = false` and is only
@@ -46,17 +63,25 @@ const PENDING_CLAIM_KEY = "rc-pending-claim-scenario-id"
  * Safe to call repeatedly — once nothing resumable is found and a scenario exists, it reports
  * `server-has-data` and stops.
  *
- * Known gap: if this browser's localStorage is cleared between creating the scenario and
- * finishing the claim, that scenario becomes permanently unresumable from any device (every
- * future sign-in sees `existing.length > 0` and stops) — stuck but safe, not silently wrong,
- * consistent with this function's guarantees, but with no self-service recovery yet.
+ * Known gap (blast radius narrowed, knowingly out of scope for self-service recovery): if
+ * this browser's localStorage is cleared between creating the scenario and finishing the
+ * claim, that scenario becomes permanently unresumable from any device (every future sign-in
+ * sees `existing.length > 0` and stops) — stuck but safe, not silently wrong. The pending
+ * marker is now per-user, so this is limited to the same user on the same browser; another
+ * account can never pick up the stranded claim.
  */
 export async function claimLocalData(
   userId: string,
-  local: LocalSnapshot
+  local: LocalSnapshot,
+  source: ClaimSource
 ): Promise<ClaimResult> {
+  // Ownership gate, decided by the caller: a non-guest snapshot is never
+  // automatically copied into an account.
+  if (source === "user") return { claimed: false, reason: "not-guest-owned" }
+  if (source === "legacy-unknown") return { claimed: false, reason: "legacy-ambiguous" }
+
   const existing = await listScenarios(userId)
-  const pendingId = localStorage.getItem(PENDING_CLAIM_KEY)
+  const pendingId = localStorage.getItem(pendingClaimKey(userId))
   const ownIncomplete = pendingId
     ? existing.find((s) => s.id === pendingId && !s.claimComplete)
     : undefined
@@ -68,14 +93,14 @@ export async function claimLocalData(
     }
     await migrateExpensesToSession(userId, local.expenseGroups, local.expenses)
     await markScenarioClaimComplete(ownIncomplete.id)
-    localStorage.removeItem(PENDING_CLAIM_KEY)
+    localStorage.removeItem(pendingClaimKey(userId))
     return { claimed: true, scenarioId: ownIncomplete.id }
   }
 
   if (existing.length > 0) return { claimed: false, reason: "server-has-data" }
 
   const scenarioId = crypto.randomUUID()
-  localStorage.setItem(PENDING_CLAIM_KEY, scenarioId)
+  localStorage.setItem(pendingClaimKey(userId), scenarioId)
 
   await createScenario(
     userId,
@@ -94,7 +119,7 @@ export async function claimLocalData(
   await cloneAccounts(local.accounts, scenarioId)
   await migrateExpensesToSession(userId, local.expenseGroups, local.expenses)
   await markScenarioClaimComplete(scenarioId)
-  localStorage.removeItem(PENDING_CLAIM_KEY)
+  localStorage.removeItem(pendingClaimKey(userId))
 
   return { claimed: true, scenarioId }
 }

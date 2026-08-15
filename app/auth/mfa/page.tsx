@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { listFactors, unenrollAbandonedFactors } from "@/lib/auth/mfa"
 import { Button } from "@/components/ui/button"
@@ -14,9 +14,15 @@ export default function MfaChallengePage() {
   const [value, setValue] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const factorLoadPromiseRef = useRef<Promise<void> | null>(null)
+  const factorIdRef = useRef<string | null>(null)
 
   useEffect(() => {
-    listFactors()
+    // Keep the in-flight load awaitable from submit(): a click that lands
+    // before the factor list resolves must wait for it, never silently drop.
+    // factorIdRef mirrors state because submit's closure captures a stale
+    // factorId if the load resolves after the click's render.
+    factorLoadPromiseRef.current = listFactors()
       .then(async (factors) => {
         if (factors.length === 0) {
           // The middleware redirected here because the session's cached AAL
@@ -26,15 +32,29 @@ export default function MfaChallengePage() {
           await unenrollAbandonedFactors().catch(() => {})
           window.location.href = "/calculator"
         } else {
+          factorIdRef.current = factors[0].id
           setFactorId(factors[0].id)
         }
       })
-      .catch(() => setError("Could not load your authentication factors."))
+      .catch((err: unknown) =>
+        setError(`Could not load your authentication factors: ${err instanceof Error ? err.message : String(err)}`)
+      )
   }, [])
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (!factorId) return
+    // The factor list loads asynchronously after mount; a submit that lands
+    // before it resolves must not silently no-op (the old `if (!factorId)
+    // return` dropped the click with no feedback) — wait for the load instead.
+    let id = factorIdRef.current
+    if (!id) {
+      if (factorLoadPromiseRef.current) await factorLoadPromiseRef.current
+      id = factorIdRef.current
+      if (!id) {
+        setError("Your security methods are not available.")
+        return
+      }
+    }
     setLoading(true); setError(null)
 
     try {
@@ -51,10 +71,10 @@ export default function MfaChallengePage() {
         }
       } else {
         const supabase = createClient()
-        const { data: challenge, error: cErr } = await supabase.auth.mfa.challenge({ factorId })
+        const { data: challenge, error: cErr } = await supabase.auth.mfa.challenge({ factorId: id })
         if (cErr) { setError(cErr.message); return }
         const { error: vErr } = await supabase.auth.mfa.verify({
-          factorId, challengeId: challenge.id, code: value,
+          factorId: id, challengeId: challenge.id, code: value,
         })
         if (vErr) { setError("That code is not correct."); return }
       }
