@@ -410,7 +410,7 @@ describe("useExpensesStore persist rehydrate", () => {
 
   it("restores persisted expenses on rehydrate and persists later writes", async () => {
     localStorage.setItem(
-      "expenses-store-v2",
+      "expenses-store-v2:guest",
       JSON.stringify({
         state: {
           sessionId: null,
@@ -429,7 +429,7 @@ describe("useExpensesStore persist rehydrate", () => {
     expect(useExpensesStore.getState().monthlyIncome).toBe(80000)
 
     useExpensesStore.getState().setMonthlyIncome(95000)
-    const stored = JSON.parse(localStorage.getItem("expenses-store-v2")!)
+    const stored = JSON.parse(localStorage.getItem("expenses-store-v2:guest")!)
     expect(stored.state.monthlyIncome).toBe(95000)
 
     useExpensesStore.setState({ sessionId: null, groups: [], expenses: [], monthlyIncome: 56500 })

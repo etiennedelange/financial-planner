@@ -613,7 +613,7 @@ describe('persist write-gate (auth-before-rehydrate clobber regression)', () => 
 
   it('survives a setSessionId fired before the layout rehydrate reads storage', async () => {
     localStorage.setItem(
-      'retirement-calculator-storage',
+      'retirement-calculator-storage:guest',
       JSON.stringify({ state: persistedSnapshot, version: 2 })
     )
 
@@ -631,14 +631,14 @@ describe('persist write-gate (auth-before-rehydrate clobber regression)', () => 
     expect(freshStore.getState().accounts[0].name).toBe('Persisted RA')
 
     // And localStorage must still hold the plan, not the pre-hydration defaults.
-    const stored = JSON.parse(localStorage.getItem('retirement-calculator-storage')!)
+    const stored = JSON.parse(localStorage.getItem('retirement-calculator-storage:guest')!)
     expect(stored.state.personalInfo.currentAge).toBe(45)
     expect(stored.state.accounts).toHaveLength(1)
   })
 
   it('persists subsequent writes once rehydrate has settled', async () => {
     localStorage.setItem(
-      'retirement-calculator-storage',
+      'retirement-calculator-storage:guest',
       JSON.stringify({ state: { ...persistedSnapshot, accounts: [] }, version: 2 })
     )
 
@@ -647,7 +647,7 @@ describe('persist write-gate (auth-before-rehydrate clobber regression)', () => 
     await freshStore.persist.rehydrate()
     freshStore.getState().setPersonalInfo({ currentAge: 52 })
 
-    const stored = JSON.parse(localStorage.getItem('retirement-calculator-storage')!)
+    const stored = JSON.parse(localStorage.getItem('retirement-calculator-storage:guest')!)
     expect(stored.state.personalInfo.currentAge).toBe(52)
   })
 })

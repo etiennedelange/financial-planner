@@ -7,6 +7,15 @@ import type { AuthEvent, AuthEventType, BootstrapDependencies } from "@/lib/auth
 import { currentAal } from "@/lib/auth/mfa"
 import { createClient } from "@/lib/supabase/client"
 import { claimLocalData } from "@/lib/supabase/claim"
+import { setScope } from "@/lib/store/persistence-scope"
+import {
+  migrateLegacyKeys,
+  readAmbiguousLegacyStates,
+  adoptAmbiguousLegacy,
+  discardAmbiguousLegacy,
+  type AmbiguousLegacyState,
+} from "@/lib/store/legacy-scope-migration"
+import { LegacyLocalPlanPrompt } from "@/components/auth/legacy-local-plan-prompt"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useExpensesStore } from "@/lib/store/expenses-store"
 import type { BootstrapPhase } from "@/lib/auth/bootstrap-machine"
@@ -50,6 +59,7 @@ function getSupabase() {
  */
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [ambiguousLegacy, setAmbiguousLegacy] = useState<AmbiguousLegacyState[]>([])
 
   // The coordinator is created once per provider instance. Its dependencies
   // close over setUser (stable) and the store getState functions (stable), and
@@ -57,18 +67,30 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const coordinator = useMemo(() => {
     const supabase = getSupabase()
     const dependencies: BootstrapDependencies = {
-      // Legacy-key migration + scope switching land in Task 3; until then the
-      // guest hydration is the only hydration and reads the un-scoped keys.
+      // One-time legacy un-scoped key migration + guest scope + store hydration.
+      // Runs pre-auth: a legacy payload is routed by the sessionId inside its
+      // own payload, so no identity is needed. The machine's hydratingGuest
+      // capture handler guarantees an early auth event cannot cancel it.
       hydrateGuestScope: async () => {
+        // New migration this load, plus any holding-area payloads parked by an
+        // earlier load before the user made a choice.
+        migrateLegacyKeys()
+        setAmbiguousLegacy(readAmbiguousLegacyStates())
+        setScope({ kind: "guest" })
         await Promise.all([
           useCalculatorStore.persist.rehydrate(),
           useExpensesStore.persist.rehydrate(),
         ])
       },
-      // Task 3 makes this rehydrate user-scoped. Between Task 2 and Task 3 the
-      // app hydrates exactly once into the un-scoped key (see plan: "Do not ship
-      // from the Task 2 / Task 3 boundary").
-      hydrateUserScope: async () => {},
+      // Second, user-scoped hydration: set the user scope (which re-closes the
+      // write gate on every store instance) then rehydrate both stores.
+      hydrateUserScope: async (userId: string) => {
+        setScope({ kind: "user", userId })
+        await Promise.all([
+          useCalculatorStore.persist.rehydrate(),
+          useExpensesStore.persist.rehydrate(),
+        ])
+      },
       getUser: async () => {
         // getUser() verifies the token with the auth server.
         // getSession() trusts the cookie unverified — do not substitute it.
@@ -166,5 +188,32 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     [user, phase, error]
   )
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  const handleUseLocalPlan = () => {
+    // Convert the ambiguous legacy states into the guest scope, then let the
+    // normal claim path (on the next sign-in) carry them into the account.
+    setScope({ kind: "guest" })
+    for (const state of ambiguousLegacy) adoptAmbiguousLegacy(state)
+    void Promise.all([
+      useCalculatorStore.persist.rehydrate(),
+      useExpensesStore.persist.rehydrate(),
+    ])
+    setAmbiguousLegacy([])
+  }
+
+  const handleKeepAccountData = () => {
+    for (const state of ambiguousLegacy) discardAmbiguousLegacy(state)
+    setAmbiguousLegacy([])
+  }
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      <LegacyLocalPlanPrompt
+        open={ambiguousLegacy.length > 0}
+        states={ambiguousLegacy}
+        onUseLocalPlan={handleUseLocalPlan}
+        onKeepAccountData={handleKeepAccountData}
+      />
+    </AuthContext.Provider>
+  )
 }
