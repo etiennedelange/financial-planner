@@ -29,6 +29,10 @@ One line per work session, newest first, capped at the latest 10 entries — whe
 arrives, delete the oldest. Full detail lives in the linked history files, never here.
 Rules: [docs/README.md](README.md).
 
+## 2026-08-15 — High-priority plan: bootstrap and data ownership hardening
+
+Phase 9.4 now tracks the architecture work needed to replace overlapping hydration/auth paths with serialized bootstrap, MFA-safe sync, explicit guest/user persistence scopes, and guarded remote writes. → [plan](superpowers/plans/2026-08-15-bootstrap-data-ownership-hardening.md) · [planning record](history/2026-08-15-bootstrap-data-ownership-hardening-plan.md)
+
 ## 2026-08-15 — Persisted plan wiped on reload; pre-hydration writes gated
 
 Both stores use `skipHydration` + a layout-driven `rehydrate()`, and zustand persist writes to storage on every `set()`; `SupabaseProvider`'s `setSessionId` fired before rehydrate's read settled, persisting the pre-hydration defaults over the saved plan (signed-in reloads masked it via `syncFromDb`; signed-out reloads lost the plan permanently). New `createGatedPersistStorage` drops writes until the first rehydrate settles; `SupabaseProvider.init()` awaits rehydrate before auth writes. 7 new tests incl. a regression test that fails without the gate; 926/926 tests. → [history](history/2026-08-15-persist-write-gate.md)
@@ -64,10 +68,6 @@ Same-origin validation on auth-callback redirects, 2FA-safe account deletion, ra
 ## 2026-08-10 — Auth/2FA risk register filed; charts page hardened
 
 Triple-check security audit opened 9 risks (resolved the same day, above). Charts fixes: MC worker now runs on `/calculator/charts`, honest empty states, success rate promoted and colour-driven, AA contrast on both themes, single H1 per page. 810 tests. → [risk register](security/auth-2fa-risk-register.md) · [audit](history/2026-08-10-auth-2fa-security-audit.md) · [charts fixes](history/2026-08-10-charts-page-critique-fixes.md)
-
-## 2026-08-09 — Charts page created; Monte Carlo demoted from Overview
-
-All visualisations centralised on `/calculator/charts` (portfolio growth, Will It Last?, income sustainability, sensitivity tornado, scenario comparison, cost of delay); Overview keeps only a quiet sim-status line. New tested calc utils `income-sustainability.ts` + `sensitivity-tornado.ts`. 806 tests. → [history](history/2026-08-09-charts-page-monte-carlo-demoted.md)
 
 ---
 

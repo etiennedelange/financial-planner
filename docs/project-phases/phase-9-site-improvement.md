@@ -92,6 +92,12 @@ _Identified 2026-06-07 via parallel agent audit (UI/UX, calculations, test cover
 - [x] **Personal Info / Retirement Goals validation never fires** (2026-08-14) — audited against current code: already resolved. Both forms (plus assumptions-form and account-form-dialog) now use `mode: "onChange"`, so Zod `superRefine` checks fire as the user types; verified live that clearing a field shows the error.
 - [x] **Monetary inputs accept absurdly large numbers** (2026-08-14) — six unbounded monetary fields accepted values far past `Number.MAX_SAFE_INTEGER` (e.g. a 40-digit figure), which lost precision as doubles and poisoned every calculation. Added `MAX_MONETARY_AMOUNT` (R1 trillion, `lib/constants/limits.ts`) + `isAllowedMonetaryInput`/`clampMonetaryAmount`/`predictInsertedValue` (`lib/utils/monetary.ts`). `useBoundedMonetary` (`lib/hooks/use-bounded-monetary.ts`) **blocks over-cap input before it enters the DOM** via `beforeinput` `preventDefault` (plus a precise ref-based `onChange` fallback) on every monetary field — holding a key just stops adding digits, with no flicker/reset; `.max()` + `max` attr + gated store writes remain as defence. Both stores persist `version: 2` + `migrate` to clamp stale pre-fix garbage on rehydrate. Full write-up: [history/2026-08-14-input-max-bounds.md](../history/2026-08-14-input-max-bounds.md)
 
+## 9.4 — Application Lifecycle & Data Ownership
+
+### High Priority
+
+- [ ] **Centralize bootstrap and data ownership** — replace overlapping store hydration, auth callback, database sync, and route-specific persistence paths with one serialized coordinator; gate protected work on MFA assurance; isolate guest/user local state; reject stale or signed-out remote mutations; add reload, account-switch, MFA, and print regression coverage. [Implementation plan](../superpowers/plans/2026-08-15-bootstrap-data-ownership-hardening.md) · [planning record](../history/2026-08-15-bootstrap-data-ownership-hardening-plan.md)
+
 ---
 
 ## Suggested Work Order

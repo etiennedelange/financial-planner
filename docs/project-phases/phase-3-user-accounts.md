@@ -55,3 +55,7 @@
 - [ ] Social login (Google OAuth) — optional
 - [ ] **Enable "Prevent use of leaked passwords"** in the hosted Supabase project (Dashboard → Authentication → Policies) on the day the project is deployed to production — this setting has no `config.toml` equivalent and cannot be applied locally
 - [ ] **WebAuthn/passkeys** — optional future enhancement for passwordless 2FA
+
+## High-Priority Post-Completion Follow-up
+
+- [ ] **Bootstrap and data ownership hardening** — centralize auth/bootstrap ordering, prevent pre-MFA protected sync, and isolate guest/user local state. Tracked in Phase 9.4: [implementation plan](../superpowers/plans/2026-08-15-bootstrap-data-ownership-hardening.md) · [planning record](../history/2026-08-15-bootstrap-data-ownership-hardening-plan.md)

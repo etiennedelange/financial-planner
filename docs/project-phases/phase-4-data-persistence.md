@@ -22,3 +22,7 @@
 
 - `20260509110000_add_scenario_names.sql` — adds `name` column, drops `unique` on `session_id`
 - `20260509120000_link_accounts_to_scenarios.sql` — adds `scenario_id` FK, backfills, updates RLS, makes `session_id` nullable
+
+## High-Priority Post-Completion Follow-up
+
+- [ ] **Bootstrap and data ownership hardening** — make hydration single-owner, prevent stale or signed-out remote writes, and separate guest/user persistence scopes. Tracked in Phase 9.4: [implementation plan](../superpowers/plans/2026-08-15-bootstrap-data-ownership-hardening.md) · [planning record](../history/2026-08-15-bootstrap-data-ownership-hardening-plan.md)
