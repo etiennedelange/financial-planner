@@ -1,0 +1,77 @@
+{
+  "skill_name": "house-rules",
+  "iteration": 2,
+  "evals": [
+    {
+      "id": 0,
+      "name": "weakened-test-regression",
+      "prompt": "i just refactored the shortfall calc in the projection engine, can you review it before i commit",
+      "fixture": "Engine change zeroes shortfallAmount via `finalBalance >= 0 ? 0 : selectShortfallAmount(...)`, and the SAME diff weakens projection-engine.test.ts:709 (toBeGreaterThan(0) -> toBeGreaterThanOrEqual(0)), weakens INV-007 in invariants.test.ts (toBeGreaterThan(50_000_000) -> toBeGreaterThanOrEqual(0)), and regenerates the golden snapshot against the broken engine. The full suite stays green (985/985) — the regression is only findable by reading the diff",
+      "expected_output": "Critical finding naming the test weakening and the engine change as one paired regression, citing the documented 75f68f7 precedent",
+      "assertions": [
+        "Flags the weakened assertion at projection-engine.test.ts:709 (toBeGreaterThan changed to toBeGreaterThanOrEqual)",
+        "States that the original toBeGreaterThan(0) assertion would fail against the new engine code (e.g. by running it against the new engine, or by reasoning that shortfallAmount is now 0 on every path) — the weakening and the engine change are one paired regression, not two issues",
+        "Identifies that the guard's false branch is unreachable — finalBalance can never be negative — so shortfallAmount is zero on every path, including fully depleted plans (not just surviving ones)",
+        "Treats the finding as commit-blocking (a 'do not commit' verdict or equivalent), regardless of whether the words Critical/High appear",
+        "Cites the project's documented tautological-regression precedent (phase-1-5-testing-validation.md / 75f68f7 / INV-007's comment) — note the suite is green, so nothing in test output hands this over",
+        "Recommends reverting the engine change and restoring the weakened assertions (projection-engine.test.ts:709, INV-007, golden snapshot), and does NOT recommend regenerating the golden file or relaxing the invariants to match",
+        "Reports no findings in lanes the diff does not touch (e.g. styling or security)",
+        "Does not edit any file in the repo under review (guardrail only, not counted toward discrimination)"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "duplicated-engine-logic",
+      "prompt": "review my changes — added a quick estimate helper for the dashboard tile",
+      "fixture": "New untracked lib/calculations/utils/quick-estimate.ts duplicates projectFinalSavings, hardcodes annualReturn / 100 / 12 ignoring compoundingMethod, ships with no .test.ts, and compiles cleanly (the import path is valid — there is no broken import to distract with)",
+      "expected_output": "Findings for calculation duplication, hardcoded monthly return, and missing tests",
+      "assertions": [
+        "Flags that the helper duplicates existing engine logic instead of importing it",
+        "Names lib/calculations/utils/projection.ts as the existing single source of truth for projectFinalSavings",
+        "Flags the hardcoded annualReturn / 12 as ignoring assumptions.compoundingMethod",
+        "Flags the absence of a corresponding .test.ts as violating CLAUDE.md rule 1",
+        "Quantifies the divergence between the helper and projectFinalSavings on at least one concrete scenario, with every numeric claim reproducing against the repo's own functions (no inverted, swapped, or fabricated figures)",
+        "Proposes deleting quick-estimate.ts in favour of importing projectFinalSavings (or otherwise routing through the shared function)",
+        "Does not offer advice about files or components that do not exist in the tree (scope discipline)",
+        "Does not edit any file in the repo under review (guardrail only, not counted toward discrimination)"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "unprotected-api-route",
+      "prompt": "added a new plan-summary API endpoint, is this safe to ship?",
+      "fixture": "New app/api/plan-summary/route.ts: no auth, no Zod validation, no rate limit, no body cap, module-scope service-role client (3rd call site), console.error logging the user's email, and the service-role path routes around the project's RLS-based 2FA enforcement gate",
+      "expected_output": "Critical/High security findings across auth, validation, rate limiting, and service-role handling",
+      "assertions": [
+        "Flags the missing authentication check",
+        "Flags the missing Zod schema validation of the request body",
+        "Flags the missing rate limit",
+        "Flags that this is a third service-role key call site when the project pins the key to exactly two call sites that need justification (SEC4 / risk register), not merely that module scope is risky",
+        "Flags the user email being written to console.error",
+        "Flags that the service-role client bypasses the project's RLS-based 2FA enforcement gate (public.mfa_satisfied() / 20260802000100_mfa_rls.sql)",
+        "Rates at least one finding Critical or High (commit-blocking)",
+        "Makes no factually incorrect claims about the repo (spot-checkable — e.g. no false 'only route without a test' claims)",
+        "States which verification commands were run and claims no result for commands it did not run",
+        "Does not edit any file in the repo under review (guardrail only, not counted toward discrimination)"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "design-system-violations",
+      "prompt": "can you review the new savings summary card i added",
+      "fixture": "New components/dashboard/savings-summary-card.tsx using Card+CardHeader+CardTitle, hardcoded emerald-500/red-500/blue-600/gray-500, inline style color #1a936f (the pre-audit --primary value), a local formatCurrency, a hand-written section-label string, and dashboard-card without shadow-none",
+      "expected_output": "Design-system findings covering the banned card pattern, hardcoded colors, local currency helper, and hand-rolled label",
+      "assertions": [
+        "Flags the banned Card + CardHeader + CardTitle section-card pattern and names PageCard as the replacement",
+        "Flags the hardcoded Tailwind palette colors (emerald-500, red-500, blue-600, gray-500)",
+        "Identifies #1a936f as a stale/retired --primary token value — the pre-audit hsl(162 70% 34%) retired by the 2026-08-16 accessibility audit — rather than merely an off-palette green",
+        "Flags the local formatCurrency instead of importing from lib/utils/currency",
+        "Flags the hand-written section-label Tailwind string instead of SectionLabel",
+        "Flags dashboard-card used without shadow-none",
+        "Notes that the hardcoded pill colors fail WCAG AA contrast (emerald/text-white ~2.5:1, red/text-white ~3.8:1) and regress the 2026-08-16 accessibility audit",
+        "Does not flag the status pill as a colour-only encoding — it carries text ('On track'/'Behind target'), so that would be a false positive",
+        "Does not edit any file in the repo under review (guardrail only, not counted toward discrimination)"
+      ]
+    }
+  ]
+}
