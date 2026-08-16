@@ -30,6 +30,10 @@ One line per work session, newest first, capped at the latest 10 entries — whe
 arrives, delete the oldest. Full detail lives in the linked history files, never here.
 Rules: [docs/README.md](README.md).
 
+## 2026-08-16 — Command palette restyled to pre-audit design on cmdk + account-search P0 fixed
+
+The cmdk palette was restyled from the shadcn-default look back to the pre-audit design (520px `rounded-xl shadow-2xl` at top 28%, compact full-width rows, teal icon + `↵` on the selected item, 10px uppercase group headings, `×` clear button, "No results for X" empty state, `bg-background` surface), keeping the audit's real a11y fixes (focus rings, aria, Escape). Also fixed: account search — item `value` was a hex UUID so "tfsa"/"pension"/account names returned "No results found"; now `value={acc.name}` + `keywords={[type label]}`. Removed the teal `focus-within` underline under the search input (kept the `bg-muted/40` focus proxy). Verified live in-browser + typecheck/lint/build clean, 985/985 tests, shadscan still 98/100. → [full write-up](history/2026-08-16-command-palette-restyle.md)
+
 ## 2026-08-16 — shadscan accessibility & polish audit: 40 → 98/100
 
 Deterministic `@shadscan/cli@0.16.0` audit (F → A): error-boundary retry buttons in the `error.tsx` files, Suspense fallback, labels on every unlabeled control (Selects, Sliders, Inputs), focus-visible rings where outlines were suppressed, `d` theme hotkey, command palette rebuilt on cmdk + mounted at root, Toaster at root, `app/not-found.tsx`, OG/Twitter images, robots/sitemap, `data-icon` on 22 buttons, "No data yet" chart empty states, async pending states, and light `--primary` 34→30% / dark `--destructive` 50→58% contrast fixes — all browser-verified in both themes and at 320px. `mobile-nav-present` waived (bottom tab bar is the mobile pattern). 985/985 tests, coverage 92.7%. → [full write-up](history/2026-08-16-shadscan-accessibility-audit.md)

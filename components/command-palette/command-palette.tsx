@@ -31,6 +31,7 @@ interface CommandItemDef {
   subtext?: string
   href: string
   icon: React.ElementType
+  type?: AccountType
 }
 
 const NAV_ITEMS: CommandItemDef[] = [
@@ -53,12 +54,14 @@ const ACCOUNT_ICON: Record<AccountType, React.ElementType> = {
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState("")
   const router = useRouter()
   const accounts = useCalculatorStore((s) => s.accounts)
 
   const accountItems: CommandItemDef[] = accounts.map((acc) => ({
     id: `account-${acc.id}`,
     label: acc.name,
+    type: acc.type,
     subtext: `${ACCOUNT_TYPE_LABELS[acc.type]}  ·  ${formatCurrency(acc.currentBalance)}`,
     href: "/calculator/accounts",
     icon: ACCOUNT_ICON[acc.type] ?? Wallet,
@@ -70,7 +73,10 @@ export function CommandPalette() {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault()
-        setOpen((prev) => !prev)
+        setOpen((prev) => {
+          if (!prev) setQuery("")
+          return !prev
+        })
       }
     }
     window.addEventListener("keydown", onKey)
@@ -79,7 +85,10 @@ export function CommandPalette() {
 
   // Custom event from TopBar search button
   useEffect(() => {
-    function onOpen() { setOpen(true) }
+    function onOpen() {
+      setQuery("")
+      setOpen(true)
+    }
     window.addEventListener("open-command-palette", onOpen)
     return () => window.removeEventListener("open-command-palette", onOpen)
   }, [])
@@ -92,12 +101,29 @@ export function CommandPalette() {
   return (
     <CommandDialog open={open} onOpenChange={setOpen} title="Command palette">
       <CommandInput
+        value={query}
+        onValueChange={setQuery}
         placeholder="Search sections and accounts…"
         aria-label="Search sections and accounts"
         autoComplete="off"
+        suffix={
+          query ? (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              aria-label="Clear search"
+              className="text-lg leading-none text-muted-foreground transition-colors hover:text-foreground"
+            >
+              ×
+            </button>
+          ) : undefined
+        }
       />
       <CommandList>
-        <CommandEmpty>No results found</CommandEmpty>
+        <CommandEmpty>
+          No results for{" "}
+          <span className="font-medium text-foreground">&quot;{query}&quot;</span>
+        </CommandEmpty>
         <CommandGroup heading="Navigate">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon
@@ -108,7 +134,14 @@ export function CommandPalette() {
                 onSelect={() => navigate(item.href)}
               >
                 <Icon className="h-4 w-4 shrink-0" />
-                <span>{item.label}</span>
+                <span className="truncate font-medium">{item.label}</span>
+                <span
+                  data-arrow
+                  aria-hidden="true"
+                  className="ml-auto shrink-0 font-mono text-[10px] leading-tight text-muted-foreground/50"
+                >
+                  ↵
+                </span>
               </CommandItem>
             )
           })}
@@ -120,18 +153,26 @@ export function CommandPalette() {
               return (
                 <CommandItem
                   key={item.id}
-                  value={item.id}
+                  value={item.label}
+                  keywords={item.type ? [ACCOUNT_TYPE_LABELS[item.type]] : undefined}
                   onSelect={() => navigate(item.href)}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
                   <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate">{item.label}</span>
+                    <span className="truncate font-medium">{item.label}</span>
                     {item.subtext && (
                       <span className="truncate text-xs text-muted-foreground/70">
                         {item.subtext}
                       </span>
                     )}
                   </div>
+                  <span
+                    data-arrow
+                    aria-hidden="true"
+                    className="ml-auto shrink-0 font-mono text-[10px] leading-tight text-muted-foreground/50"
+                  >
+                    ↵
+                  </span>
                 </CommandItem>
               )
             })}
