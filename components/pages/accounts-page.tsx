@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useTransition } from "react"
+import { useState, useMemo, startTransition } from "react"
 import { Plus, ChevronDown, AlertTriangle, Pencil, Trash2, Database, Wallet } from "lucide-react"
 import { m } from "motion/react"
 import { FloatingActionBar } from "@/components/ui/floating-action-bar"
@@ -274,7 +274,6 @@ interface AccountRowProps {
 function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
   const [expanded, setExpanded] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
-  const [, startTransition] = useTransition()
 
   const netReturn = account.expectedReturn - account.annualFees
 
@@ -287,7 +286,10 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
   }, [account])
 
   const toggle = () => {
-    // Use View Transitions API if available; falls back to instant state change
+    // Use View Transitions API if available; falls back to instant state change.
+    // startTransition (imported directly as a function) marks the state
+    // update as a transition so it flushes synchronously inside the view-transition
+    // callback and the expand/collapse can morph smoothly.
     if (document.startViewTransition) {
       document.startViewTransition(() => {
         startTransition(() => {
@@ -371,15 +373,11 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
 
           {/* Actions + chevron */}
           <div className="flex items-center gap-0.5 flex-none">
-            <div
-              className="flex items-center gap-0.5 opacity-100 md:opacity-40 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity"
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-            >
+            <div className="flex items-center gap-0.5 opacity-100 md:opacity-40 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity">
               <Button
                 variant="ghost"
                 size="icon-sm"
-                onClick={() => onEdit(account)}
+                onClick={(e) => { e.stopPropagation(); onEdit(account) }}
                 aria-label="Edit account"
               >
                 <Pencil className="h-3.5 w-3.5" />
@@ -388,7 +386,7 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
                 variant="ghost"
                 size="icon-sm"
                 className="text-muted-foreground hover:text-destructive"
-                onClick={() => setDeleteOpen(true)}
+                onClick={(e) => { e.stopPropagation(); setDeleteOpen(true) }}
                 aria-label="Delete account"
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -571,11 +569,11 @@ function EmptyState({ onAdd, onSeed }: { onAdd: () => void; onSeed: () => void }
         </div>
         <div className="flex flex-wrap items-center justify-center gap-2">
           <Button variant="outline" onClick={onSeed}>
-            <Database className="mr-2 h-4 w-4" />
+            <Database className="mr-2 h-4 w-4" data-icon="inline-start" />
             Seed Accounts
           </Button>
           <Button onClick={onAdd}>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="mr-2 h-4 w-4" data-icon="inline-start" />
             Add Your First Account
           </Button>
         </div>
@@ -683,7 +681,7 @@ export function AccountsPage() {
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           account={editingAccount}
-          onSubmit={handleSubmit}
+          onSave={handleSubmit}
         />
       </>
     )
@@ -715,7 +713,7 @@ export function AccountsPage() {
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           account={editingAccount}
-          onSubmit={handleSubmit}
+          onSave={handleSubmit}
         />
       </div>
 

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
 import { PageCard } from "@/components/ui/page-card"
 import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useCalculator } from "@/lib/context/calculator-context"
 import { usePlanNarrative } from "@/lib/hooks/use-plan-narrative"
@@ -100,15 +100,17 @@ export function PlanNarrativeCard() {
         )}
 
         <Select value={tier} onValueChange={handleTierChange} disabled={isStreaming}>
-          <SelectTrigger className="w-28 h-8 text-xs">
+          <SelectTrigger className="w-28 h-8 text-xs" aria-label="Model tier">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {(Object.keys(TIER_LABELS) as ModelTier[]).map((value) => (
-              <SelectItem key={value} value={value}>
-                {TIER_LABELS[value]}
-              </SelectItem>
-            ))}
+            <SelectGroup>
+              {(Object.keys(TIER_LABELS) as ModelTier[]).map((value) => (
+                <SelectItem key={value} value={value}>
+                  {TIER_LABELS[value]}
+                </SelectItem>
+              ))}
+            </SelectGroup>
           </SelectContent>
         </Select>
       </div>

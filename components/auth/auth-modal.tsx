@@ -190,7 +190,12 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                   <p className="text-xs text-destructive">{signinErrors.password.message}</p>
                 )}
               </div>
-              <StatusMessage message={message} />
+              {(signinErrors.email || signinErrors.password) && (
+                <p role="alert" className="text-xs text-destructive">
+                  Please fix the highlighted fields to continue.
+                </p>
+              )}
+              <StatusMessage message={message} role="status" />
               <Turnstile ref={turnstile} onToken={setCaptchaToken} />
               <Button type="submit" className="w-full" disabled={loading || !captchaToken}>
                 {loading ? "Signing in…" : captchaToken ? "Sign In" : "Verifying…"}
@@ -206,7 +211,12 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
               <Field label="Password" id="su-pw" type="password" autoComplete="new-password"
                 error={signupErrors.password?.message}
                 {...signupForm.register("password")} />
-              <StatusMessage message={message} />
+              {(signupErrors.email || signupErrors.password) && (
+                <p role="alert" className="text-xs text-destructive">
+                  Please fix the highlighted fields to continue.
+                </p>
+              )}
+              <StatusMessage message={message} role="status" />
               <Turnstile ref={turnstile} onToken={setCaptchaToken} />
               <Button type="submit" className="w-full" disabled={loading || !captchaToken}>
                 {loading ? "Creating account…" : captchaToken ? "Create Account" : "Verifying…"}
@@ -219,7 +229,12 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
               <Field label="Email" id="re-email" type="email" autoComplete="email"
                 error={resetErrors.email?.message}
                 {...resetForm.register("email")} />
-              <StatusMessage message={message} />
+              {resetErrors.email && (
+                <p role="alert" className="text-xs text-destructive">
+                  Please fix the highlighted fields to continue.
+                </p>
+              )}
+              <StatusMessage message={message} role="status" />
               <Turnstile ref={turnstile} onToken={setCaptchaToken} />
               <Button type="submit" className="w-full" disabled={loading || !captchaToken}>
                 {loading ? "Sending…" : captchaToken ? "Send Reset Link" : "Verifying…"}
@@ -274,10 +289,10 @@ const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
   )
 })
 
-function StatusMessage({ message }: { message: { type: "success" | "error"; text: string } | null }) {
+function StatusMessage({ message, role = "status" }: { message: { type: "success" | "error"; text: string } | null; role?: string }) {
   if (!message) return null
   return (
-    <p className={`text-sm rounded-md px-3 py-2 ${
+    <p role={role} className={`text-sm rounded-md px-3 py-2 ${
       message.type === "error"
         ? "bg-destructive/10 text-destructive"
         : "bg-success/10 text-success"

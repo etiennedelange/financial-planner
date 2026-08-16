@@ -95,7 +95,7 @@ export function ScenarioSwitcher() {
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="max-w-44 px-3" disabled={loading}>
           <span className="truncate text-sm font-medium">{active?.name ?? "Scenarios"}</span>
-          <ChevronDown className="ml-2 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+          <ChevronDown className="ml-2 h-3.5 w-3.5 shrink-0 text-muted-foreground" data-icon="inline-end" />
         </Button>
       </DropdownMenuTrigger>
 
@@ -121,6 +121,7 @@ export function ScenarioSwitcher() {
                   if (e.key === "Escape") setRenamingId(null)
                 }}
                 className="h-7 text-sm"
+                aria-label={`Rename scenario ${s.name}`}
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (
@@ -161,6 +162,7 @@ export function ScenarioSwitcher() {
             <Input
               autoFocus
               placeholder="Scenario name"
+              aria-label="New scenario name"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => {

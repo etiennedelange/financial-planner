@@ -1,5 +1,8 @@
 import { SupabaseProvider } from "@/components/supabase-provider"
 import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeShortcut } from "@/components/theme-shortcut"
+import { CommandPalette } from "@/components/command-palette/command-palette"
+import { Toaster } from "@/components/ui/toaster"
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import type { Metadata, Viewport } from "next"
@@ -20,7 +23,13 @@ const ibmPlexMono = IBM_Plex_Mono({
   variable: "--font-ibm-mono",
 })
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  process.env.VERCEL_PROJECT_PRODUCTION_URL ??
+  "http://localhost:3000"
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "SA Retirement Calculator",
   description: "South African retirement planning with Monte Carlo simulations",
 }
@@ -69,6 +78,12 @@ export default async function RootLayout({
               {children}
             </main>
           </SupabaseProvider>
+          {/* App-wide shell affordances: the `d` theme shortcut, the Cmd+K
+              command palette, and the Radix toast channel all live at the root
+              so they work on every route, not just the calculator section. */}
+          <ThemeShortcut />
+          <CommandPalette />
+          <Toaster />
         </ThemeProvider>
         <Analytics />
         <SpeedInsights />

@@ -153,7 +153,7 @@ export function WhatIfPanel() {
         <div className="space-y-5">
           <div className="space-y-2">
             <label className="text-sm font-medium">Retirement age: {scaledPersonalInfo.retirementAge}</label>
-            <Slider
+            <Slider aria-label="Retirement age"
               value={[deltas.retirementAgeOffset]}
               min={-10}
               max={15}
@@ -166,7 +166,7 @@ export function WhatIfPanel() {
             <label className="text-sm font-medium">
               Monthly contribution: {formatCurrency(totalScaledContribution)}
             </label>
-            <Slider
+            <Slider aria-label="Monthly contribution"
               value={[deltas.contributionScalePct]}
               min={-100}
               max={200}
@@ -177,7 +177,7 @@ export function WhatIfPanel() {
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Expected return: {weightedReturn.toFixed(1)}%</label>
-            <Slider
+            <Slider aria-label="Expected return"
               value={[deltas.returnDeltaPts]}
               min={-5}
               max={5}
@@ -190,7 +190,7 @@ export function WhatIfPanel() {
             <label className="text-sm font-medium">
               Target monthly income: {formatCurrency(scaledRetirementGoals.desiredMonthlyIncome)}
             </label>
-            <Slider
+            <Slider aria-label="Target monthly income"
               value={[deltas.targetMonthlyIncomeOverride ?? retirementGoals.desiredMonthlyIncome]}
               min={retirementGoals.desiredMonthlyIncome * 0.5}
               max={retirementGoals.desiredMonthlyIncome * 1.5}

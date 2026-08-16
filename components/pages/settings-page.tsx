@@ -99,7 +99,7 @@ export function SettingsPage({ projection }: SettingsPageProps) {
 
   return (
     <div className="space-y-6">
-      <input ref={importInputRef} type="file" accept=".json" className="sr-only" onChange={handleImportPlan} />
+      <input ref={importInputRef} type="file" accept=".json" className="sr-only" aria-label="Import plan file" onChange={handleImportPlan} />
       {/* Display */}
       <PageCard label="Display" contentClassName="space-y-4">
           <div className="space-y-2">
@@ -153,7 +153,7 @@ export function SettingsPage({ projection }: SettingsPageProps) {
                 size="sm"
                 onClick={() => setTheme("light")}
               >
-                <Sun className="mr-1.5 h-3.5 w-3.5" />
+                <Sun className="mr-1.5 h-3.5 w-3.5" data-icon="inline-start" />
                 Light
               </Button>
               <Button
@@ -161,7 +161,7 @@ export function SettingsPage({ projection }: SettingsPageProps) {
                 size="sm"
                 onClick={() => setTheme("dark")}
               >
-                <Moon className="mr-1.5 h-3.5 w-3.5" />
+                <Moon className="mr-1.5 h-3.5 w-3.5" data-icon="inline-start" />
                 Dark
               </Button>
               <Button
@@ -169,7 +169,7 @@ export function SettingsPage({ projection }: SettingsPageProps) {
                 size="sm"
                 onClick={() => setTheme("system")}
               >
-                <SunMoon className="mr-1.5 h-3.5 w-3.5" />
+                <SunMoon className="mr-1.5 h-3.5 w-3.5" data-icon="inline-start" />
                 System
               </Button>
             </div>
@@ -180,19 +180,19 @@ export function SettingsPage({ projection }: SettingsPageProps) {
       <PageCard label="Plan" contentClassName="space-y-2">
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={() => window.open("/print", "_blank")}>
-              <Printer className="mr-2 h-4 w-4" />
+              <Printer className="mr-2 h-4 w-4" data-icon="inline-start" />
               Print / Save PDF
             </Button>
             <Button variant="outline" size="sm" onClick={handleExportCsv} disabled={!projection}>
-              <FileSpreadsheet className="mr-2 h-4 w-4" />
+              <FileSpreadsheet className="mr-2 h-4 w-4" data-icon="inline-start" />
               Export CSV
             </Button>
             <Button variant="outline" size="sm" onClick={handleExportPlan}>
-              <Download className="mr-2 h-4 w-4" />
+              <Download className="mr-2 h-4 w-4" data-icon="inline-start" />
               Export Plan
             </Button>
             <Button variant="outline" size="sm" onClick={() => importInputRef.current?.click()} disabled={importing}>
-              <Upload className="mr-2 h-4 w-4" />
+              <Upload className="mr-2 h-4 w-4" data-icon="inline-start" />
               {importing ? "Importing…" : "Import Plan"}
             </Button>
           </div>
@@ -219,7 +219,7 @@ export function SettingsPage({ projection }: SettingsPageProps) {
             </div>
           ) : (
             <Button variant="outline" size="sm" onClick={handleReset} className="border-destructive/40 text-destructive hover:bg-destructive/10">
-              <RotateCcw className="mr-2 h-4 w-4" />
+              <RotateCcw className="mr-2 h-4 w-4" data-icon="inline-start" />
               Reset to Defaults
             </Button>
           )}

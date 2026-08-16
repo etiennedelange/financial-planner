@@ -1,40 +1,41 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useForm, useFormState, Controller } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { PortfolioImpactStrip } from "@/components/accounts/portfolio-impact-strip";
+import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+    Drawer,
+    DrawerContent,
+    DrawerDescription,
+    DrawerHeader,
+    DrawerTitle,
+} from "@/components/ui/drawer";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer"
-import type { Account, AccountType } from "@/types"
-import { ACCOUNT_TYPE_LABELS } from "@/types"
-import { InfoTooltip } from "@/components/ui/info-tooltip"
-import { PortfolioImpactStrip } from "@/components/accounts/portfolio-impact-strip"
-import { SA_DEFAULTS } from "@/lib/constants/defaults"
-import { MAX_MONETARY_AMOUNT, SA_TAX_LIMITS } from "@/lib/constants/limits"
-import { useBoundedMonetary } from "@/lib/hooks/use-bounded-monetary"
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { SA_DEFAULTS } from "@/lib/constants/defaults";
+import { MAX_MONETARY_AMOUNT, SA_TAX_LIMITS } from "@/lib/constants/limits";
+import { useBoundedMonetary } from "@/lib/hooks/use-bounded-monetary";
+import type { Account } from "@/types";
+import { ACCOUNT_TYPE_LABELS } from "@/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
+import { Controller, useForm, useFormState } from "react-hook-form";
+import { z } from "zod";
 
 // ─── Schema ─────────────────────────────────────────────────────────────────
 
@@ -144,13 +145,17 @@ function EssentialFields({ form }: { form: FormRef }) {
           control={control}
           render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger id="af-type">
+              {/* Radix SelectTrigger is a button — htmlFor association doesn't
+                  reach it, so the accessible name must live on the trigger. */}
+              <SelectTrigger id="af-type" aria-label="Account type">
                 <SelectValue placeholder="Select account type" />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(ACCOUNT_TYPE_LABELS).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                ))}
+                <SelectGroup>
+                  {Object.entries(ACCOUNT_TYPE_LABELS).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
           )}
@@ -186,6 +191,9 @@ function EssentialFields({ form }: { form: FormRef }) {
             onChange={(e) => guardContribution.onChange(e, contributionOnChange)}
             onBeforeInput={guardContribution.onBeforeInput}
           />
+          {errors.monthlyContribution && (
+            <p className="text-xs text-destructive">{errors.monthlyContribution.message}</p>
+          )}
         </div>
       </div>
     </div>
@@ -298,79 +306,27 @@ function PerformanceFields({ form }: { form: FormRef }) {
 
 // ─── Add flow: 2-step wizard ──────────────────────────────────────────────────
 
-interface Step1Props {
-  form: FormRef
-  onContinue: () => void
-  onCancel: () => void
-  impactStrip: React.ReactNode
-}
-
-function Step1({ form, onContinue, onCancel, impactStrip }: Step1Props) {
-  const { trigger, setFocus } = form
-
-  const handleContinue = async () => {
-    const fields = ["name", "provider", "type", "currentBalance", "monthlyContribution"] as const
-    const valid = await trigger(fields)
-    if (valid) {
-      onContinue()
-      return
-    }
-    const firstInvalid = fields.find((field) => form.getFieldState(field).invalid)
-    if (firstInvalid) setFocus(firstInvalid)
-  }
-
+function Step1Fields({ form, impactStrip }: { form: FormRef; impactStrip: React.ReactNode }) {
   return (
     <div className="space-y-4">
       <EssentialFields form={form} />
       {impactStrip}
-      <div className="flex justify-between items-center pt-2">
-        <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="button" onClick={handleContinue}>
-          Continue →
-        </Button>
-      </div>
     </div>
   )
 }
 
-interface Step2Props {
-  form: FormRef
-  onBack: () => void
-  impactStrip: React.ReactNode
-}
-
-function Step2({ form, onBack, impactStrip }: Step2Props) {
-  const isSubmitting = form.formState.isSubmitting
+function Step2Fields({ form, impactStrip }: { form: FormRef; impactStrip: React.ReactNode }) {
   return (
     <div className="space-y-4">
       <PerformanceFields form={form} />
       {impactStrip}
-      <div className="flex justify-between items-center pt-2">
-        <Button type="button" variant="ghost" size="sm" onClick={onBack}>
-          ← Back
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Adding…" : "Add Account"}
-        </Button>
-      </div>
     </div>
   )
 }
 
 // ─── Edit form: all fields on one scrollable view ─────────────────────────────
 
-function EditForm({
-  form,
-  onCancel,
-  impactStrip,
-}: {
-  form: FormRef
-  onCancel: () => void
-  impactStrip: React.ReactNode
-}) {
-  const isSubmitting = form.formState.isSubmitting
+function EditFields({ form, impactStrip }: { form: FormRef; impactStrip: React.ReactNode }) {
   return (
     <div className="space-y-5">
       <EssentialFields form={form} />
@@ -378,14 +334,6 @@ function EditForm({
         <PerformanceFields form={form} />
       </div>
       {impactStrip}
-      <div className="flex justify-between items-center pt-2">
-        <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Saving…" : "Update Account"}
-        </Button>
-      </div>
     </div>
   )
 }
@@ -394,11 +342,11 @@ function EditForm({
 
 interface FormBodyProps {
   account?: Account | null
-  onSubmit: (data: AccountFormData) => void
+  onSave: (data: AccountFormData) => void
   onClose: () => void
 }
 
-function FormBody({ account, onSubmit, onClose }: FormBodyProps) {
+function FormBody({ account, onSave, onClose }: FormBodyProps) {
   const [step, setStep] = useState<1 | 2>(1)
   const isEdit = !!account
 
@@ -407,6 +355,8 @@ function FormBody({ account, onSubmit, onClose }: FormBodyProps) {
     defaultValues: getDefaultValues(account),
     mode: 'onChange', // Validate as user types for immediate feedback
   })
+
+  const { isSubmitting, errors: formErrors } = useFormState({ control: form.control })
 
   const [currentBalance, monthlyContribution, expectedReturn, annualFees] = form.watch([
     "currentBalance",
@@ -425,27 +375,76 @@ function FormBody({ account, onSubmit, onClose }: FormBodyProps) {
     />
   )
 
-  const handleSubmit = form.handleSubmit((data) => {
-    onSubmit(data)
+  // Awaiting onSubmit keeps isSubmitting true (and the submit trigger disabled)
+  // for however long the save takes, so a slow write cannot be double-submitted
+  // and the dialog only closes once the save has settled.
+  const handleSubmit = form.handleSubmit(async (data) => {
+    await onSave(data)
     onClose()
   })
 
-  if (isEdit) {
-    return (
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <p className="text-base font-semibold leading-none">Edit Account</p>
-        <EditForm form={form} onCancel={onClose} impactStrip={impactStrip} />
-      </form>
-    )
+  const handleContinue = async () => {
+    const fields = ["name", "provider", "type", "currentBalance", "monthlyContribution"] as const
+    const valid = await form.trigger(fields)
+    if (valid) {
+      setStep(2)
+      return
+    }
+    const firstInvalid = fields.find((field) => form.getFieldState(field).invalid)
+    if (firstInvalid) form.setFocus(firstInvalid)
   }
 
+  const fieldErrorCount = Object.keys(formErrors).length
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <StepHeader step={step} />
-      {step === 1 ? (
-        <Step1 form={form} onContinue={() => setStep(2)} onCancel={onClose} impactStrip={impactStrip} />
+    <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="space-y-5">
+      {fieldErrorCount > 0 && (
+        <p role="alert" className="text-xs text-destructive">
+          Please fix the {fieldErrorCount} highlighted field{fieldErrorCount === 1 ? "" : "s"} below.
+        </p>
+      )}
+      {isEdit ? (
+        <>
+          <p className="text-base font-semibold leading-none">Edit Account</p>
+          <EditFields form={form} impactStrip={impactStrip} />
+          <div className="flex justify-between items-center pt-2">
+            <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Saving…" : "Update Account"}
+            </Button>
+          </div>
+        </>
       ) : (
-        <Step2 form={form} onBack={() => setStep(1)} impactStrip={impactStrip} />
+        <>
+          <StepHeader step={step} />
+          {step === 1 ? (
+            <>
+              <Step1Fields form={form} impactStrip={impactStrip} />
+              <div className="flex justify-between items-center pt-2">
+                <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+                  Cancel
+                </Button>
+                <Button type="button" onClick={handleContinue}>
+                  Continue →
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <Step2Fields form={form} impactStrip={impactStrip} />
+              <div className="flex justify-between items-center pt-2">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setStep(1)}>
+                  ← Back
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Adding…" : "Add Account"}
+                </Button>
+              </div>
+            </>
+          )}
+        </>
       )}
     </form>
   )
@@ -457,14 +456,14 @@ interface AccountFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   account?: Account | null
-  onSubmit: (data: AccountFormData) => void
+  onSave: (data: AccountFormData) => void
 }
 
 export function AccountFormDialog({
   open,
   onOpenChange,
   account,
-  onSubmit,
+  onSave,
 }: AccountFormDialogProps) {
   const isMobile = useIsMobile()
 
@@ -485,7 +484,7 @@ export function AccountFormDialog({
             </DrawerDescription>
           </DrawerHeader>
           <div className="px-4 pb-6 pt-2 overflow-y-auto">
-            <FormBody account={account} onSubmit={onSubmit} onClose={handleClose} />
+            <FormBody account={account} onSave={onSave} onClose={handleClose} />
           </div>
         </DrawerContent>
       </Drawer>
@@ -503,7 +502,7 @@ export function AccountFormDialog({
               : "Add a new account and its performance assumptions to your portfolio."}
           </DialogDescription>
         </DialogHeader>
-        <FormBody account={account} onSubmit={onSubmit} onClose={handleClose} />
+        <FormBody account={account} onSave={onSave} onClose={handleClose} />
       </DialogContent>
     </Dialog>
   )

@@ -87,6 +87,28 @@ export const ScenarioComparisonChart = memo(function ScenarioComparisonChart({
     [result, displayMode, yearsToRetirement, inflationRate]
   )
 
+  const hasAnyInput = currentSavings > 0 || monthlyContribution > 0
+
+  if (!hasAnyInput) {
+    return (
+      <Card className="dashboard-card shadow-none">
+        <div className="px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-3 space-y-1">
+          <SectionLabel>Investment Scenarios</SectionLabel>
+          <p className="text-sm text-muted-foreground pl-3">
+            Nest egg and success rate by strategy
+          </p>
+        </div>
+        <CardContent className="flex h-(--chart-height-compact) md:h-(--chart-height-full) flex-col items-center justify-center gap-2 text-center">
+          <PieChart className="h-8 w-8 text-muted-foreground/30" />
+          <p className="text-sm font-medium text-muted-foreground">No data yet</p>
+          <p className="text-xs text-muted-foreground/70">
+            Add an account or contributions to compare scenarios
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card className="dashboard-card shadow-none" role="figure" aria-label="Nest egg and success probability across conservative, balanced, and aggressive investment scenarios">
       <div className="px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-3 space-y-1">

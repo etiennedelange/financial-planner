@@ -1,13 +1,11 @@
 "use client"
 
 import { useEffect, useReducer } from "react"
-import { CommandPalette } from "@/components/command-palette/command-palette"
 import { DebugWindow } from "@/components/debug/debug-window"
 import { AppShell } from "@/components/layout/app-shell"
 import { useAuth } from "@/components/supabase-provider"
 import { CalculatorProvider, useCalculator } from "@/lib/context/calculator-context"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
-import { Toaster } from "@/components/ui/toaster"
 
 export default function CalculatorLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -68,9 +66,7 @@ function CalculatorShell({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </AppShell>
-      <CommandPalette />
       <DebugWindow projection={projection} simulationResult={simulationResult} className="hidden md:flex fixed bottom-4 right-4 z-50" />
-      <Toaster />
     </>
   )
 }

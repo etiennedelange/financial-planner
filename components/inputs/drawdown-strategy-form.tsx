@@ -11,6 +11,7 @@ import { AnimatedValue } from "@/components/ui/animated-value"
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -100,13 +101,15 @@ export function DrawdownStrategyForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(DRAWDOWN_STRATEGY_LABELS).map(
-                  ([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  )
-                )}
+                <SelectGroup>
+                  {Object.entries(DRAWDOWN_STRATEGY_LABELS).map(
+                    ([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    )
+                  )}
+                </SelectGroup>
               </SelectContent>
             </Select>
           </div>
@@ -131,6 +134,7 @@ export function DrawdownStrategyForm({
               min={2}
               max={8}
               step={0.5}
+              aria-label="Initial Withdrawal Rate"
             />
             <p className="text-xs text-muted-foreground">
               Traditional &quot;safe&quot; rate is 4%. SA research suggests 3–5% may be appropriate.
@@ -179,6 +183,7 @@ export function DrawdownStrategyForm({
               min={0}
               max={33}
               step={1}
+              aria-label="Lump Sum at Retirement"
             />
             <p className="text-xs text-muted-foreground">
               SA regulations cap the lump sum at one-third (33%) of pension/RA funds. TFSA and discretionary funds have no restriction.
@@ -279,6 +284,7 @@ export function DrawdownStrategyForm({
                       min={5}
                       max={50}
                       step={5}
+                      aria-label="Upper Guardrail"
                     />
                   </div>
 
@@ -300,6 +306,7 @@ export function DrawdownStrategyForm({
                       min={5}
                       max={50}
                       step={5}
+                      aria-label="Lower Guardrail"
                     />
                   </div>
                 </div>

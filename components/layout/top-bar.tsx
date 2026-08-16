@@ -73,13 +73,13 @@ export function TopBar({ user }: TopBarProps) {
           onClick={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}
           title="Open command palette (⌘K)"
         >
-          <Search className="h-3.5 w-3.5" />
+          <Search className="h-3.5 w-3.5" data-icon="inline-start" />
           <span className="font-mono text-[10px]">⌘K</span>
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="h-8 px-2 text-xs gap-1.5">
-              <TrendingDown className="h-3.5 w-3.5" />
+              <TrendingDown className="h-3.5 w-3.5" data-icon="inline-start" />
               <span className="hidden md:inline">{displayMode === "real" ? "Today's Value" : "Future Value"}</span>
             </Button>
           </DropdownMenuTrigger>

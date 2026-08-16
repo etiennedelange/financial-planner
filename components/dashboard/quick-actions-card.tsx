@@ -21,25 +21,25 @@ export function QuickActionsCard({
     <PageCard label="Quick Actions" className="dashboard-card" contentClassName="space-y-2">
         {onAddAccount && (
           <Button onClick={onAddAccount} variant="outline" className="w-full justify-start">
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="mr-2 h-4 w-4" data-icon="inline-start" />
             Add Account
           </Button>
         )}
         {onViewInsights && (
           <Button onClick={onViewInsights} variant="outline" className="w-full justify-start">
-            <Eye className="mr-2 h-4 w-4" />
+            <Eye className="mr-2 h-4 w-4" data-icon="inline-start" />
             View Insights
           </Button>
         )}
         {onPrintReport && (
           <Button onClick={onPrintReport} variant="outline" className="w-full justify-start">
-            <Printer className="mr-2 h-4 w-4" />
+            <Printer className="mr-2 h-4 w-4" data-icon="inline-start" />
             Print / Save PDF
           </Button>
         )}
         {onExportCsv && (
           <Button onClick={onExportCsv} variant="outline" className="w-full justify-start">
-            <FileSpreadsheet className="mr-2 h-4 w-4" />
+            <FileSpreadsheet className="mr-2 h-4 w-4" data-icon="inline-start" />
             Export CSV
           </Button>
         )}

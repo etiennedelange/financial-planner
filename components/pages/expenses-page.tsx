@@ -51,10 +51,10 @@ function EditRow({
   return (
     <div className="flex items-center gap-1.5 px-3 py-1.5 bg-accent/60 rounded-sm border border-border">
       <Input value={name} onChange={(e) => setName(e.target.value)} onKeyDown={onKey}
-        className="h-7 text-sm flex-1 min-w-0" autoFocus />
+        className="h-7 text-sm flex-1 min-w-0" autoFocus aria-label="Expense name" />
       <Input value={amount} onChange={(e) => guardAmount.onChange(e, (ev) => setAmount(ev.target.value))} onKeyDown={onKey}
         onBeforeInput={guardAmount.onBeforeInput}
-        className="h-7 text-sm w-28 text-right font-mono" placeholder="0" />
+        className="h-7 text-sm w-28 text-right font-mono" placeholder="0" aria-label="Expense amount" />
       <Button size="icon-sm" variant="ghost" className="text-primary" onClick={commit} aria-label="Save expense">
         <Check className="h-3.5 w-3.5" />
       </Button>
@@ -114,10 +114,10 @@ function AddExpenseRow({
   return (
     <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 rounded-sm border border-primary/25">
       <Input value={name} onChange={(e) => setName(e.target.value)} onKeyDown={onKey}
-        className="h-7 text-sm flex-1 min-w-0" placeholder="Expense name" autoFocus />
+        className="h-7 text-sm flex-1 min-w-0" placeholder="Expense name" autoFocus aria-label="New expense name" />
       <Input value={amount} onChange={(e) => guardAmount.onChange(e, (ev) => setAmount(ev.target.value))} onKeyDown={onKey}
         onBeforeInput={guardAmount.onBeforeInput}
-        className="h-7 text-sm w-28 text-right font-mono" placeholder="0" />
+        className="h-7 text-sm w-28 text-right font-mono" placeholder="0" aria-label="New expense amount" />
       <Button size="icon-sm" variant="ghost" className="text-primary" onClick={commit} aria-label="Save expense">
         <Check className="h-3.5 w-3.5" />
       </Button>
@@ -143,7 +143,7 @@ function AddGroupRow({ onSave, onCancel }: { onSave: (name: string, color: strin
     <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 rounded-sm border border-primary/25">
       <Input value={name} onChange={(e) => setName(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter") commit(); if (e.key === "Escape") onCancel() }}
-        className="h-7 text-sm flex-1" placeholder="Group name" autoFocus />
+        className="h-7 text-sm flex-1" placeholder="Group name" autoFocus aria-label="New group name" />
       <div className="flex gap-1 flex-wrap">
         {GROUP_COLOR_OPTIONS.map((c) => (
           <button
@@ -179,7 +179,7 @@ function EmptyGroups({ onAdd, onLoadSample }: { onAdd: () => void; onLoadSample:
       </div>
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={onAdd}>
-          <Plus className="mr-1.5 h-3.5 w-3.5" />
+          <Plus className="mr-1.5 h-3.5 w-3.5" data-icon="inline-start" />
           Create first group
         </Button>
         <Button variant="ghost" size="sm" onClick={onLoadSample}>
@@ -418,7 +418,7 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
                 <Input value={incomeInput} onChange={(e) => guardIncome.onChange(e, (ev) => setIncomeInput(ev.target.value))}
                   onKeyDown={(e) => { if (e.key === "Enter") saveIncome(); if (e.key === "Escape") setEditIncome(false) }}
                   onBeforeInput={guardIncome.onBeforeInput}
-                  className="h-6 w-28 text-right text-sm font-mono" autoFocus />
+                  className="h-6 w-28 text-right text-sm font-mono" autoFocus aria-label="Monthly income" />
                 <Button size="icon-sm" variant="ghost" className="text-primary" onClick={saveIncome} aria-label="Save income">
                   <Check className="h-3 w-3" />
                 </Button>
@@ -564,7 +564,7 @@ export function ExpensesPage() {
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-destructive">
-                  <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                  <Trash2 className="mr-1.5 h-3.5 w-3.5" data-icon="inline-start" />
                   Clear all
                 </Button>
               </AlertDialogTrigger>
@@ -585,7 +585,7 @@ export function ExpensesPage() {
             </AlertDialog>
           )}
           <Button size="sm" onClick={handleAddGroup} disabled={addingGroup}>
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            <Plus className="mr-1.5 h-3.5 w-3.5" data-icon="inline-start" />
             New Group
           </Button>
         </div>

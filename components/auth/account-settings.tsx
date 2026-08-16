@@ -50,6 +50,9 @@ export function AccountSettings({ user }: AccountSettingsProps) {
   const [deleteMsg, setDeleteMsg] = useState<string | null>(null)
   const [emailLoading, setEmailLoading] = useState(false)
   const [pwLoading, setPwLoading] = useState(false)
+  // Either action disables every submit while in flight so a slow request
+  // cannot be double-submitted.
+  const isSubmitting = emailLoading || pwLoading
   const [totpFactorId, setTotpFactorId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -105,13 +108,14 @@ export function AccountSettings({ user }: AccountSettingsProps) {
         <p className="text-sm text-muted-foreground -mt-1">{user.email}</p>
 
         <form onSubmit={emailForm.handleSubmit((values) => setPendingAction({ kind: "email", values }))}
+          aria-busy={isSubmitting}
           className="space-y-3 max-w-sm">
           <Field label="New email" id="acct-email" type="email" autoComplete="email"
             placeholder={user.email}
             error={emailForm.formState.errors.email?.message}
             {...emailForm.register("email")} />
           <StatusMessage message={emailMsg} />
-          <Button type="submit" variant="outline" size="sm" disabled={emailLoading}>
+          <Button type="submit" variant="outline" size="sm" disabled={isSubmitting}>
             {emailLoading ? "Sending confirmation…" : "Update Email"}
           </Button>
         </form>
@@ -119,6 +123,7 @@ export function AccountSettings({ user }: AccountSettingsProps) {
         <div className="border-t" />
 
         <form onSubmit={pwForm.handleSubmit((values) => setPendingAction({ kind: "password", values }))}
+          aria-busy={isSubmitting}
           className="space-y-3 max-w-sm">
           <Field label="New password" id="acct-pw" type="password" autoComplete="new-password"
             error={pwForm.formState.errors.password?.message}
@@ -127,7 +132,7 @@ export function AccountSettings({ user }: AccountSettingsProps) {
             error={pwForm.formState.errors.confirm?.message}
             {...pwForm.register("confirm")} />
           <StatusMessage message={pwMsg} />
-          <Button type="submit" variant="outline" size="sm" disabled={pwLoading}>
+          <Button type="submit" variant="outline" size="sm" disabled={isSubmitting}>
             {pwLoading ? "Updating…" : "Update Password"}
           </Button>
         </form>
@@ -136,7 +141,7 @@ export function AccountSettings({ user }: AccountSettingsProps) {
 
         <Button variant="outline" size="sm" asChild>
           <a href="/api/account/export" download>
-            <Download className="mr-2 h-4 w-4" />
+            <Download className="mr-2 h-4 w-4" data-icon="inline-start" />
             Export My Data
           </a>
         </Button>

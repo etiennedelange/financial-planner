@@ -83,9 +83,12 @@ export const CostOfDelayChart = memo(function CostOfDelayChart({
             Nest egg lost by delaying the start of saving
           </p>
         </div>
-        <CardContent className="flex h-(--chart-height-compact) md:h-(--chart-height-full) items-center justify-center gap-2 text-center">
+        <CardContent className="flex h-(--chart-height-compact) md:h-(--chart-height-full) flex-col items-center justify-center gap-2 text-center">
           <Clock className="h-8 w-8 text-muted-foreground/30" />
-          <p className="text-sm text-muted-foreground">Add contributions to see the cost of delay</p>
+          <p className="text-sm font-medium text-muted-foreground">No data yet</p>
+          <p className="text-xs text-muted-foreground/70">
+            Add contributions to see the cost of delay
+          </p>
         </CardContent>
       </Card>
     )

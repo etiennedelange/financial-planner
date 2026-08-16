@@ -68,6 +68,7 @@ export function ReauthenticateDialog({
               type="password"
               autoComplete="current-password"
               autoFocus
+              required={true}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className={`h-8 text-sm ${error ? "border-destructive" : ""}`}

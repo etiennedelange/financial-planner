@@ -1,29 +1,31 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
 import { PageCard } from "@/components/ui/page-card"
-import { AlertTriangle, RefreshCw } from "lucide-react"
+import { AlertTriangle } from "lucide-react"
 
 interface ErrorFallbackProps {
   error: Error & { digest?: string }
   retry: () => void
   title?: string
   description?: string
+  /** Action buttons rendered in the error card's footer. */
+  actions?: React.ReactNode
 }
 
 /**
- * Shared error-boundary fallback for error.tsx files (Next 16.3).
+ * Shared error-boundary fallback card for error.tsx files (Next 16.3).
  *
  * Next 16.3 replaced the old `reset` callback with `retry`, which re-fetches
  * the failed server-rendered children and swaps them back in if it succeeds.
- * Use this component from any error.tsx — root (`app/error.tsx`) and nested
- * route segments (`app/<segment>/error.tsx`) alike.
+ * Each error.tsx entry point renders its own retry controls via `actions` —
+ * keep the wired <Button onClick={retry}> in the boundary file itself.
  */
 export function ErrorFallback({
   error,
   retry,
   title = "Something went wrong",
   description = "An unexpected error occurred while rendering this page.",
+  actions,
 }: ErrorFallbackProps) {
   return (
     <div className="flex min-h-[60vh] items-center justify-center p-6">
@@ -40,15 +42,7 @@ export function ErrorFallback({
             Error digest: {error.digest}
           </p>
         )}
-        <div className="flex items-center gap-2 pl-3">
-          <Button size="sm" onClick={retry} className="gap-2">
-            <RefreshCw className="h-3.5 w-3.5" />
-            Try again
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => window.location.reload()}>
-            Reload page
-          </Button>
-        </div>
+        {actions && <div className="flex items-center gap-2 pl-3">{actions}</div>}
       </PageCard>
     </div>
   )
