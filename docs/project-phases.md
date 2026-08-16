@@ -30,6 +30,10 @@ One line per work session, newest first, capped at the latest 10 entries — whe
 arrives, delete the oldest. Full detail lives in the linked history files, never here.
 Rules: [docs/README.md](README.md).
 
+## 2026-08-16 — Vercel build failure fixed: protocol-less site URL
+
+`next build` crashed on Vercel with `ERR_INVALID_URL` at `app/layout.tsx:32` — Vercel injects `VERCEL_PROJECT_PRODUCTION_URL` without a scheme (`retirement-calculator-claude.vercel.app`), and `new URL(siteUrl)` rejects it. Fixed by extracting `resolveSiteUrl()` into `lib/utils/site-url.ts` (prefers `NEXT_PUBLIC_SITE_URL`, normalises protocol-less values to `https://`, falls back to localhost), used by `app/layout.tsx`, `app/robots.ts`, and `app/sitemap.ts` (robots/sitemap would have emitted protocol-less URLs too). Reproduced the exact Vercel failure locally before fixing; 5 new tests, 990/990 pass, typecheck + build clean under the simulated Vercel env. → [full write-up](history/2026-08-16-vercel-build-url-fix.md)
+
 ## 2026-08-16 — Command palette restyled to pre-audit design on cmdk + account-search P0 fixed
 
 The cmdk palette was restyled from the shadcn-default look back to the pre-audit design (520px `rounded-xl shadow-2xl` at top 28%, compact full-width rows, teal icon + `↵` on the selected item, 10px uppercase group headings, `×` clear button, "No results for X" empty state, `bg-background` surface), keeping the audit's real a11y fixes (focus rings, aria, Escape). Also fixed: account search — item `value` was a hex UUID so "tfsa"/"pension"/account names returned "No results found"; now `value={acc.name}` + `keywords={[type label]}`. Removed the teal `focus-within` underline under the search input (kept the `bg-muted/40` focus proxy). Verified live in-browser + typecheck/lint/build clean, 985/985 tests, shadscan still 98/100. → [full write-up](history/2026-08-16-command-palette-restyle.md)
@@ -65,18 +69,6 @@ Non-finite engine inputs (NaN balance/return/age, 0% withdrawal rate) no longer 
 ## 2026-08-14 — Phase 9.3 UI polish: CSS vars, loading states, chart data tables
 
 All open 9.3 Medium/Low items done: `--sidebar-width` + `--chart-height-*` tokens, `icon-sm` button variant, import/submit/print loading states (fixed latent `/print` hydration bug), reusable collapsible chart data tables for a11y, SA-context Zod messages, dead `success-gauge.tsx` deleted. 4 items audited as already resolved. 867 tests. → [history](history/2026-08-14-phase-9-3-ui-polish.md)
-
-## 2026-08-14 — Phase 9.1 tax rules validated against Budget Tax Guide 2026/2027
-
-All four open 9.1 items resolved as documentation: TFSA re-contribution room moot (no post-retirement contributions), s6A medical credit has no minimum contribution (premise was wrong), DWT documented as a known simplification (20% rate confirmed), spending-phase multipliers sourced (US spending-smile research, no SA equivalent). 867 tests. → [history](history/2026-08-14-phase-9-1-tax-rules-validation.md)
-
-## 2026-08-10 — Charts critique round 2: truthful tooltips, keyboard focus, gallery hierarchy
-
-Tooltip pipeline rebuilt in shared `lib/utils/chart-tooltip.ts` (no more "Age undefined" or "R 100" success rates), 2px teal `:focus-visible` ring on chart surfaces, page-level verdict strip, negative deltas moved to Signal Red. 862 tests. → [history](history/2026-08-10-charts-page-critique-fixes-round-2.md)
-
-## 2026-08-10 — Next.js 16.3 feature adoption
-
-Added root + calculator error boundaries using the new `retry()` API, enabled the native Rust React Compiler, and turned on Instant Navigations (`cacheComponents` + `partialPrefetching`); root layout opts out via `instant = false`. 854 tests. → [history](history/2026-08-10-next-16-3-upgrade-adoption.md)
 
 ---
 
