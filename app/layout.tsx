@@ -9,6 +9,7 @@ import type { Metadata, Viewport } from "next"
 import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google"
 import { connection } from "next/server"
 import { headers } from "next/headers"
+import { resolveSiteUrl } from "@/lib/utils/site-url"
 import "./globals.css"
 
 const ibmPlexSans = IBM_Plex_Sans({
@@ -23,10 +24,7 @@ const ibmPlexMono = IBM_Plex_Mono({
   variable: "--font-ibm-mono",
 })
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  process.env.VERCEL_PROJECT_PRODUCTION_URL ??
-  "http://localhost:3000"
+const siteUrl = resolveSiteUrl()
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
