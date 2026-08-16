@@ -21,7 +21,24 @@ npm run lint
 npm run test             # Vitest
 npm run test:coverage    # must stay >90% on calculation files
 npm run test:watch
+npm run shadscan         # shadcn UI-fundamentals audit (human output)
+npm run shadscan:json    # same audit, machine-readable JSON
+npm run shadscan:gate    # audit with --fail-under 90 (exits non-zero on regression)
 ```
+
+## shadscan audit (run regularly)
+
+`@shadscan/cli@0.16.0` is a pinned devDependency — `pnpm install` restores it on
+container reload, so the audit works offline and can never drift versions.
+
+**Run `npm run shadscan` before committing** (or `shadscan:gate` for a
+hard-fail at <90/100). Baseline: 98/100 (A). Known non-passing finding, all
+deliberate and documented in
+[docs/history/2026-08-16-shadscan-accessibility-audit.md](docs/history/2026-08-16-shadscan-accessibility-audit.md):
+- `mobile-nav-present` — waived (mobile bottom tab bar is the pattern).
+
+When a new finding appears, fix it or record an explicit implement/waive
+decision; never churn code just to move score-neutral advisories.
 
 ## SA Financial Defaults
 
@@ -49,6 +66,7 @@ Pension Funds, Retirement Annuities (RAs), Preservation Funds, TFSA, Discretiona
 - `npm run typecheck` — no TS errors. `next build` skips test files, so 44 errors once
   accumulated there unnoticed; test fixtures had drifted from the real types and were
   exercising shapes that could not occur in production
+- `npm run shadscan` — audit stays ≥90/100 (or `shadscan:gate` for the hard fail)
 - Check Debug Window (`components/debug/debug-window.tsx`) — correct compounding method + consistent values across tabs
 
 **Test structure** (see `projection.test.ts` as reference):
@@ -154,3 +172,13 @@ After a meaningful change, update all three tiers — detail lives in exactly ON
 3. `docs/project-phases.md` — one-line Recent Activity entry (date + title + history link); keep the latest 10, drop the oldest. Status emoji only when a phase's status actually changes
 
 Full conventions: `docs/README.md`
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
