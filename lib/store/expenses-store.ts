@@ -109,17 +109,13 @@ export const useExpensesStore = create<ExpensesState>()(
       setIdentity: (scope) => {
         const prev = get().identity
         set({ identity: scope })
-        // Sign-out transition: reset in-memory expenses to defaults (so a
-        // previous user's data cannot linger on screen or be captured by a later
-        // guest-claim), cancel pending sync timers, switch persistence back to
-        // the guest scope, and evict the signed-out user's scoped keys. The
-        // coordinator rehydrates the guest scope after this.
+        // Sign-out transition: cancel pending sync timers, switch persistence
+        // back to the guest scope, and evict the signed-out user's scoped keys.
         if (scope.kind === "guest" && prev.kind === "user") {
           for (const timer of groupSyncTimers.values()) clearTimeout(timer)
           for (const timer of expenseSyncTimers.values()) clearTimeout(timer)
           groupSyncTimers.clear()
           expenseSyncTimers.clear()
-          set({ groups: [], expenses: [], monthlyIncome: 56500 })
           setScope({ kind: "guest" })
           evictUserScopedKeys(prev.userId)
         }

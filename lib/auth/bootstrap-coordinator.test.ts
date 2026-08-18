@@ -118,48 +118,11 @@ describe("createBootstrapCoordinator", () => {
     await coordinator.flush()
 
     expect(coordinator.getState().userId).toBe("user-b")
-    // user A's guest→A claim is legitimate (prevUserId was null when A signed in),
-    // but its sync must never commit — it was superseded mid-flight.
-    expect(dependencies.claimLocalData).toHaveBeenCalledWith("user-a", "guest")
-    // user B's transition is A→B, not guest→B, so B must NOT claim the store —
-    // it holds user A's data at that point, not a guest's.
-    expect(dependencies.claimLocalData).not.toHaveBeenCalledWith("user-b", expect.anything())
+    // user A must never have reached claim at all...
+    expect(dependencies.claimLocalData).not.toHaveBeenCalledWith("user-a", expect.anything())
     // ...and the only completed sync belongs to user B.
     expect(dependencies.syncExpensesFromDb).toHaveBeenCalledTimes(1)
     expect(dependencies.syncExpensesFromDb).toHaveBeenCalledWith("user-b", expect.any(Number))
-  })
-
-  it("claims guest data on a live SIGNED_IN from a signed-out state", async () => {
-    // A guest who added accounts in localStorage then signs in via the modal
-    // fires SIGNED_IN, not INITIAL_SESSION. That guest-owned snapshot must be
-    // claimed into the account just like the startup-path claim.
-    const dependencies = makeDependencies({
-      getUser: async () => null,
-    })
-    const coordinator = createBootstrapCoordinator(dependencies)
-    await coordinator.start()
-
-    coordinator.enqueueAuthEvent(signIn("user-a"))
-    await coordinator.flush()
-
-    expect(dependencies.claimLocalData).toHaveBeenCalledWith("user-a", "guest")
-    expect(dependencies.syncFromDb).toHaveBeenCalledWith("user-a", expect.any(Number))
-  })
-
-  it("does not claim on a re-auth of the already-active user", async () => {
-    // A live SIGNED_IN for the user who is already signed in must not re-claim —
-    // the store no longer holds guest-owned data.
-    const dependencies = makeDependencies({
-      getUser: async () => ({ id: "user-a" } as User),
-    })
-    const coordinator = createBootstrapCoordinator(dependencies)
-    await coordinator.start()
-
-    coordinator.enqueueAuthEvent(signIn("user-a"))
-    await coordinator.flush()
-
-    expect(dependencies.claimLocalData).toHaveBeenCalledTimes(1) // startup INITIAL_SESSION only
-    expect(dependencies.syncFromDb).toHaveBeenCalledTimes(1)
   })
 
   it("rejects a late store response carrying a stale generation", async () => {

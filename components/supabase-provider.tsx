@@ -111,17 +111,6 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
           // Signed out: the app runs entirely from localStorage.
           // Both stores no-op their DB writes while identity is guest.
           useCalculatorStore.getState().setIdentity({ kind: "guest" })
-          useExpensesStore.getState().setIdentity({ kind: "guest" })
-          // The guest transition above resets both stores to defaults and
-          // switches the persistence scope back to guest. Re-hydrate the guest
-          // scope here so the signed-out user sees their own local plan (or a
-          // clean empty plan) instead of the previous account's data, and so
-          // the write gate is re-released for guest edits.
-          setScope({ kind: "guest" })
-          await Promise.all([
-            useCalculatorStore.persist.rehydrate(),
-            useExpensesStore.persist.rehydrate(),
-          ])
           return
         }
         const scope = { kind: "user", userId: current.id } as const

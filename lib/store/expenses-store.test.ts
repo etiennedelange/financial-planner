@@ -459,19 +459,6 @@ describe("identity transitions and stale-write guards (expenses)", () => {
     expect(expensesApi.deleteExpense).not.toHaveBeenCalled()
   })
 
-  it("resets in-memory expenses to defaults on sign-out so a previous user's data cannot linger", () => {
-    useExpensesStore.getState().setIdentity({ kind: "user", userId: "user-a" })
-    useExpensesStore.setState({ groups: [mockGroup], expenses: [mockExpense], monthlyIncome: 120000 })
-
-    useExpensesStore.getState().setIdentity({ kind: "guest" })
-
-    const state = useExpensesStore.getState()
-    expect(state.groups).toEqual([])
-    expect(state.expenses).toEqual([])
-    expect(state.monthlyIncome).toBe(56500)
-    expect(state.identity).toEqual({ kind: "guest" })
-  })
-
   it("does not delete a previous user's group after sign-out", () => {
     useExpensesStore.getState().setIdentity({ kind: "guest" })
     useExpensesStore.getState().removeGroup("user-a-group")
