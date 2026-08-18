@@ -32,7 +32,10 @@ const stubActors = {
   checkAal: fromPromise<{ current: string | null; next: string | null }, { userId: string }>(
     async () => ({ current: "aal2", next: null })
   ),
-  claimAndSync: fromPromise<void, { userId: string; event: AuthEvent; generation: number }>(
+  claimAndSync: fromPromise<
+    void,
+    { userId: string; event: AuthEvent; generation: number; prevUserId: string | null }
+  >(
     async ({ input }) => {
       void input
     }
@@ -143,7 +146,7 @@ describe("bootstrapMachine", () => {
     const actor = createActor(
       makeMachine({
         claimAndSync: fromPromise(
-          async ({ input }: { input: { userId: string; event: AuthEvent; generation: number } }) => {
+          async ({ input }: { input: { userId: string; event: AuthEvent; generation: number; prevUserId: string | null } }) => {
             started.push(input.userId)
             if (input.userId === "user-a") {
               await neverResolves()
@@ -170,7 +173,10 @@ describe("bootstrapMachine", () => {
     const syncCalls: string[] = []
     const actor = createActor(
       makeMachine({
-        claimAndSync: fromPromise<void, { userId: string; event: AuthEvent; generation: number }>(
+        claimAndSync: fromPromise<
+          void,
+          { userId: string; event: AuthEvent; generation: number; prevUserId: string | null }
+        >(
           async ({ input }) => {
             syncCalls.push(`${input.event.type}:${input.userId}`)
           }

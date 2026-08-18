@@ -30,6 +30,10 @@ One line per work session, newest first, capped at the latest 10 entries — whe
 arrives, delete the oldest. Full detail lives in the linked history files, never here.
 Rules: [docs/README.md](README.md).
 
+## 2026-08-18 — Auth & guest UX fixes: login feedback, guest-data ownership, sign-out reset
+
+Live sign-in now claims guest data into the account (`SIGNED_IN` with `prevUserId === null` claims like the startup path), a signed-in user with zero scenarios sees a clean plan instead of a previous scope's lingering accounts, sign-out resets both stores and re-hydrates the guest scope (no more previous user's portfolio showing under "Sign in"), a success toast confirms login, mobile gains a sign-in button + account menu (previously none existed), and the shell shows a loading spinner / error+reload instead of a silently blank content area. 994/994 tests, coverage 85.2% branches, typecheck/lint/build clean, shadscan 98/100, journey 09 e2e green, browser-verified incl. Postgres claim rows. → [full write-up](history/2026-08-18-auth-guest-ux-fixes.md)
+
 ## 2026-08-16 — Vercel build failure fixed: protocol-less site URL
 
 `next build` crashed on Vercel with `ERR_INVALID_URL` at `app/layout.tsx:32` — Vercel injects `VERCEL_PROJECT_PRODUCTION_URL` without a scheme (`retirement-calculator-claude.vercel.app`), and `new URL(siteUrl)` rejects it. Fixed by extracting `resolveSiteUrl()` into `lib/utils/site-url.ts` (prefers `NEXT_PUBLIC_SITE_URL`, normalises protocol-less values to `https://`, falls back to localhost), used by `app/layout.tsx`, `app/robots.ts`, and `app/sitemap.ts` (robots/sitemap would have emitted protocol-less URLs too). Reproduced the exact Vercel failure locally before fixing; 5 new tests, 990/990 pass, typecheck + build clean under the simulated Vercel env. → [full write-up](history/2026-08-16-vercel-build-url-fix.md)
@@ -72,7 +76,7 @@ All open 9.3 Medium/Low items done: `--sidebar-width` + `--chart-height-*` token
 
 ---
 
-*Older activity (2026-01 → 2026-08-08): see the dated files in [history/](history/) and the checkbox records in [project-phases/](project-phases/).*
+*Older activity (2026-01 → 2026-08-14): see the dated files in [history/](history/) and the checkbox records in [project-phases/](project-phases/).*
 
 ## Maintaining This File
 

@@ -162,18 +162,22 @@ export const useCalculatorStore = create<CalculatorState>()(
       setIdentity: (scope) => {
         const prev = useCalculatorStore.getState().identity
         set({ identity: scope })
-        // Sign-out transition: clear scenario metadata, cancel pending timers,
-        // switch persistence back to the guest scope, and evict the signed-out
-        // user's scoped keys so a shared device does not accumulate every past
-        // account's plan. Sign-in sets the user scope before loading server data
-        // (handled by the coordinator's hydrateUserScope), so only the guest
-        // transition needs the scope switch here.
+        // Sign-out transition: reset the in-memory plan to defaults, clear
+        // scenario metadata, cancel pending timers, switch persistence back to
+        // the guest scope, and evict the signed-out user's scoped keys so a
+        // shared device does not accumulate every past account's plan. The
+        // reset is essential: without it the previous user's data stays visible
+        // (and would be captured by a later guest-claim). The coordinator
+        // rehydrates the guest scope after this, which restores whatever the
+        // guest actually owns. Sign-in sets the user scope before loading server
+        // data (handled by the coordinator's hydrateUserScope), so only the
+        // guest transition needs the reset and scope switch here.
         if (scope.kind === "guest" && prev.kind === "user") {
           if (scenarioSyncTimer) {
             clearTimeout(scenarioSyncTimer)
             scenarioSyncTimer = null
           }
-          set({ activeScenarioId: null, scenarioList: [] })
+          set({ ...initialState })
           setScope({ kind: "guest" })
           evictUserScopedKeys(prev.userId)
         }
@@ -208,10 +212,15 @@ export const useCalculatorStore = create<CalculatorState>()(
             if (currentUserId !== userId || generation < latestGeneration) return
 
             if (scenarios.length === 0) {
-              // Claiming is owned by claimLocalData(), called from SupabaseProvider on
-              // sign-in. syncFromDb must not create scenarios — two code paths creating
-              // "My Plan" is how duplicate plans appear.
-              set({ activeScenarioId: null, scenarioList: [] })
+              // Claiming is owned by claimLocalData(), called from the bootstrap
+              // coordinator on sign-in/startup. syncFromDb must not create
+              // scenarios — two code paths creating "My Plan" is how duplicate
+              // plans appear. When the user genuinely has no scenarios (fresh
+              // account, or everything deleted), reset the plan to a clean slate
+              // instead of leaving a previous scope's accounts/personal info on
+              // screen: a signed-in user must never see a guest's (or another
+              // user's) lingering data.
+              set({ ...defaultSettings, accounts: [], activeScenarioId: null, scenarioList: [] })
               return
             }
 

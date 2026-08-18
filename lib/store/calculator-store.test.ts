@@ -6,7 +6,7 @@ import { useCalculatorStore, type CalculatorState } from "./calculator-store"
 import "@/lib/store/expenses-store"
 import * as accountsApi from "@/lib/supabase/accounts"
 import * as scenariosApi from "@/lib/supabase/scenarios"
-import { SA_DEFAULTS } from "@/lib/constants/defaults"
+import { SA_DEFAULTS, SA_DEFAULTS_DISPLAY } from "@/lib/constants/defaults"
 import type { Account } from "@/types"
 
 vi.mock("@/lib/supabase/accounts")
@@ -394,6 +394,9 @@ describe("useCalculatorStore", () => {
     it("should clear scenario state without creating one when the account has zero scenarios", async () => {
       const createScenario = vi.spyOn(scenariosApi, "createScenario")
       vi.spyOn(scenariosApi, "listScenarios").mockResolvedValue([])
+      // Simulate a previous scope's data lingering in the store (guest accounts
+      // entered before sign-in, or a different user's plan).
+      useCalculatorStore.setState({ accounts: [mockAccount], personalInfo: { ...mockScenarioData.personalInfo, annualIncome: 999999 } })
 
       await useCalculatorStore.getState().syncFromDb("session-1")
 
@@ -401,6 +404,10 @@ describe("useCalculatorStore", () => {
       expect(state.activeScenarioId).toBeNull()
       expect(state.scenarioList).toHaveLength(0)
       expect(createScenario).not.toHaveBeenCalled()
+      // The stale plan must not linger: a signed-in user with no scenarios sees
+      // a clean slate, never a previous scope's accounts or personal info.
+      expect(state.accounts).toEqual([])
+      expect(state.personalInfo.annualIncome).toBe(600000)
     })
 
     it("should restore previously active scenario if available", async () => {
@@ -681,6 +688,24 @@ describe("identity transitions and stale-write guards", () => {
     expect(useCalculatorStore.getState()).toEqual(
       expect.objectContaining({ identity: { kind: "guest" }, activeScenarioId: null, scenarioList: [] })
     )
+  })
+
+  it("resets the in-memory plan to defaults on sign-out so a previous user's data cannot linger", () => {
+    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-a" })
+    useCalculatorStore.setState({
+      accounts: [mockAccount],
+      personalInfo: { ...mockScenarioData.personalInfo, annualIncome: 999999 },
+      assumptions: { ...mockScenarioData.assumptions, equityReturn: 21 },
+    })
+
+    useCalculatorStore.getState().setIdentity({ kind: "guest" })
+
+    const state = useCalculatorStore.getState()
+    expect(state.accounts).toEqual([])
+    expect(state.personalInfo.annualIncome).toBe(600000)
+    expect(state.assumptions.equityReturn).toBe(SA_DEFAULTS_DISPLAY.equityReturn)
+    expect(state.identity).toEqual({ kind: "guest" })
+    expect(state.activeScenarioId).toBeNull()
   })
 
   it("does not update the previous user's scenario after sign-out", async () => {

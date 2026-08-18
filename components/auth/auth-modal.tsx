@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { toast } from "@/lib/hooks/use-toast"
 import { FinanceAnimation } from "@/components/auth/finance-animation"
 import { Turnstile, type TurnstileHandle } from "@/components/auth/turnstile"
 
@@ -100,6 +101,10 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
       resetCaptcha()
     } else {
       onClose()
+      // Signed-in confirmation: the sidebar's account menu is a quiet change, so
+      // a toast makes the login succeed visibly rather than feeling like nothing
+      // happened.
+      toast({ title: "Signed in", description: values.email })
       // The AAL gate that sends a not-yet-second-factored session to /auth/mfa
       // lives in middleware, which only runs on a request — sign-in itself is
       // a client-side Supabase call with no navigation, so without this the

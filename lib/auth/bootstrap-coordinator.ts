@@ -61,17 +61,25 @@ export function createBootstrapCoordinator(dependencies: BootstrapDependencies):
       checkAal: fromPromise<{ current: string | null; next: string | null }, { userId: string }>(
         async () => dependencies.currentAal()
       ),
-      claimAndSync: fromPromise<void, { userId: string; event: AuthEvent; generation: number }>(
+      claimAndSync: fromPromise<
+        void,
+        { userId: string; event: AuthEvent; generation: number; prevUserId: string | null }
+      >(
         async ({ input }) => {
-          // Claiming runs only on the startup path (the synthetic INITIAL_SESSION):
-          // that is the only moment guest-owned data exists. A live SIGNED_IN event
-          // is a re-auth of an already-active session and must not claim — the
-          // claim/sync guard additionally requires a userId change for that path.
-          // The source is the caller's ownership claim: the startup snapshot is
-          // guest-owned by construction, so every claim here is "guest". The
-          // claimLocalData dependency passes it to lib/supabase/claim.ts which
-          // rejects any non-guest source outright.
-          if (input.event.type === "INITIAL_SESSION") {
+          // Claiming runs whenever a guest-owned snapshot exists: the startup
+          // path (the synthetic INITIAL_SESSION) and a live SIGNED_IN that
+          // arrives while signed out (a guest who added data then signs in for
+          // the first time). Both have prevUserId === null — the store holds
+          // guest-owned data, so the source is "guest". A re-auth of an
+          // already-active session (SIGNED_IN with the same userId) never
+          // reaches syncing (the mayClaimAndSync guard), and an A→B user
+          // switch (prevUserId set) must not claim — the store holds A's data,
+          // not a guest's. The claimLocalData dependency passes "guest" to
+          // lib/supabase/claim.ts, which rejects any non-guest source outright.
+          if (
+            input.prevUserId === null &&
+            (input.event.type === "INITIAL_SESSION" || input.event.type === "SIGNED_IN")
+          ) {
             await dependencies.claimLocalData(input.userId, "guest")
           }
           await dependencies.syncFromDb(input.userId, input.generation)

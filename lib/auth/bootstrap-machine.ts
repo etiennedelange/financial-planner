@@ -141,7 +141,10 @@ export const bootstrapMachine = setup({
         throw new Error("checkAal not provided")
       }
     ),
-    claimAndSync: fromPromise<void, { userId: string; event: AuthEvent; generation: number }>(
+    claimAndSync: fromPromise<
+      void,
+      { userId: string; event: AuthEvent; generation: number; prevUserId: string | null }
+    >(
       async () => {
         throw new Error("claimAndSync not provided")
       }
@@ -316,6 +319,7 @@ export const bootstrapMachine = setup({
           userId: context.userId!,
           event: context.pendingEvent!,
           generation: context.generation,
+          prevUserId: context.prevUserId,
         }),
         onDone: "ready",
         onError: {
