@@ -32,7 +32,7 @@ Rules: [docs/README.md](README.md).
 
 ## 2026-08-24 — AnimateIcons icon motion: the instrument responds to touch
 
-`@animateicons/react@0.4.3` path-level animated icons on every interactive control — sidebar/bottom-nav icons are the focal moment (animate on row hover/focus), plus hover/focus feedback on quick actions, row actions, chevrons, scenario switcher, theme controls, reset/retry/export. Informational icons stay static. New primitives: `useAnimatedIcon()` hook + `AnimatedIconButton`. Reduced-motion respected; 990/990 tests, typecheck/lint/build clean, shadscan 93/100 unchanged; known cost: 84.7 KB gzip shell chunk (barrel not tree-shaken). → [full write-up](history/2026-08-24-animateicons-icon-motion.md)
+`@animateicons/react@0.4.3` path-level animated icons on every interactive control — sidebar/bottom-nav icons are the focal moment (animate on row hover/focus), plus hover/focus feedback on quick actions, row actions, chevrons, scenario switcher, theme controls, reset/retry/export. Informational icons stay static. New primitives: `useAnimatedIcon()` hook + `AnimatedIconButton`. Reduced-motion respected; 990/990 tests, typecheck/lint/build clean, shadscan 93/100 unchanged; known cost: 84.7 KB gzip shell chunk (barrel not tree-shaken). Follow-up: theme-toggle moon icon never animated (AnimatePresence remount nulled the shared ref) — dual mounted icons + CSS crossfade. → [full write-up](history/2026-08-24-animateicons-icon-motion.md)
 
 ## 2026-08-16 — Vercel build failure fixed: protocol-less site URL
 

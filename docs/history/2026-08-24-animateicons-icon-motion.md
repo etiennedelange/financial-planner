@@ -114,6 +114,38 @@ and the lid's bounding box paints ~1px above the svg box instead of clipping.
   made module-internal (no external importers; only `AnimatedIconComponent`
   consumes them).
 
+## Follow-up: theme-toggle moon icon never animated
+
+Reported after ship: hovering the top-bar theme toggle in dark mode did nothing —
+the moon stayed static while the sun animated. Root cause: `ThemeToggle` passed
+one shared `useAnimatedIcon()` ref to a single icon swapped by
+`AnimatePresence` with a `key`. AnimatePresence keeps the exiting fiber mounted
+until its exit completes, and when that deferred unmount finally ran, React
+nulled the shared ref — even though it had since been re-attached to the new
+icon. The ref was therefore dead after *any* keyed swap: the hydration flip
+(when the saved theme is dark) or the first manual theme switch. Light mode was
+unaffected only because no remount happened there, which is also why the
+original "crossfade + light mode" verification missed it.
+
+Fix (`components/theme-toggle.tsx`): drop `AnimatePresence`/`motion.span`
+entirely. Both `SunIcon` and `MoonIcon` stay permanently mounted, each owning
+its own `useAnimatedIcon()` ref (no remount, no shared ref, no app-motion
+wrapper around the animateicons icons). The crossfade is now a plain CSS
+transition (opacity/scale/y, `duration-300`, mirrored from the old spring);
+it is gated on `mounted && !reduceMotion` so the server render and the first
+client render agree under `prefers-reduced-motion` (branching on the
+client-only `useReducedMotion` alone caused a hydration mismatch). Both icons
+are `aria-hidden`. A theme switch while the pointer is already over the button
+(no fresh mouseenter) kicks the newly-visible icon's animation off via an
+effect keyed on the active icon.
+
+Verified live (Playwright): sun animates in light mode; moon animates in dark
+mode (`translateY(-0.55px) scale(1.011)` mid-flight — the moon's authored bob);
+toggling while hovering starts the new icon immediately; under
+`prefers-reduced-motion` neither the crossfade nor the icon animation runs and
+hydration is clean. Gates: typecheck/lint (0 errors)/build clean, 990/990
+tests, coverage 92.7% stmts / 85.2% branches, shadscan 93/100 unchanged.
+
 ## Bundle cost (measured)
 
 The package ships a single 509-icon ESM barrel that Turbopack does **not**
