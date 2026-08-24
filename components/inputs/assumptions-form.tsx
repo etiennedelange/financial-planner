@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { PageCard } from "@/components/ui/page-card"
 import { SectionLabel } from "@/components/ui/section-label"
 import { Button } from "@/components/ui/button"
-import { RotateCcw } from "lucide-react"
+import { RefreshCwIcon } from "@animateicons/react/lucide"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { SA_DEFAULTS_DISPLAY } from "@/lib/constants/defaults"
 import { useShallow } from "zustand/react/shallow"
@@ -18,6 +18,7 @@ import { InfoTooltip } from "@/components/ui/info-tooltip"
 import { cn } from "@/lib/utils"
 import { COMPOUNDING_METHOD_DESCRIPTIONS, COMPOUNDING_METHOD_LABELS } from "@/types"
 import type { CompoundingMethod } from "@/types"
+import { useAnimatedIcon } from "@/components/ui/animated-icon"
 
 const schema = z.object({
   equityReturn: z.number({ error: "Enter an equity return" }).min(0, "Equity return must be between 0% and 30%").max(30, "Equity return must be between 0% and 30%"),
@@ -121,10 +122,26 @@ export function AssumptionsForm() {
   ])
 
   const resetButton = (
+    <ResetButton onClick={handleReset} resetSpins={resetSpins} shouldReduceMotion={shouldReduceMotion} />
+  )
+
+function ResetButton({
+  onClick,
+  resetSpins,
+  shouldReduceMotion,
+}: {
+  onClick: () => void
+  resetSpins: number
+  shouldReduceMotion: boolean | null
+}) {
+  const { iconProps, controlProps } = useAnimatedIcon()
+
+  return (
     <Button
+      {...controlProps}
       variant="ghost"
       size="sm"
-      onClick={handleReset}
+      onClick={onClick}
       className="h-6 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground"
     >
       <motion.span
@@ -132,11 +149,12 @@ export function AssumptionsForm() {
         animate={{ rotate: resetSpins * -360 }}
         transition={{ duration: shouldReduceMotion ? 0 : 0.4, ease: [0.16, 1, 0.3, 1] }}
       >
-        <RotateCcw className="h-3 w-3" />
+        <RefreshCwIcon {...iconProps} size={12} />
       </motion.span>
       SA defaults
     </Button>
   )
+}
 
   return (
     <PageCard

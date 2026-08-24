@@ -212,3 +212,14 @@
     animation: none !important;
   }
 }
+
+/* ─── AnimateIcons: let path-level animations paint past the viewBox ─────── */
+/* Icons like Trash/Trash2 swing a part of the glyph (the lid) ~3 viewBox
+   units past the top edge mid-animation; SVG root elements clip at their
+   box by default, which cuts the stroke. This selector matches only the
+   @animateicons/react wrapper div (nothing else in the app renders
+   `div.inline-flex.items-center.justify-center`), and the overshoot stays
+   inside the button padding since icons render at 10-18px in 28px+ buttons. */
+div.inline-flex.items-center.justify-center > svg {
+  overflow: visible;
+}

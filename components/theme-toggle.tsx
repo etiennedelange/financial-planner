@@ -1,11 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { Moon, Sun } from "lucide-react"
+import { MoonIcon, SunIcon } from "@animateicons/react/lucide"
 import { useTheme } from "next-themes"
 import { AnimatePresence, motion } from "motion/react"
 
 import { Button } from "@/components/ui/button"
+import { useAnimatedIcon } from "@/components/ui/animated-icon"
 
 // True after client hydration. Reading the resolved theme before mount on the
 // server would render the wrong icon for the current theme, so we keep the
@@ -23,12 +24,14 @@ function useMounted() {
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
   const mounted = useMounted()
+  const { iconProps, controlProps } = useAnimatedIcon()
 
   const isDark = mounted && resolvedTheme === "dark"
-  const Icon = isDark ? Moon : Sun
+  const Icon = isDark ? MoonIcon : SunIcon
 
   return (
     <Button
+      {...controlProps}
       variant="ghost"
       size="sm"
       className="relative h-8 w-8 px-0 text-muted-foreground hover:text-foreground"
@@ -45,7 +48,7 @@ export function ThemeToggle() {
           transition={{ type: "spring", stiffness: 600, damping: 28 }}
           className="absolute inset-0 flex items-center justify-center"
         >
-          <Icon className="h-4 w-4" />
+          <Icon {...iconProps} size={16} />
         </motion.span>
       </AnimatePresence>
       <span className="sr-only">Toggle theme</span>

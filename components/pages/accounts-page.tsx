@@ -1,7 +1,15 @@
 "use client"
 
 import { useState, useMemo, startTransition } from "react"
-import { Plus, ChevronDown, AlertTriangle, Pencil, Trash2, Database, Wallet } from "lucide-react"
+import {
+  ChevronDownIcon,
+  PencilIcon,
+  PlusIcon,
+  ServerIcon,
+  Trash2Icon,
+  WalletIcon,
+} from "@animateicons/react/lucide"
+import { AlertTriangle } from "lucide-react"
 import { m } from "motion/react"
 import { FloatingActionBar } from "@/components/ui/floating-action-bar"
 import { PageCard } from "@/components/ui/page-card"
@@ -26,6 +34,8 @@ import { cn } from "@/lib/utils"
 import type { Account, AccountType } from "@/types"
 import { useShallow } from "zustand/react/shallow"
 import { toast } from "@/lib/hooks/use-toast"
+import { useAnimatedIcon, type AnimatedIconComponent } from "@/components/ui/animated-icon"
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button"
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -74,6 +84,66 @@ function typeColor(type: AccountType): string {
   return TYPE_COLOR[type]
 }
 
+function RowIconButton({
+  icon,
+  label,
+  className,
+  onClick,
+}: {
+  icon: AnimatedIconComponent
+  label: string
+  className?: string
+  onClick: (e: React.MouseEvent<HTMLButtonElement>) => void
+}) {
+  return (
+    <AnimatedIconButton
+      variant="ghost"
+      size="icon-sm"
+      onClick={onClick}
+      aria-label={label}
+      className={className}
+      icon={icon}
+      iconSize={14}
+    />
+  )
+}
+
+function ExpandButton({
+  expanded,
+  accountName,
+  onToggle,
+}: {
+  expanded: boolean
+  accountName: string
+  onToggle: () => void
+}) {
+  return (
+    <AnimatedIconButton
+      type="button"
+      variant="ghost"
+      size="icon-sm"
+      className="flex-none"
+      onClick={(e) => {
+        e.stopPropagation()
+        onToggle()
+      }}
+      aria-expanded={expanded}
+      aria-label={
+        expanded
+          ? `Collapse details for ${accountName}`
+          : `Expand details for ${accountName}`
+      }
+      icon={ChevronDownIcon}
+      iconSize={14}
+      iconAriaHidden
+      iconClassName={cn(
+        "text-muted-foreground/50 transition-transform duration-200",
+        expanded && "rotate-180"
+      )}
+    />
+  )
+}
+
 // ─── Portfolio summary card ─────────────────────────────────────────────────────
 
 interface AllocationSegment {
@@ -102,7 +172,7 @@ function PortfolioSummaryCard({
   return (
     <PageCard
       label="Portfolio"
-      leading={<Wallet className="h-3.5 w-3.5 text-muted-foreground" />}
+      leading={<WalletIcon size={14} className="text-muted-foreground" />}
       contentClassName="pt-5"
     >
       <div className="mt-3 space-y-3">
@@ -374,48 +444,19 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
           {/* Actions + chevron */}
           <div className="flex items-center gap-0.5 flex-none">
             <div className="flex items-center gap-0.5 opacity-100 md:opacity-40 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity">
-              <Button
-                variant="ghost"
-                size="icon-sm"
+              <RowIconButton
+                icon={PencilIcon}
+                label="Edit account"
                 onClick={(e) => { e.stopPropagation(); onEdit(account) }}
-                aria-label="Edit account"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon-sm"
+              />
+              <RowIconButton
+                icon={Trash2Icon}
+                label="Delete account"
                 className="text-muted-foreground hover:text-destructive"
                 onClick={(e) => { e.stopPropagation(); setDeleteOpen(true) }}
-                aria-label="Delete account"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              className="flex-none"
-              onClick={(e) => {
-                e.stopPropagation()
-                toggle()
-              }}
-              aria-expanded={expanded}
-              aria-label={
-                expanded
-                  ? `Collapse details for ${account.name}`
-                  : `Expand details for ${account.name}`
-              }
-            >
-              <ChevronDown
-                className={cn(
-                  "h-3.5 w-3.5 text-muted-foreground/50 transition-transform duration-200",
-                  expanded && "rotate-180"
-                )}
-                aria-hidden
               />
-            </Button>
+            </div>
+            <ExpandButton expanded={expanded} accountName={account.name} onToggle={toggle} />
           </div>
         </m.div>
 
@@ -557,6 +598,9 @@ function AccountGroupCard({ type, accounts, totalBalance, onEdit, onDelete }: Ac
 // ─── Empty state ─────────────────────────────────────────────────────────────────
 
 function EmptyState({ onAdd, onSeed }: { onAdd: () => void; onSeed: () => void }) {
+  const addButton = useAnimatedIcon()
+  const seedButton = useAnimatedIcon()
+
   return (
     <div className="pt-4">
       <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16 text-center gap-4">
@@ -568,12 +612,12 @@ function EmptyState({ onAdd, onSeed }: { onAdd: () => void; onSeed: () => void }
           </p>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-2">
-          <Button variant="outline" onClick={onSeed}>
-            <Database className="mr-2 h-4 w-4" data-icon="inline-start" />
+          <Button {...seedButton.controlProps} variant="outline" onClick={onSeed}>
+            <ServerIcon {...seedButton.iconProps} size={16} className="mr-2" data-icon="inline-start" />
             Seed Accounts
           </Button>
-          <Button onClick={onAdd}>
-            <Plus className="mr-2 h-4 w-4" data-icon="inline-start" />
+          <Button {...addButton.controlProps} onClick={onAdd}>
+            <PlusIcon {...addButton.iconProps} size={16} className="mr-2" data-icon="inline-start" />
             Add Your First Account
           </Button>
         </div>
@@ -720,12 +764,12 @@ export function AccountsPage() {
       <FloatingActionBar
         primary={{
           label: "Add Account",
-          icon: <Plus className="h-3.5 w-3.5" />,
+          icon: <PlusIcon size={14} />,
           onClick: handleAddClick,
         }}
         secondary={{
           label: "Seed",
-          icon: <Database className="h-3.5 w-3.5" />,
+          icon: <ServerIcon size={14} />,
           onClick: handleSeedClick,
           variant: "outline",
         }}

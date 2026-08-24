@@ -1,8 +1,9 @@
 "use client"
 
-import { Plus, Eye, Printer, FileSpreadsheet } from "lucide-react"
+import { EyeIcon, FileSpreadsheetIcon, PlusIcon, PrinterIcon } from "@animateicons/react/lucide"
 import { Button } from "@/components/ui/button"
 import { PageCard } from "@/components/ui/page-card"
+import { useAnimatedIcon } from "@/components/ui/animated-icon"
 
 interface QuickActionsCardProps {
   onAddAccount?: () => void
@@ -20,30 +21,37 @@ export function QuickActionsCard({
   return (
     <PageCard label="Quick Actions" className="dashboard-card" contentClassName="space-y-2">
         {onAddAccount && (
-          <Button onClick={onAddAccount} variant="outline" className="w-full justify-start">
-            <Plus className="mr-2 h-4 w-4" data-icon="inline-start" />
-            Add Account
-          </Button>
+          <ActionButton label="Add Account" icon={PlusIcon} onClick={onAddAccount} />
         )}
         {onViewInsights && (
-          <Button onClick={onViewInsights} variant="outline" className="w-full justify-start">
-            <Eye className="mr-2 h-4 w-4" data-icon="inline-start" />
-            View Insights
-          </Button>
+          <ActionButton label="View Insights" icon={EyeIcon} onClick={onViewInsights} />
         )}
         {onPrintReport && (
-          <Button onClick={onPrintReport} variant="outline" className="w-full justify-start">
-            <Printer className="mr-2 h-4 w-4" data-icon="inline-start" />
-            Print / Save PDF
-          </Button>
+          <ActionButton label="Print / Save PDF" icon={PrinterIcon} onClick={onPrintReport} />
         )}
         {onExportCsv && (
-          <Button onClick={onExportCsv} variant="outline" className="w-full justify-start">
-            <FileSpreadsheet className="mr-2 h-4 w-4" data-icon="inline-start" />
-            Export CSV
-          </Button>
+          <ActionButton label="Export CSV" icon={FileSpreadsheetIcon} onClick={onExportCsv} />
         )}
 
     </PageCard>
+  )
+}
+
+function ActionButton({
+  label,
+  icon: Icon,
+  onClick,
+}: {
+  label: string
+  icon: typeof PlusIcon
+  onClick: () => void
+}) {
+  const { iconProps, controlProps } = useAnimatedIcon()
+
+  return (
+    <Button {...controlProps} onClick={onClick} variant="outline" className="w-full justify-start">
+      <Icon {...iconProps} size={16} className="mr-2 shrink-0" data-icon="inline-start" />
+      {label}
+    </Button>
   )
 }

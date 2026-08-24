@@ -30,6 +30,10 @@ One line per work session, newest first, capped at the latest 10 entries — whe
 arrives, delete the oldest. Full detail lives in the linked history files, never here.
 Rules: [docs/README.md](README.md).
 
+## 2026-08-24 — AnimateIcons icon motion: the instrument responds to touch
+
+`@animateicons/react@0.4.3` path-level animated icons on every interactive control — sidebar/bottom-nav icons are the focal moment (animate on row hover/focus), plus hover/focus feedback on quick actions, row actions, chevrons, scenario switcher, theme controls, reset/retry/export. Informational icons stay static. New primitives: `useAnimatedIcon()` hook + `AnimatedIconButton`. Reduced-motion respected; 990/990 tests, typecheck/lint/build clean, shadscan 93/100 unchanged; known cost: 84.7 KB gzip shell chunk (barrel not tree-shaken). → [full write-up](history/2026-08-24-animateicons-icon-motion.md)
+
 ## 2026-08-16 — Vercel build failure fixed: protocol-less site URL
 
 `next build` crashed on Vercel with `ERR_INVALID_URL` at `app/layout.tsx:32` — Vercel injects `VERCEL_PROJECT_PRODUCTION_URL` without a scheme (`retirement-calculator-claude.vercel.app`), and `new URL(siteUrl)` rejects it. Fixed by extracting `resolveSiteUrl()` into `lib/utils/site-url.ts` (prefers `NEXT_PUBLIC_SITE_URL`, normalises protocol-less values to `https://`, falls back to localhost), used by `app/layout.tsx`, `app/robots.ts`, and `app/sitemap.ts` (robots/sitemap would have emitted protocol-less URLs too). Reproduced the exact Vercel failure locally before fixing; 5 new tests, 990/990 pass, typecheck + build clean under the simulated Vercel env. → [full write-up](history/2026-08-16-vercel-build-url-fix.md)
@@ -65,10 +69,6 @@ Unbounded monetary fields (annual income, retirement goals, account balances/con
 ## 2026-08-14 — NaN/Infinity guards; coverage gap closed
 
 Non-finite engine inputs (NaN balance/return/age, 0% withdrawal rate) no longer poison divisions into NaN/±Infinity: new `finiteOrZero`/`safePositiveDivide`/`sanitizeAccounts` guards in `invariant-guards.ts`, applied across both engines + optimal-contribution; non-finite ages route through the empty result. 40 new tests; branches 84.61% → 85.1% (global coverage red resolved). Supabase error-context item audited as already resolved. 898 tests. → [history](history/2026-08-14-phase-9-1-nan-infinity-guards.md)
-
-## 2026-08-14 — Phase 9.3 UI polish: CSS vars, loading states, chart data tables
-
-All open 9.3 Medium/Low items done: `--sidebar-width` + `--chart-height-*` tokens, `icon-sm` button variant, import/submit/print loading states (fixed latent `/print` hydration bug), reusable collapsible chart data tables for a11y, SA-context Zod messages, dead `success-gauge.tsx` deleted. 4 items audited as already resolved. 867 tests. → [history](history/2026-08-14-phase-9-3-ui-polish.md)
 
 ---
 

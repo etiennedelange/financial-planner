@@ -2,7 +2,16 @@
 
 import { useEffect, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
-import { Check, ChevronDown, ChevronRight, Circle, CircleCheck, FolderPlus, Pencil, Plus, Trash2, X } from "lucide-react"
+import { Circle, CircleCheck, FolderPlus } from "lucide-react"
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  PencilIcon,
+  PlusIcon,
+  Trash2Icon,
+  XIcon,
+} from "@animateicons/react/lucide"
 import { Button } from "@/components/ui/button"
 import { PageCard } from "@/components/ui/page-card"
 import { Input } from "@/components/ui/input"
@@ -19,6 +28,8 @@ import { clampMonetaryAmount } from "@/lib/utils/monetary"
 import { useBoundedMonetary } from "@/lib/hooks/use-bounded-monetary"
 import { GROUP_COLOR_OPTIONS, type Expense, type ExpenseGroup } from "@/types/expenses"
 import { cn } from "@/lib/utils"
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button"
+import { useAnimatedIcon } from "@/components/ui/animated-icon"
 
 // ─── inline edit row ──────────────────────────────────────────────────────────
 
@@ -55,17 +66,33 @@ function EditRow({
       <Input value={amount} onChange={(e) => guardAmount.onChange(e, (ev) => setAmount(ev.target.value))} onKeyDown={onKey}
         onBeforeInput={guardAmount.onBeforeInput}
         className="h-7 text-sm w-28 text-right font-mono" placeholder="0" aria-label="Expense amount" />
-      <Button size="icon-sm" variant="ghost" className="text-primary" onClick={commit} aria-label="Save expense">
-        <Check className="h-3.5 w-3.5" />
-      </Button>
-      <Button size="icon-sm" variant="ghost" onClick={onCancel} aria-label="Cancel edit">
-        <X className="h-3.5 w-3.5" />
-      </Button>
+      <AnimatedIconButton
+        size="icon-sm"
+        variant="ghost"
+        className="text-primary"
+        onClick={commit}
+        aria-label="Save expense"
+        icon={CheckIcon}
+        iconSize={14}
+      />
+      <AnimatedIconButton
+        size="icon-sm"
+        variant="ghost"
+        onClick={onCancel}
+        aria-label="Cancel edit"
+        icon={XIcon}
+        iconSize={14}
+      />
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button size="icon-sm" variant="ghost" className="text-destructive" aria-label="Delete expense">
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          <AnimatedIconButton
+            size="icon-sm"
+            variant="ghost"
+            className="text-destructive"
+            aria-label="Delete expense"
+            icon={Trash2Icon}
+            iconSize={14}
+          />
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -118,12 +145,23 @@ function AddExpenseRow({
       <Input value={amount} onChange={(e) => guardAmount.onChange(e, (ev) => setAmount(ev.target.value))} onKeyDown={onKey}
         onBeforeInput={guardAmount.onBeforeInput}
         className="h-7 text-sm w-28 text-right font-mono" placeholder="0" aria-label="New expense amount" />
-      <Button size="icon-sm" variant="ghost" className="text-primary" onClick={commit} aria-label="Save expense">
-        <Check className="h-3.5 w-3.5" />
-      </Button>
-      <Button size="icon-sm" variant="ghost" onClick={onCancel} aria-label="Cancel">
-        <X className="h-3.5 w-3.5" />
-      </Button>
+      <AnimatedIconButton
+        size="icon-sm"
+        variant="ghost"
+        className="text-primary"
+        onClick={commit}
+        aria-label="Save expense"
+        icon={CheckIcon}
+        iconSize={14}
+      />
+      <AnimatedIconButton
+        size="icon-sm"
+        variant="ghost"
+        onClick={onCancel}
+        aria-label="Cancel"
+        icon={XIcon}
+        iconSize={14}
+      />
     </div>
   )
 }
@@ -157,12 +195,23 @@ function AddGroupRow({ onSave, onCancel }: { onSave: (name: string, color: strin
           </button>
         ))}
       </div>
-      <Button size="icon-sm" variant="ghost" className="text-primary" onClick={commit} aria-label="Save group">
-        <Check className="h-3.5 w-3.5" />
-      </Button>
-      <Button size="icon-sm" variant="ghost" onClick={onCancel} aria-label="Cancel">
-        <X className="h-3.5 w-3.5" />
-      </Button>
+      <AnimatedIconButton
+        size="icon-sm"
+        variant="ghost"
+        className="text-primary"
+        onClick={commit}
+        aria-label="Save group"
+        icon={CheckIcon}
+        iconSize={14}
+      />
+      <AnimatedIconButton
+        size="icon-sm"
+        variant="ghost"
+        onClick={onCancel}
+        aria-label="Cancel"
+        icon={XIcon}
+        iconSize={14}
+      />
     </div>
   )
 }
@@ -170,6 +219,8 @@ function AddGroupRow({ onSave, onCancel }: { onSave: (name: string, color: strin
 // ─── empty state ──────────────────────────────────────────────────────────────
 
 function EmptyGroups({ onAdd, onLoadSample }: { onAdd: () => void; onLoadSample: () => void }) {
+  const { iconProps, controlProps } = useAnimatedIcon()
+
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
       <FolderPlus className="h-10 w-10 text-muted-foreground/40" />
@@ -178,8 +229,8 @@ function EmptyGroups({ onAdd, onLoadSample }: { onAdd: () => void; onLoadSample:
         <p className="text-xs text-muted-foreground/70">Group your expenses to track what you spend in retirement vs. today.</p>
       </div>
       <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={onAdd}>
-          <Plus className="mr-1.5 h-3.5 w-3.5" data-icon="inline-start" />
+        <Button {...controlProps} variant="outline" size="sm" onClick={onAdd}>
+          <PlusIcon {...iconProps} size={14} className="mr-1.5" data-icon="inline-start" />
           Create first group
         </Button>
         <Button variant="ghost" size="sm" onClick={onLoadSample}>
@@ -191,6 +242,40 @@ function EmptyGroups({ onAdd, onLoadSample }: { onAdd: () => void; onLoadSample:
 }
 
 // ─── expense group section ────────────────────────────────────────────────────
+
+function GroupToggleButton({
+  collapsed,
+  groupName,
+  groupTotal,
+  groupColor,
+  onToggle,
+}: {
+  collapsed: boolean
+  groupName: string
+  groupTotal: number
+  groupColor: string
+  onToggle: () => void
+}) {
+  const { iconProps, controlProps } = useAnimatedIcon()
+
+  return (
+    <button
+      {...controlProps}
+      className="flex flex-1 items-center gap-2.5 px-3 py-2.5 text-left min-w-0"
+      onClick={onToggle}
+      aria-expanded={!collapsed}
+    >
+      <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: groupColor }} />
+      <span className="flex-1 text-sm font-semibold truncate">{groupName}</span>
+      <span className="text-xs text-muted-foreground tabular-nums font-mono shrink-0">{formatCurrency(groupTotal)}</span>
+      {collapsed ? (
+        <ChevronRightIcon {...iconProps} size={14} className="text-muted-foreground shrink-0" />
+      ) : (
+        <ChevronDownIcon {...iconProps} size={14} className="text-muted-foreground shrink-0" />
+      )}
+    </button>
+  )
+}
 
 function GroupSection({
   group,
@@ -246,26 +331,23 @@ function GroupSection({
       <div className="h-[3px] w-full" style={{ backgroundColor: group.color }} />
       {/* Group header */}
       <div className="group/header flex items-center bg-muted/30 hover:bg-muted/50 transition-colors">
-        <button
-          className="flex flex-1 items-center gap-2.5 px-3 py-2.5 text-left min-w-0"
-          onClick={() => setCollapsed((c) => !c)}
-          aria-expanded={!collapsed}
-        >
-          <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: group.color }} />
-          <span className="flex-1 text-sm font-semibold truncate">{group.name}</span>
-          <span className="text-xs text-muted-foreground tabular-nums font-mono shrink-0">{formatCurrency(groupTotal)}</span>
-          {collapsed ? <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
-        </button>
+        <GroupToggleButton
+          collapsed={collapsed}
+          groupName={group.name}
+          groupTotal={groupTotal}
+          groupColor={group.color}
+          onToggle={() => setCollapsed((c) => !c)}
+        />
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button
+            <AnimatedIconButton
               size="icon-sm"
               variant="ghost"
               className="mr-2 shrink-0 opacity-0 group-hover/header:opacity-60 hover:!opacity-100 focus:opacity-60 transition-opacity"
               aria-label={`Delete group ${group.name}`}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+              icon={Trash2Icon}
+              iconSize={14}
+            />
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -338,13 +420,7 @@ function GroupSection({
                   }
                 </button>
                 <span className="text-sm font-mono tabular-nums min-w-[5rem] text-right">{formatCurrency(expense.amount)}</span>
-                <button
-                  onClick={() => onEdit(expense.id)}
-                  aria-label={`Edit ${expense.name}`}
-                  className="transition-opacity shrink-0 opacity-20 group-hover/row:opacity-60 hover:!opacity-100 focus-visible:!opacity-100 sm:opacity-0 sm:group-hover/row:opacity-60"
-                >
-                  <Pencil className="h-3 w-3" />
-                </button>
+                <EditExpenseButton expenseName={expense.name} onEdit={() => onEdit(expense.id)} />
               </div>
             )
           )}
@@ -358,13 +434,7 @@ function GroupSection({
               />
             </div>
           ) : (
-            <button
-              onClick={() => onSetAdding(group.id)}
-              className="w-full flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-colors"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Add expense
-            </button>
+            <AddExpenseButton onAdd={() => onSetAdding(group.id)} />
           )}
         </div>
       )}
@@ -372,7 +442,59 @@ function GroupSection({
   )
 }
 
+function EditExpenseButton({
+  expenseName,
+  onEdit,
+}: {
+  expenseName: string
+  onEdit: () => void
+}) {
+  const { iconProps, controlProps } = useAnimatedIcon()
+
+  return (
+    <button
+      {...controlProps}
+      onClick={onEdit}
+      aria-label={`Edit ${expenseName}`}
+      className="transition-opacity shrink-0 opacity-20 group-hover/row:opacity-60 hover:!opacity-100 focus-visible:!opacity-100 sm:opacity-0 sm:group-hover/row:opacity-60"
+    >
+      <PencilIcon {...iconProps} size={12} />
+    </button>
+  )
+}
+
+function AddExpenseButton({ onAdd }: { onAdd: () => void }) {
+  const { iconProps, controlProps } = useAnimatedIcon()
+
+  return (
+    <button
+      {...controlProps}
+      onClick={onAdd}
+      className="w-full flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-colors"
+    >
+      <PlusIcon {...iconProps} size={14} />
+      Add expense
+    </button>
+  )
+}
+
 // ─── summary panel ────────────────────────────────────────────────────────────
+
+function IncomeEditButton({ income, onEdit }: { income: number; onEdit: () => void }) {
+  const { iconProps, controlProps } = useAnimatedIcon()
+
+  return (
+    <button
+      {...controlProps}
+      onClick={onEdit}
+      className="group/income flex items-center gap-1 text-sm font-mono font-semibold hover:text-primary transition-colors border-b border-dashed border-muted-foreground/30 hover:border-primary/50"
+      aria-label="Edit monthly income"
+    >
+      {formatCurrency(income)}
+      <PencilIcon {...iconProps} size={10} className="opacity-40 group-hover/income:opacity-80 transition-opacity" />
+    </button>
+  )
+}
 
 function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
   monthlyIncome: number
@@ -419,19 +541,18 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
                   onKeyDown={(e) => { if (e.key === "Enter") saveIncome(); if (e.key === "Escape") setEditIncome(false) }}
                   onBeforeInput={guardIncome.onBeforeInput}
                   className="h-6 w-28 text-right text-sm font-mono" autoFocus aria-label="Monthly income" />
-                <Button size="icon-sm" variant="ghost" className="text-primary" onClick={saveIncome} aria-label="Save income">
-                  <Check className="h-3 w-3" />
-                </Button>
+                <AnimatedIconButton
+                  size="icon-sm"
+                  variant="ghost"
+                  className="text-primary"
+                  onClick={saveIncome}
+                  aria-label="Save income"
+                  icon={CheckIcon}
+                  iconSize={12}
+                />
               </div>
             ) : (
-              <button
-                onClick={() => { setIncomeInput(String(monthlyIncome)); setEditIncome(true) }}
-                className="group/income flex items-center gap-1 text-sm font-mono font-semibold hover:text-primary transition-colors border-b border-dashed border-muted-foreground/30 hover:border-primary/50"
-                aria-label="Edit monthly income"
-              >
-                {formatCurrency(monthlyIncome)}
-                <Pencil className="h-2.5 w-2.5 opacity-40 group-hover/income:opacity-80 transition-opacity" />
-              </button>
+              <IncomeEditButton income={monthlyIncome} onEdit={() => { setIncomeInput(String(monthlyIncome)); setEditIncome(true) }} />
             )}
           </div>
           <div className="flex justify-between items-center">
@@ -525,6 +646,30 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
 
 // ─── page ─────────────────────────────────────────────────────────────────────
 
+// ─── page-level action buttons ────────────────────────────────────────────────
+
+function ClearAllTrigger() {
+  const { iconProps, controlProps } = useAnimatedIcon()
+
+  return (
+    <Button {...controlProps} size="sm" variant="ghost" className="text-muted-foreground hover:text-destructive">
+      <Trash2Icon {...iconProps} size={14} className="mr-1.5" data-icon="inline-start" />
+      Clear all
+    </Button>
+  )
+}
+
+function NewGroupButton({ onClick, disabled }: { onClick: () => void; disabled: boolean }) {
+  const { iconProps, controlProps } = useAnimatedIcon()
+
+  return (
+    <Button {...controlProps} size="sm" onClick={onClick} disabled={disabled}>
+      <PlusIcon {...iconProps} size={14} className="mr-1.5" data-icon="inline-start" />
+      New Group
+    </Button>
+  )
+}
+
 export function ExpensesPage() {
   const {
     groups, expenses, monthlyIncome,
@@ -563,10 +708,7 @@ export function ExpensesPage() {
           {groups.length > 0 && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-destructive">
-                  <Trash2 className="mr-1.5 h-3.5 w-3.5" data-icon="inline-start" />
-                  Clear all
-                </Button>
+                <ClearAllTrigger />
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -584,10 +726,7 @@ export function ExpensesPage() {
               </AlertDialogContent>
             </AlertDialog>
           )}
-          <Button size="sm" onClick={handleAddGroup} disabled={addingGroup}>
-            <Plus className="mr-1.5 h-3.5 w-3.5" data-icon="inline-start" />
-            New Group
-          </Button>
+          <NewGroupButton onClick={handleAddGroup} disabled={addingGroup} />
         </div>
       </div>
 

@@ -13,34 +13,104 @@ import {
 import { createClient } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
 import {
-  BarChart3,
-  LayoutDashboard,
-  LogOut,
-  Receipt,
-  SlidersHorizontal,
-  TrendingUp,
-  Wallet,
-  Settings,
-  User as UserIcon,
-} from "lucide-react"
+  ChartColumnIcon,
+  LayoutDashboardIcon,
+  ReceiptIcon,
+  SettingsIcon,
+  SlidersHorizontalIcon,
+  TrendingUpIcon,
+  WalletIcon,
+} from "@animateicons/react/lucide"
+import { LogOut, User as UserIcon } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
+import { useAnimatedIcon, type AnimatedIconComponent } from "@/components/ui/animated-icon"
 
-const NAV_ITEMS: { href: string; label: string; icon: React.ElementType; showBadge?: boolean }[] = [
-  { href: "/calculator/overview", label: "Overview", icon: LayoutDashboard },
-  { href: "/calculator/accounts", label: "Accounts", icon: Wallet, showBadge: true },
-  { href: "/calculator/plan", label: "Plan", icon: SlidersHorizontal },
-  { href: "/calculator/expenses", label: "Expenses", icon: Receipt },
-  { href: "/calculator/projections", label: "Projections", icon: TrendingUp },
-  { href: "/calculator/charts", label: "Charts", icon: BarChart3 },
+const NAV_ITEMS: { href: string; label: string; icon: AnimatedIconComponent; showBadge?: boolean }[] = [
+  { href: "/calculator/overview", label: "Overview", icon: LayoutDashboardIcon },
+  { href: "/calculator/accounts", label: "Accounts", icon: WalletIcon, showBadge: true },
+  { href: "/calculator/plan", label: "Plan", icon: SlidersHorizontalIcon },
+  { href: "/calculator/expenses", label: "Expenses", icon: ReceiptIcon },
+  { href: "/calculator/projections", label: "Projections", icon: TrendingUpIcon },
+  { href: "/calculator/charts", label: "Charts", icon: ChartColumnIcon },
 ]
 
 interface SidebarProps {
   accountCount: number
   user: User | null
   isLoaded: boolean
+}
+
+function NavItem({
+  item,
+  accountCount,
+  active,
+}: {
+  item: (typeof NAV_ITEMS)[number]
+  accountCount: number
+  active: boolean
+}) {
+  const { iconProps, controlProps } = useAnimatedIcon()
+  const Icon = item.icon
+
+  return (
+    <Link
+      {...controlProps}
+      href={item.href}
+      prefetch
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "group relative flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-all duration-150",
+        active
+          ? "bg-primary/10 text-primary"
+          : "text-muted-foreground hover:bg-accent hover:text-foreground"
+      )}
+    >
+      {active && (
+        <span className="absolute left-0 inset-y-1 w-[2px] rounded-full bg-primary" />
+      )}
+      <Icon {...iconProps} size={16} className="shrink-0" />
+      <span className="flex-1 text-left tracking-wide">{item.label}</span>
+      {item.showBadge && accountCount > 0 && (
+        <Badge
+          variant="outline"
+          className={cn(
+            "ml-auto h-4 min-w-4 px-1 text-[10px]",
+            active ? "border-primary/30 bg-primary/10 text-primary" : ""
+          )}
+        >
+          {accountCount}
+        </Badge>
+      )}
+    </Link>
+  )
+}
+
+function SettingsNavLink({ active }: { active: boolean }) {
+  const { iconProps, controlProps } = useAnimatedIcon()
+
+  return (
+    <Link
+      {...controlProps}
+      href="/calculator/settings"
+      prefetch
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "group relative flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-all duration-150",
+        active
+          ? "bg-primary/10 text-primary"
+          : "text-muted-foreground hover:bg-accent hover:text-foreground"
+      )}
+    >
+      {active && (
+        <span className="absolute left-0 inset-y-1 w-[2px] rounded-full bg-primary" />
+      )}
+      <SettingsIcon {...iconProps} size={16} className="shrink-0" />
+      <span className="tracking-wide">Settings</span>
+    </Link>
+  )
 }
 
 export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
@@ -77,62 +147,19 @@ export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
 
       {/* Navigation */}
       <nav aria-label="Main navigation" className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-0.5">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon
-          const isActive = pathname === item.href
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              prefetch
-              aria-current={isActive ? "page" : undefined}
-              className={cn(
-                "group relative flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-all duration-150",
-                isActive
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
-              )}
-            >
-              {isActive && (
-                <span className="absolute left-0 inset-y-1 w-[2px] rounded-full bg-primary" />
-              )}
-              <Icon className="h-4 w-4 shrink-0" />
-              <span className="flex-1 text-left tracking-wide">{item.label}</span>
-              {item.showBadge && accountCount > 0 && (
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "ml-auto h-4 min-w-4 px-1 text-[10px]",
-                    isActive ? "border-primary/30 bg-primary/10 text-primary" : ""
-                  )}
-                >
-                  {accountCount}
-                </Badge>
-              )}
-            </Link>
-          )
-        })}
+        {NAV_ITEMS.map((item) => (
+          <NavItem
+            key={item.href}
+            item={item}
+            accountCount={accountCount}
+            active={pathname === item.href}
+          />
+        ))}
       </nav>
 
       {/* Bottom utility */}
       <div className="px-3 pb-4 border-t border-border pt-3 space-y-0.5">
-        <Link
-          href="/calculator/settings"
-          prefetch
-          aria-current={pathname === "/calculator/settings" ? "page" : undefined}
-          className={cn(
-            "group relative flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-all duration-150",
-            pathname === "/calculator/settings"
-              ? "bg-primary/10 text-primary"
-              : "text-muted-foreground hover:bg-accent hover:text-foreground"
-          )}
-        >
-          {pathname === "/calculator/settings" && (
-            <span className="absolute left-0 inset-y-1 w-[2px] rounded-full bg-primary" />
-          )}
-          <Settings className="h-4 w-4 shrink-0" />
-          <span className="tracking-wide">Settings</span>
-        </Link>
+        <SettingsNavLink active={pathname === "/calculator/settings"} />
 
         <div>
           {isAnon ? (
@@ -161,7 +188,7 @@ export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild className="cursor-pointer">
                   <Link href="/calculator/settings">
-                    <Settings className="mr-2 h-4 w-4" />
+                    <SettingsIcon className="mr-2 h-4 w-4" size={16} />
                     Manage Account
                   </Link>
                 </DropdownMenuItem>

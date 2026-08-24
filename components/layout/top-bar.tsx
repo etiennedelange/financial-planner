@@ -13,8 +13,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import type { User } from "@supabase/supabase-js"
-import { Search, TrendingDown } from "lucide-react"
+import { SearchIcon, TrendingDownIcon } from "@animateicons/react/lucide"
 import { usePathname } from "next/navigation"
+import { useAnimatedIcon } from "@/components/ui/animated-icon"
 
 const PAGE_TITLES: Record<string, string> = {
   overview: "Overview",
@@ -66,23 +67,46 @@ export function TopBar({ user }: TopBarProps) {
 
       {/* Right controls */}
       <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="hidden md:flex h-8 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
-          onClick={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}
-          title="Open command palette (⌘K)"
-        >
-          <Search className="h-3.5 w-3.5" data-icon="inline-start" />
-          <span className="font-mono text-[10px]">⌘K</span>
+        <CommandPaletteTrigger />
+        <DisplayModeDropdown />
+        <ThemeToggle />
+      </div>
+      </div>
+    </header>
+  )
+}
+
+function CommandPaletteTrigger() {
+  const { iconProps, controlProps } = useAnimatedIcon()
+
+  return (
+    <Button
+      {...controlProps}
+      variant="ghost"
+      size="sm"
+      className="hidden md:flex h-8 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
+      onClick={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}
+      title="Open command palette (⌘K)"
+    >
+      <SearchIcon {...iconProps} size={14} className="shrink-0" data-icon="inline-start" />
+      <span className="font-mono text-[10px]">⌘K</span>
+    </Button>
+  )
+}
+
+function DisplayModeDropdown() {
+  const displayMode = useCalculatorStore((s) => s.displayMode)
+  const setDisplayMode = useCalculatorStore((s) => s.setDisplayMode)
+  const { iconProps, controlProps } = useAnimatedIcon()
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button {...controlProps} variant="ghost" size="sm" className="h-8 px-2 text-xs gap-1.5">
+          <TrendingDownIcon {...iconProps} size={14} className="shrink-0" data-icon="inline-start" />
+          <span className="hidden md:inline">{displayMode === "real" ? "Today's Value" : "Future Value"}</span>
         </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 px-2 text-xs gap-1.5">
-              <TrendingDown className="h-3.5 w-3.5" data-icon="inline-start" />
-              <span className="hidden md:inline">{displayMode === "real" ? "Today's Value" : "Future Value"}</span>
-            </Button>
-          </DropdownMenuTrigger>
+      </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
             <DropdownMenuLabel>Display Values As</DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -116,10 +140,5 @@ export function TopBar({ user }: TopBarProps) {
             </div>
           </DropdownMenuContent>
         </DropdownMenu>
-
-        <ThemeToggle />
-      </div>
-      </div>
-    </header>
-  )
+    )
 }

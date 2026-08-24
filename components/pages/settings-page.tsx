@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { Button, type ButtonProps } from "@/components/ui/button"
 import { PageCard } from "@/components/ui/page-card"
 import { AccountSettings } from "@/components/auth/account-settings"
 import { useAuth } from "@/components/supabase-provider"
@@ -9,22 +9,44 @@ import { exportPlan, parsePlanFile } from "@/lib/utils/plan-io"
 import { exportProjectionCsv } from "@/lib/utils/export-csv"
 import { useTheme } from "next-themes"
 import {
-  Download,
-  FileSpreadsheet,
-  Moon,
-  Printer,
-  RotateCcw,
-  Sun,
-  SunMoon,
-  Upload,
-} from "lucide-react"
+  DownloadIcon,
+  FileSpreadsheetIcon,
+  MonitorIcon,
+  MoonIcon,
+  PrinterIcon,
+  RefreshCwIcon,
+  SunIcon,
+  UploadIcon,
+} from "@animateicons/react/lucide"
 import { useRef, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
 import type { ProjectionResult } from "@/types"
 import { toast } from "@/lib/hooks/use-toast"
+import { useAnimatedIcon } from "@/components/ui/animated-icon"
+import type { AnimatedIconComponent } from "@/components/ui/animated-icon"
 
 interface SettingsPageProps {
   projection: ProjectionResult | null
+}
+
+function IconLabelButton({
+  icon: Icon,
+  iconSize = 16,
+  iconClassName = "mr-2",
+  ...props
+}: ButtonProps & {
+  icon: AnimatedIconComponent
+  iconSize?: number
+  iconClassName?: string
+}) {
+  const { iconProps, controlProps } = useAnimatedIcon()
+
+  return (
+    <Button {...controlProps} {...props}>
+      <Icon {...iconProps} size={iconSize} className={iconClassName} data-icon="inline-start" />
+      {props.children}
+    </Button>
+  )
 }
 
 export function SettingsPage({ projection }: SettingsPageProps) {
@@ -148,30 +170,36 @@ export function SettingsPage({ projection }: SettingsPageProps) {
           <div className="space-y-2">
             <p className="text-sm font-medium">Dark Mode</p>
             <div className="flex gap-2">
-              <Button
+              <IconLabelButton
+                icon={SunIcon}
+                iconSize={14}
+                iconClassName="mr-1.5"
                 variant={theme === "light" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setTheme("light")}
               >
-                <Sun className="mr-1.5 h-3.5 w-3.5" data-icon="inline-start" />
                 Light
-              </Button>
-              <Button
+              </IconLabelButton>
+              <IconLabelButton
+                icon={MoonIcon}
+                iconSize={14}
+                iconClassName="mr-1.5"
                 variant={theme === "dark" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setTheme("dark")}
               >
-                <Moon className="mr-1.5 h-3.5 w-3.5" data-icon="inline-start" />
                 Dark
-              </Button>
-              <Button
+              </IconLabelButton>
+              <IconLabelButton
+                icon={MonitorIcon}
+                iconSize={14}
+                iconClassName="mr-1.5"
                 variant={theme === "system" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setTheme("system")}
               >
-                <SunMoon className="mr-1.5 h-3.5 w-3.5" data-icon="inline-start" />
                 System
-              </Button>
+              </IconLabelButton>
             </div>
           </div>
       </PageCard>
@@ -179,22 +207,40 @@ export function SettingsPage({ projection }: SettingsPageProps) {
       {/* Plan */}
       <PageCard label="Plan" contentClassName="space-y-2">
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={() => window.open("/print", "_blank")}>
-              <Printer className="mr-2 h-4 w-4" data-icon="inline-start" />
+            <IconLabelButton
+              icon={PrinterIcon}
+              variant="outline"
+              size="sm"
+              onClick={() => window.open("/print", "_blank")}
+            >
               Print / Save PDF
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleExportCsv} disabled={!projection}>
-              <FileSpreadsheet className="mr-2 h-4 w-4" data-icon="inline-start" />
+            </IconLabelButton>
+            <IconLabelButton
+              icon={FileSpreadsheetIcon}
+              variant="outline"
+              size="sm"
+              onClick={handleExportCsv}
+              disabled={!projection}
+            >
               Export CSV
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleExportPlan}>
-              <Download className="mr-2 h-4 w-4" data-icon="inline-start" />
+            </IconLabelButton>
+            <IconLabelButton
+              icon={DownloadIcon}
+              variant="outline"
+              size="sm"
+              onClick={handleExportPlan}
+            >
               Export Plan
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => importInputRef.current?.click()} disabled={importing}>
-              <Upload className="mr-2 h-4 w-4" data-icon="inline-start" />
+            </IconLabelButton>
+            <IconLabelButton
+              icon={UploadIcon}
+              variant="outline"
+              size="sm"
+              onClick={() => importInputRef.current?.click()}
+              disabled={importing}
+            >
               {importing ? "Importing…" : "Import Plan"}
-            </Button>
+            </IconLabelButton>
           </div>
           {importError && (
             <p className="text-sm text-destructive">{importError}</p>
@@ -218,10 +264,15 @@ export function SettingsPage({ projection }: SettingsPageProps) {
               </div>
             </div>
           ) : (
-            <Button variant="outline" size="sm" onClick={handleReset} className="border-destructive/40 text-destructive hover:bg-destructive/10">
-              <RotateCcw className="mr-2 h-4 w-4" data-icon="inline-start" />
+            <IconLabelButton
+              icon={RefreshCwIcon}
+              variant="outline"
+              size="sm"
+              onClick={handleReset}
+              className="border-destructive/40 text-destructive hover:bg-destructive/10"
+            >
               Reset to Defaults
-            </Button>
+            </IconLabelButton>
           )}
       </PageCard>
 

@@ -2,7 +2,8 @@
 
 import { Button } from "@/components/ui/button"
 import { ErrorFallback } from "@/components/error/error-fallback"
-import { RefreshCw } from "lucide-react"
+import { RefreshCwIcon } from "@animateicons/react/lucide"
+import { useAnimatedIcon } from "@/components/ui/animated-icon"
 
 export default function RootError({
   error,
@@ -11,6 +12,8 @@ export default function RootError({
   error: Error & { digest?: string }
   retry: () => void
 }) {
+  const { iconProps, controlProps } = useAnimatedIcon()
+
   return (
     <ErrorFallback
       error={error}
@@ -18,8 +21,8 @@ export default function RootError({
       description="An unexpected error occurred while rendering the page. You can retry, or reload to start again."
       actions={
         <>
-          <Button size="sm" onClick={retry} className="gap-2">
-            <RefreshCw className="h-3.5 w-3.5" data-icon="inline-start" />
+          <Button {...controlProps} size="sm" onClick={retry} className="gap-2">
+            <RefreshCwIcon {...iconProps} size={14} data-icon="inline-start" />
             Try again
           </Button>
           <Button size="sm" variant="outline" onClick={() => window.location.reload()}>

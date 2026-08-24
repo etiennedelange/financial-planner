@@ -13,10 +13,11 @@ import { SecuritySection } from "@/components/auth/security-section"
 import { SessionList } from "@/components/auth/session-list"
 import { TotpReauthDialog } from "@/components/auth/totp-reauth-dialog"
 import { PageCard } from "@/components/ui/page-card"
-import { Download } from "lucide-react"
+import { DownloadIcon } from "@animateicons/react/lucide"
 import type { User } from "@supabase/supabase-js"
 import { listFactors } from "@/lib/auth/mfa"
 import { useEffect } from "react"
+import { useAnimatedIcon } from "@/components/ui/animated-icon"
 
 const emailSchema = z.object({
   email: z.string().email("Enter a valid email address"),
@@ -42,6 +43,19 @@ type PasswordForm = z.infer<typeof passwordSchema>
 
 interface AccountSettingsProps {
   user: User
+}
+
+function ExportDataButton() {
+  const { iconProps, controlProps } = useAnimatedIcon()
+
+  return (
+    <Button {...controlProps} variant="outline" size="sm" asChild>
+      <a href="/api/account/export" download>
+        <DownloadIcon {...iconProps} size={16} className="mr-2" data-icon="inline-start" />
+        Export My Data
+      </a>
+    </Button>
+  )
 }
 
 export function AccountSettings({ user }: AccountSettingsProps) {
@@ -139,12 +153,7 @@ export function AccountSettings({ user }: AccountSettingsProps) {
 
         <div className="border-t" />
 
-        <Button variant="outline" size="sm" asChild>
-          <a href="/api/account/export" download>
-            <Download className="mr-2 h-4 w-4" data-icon="inline-start" />
-            Export My Data
-          </a>
-        </Button>
+        <ExportDataButton />
       </PageCard>
 
       <SecuritySection email={user.email ?? ""} />

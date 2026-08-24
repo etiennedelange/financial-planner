@@ -22,12 +22,34 @@ import {
 import { Input } from "@/components/ui/input"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { toast } from "@/lib/hooks/use-toast"
-import { ChevronDown, Pencil, Plus, Trash2 } from "lucide-react"
+import { ChevronDownIcon, PencilIcon, PlusIcon, Trash2Icon } from "@animateicons/react/lucide"
 import { useRef, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
+import { useAnimatedIcon } from "@/components/ui/animated-icon"
+
+function ScenarioTrigger({ name, disabled }: { name: string; disabled: boolean }) {
+  const { iconProps, controlProps } = useAnimatedIcon()
+
+  return (
+    <Button {...controlProps} variant="outline" className="max-w-44 px-3" disabled={disabled}>
+      <span className="truncate text-sm font-medium">{name}</span>
+      <ChevronDownIcon {...iconProps} size={14} className="ml-2 shrink-0 text-muted-foreground" data-icon="inline-end" />
+    </Button>
+  )
+}
 
 export function ScenarioSwitcher() {
   const { scenarioList, activeScenarioId, switchScenario, createNewScenario, renameScenario, deleteScenario } =
+    useCalculatorStore(
+      useShallow((s) => ({
+        scenarioList: s.scenarioList,
+        activeScenarioId: s.activeScenarioId,
+        switchScenario: s.switchScenario,
+        createNewScenario: s.createNewScenario,
+        renameScenario: s.renameScenario,
+        deleteScenario: s.deleteScenario,
+      }))
+    )
     useCalculatorStore(
       useShallow((s) => ({
         scenarioList: s.scenarioList,
@@ -93,10 +115,7 @@ export function ScenarioSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="max-w-44 px-3" disabled={loading}>
-          <span className="truncate text-sm font-medium">{active?.name ?? "Scenarios"}</span>
-          <ChevronDown className="ml-2 h-3.5 w-3.5 shrink-0 text-muted-foreground" data-icon="inline-end" />
-        </Button>
+        <ScenarioTrigger name={active?.name ?? "Scenarios"} disabled={loading} />
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="start" className="w-64">
@@ -138,7 +157,7 @@ export function ScenarioSwitcher() {
                   title="Rename"
                   aria-label={`Rename scenario ${s.name}`}
                 >
-                  <Pencil className="h-3 w-3" />
+                  <PencilIcon size={12} />
                 </button>
                 {scenarioList.length > 1 && (
                   <button
@@ -147,7 +166,7 @@ export function ScenarioSwitcher() {
                     title="Delete"
                     aria-label={`Delete scenario ${s.name}`}
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2Icon size={12} />
                   </button>
                 )}
               </>
@@ -180,7 +199,7 @@ export function ScenarioSwitcher() {
             className="cursor-pointer text-muted-foreground"
             onClick={(e) => { e.preventDefault(); setCreatingNew(true) }}
           >
-            <Plus className="mr-2 h-4 w-4" />
+            <PlusIcon size={16} className="mr-2" />
             New Scenario
           </DropdownMenuItem>
         )}
