@@ -3,6 +3,7 @@
 import { LucideIcon } from "lucide-react"
 import { memo } from "react"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
+import { RollingValue } from "@/components/ui/rolling-value"
 import { getSuccessRateStyle } from "@/lib/utils/success-rate"
 
 interface DashboardMetricCardProps {
@@ -12,6 +13,12 @@ interface DashboardMetricCardProps {
   description?: string
   successRate?: number
   tooltip?: string | React.ReactNode
+  /** Numeric value that rolls between changes instead of snapping. */
+  numericValue?: number
+  /** Format function for `numericValue`. Required when `numericValue` is set. */
+  format?: (value: number) => string
+  /** Start value for the first appearance; `0` counts up, default fades in settled. */
+  initial?: number
 }
 
 export const DashboardMetricCard = memo(function DashboardMetricCard({
@@ -21,6 +28,9 @@ export const DashboardMetricCard = memo(function DashboardMetricCard({
   description,
   successRate,
   tooltip,
+  numericValue,
+  format,
+  initial,
 }: DashboardMetricCardProps) {
   const styles = successRate !== undefined
     ? getSuccessRateStyle(successRate)
@@ -44,7 +54,11 @@ export const DashboardMetricCard = memo(function DashboardMetricCard({
         {/* Value */}
         <div className="mb-1">
           <p className={`text-base font-bold font-mono ${styles.text}`}>
-            {value}
+            {numericValue !== undefined && format ? (
+              <RollingValue value={numericValue} format={format} initial={initial} />
+            ) : (
+              value
+            )}
           </p>
         </div>
 

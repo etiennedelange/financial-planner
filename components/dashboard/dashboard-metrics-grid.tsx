@@ -7,6 +7,18 @@ import { Calendar, DollarSign, Gauge, Hourglass, Target, TrendingUp, Wallet } fr
 import { useMemo } from "react"
 import { DashboardMetricCard } from "./dashboard-metric-card"
 
+interface MetricEntry {
+  icon: typeof Wallet
+  label: string
+  value: string | number
+  description: string
+  tooltip?: string
+  successRate?: number
+  numericValue?: number
+  format?: (value: number) => string
+  initial?: number
+}
+
 interface DashboardMetricsGridProps {
   projection: ProjectionResult | null
   simulationResult: SimulationResult | null
@@ -73,6 +85,8 @@ export function DashboardMetricsGrid({
         icon: Wallet,
         label: "Total Portfolio",
         value: totalCurrentBalance > 0 ? formatCurrency(totalCurrentBalance) : "--",
+        numericValue: totalCurrentBalance > 0 ? totalCurrentBalance : undefined,
+        format: formatCurrency,
         description: "Current balance",
         tooltip: "Your total retirement savings across all accounts (RAs, Pension Funds, TFSAs, etc.). This is your starting point.",
       },
@@ -82,6 +96,10 @@ export function DashboardMetricsGrid({
         value: projection
           ? formatCurrency(projection.portfolioAtRetirement, displayMode, yearsToRetirement, inflationRate / 100)
           : "--",
+        numericValue: projection ? projection.portfolioAtRetirement : undefined,
+        format: projection
+          ? (v: number) => formatCurrency(v, displayMode, yearsToRetirement, inflationRate / 100)
+          : undefined,
         description: projection
           ? `At age ${retirementAge}${displayMode === "real" ? " (today's value)" : ""}`
           : `Target: age ${retirementAge}`,
@@ -91,6 +109,8 @@ export function DashboardMetricsGrid({
         icon: TrendingUp,
         label: "Monthly Contributions",
         value: totalMonthlyContributions > 0 ? formatCurrency(totalMonthlyContributions) : "--",
+        numericValue: totalMonthlyContributions > 0 ? totalMonthlyContributions : undefined,
+        format: formatCurrency,
         description: "Total across all accounts",
         tooltip: "Total monthly contributions across all retirement accounts. Increasing contributions significantly improves outcomes due to compound growth.",
       },
@@ -100,6 +120,10 @@ export function DashboardMetricsGrid({
         value: projection
           ? formatCurrency(projection.monthlyIncomeAtRetirement, displayMode, yearsToRetirement, inflationRate / 100)
           : "--",
+        numericValue: projection ? projection.monthlyIncomeAtRetirement : undefined,
+        format: projection
+          ? (v: number) => formatCurrency(v, displayMode, yearsToRetirement, inflationRate / 100)
+          : undefined,
         description: projection
           ? `At retirement${displayMode === "real" ? " (today's value)" : ""}`
           : "Requires projection",
@@ -109,12 +133,17 @@ export function DashboardMetricsGrid({
         icon: Calendar,
         label: "Years to Retirement",
         value: yearsToRetirement > 0 ? yearsToRetirement : "--",
+        numericValue: yearsToRetirement > 0 ? yearsToRetirement : undefined,
+        format: (v: number) => String(v),
         description: `Currently age ${currentAge}`,
       },
       {
         icon: Gauge,
         label: "Plan Success Rate",
         value: successRate !== null ? `${successRate.toFixed(0)}%` : isSimulating ? "…" : "--",
+        numericValue: successRate !== null ? successRate : undefined,
+        format: (v: number) => `${v.toFixed(0)}%`,
+        initial: 0,
         description: successRate !== null
           ? successRate >= 90 ? "Excellent" : successRate >= 75 ? "Good" : successRate >= 60 ? "Fair" : "At Risk"
           : isSimulating ? "Simulating…" : "Run simulation",
@@ -130,7 +159,7 @@ export function DashboardMetricsGrid({
           ? "Reflects how confidently your plan avoids running out of money: 'Never' at 90%+ success, 'Likely Never' at 75%+, 'Uncertain' below that. The description shows the risk among scenarios that fail."
           : "Below a 60% success rate, this shows the median age at which your portfolio runs out across failing scenarios. Increase contributions or adjust retirement age to improve this.",
       },
-    ] as const
+    ]
   }, [projection, simulationResult, isSimulating, displayMode, yearsToRetirement, retirementAge, inflationRate, totalCurrentBalance, totalMonthlyContributions, currentAge])
 
   return (
@@ -144,8 +173,11 @@ export function DashboardMetricsGrid({
             label={metric.label}
             value={metric.value}
             description={metric.description}
-            successRate={"successRate" in metric ? metric.successRate : undefined}
-            tooltip={"tooltip" in metric ? metric.tooltip : undefined}
+            successRate={metric.successRate}
+            tooltip={metric.tooltip}
+            numericValue={metric.numericValue}
+            format={metric.format}
+            initial={metric.initial}
           />
         ))}
       </div>

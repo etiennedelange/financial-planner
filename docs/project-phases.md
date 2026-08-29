@@ -30,6 +30,10 @@ One line per work session, newest first, capped at the latest 10 entries — whe
 arrives, delete the oldest. Full detail lives in the linked history files, never here.
 Rules: [docs/README.md](README.md).
 
+## 2026-08-24 — Motion delight: the Monte Carlo verdict lands
+
+`/impeccable delight` on Motion for React: the one authored moment is the simulation's answer. When the Monte Carlo worker resolves, Plan Success Rate counts up from zero with the tool's critically-damped spring (the dial sweeping to its reading; rolls between verdicts after), and the run-status checkmark stroke-draws itself in. Continuity: the five numeric metric cards roll between values via a new shared `RollingValue` primitive (fade on first appearance, spring on change); `SpringNumber` gains an `initial` prop. Caught a real hydration bug — branching markup on `useReducedMotion()` mismatches SSR; now gates durations/values only. First UI component tests in the repo (4, incl. mid-flight rollover proof). Waiting stays honest, charts stay static; `StickyResultsBar` confirmed dead. 994/994 tests, typecheck/lint/build clean, shadscan 93/100 unchanged. DESIGN.md gains a Motion section. → [full write-up](history/2026-08-24-motion-delight-verdict.md)
+
 ## 2026-08-24 — AnimateIcons icon motion: the instrument responds to touch
 
 `@animateicons/react@0.4.3` path-level animated icons on every interactive control — sidebar/bottom-nav icons are the focal moment (animate on row hover/focus), plus hover/focus feedback on quick actions, row actions, chevrons, scenario switcher, theme controls, reset/retry/export. Informational icons stay static. New primitives: `useAnimatedIcon()` hook + `AnimatedIconButton`. Reduced-motion respected; 990/990 tests, typecheck/lint/build clean, shadscan 93/100 unchanged; known cost: 84.7 KB gzip shell chunk (barrel not tree-shaken). Follow-up: theme-toggle moon icon never animated (AnimatePresence remount nulled the shared ref) — dual mounted icons + CSS crossfade. → [full write-up](history/2026-08-24-animateicons-icon-motion.md)
@@ -65,10 +69,6 @@ Both stores use `skipHydration` + a layout-driven `rehydrate()`, and zustand per
 ## 2026-08-14 — Monetary inputs physically reject absurdly large numbers
 
 Unbounded monetary fields (annual income, retirement goals, account balances/contributions, drawdown withdrawals, medical aid, expenses) accepted values far past `Number.MAX_SAFE_INTEGER`, which lost precision, poisoned calculations, and overflowed the input padding. New `MAX_MONETARY_AMOUNT` (R1 trillion) + `isAllowedMonetaryInput`; `useBoundedMonetary` blocks over-cap input before it enters the DOM (`beforeinput`), so holding a key just stops adding digits; stores persist `version: 2` + `migrate` to clamp stale pre-fix data. 920 tests. → [history](history/2026-08-14-input-max-bounds.md)
-
-## 2026-08-14 — NaN/Infinity guards; coverage gap closed
-
-Non-finite engine inputs (NaN balance/return/age, 0% withdrawal rate) no longer poison divisions into NaN/±Infinity: new `finiteOrZero`/`safePositiveDivide`/`sanitizeAccounts` guards in `invariant-guards.ts`, applied across both engines + optimal-contribution; non-finite ages route through the empty result. 40 new tests; branches 84.61% → 85.1% (global coverage red resolved). Supabase error-context item audited as already resolved. 898 tests. → [history](history/2026-08-14-phase-9-1-nan-infinity-guards.md)
 
 ---
 

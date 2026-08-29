@@ -7,29 +7,35 @@ interface SpringNumberProps {
   value: number
   format: (value: number) => string
   className?: string
+  /** Value the spring starts at on mount. Defaults to `value` (no initial animation). */
+  initial?: number
 }
 
 /**
  * Renders a number that eases toward `value` with spring physics whenever it changes,
  * instead of snapping. Critically damped (no overshoot) to read as precise, not playful.
  */
-export function SpringNumber({ value, format, className }: SpringNumberProps) {
+export function SpringNumber({ value, format, className, initial }: SpringNumberProps) {
   const prefersReducedMotion = useReducedMotion()
-  const motionValue = useMotionValue(value)
+  const [startValue] = useState(() => initial ?? value)
+  const motionValue = useMotionValue(startValue)
   const spring = useSpring(motionValue, { stiffness: 140, damping: 26, mass: 0.5 })
-  const [display, setDisplay] = useState(value)
+  const [display, setDisplay] = useState(startValue)
 
   useEffect(() => {
+    if (prefersReducedMotion) {
+      // Reduced motion: land the target instantly — no spring frames. jump()
+      // fires the change listener, which updates `display`; markup stays
+      // identical to the spring path so SSR hydration matches.
+      spring.jump(value)
+      return
+    }
     motionValue.set(value)
-  }, [value, motionValue])
+  }, [value, motionValue, spring, prefersReducedMotion])
 
   useMotionValueEvent(spring, "change", (latest) => {
     setDisplay(latest)
   })
 
-  // Reduced motion skips the spring entirely and shows the target value
-  // immediately; the spring keeps running but its output is ignored.
-  const shown = prefersReducedMotion ? value : display
-
-  return <span className={className}>{format(shown)}</span>
+  return <span className={className}>{format(display)}</span>
 }
