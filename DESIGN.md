@@ -185,33 +185,7 @@ This system is flat by default. Depth is expressed through tonal layering (Vault
 ### Shadow Vocabulary
 - **Ambient** (`box-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3)`): The single shadow level — on `<Card>` components. Provides the lightest separation on dark surfaces. Not used for hover effects; use tonal shift instead.
 
-## 5. Motion
-
-Motion is the instrument responding, not the instrument performing. The system runs on Motion for React (`motion/react`, v12); every animation must explain a state change, a relationship, or the product's one authored moment. Decoration without purpose is animation debt.
-
-**The One Authored Moment.** The Monte Carlo verdict is the only moment the tool theatricalises: when the simulation resolves, the Plan Success Rate counts up from zero with the critically damped spring — the dial sweeping to its reading — and the run-status checkmark draws its stroke (`pathLength`, 250 ms circle + 200 ms check). It is the product's answer landing; everything else stays quiet. There is exactly one count-up in the app.
-
-### Duration budget
-| Duration | Typical use |
-|---|---|
-| 150 ms | verdict row fade, derived-value crossfades (`AnimatedValue`) |
-| 200 ms | `RollingValue` first-appearance fade |
-| ~350 ms | spring rollovers between values (`SpringNumber`/`RollingValue`) |
-| 400–450 ms | verdict count-up + checkmark draw (the authored moment) |
-
-### Spring constants
-Critically damped, no overshoot: `{ stiffness: 140, damping: 26, mass: 0.5 }`. Numbers land like a precision instrument — never bouncy, never playful. Entrance easing for tweened values: `cubic-bezier(0.16, 1, 0.3, 1)` (natural deceleration).
-
-### RollingValue (the number primitive)
-`components/ui/rolling-value.tsx` — fades in on first appearance (200 ms), rolls between values with the spring afterwards. Optional `initial`: default fades in already settled; `initial={0}` counts up from zero. `SpringNumber` (`components/ui/spring-number.tsx`) is the raw spring renderer; keep durations and physics in these primitives rather than re-typing them per surface.
-
-### Reduced motion
-`prefers-reduced-motion` means fewer and gentler animations, not none: values land instantly (0 ms durations, `spring.jump`), opacity/color state transitions that carry meaning survive. **Never branch rendered markup on `useReducedMotion()`** — it is `false` on the server, so any structural branch breaks SSR hydration for reduced-motion users. Gate durations and values only, keeping markup identical to the spring path.
-
-### The quiet surface
-Charts stay `isAnimationActive={false}` (the data is the animation). Waiting stays honest: spinner + `…`, never faked progress. Icon path animation on interactive controls is the `@animateicons` system (see AnimateIcons doc). Scroll-triggered reveals, parallax, and bounce/elastic curves are not part of this system.
-
-## 6. Components
+## 5. Components
 
 ### Buttons
 
@@ -254,7 +228,7 @@ The chrome disappears; the action leads.
 - **Series colors:** Signal Teal (primary series: `#1A936F` light / `#3CDDAC` dark), Fjord Teal (`#114B5F` light / `#258EB1` dark), Glacier Mint (`#88D498` light / `#8CD99D` dark), Chart Blue (`#5184EC` light / `#5B8FEE` dark), Signal Red (`#DC2828` light / `#D63030` dark). Ordered by importance, not by hue distance.
 - **The Accessibility Rule.** Color alone never encodes data series. Each series must also differ by shape (solid vs. dashed line), pattern, or direct label. Monte Carlo confidence bands use opacity layering (10%/50%/90%) — the opacity step, not just the color, encodes the confidence level.
 
-## 7. Do's and Don'ts
+## 6. Do's and Don'ts
 
 ### Do:
 - **Do** use Teal on exactly one active element per view, not counting `SectionLabel`'s structural left-border accent (a fixed, repeating chrome element, not a per-view signal). Rarity is authority for the signal use; the structural use is a constant.
@@ -266,7 +240,6 @@ The chrome disappears; the action leads.
 - **Do** label every chart series with a text label or legend entry — color alone does not carry information.
 - **Do** respect SA-specific account type labels (RA, TFSA, Pension Fund, Preservation Fund) exactly — these are not interchangeable and their specificity is a feature.
 - **Do** keep the accent locked. If a future request calls for a second brand color, replace teal deliberately — don't add a second concurrent accent or a switcher.
-- **Do** route every number animation through `RollingValue`/`SpringNumber` so physics and reduced-motion handling live in one place, and gate reduced-motion by duration/value only — never by rendered markup (it breaks SSR hydration).
 
 ### Don't:
 - **Don't** nest `bg-card` inside `bg-card` — use `bg-muted` or `bg-accent` for inner surfaces. Nested cards are always wrong.
@@ -280,4 +253,3 @@ The chrome disappears; the action leads.
 - **Don't** use consumer-fintech UI patterns: no gamified progress bars with cheerful copy, no pastel metric cards, no rounded pill buttons with emoji-adjacent icons. See PRODUCT.md anti-references.
 - **Don't** use the hero-metric template: large number + small label + gradient accent behind it. The metrics grid uses flat tonal cards, not lifted hero cards with color washes.
 - **Don't** genericise SA account type names for "clarity." RA, TFSA, Pension Fund: these are the correct terms for the users of this tool.
-- **Don't** animate decoratively: no scroll-triggered reveals, hover lifts, parallax, bounce/elastic curves, or repeated section staggers. Motion explains the Monte Carlo verdict, rolls numbers, and acknowledges controls — nothing else. One count-up in the app (the success rate); charts stay `isAnimationActive={false}`; waiting states never fake progress.
