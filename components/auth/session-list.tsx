@@ -23,6 +23,7 @@ export function SessionList() {
 
   async function signOutEverywhere() {
     await createClient().auth.signOut({ scope: "global" })
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- hard reload clears the signed-out session from client state.
     window.location.href = "/calculator"
   }
 

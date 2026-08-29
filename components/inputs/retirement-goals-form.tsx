@@ -57,6 +57,9 @@ export function RetirementGoalsForm() {
   const guardLegacyAmount = useBoundedMonetary(watchedValues.legacyAmount ?? retirementGoals.legacyAmount)
 
   useEffect(() => {
+    // RHF's watch() subscription is the documented API; the React Compiler lint
+    // flags it as incompatible with memoization (a known false positive).
+    // eslint-disable-next-line react-hooks/incompatible-library
     const subscription = watch((value) => {
       // Only propagate valid values to the store — an invalid (e.g. absurdly
       // large) input must never reach the calculations.

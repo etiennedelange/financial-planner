@@ -113,6 +113,7 @@ export function AccountSettings({ user }: AccountSettingsProps) {
       return
     }
     localStorage.clear()
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- hard reload clears the deleted session from client state.
     window.location.href = "/calculator"
   }
 

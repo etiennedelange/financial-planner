@@ -6,6 +6,7 @@ import { useAuth } from "@/components/supabase-provider"
 import { formatCurrency } from "@/lib/utils/currency"
 import type { ProjectionResult } from "@/types"
 import { useEffect, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import { useShallow } from "zustand/react/shallow"
 
 function pct(n: number) {
@@ -14,6 +15,7 @@ function pct(n: number) {
 
 export function PrintClient() {
   const { isLoaded: authLoaded, phase, error } = useAuth()
+  const router = useRouter()
 
   // /print is a standalone route outside the /calculator layout. The root
   // SupabaseProvider is the single bootstrap owner: it hydrates the stores
@@ -75,7 +77,7 @@ export function PrintClient() {
         <div className="flex min-h-screen flex-col items-center justify-center gap-2 text-muted-foreground">
           <p>Two-factor verification is required before this plan can be printed.</p>
           <button
-            onClick={() => { window.location.href = "/auth/mfa" }}
+            onClick={() => router.push("/auth/mfa")}
             className="mt-2 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
           >
             Verify now

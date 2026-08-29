@@ -30,6 +30,7 @@ export default function MfaChallengePage() {
           // next request's AAL check no longer sees a reason to gate — the
           // hard navigation below re-runs middleware against the fresh state.
           await unenrollAbandonedFactors().catch(() => {})
+          // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- hard reload re-runs middleware against the freshly cleaned-up factor state.
           window.location.href = "/calculator"
         } else {
           factorIdRef.current = factors[0].id
@@ -87,6 +88,7 @@ export default function MfaChallengePage() {
       // load remounts the provider and re-syncs at the now-satisfied aal2.
       // session-list.tsx and account-settings.tsx force a reload for the same
       // reason after changing auth state.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- full reload remounts SupabaseProvider and re-syncs at the now-satisfied aal2.
       window.location.href = "/calculator"
     } finally {
       setLoading(false)
