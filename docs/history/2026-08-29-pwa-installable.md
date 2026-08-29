@@ -10,8 +10,8 @@ offline. No new dependencies were added:
 - **Web app manifest** (`app/manifest.ts`, served at `/manifest.webmanifest`) —
   `display: standalone`, `start_url: /calculator`, `theme_color: #178262`,
   `background_color: #faf9fb`, and the 192/512 icons.
-- **Icons** — `app/icon1/route.tsx` (192×192), `app/icon2/route.tsx`
-  (512×512), `app/apple-icon/route.tsx` (180×180 apple-touch icon), all
+- **Icons** — `app/icon1.tsx` (192×192), `app/icon2.tsx`
+  (512×512), `app/apple-icon.tsx` (180×180 apple-touch icon), all
   rendered from one shared `PwaIconArtwork` component (`lib/pwa/icon-artwork.tsx`),
   served as `image/png` with Vercel's `next/og` `ImageResponse`.
 - **Service worker** (`public/sw.js`) with three strategies:
@@ -105,8 +105,9 @@ deployed.
   data. The cached `static-assets-v1` JS/CSS still serve the app shell on any
   page that does render, and the fallback is the documented offline
   experience.
-- `maskable-icon` (Lighthouse advisory) is a possible follow-up: a purpose
-  `maskable` icon variant would close the only PWA-category finding.
+- `maskable-icon` (Lighthouse advisory) is a known follow-up: the artwork is
+  NOT maskable-safe (bars are, trend-line endpoints aren't), so declaring
+  `purpose: "maskable"` first needs the polyline endpoints moved inward.
 - The `/_vercel/*` console errors seen locally are environmental (Vercel-only
   endpoints) and unrelated to this feature.
 

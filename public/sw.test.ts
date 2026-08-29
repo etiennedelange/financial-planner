@@ -14,4 +14,9 @@ describe("public/sw.js", () => {
     expect(sw).toContain('request.mode === "navigate"')
     expect(sw).toContain("offlineResponse()")
   })
+
+  it("falls back to the network when the cache throws (e.g. quota exceeded)", () => {
+    expect(sw).toContain("catch {")
+    expect(sw).toContain("return fetch(request)")
+  })
 })

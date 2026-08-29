@@ -52,8 +52,9 @@ same design without duplication:
 - `app/icon2.tsx` — 512×512, served at `/icon2`
 - `app/apple-icon.tsx` — 180×180, served at `/apple-icon` (required for iOS
   home screen; Next auto-injects `<link rel="apple-touch-icon">`)
-- Artwork stays within the central ~80% safe zone so icons also work as
-  maskable (per the app-icons file convention — numbered `icon1.tsx`,
+- Artwork is NOT maskable-safe (bars are, trend-line endpoints aren't) —
+  declaring maskable is a known follow-up (move polyline endpoints inward
+  first) (per the app-icons file convention — numbered `icon1.tsx`,
   `icon2.tsx` files, `size` + `contentType` exports)
 
 **Fallback (only if an installer rejects extensionless URLs):** generate static

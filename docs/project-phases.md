@@ -74,8 +74,6 @@ Both stores use `skipHydration` + a layout-driven `rehydrate()`, and zustand per
 
 *Older activity (2026-01 → 2026-08-14): see the dated files in [history/](history/) and the checkbox records in [project-phases/](project-phases/).*
 
-*Older activity (2026-01 → 2026-08-08): see the dated files in [history/](history/) and the checkbox records in [project-phases/](project-phases/).*
-
 ## Maintaining This File
 
 See [docs/README.md](README.md) for the three-tier rule and conventions. In short:

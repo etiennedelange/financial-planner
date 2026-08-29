@@ -177,7 +177,7 @@ export function PwaIconArtwork({ rounded = false }: { rounded?: boolean }) {
 }
 ```
 
-Note: no rounded corners at install sizes — installers apply their own mask; `rounded` stays only for the 32px favicon. Bars span left 9.4%→78% — within the central ~80% maskable safe zone.
+Note: no rounded corners at install sizes — installers apply their own mask; `rounded` stays only for the 32px favicon. Artwork is NOT maskable-safe (bars are, trend-line endpoints aren't) — declaring maskable is a known follow-up (move polyline endpoints inward first).
 
 - [ ] **Step 2: Refactor `app/icon.tsx` to use the artwork**
 

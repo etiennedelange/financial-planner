@@ -29,15 +29,22 @@ self.addEventListener("fetch", (event) => {
 
   // Immutable build assets (hashed JS/CSS/fonts): cache-first. Everything
   // else (API, auth, cross-origin) stays network-only — never cached.
+  // Any cache failure (e.g. quota exceeded on put) falls back to the
+  // network — a cache hiccup must never fail an otherwise-fetchable asset.
   if (sameOrigin && request.method === "GET" && url.pathname.startsWith("/_next/static/")) {
     event.respondWith(
-      caches.open(ASSET_CACHE).then(async (cache) => {
-        const cached = await cache.match(request)
-        if (cached) return cached
-        const response = await fetch(request)
-        if (response.ok) cache.put(request, response.clone())
-        return response
-      })
+      (async () => {
+        try {
+          const cache = await caches.open(ASSET_CACHE)
+          const cached = await cache.match(request)
+          if (cached) return cached
+          const response = await fetch(request)
+          if (response.ok) cache.put(request, response.clone())
+          return response
+        } catch {
+          return fetch(request)
+        }
+      })()
     )
   }
 })
