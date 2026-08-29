@@ -20,7 +20,8 @@
         "formulahendry.auto-rename-tag",
         "christian-kohler.path-intellisense",
         "TypeScriptTeam.native-preview",
-        "ms-playwright.playwright"
+        "ms-playwright.playwright",
+        "github.vscode-github-actions"
       ],
       "settings": {
         "editor.formatOnSave": true,
@@ -64,6 +65,7 @@
   "runArgs": ["--ipc=host", "--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
 
   "containerEnv": {
+    "GITHUB_COPILOT_API_KEY": "${localEnv:GITHUB_COPILOT_API_KEY}",
     "CLAUDE_CONFIG_DIR": "/home/node/.claude",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     // Long-lived token from `claude setup-token` (1 year), set as a host env
