@@ -36,6 +36,20 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
 
+  // PWA: the service worker must never be served from a browser/CDN cache —
+  // stale workers trap users on old caches. Per the Next.js PWA guide.
+  async headers() {
+    return [
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+        ],
+      },
+    ]
+  },
+
 }
 
 module.exports = withBundleAnalyzer(nextConfig)
