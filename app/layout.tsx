@@ -1,6 +1,7 @@
 import { SupabaseProvider } from "@/components/supabase-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ThemeShortcut } from "@/components/theme-shortcut"
+import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register"
 import { CommandPalette } from "@/components/command-palette/command-palette"
 import { Toaster } from "@/components/ui/toaster"
 import { Analytics } from "@vercel/analytics/next"
@@ -30,11 +31,20 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: "SA Retirement Calculator",
   description: "South African retirement planning with Monte Carlo simulations",
+  appleWebApp: {
+    capable: true,
+    title: "SA Retirement Calculator",
+    statusBarStyle: "default",
+  },
 }
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#178262" },
+    { media: "(prefers-color-scheme: dark)", color: "#3cddac" },
+  ],
 }
 
 // cacheComponents enables Partial Prefetching, which wants to prerender the
@@ -81,6 +91,7 @@ export default async function RootLayout({
               so they work on every route, not just the calculator section. */}
           <ThemeShortcut />
           <CommandPalette />
+          <ServiceWorkerRegister />
           <Toaster />
         </ThemeProvider>
         <Analytics />
