@@ -30,6 +30,10 @@ One line per work session, newest first, capped at the latest 10 entries — whe
 arrives, delete the oldest. Full detail lives in the linked history files, never here.
 Rules: [docs/README.md](README.md).
 
+## 2026-08-29 — PWA icon: safe-zone padding, maskable manifest entries, single icon route
+
+Confirmed `icon.tsx`/`icon1.tsx`/`icon2.tsx`/`apple-icon.tsx` were all live Next file-convention routes, not dead code (verified in the rendered `<head>`), then collapsed the three near-identical `icon.tsx`/`icon1.tsx`/`icon2.tsx` files into one `app/icon.tsx` via `generateImageMetadata()` (now serves `/icon/32`, `/icon/192`, `/icon/512`); `apple-icon.tsx` stays separate as its own Next convention. Closed the `maskable-icon` advisory the PWA work below had left open: `PwaIconArtwork`'s foreground chart glyph now sits in an inset `<g transform="translate(2.3 2.14) scale(0.83)">` (background stays full-bleed) so OS icon masks — Windows taskbar/Start pinning, Android adaptive icons, iOS auto-rounding — can't clip the artwork; `app/manifest.ts` adds explicit `purpose: "maskable"` entries. 1003/1003 tests (4 new), typecheck/lint/build clean, shadscan 93/100 unchanged. → [full write-up](history/2026-08-29-pwa-maskable-icon-safe-zone.md)
+
 ## 2026-08-29 — PWA: installable + offline-capable
 
 Manifest (`/manifest.webmanifest`, `display: standalone`, teal theme/background), shared-artwork icons (`/icon1` 192, `/icon2` 512, `/apple-icon` 180), and a hand-written `public/sw.js` (network-first navigations with an inline offline fallback page, cache-first `/_next/static/*` into `static-assets-v1`, `no-store` headers on the SW) — no new dependencies. Production-only registration in the root layout + `appleWebApp` metadata. Verified against a production build: SW active/controlling, 38 cached chunks served offline, fallback renders offline with zero console errors and zero CSP violations; Lighthouse 11.7.1 PWA 0.88/1 (`installable-manifest` passes; only advisory is `maskable-icon`). 1002/1002 tests, typecheck/lint/build clean, shadscan 93/100 unchanged. → [full write-up](history/2026-08-29-pwa-installable.md)

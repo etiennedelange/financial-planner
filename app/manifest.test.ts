@@ -12,8 +12,24 @@ describe("manifest", () => {
 
   it("declares 192 and 512 PNG icons", () => {
     const icons = manifest().icons ?? []
-    expect(icons).toContainEqual({ src: "/icon1", sizes: "192x192", type: "image/png" })
-    expect(icons).toContainEqual({ src: "/icon2", sizes: "512x512", type: "image/png" })
+    expect(icons).toContainEqual({ src: "/icon/192", sizes: "192x192", type: "image/png" })
+    expect(icons).toContainEqual({ src: "/icon/512", sizes: "512x512", type: "image/png" })
+  })
+
+  it("declares maskable variants so OS icon masks (e.g. Windows taskbar pinning) don't clip the artwork", () => {
+    const icons = manifest().icons ?? []
+    expect(icons).toContainEqual({
+      src: "/icon/192",
+      sizes: "192x192",
+      type: "image/png",
+      purpose: "maskable",
+    })
+    expect(icons).toContainEqual({
+      src: "/icon/512",
+      sizes: "512x512",
+      type: "image/png",
+      purpose: "maskable",
+    })
   })
 
   it("uses the brand teal and light background colors", () => {
