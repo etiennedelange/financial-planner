@@ -30,9 +30,8 @@ Decisions made during brainstorming:
 `MetadataRoute.Manifest` per the Next 16 manifest file convention
 (`app/manifest.ts` serves at `/manifest.webmanifest`):
 
-- `name: "SA Retirement Calculator"`, `short_name` (short form, decided at
-  implementation — e.g. "Retirement Calc"), description from existing layout
-  metadata
+- `name: "SA Retirement Calculator"`, `short_name: "Retirement Calc"`,
+  description from existing layout metadata
 - `start_url: "/calculator"` — `app/page.tsx` redirects there anyway; starting
   directly avoids a redirect hop on cold start (critical offline)
 - `display: "standalone"`
