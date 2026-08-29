@@ -30,6 +30,10 @@ One line per work session, newest first, capped at the latest 10 entries — whe
 arrives, delete the oldest. Full detail lives in the linked history files, never here.
 Rules: [docs/README.md](README.md).
 
+## 2026-08-29 — PWA: installable + offline-capable
+
+Manifest (`/manifest.webmanifest`, `display: standalone`, teal theme/background), shared-artwork icons (`/icon1` 192, `/icon2` 512, `/apple-icon` 180), and a hand-written `public/sw.js` (network-first navigations with an inline offline fallback page, cache-first `/_next/static/*` into `static-assets-v1`, `no-store` headers on the SW) — no new dependencies. Production-only registration in the root layout + `appleWebApp` metadata. Verified against a production build: SW active/controlling, 38 cached chunks served offline, fallback renders offline with zero console errors and zero CSP violations; Lighthouse 11.7.1 PWA 0.88/1 (`installable-manifest` passes; only advisory is `maskable-icon`). 1002/1002 tests, typecheck/lint/build clean, shadscan 93/100 unchanged. → [full write-up](history/2026-08-29-pwa-installable.md)
+
 ## 2026-08-24 — Motion delight: the Monte Carlo verdict lands
 
 `/impeccable delight` on Motion for React: the one authored moment is the simulation's answer. When the Monte Carlo worker resolves, Plan Success Rate counts up from zero with the tool's critically-damped spring (the dial sweeping to its reading; rolls between verdicts after), and the run-status checkmark stroke-draws itself in. Continuity: the five numeric metric cards roll between values via a new shared `RollingValue` primitive (fade on first appearance, spring on change); `SpringNumber` gains an `initial` prop. Caught a real hydration bug — branching markup on `useReducedMotion()` mismatches SSR; now gates durations/values only. First UI component tests in the repo (4, incl. mid-flight rollover proof). Waiting stays honest, charts stay static; `StickyResultsBar` confirmed dead. 994/994 tests, typecheck/lint/build clean, shadscan 93/100 unchanged. DESIGN.md gains a Motion section. → [full write-up](history/2026-08-24-motion-delight-verdict.md)
@@ -66,11 +70,9 @@ Phase 9.4 now tracks the architecture work needed to replace overlapping hydrati
 
 Both stores use `skipHydration` + a layout-driven `rehydrate()`, and zustand persist writes to storage on every `set()`; `SupabaseProvider`'s `setSessionId` fired before rehydrate's read settled, persisting the pre-hydration defaults over the saved plan (signed-in reloads masked it via `syncFromDb`; signed-out reloads lost the plan permanently). New `createGatedPersistStorage` drops writes until the first rehydrate settles; `SupabaseProvider.init()` awaits rehydrate before auth writes. 7 new tests incl. a regression test that fails without the gate; 926/926 tests. → [history](history/2026-08-15-persist-write-gate.md)
 
-## 2026-08-14 — Monetary inputs physically reject absurdly large numbers
-
-Unbounded monetary fields (annual income, retirement goals, account balances/contributions, drawdown withdrawals, medical aid, expenses) accepted values far past `Number.MAX_SAFE_INTEGER`, which lost precision, poisoned calculations, and overflowed the input padding. New `MAX_MONETARY_AMOUNT` (R1 trillion) + `isAllowedMonetaryInput`; `useBoundedMonetary` blocks over-cap input before it enters the DOM (`beforeinput`), so holding a key just stops adding digits; stores persist `version: 2` + `migrate` to clamp stale pre-fix data. 920 tests. → [history](history/2026-08-14-input-max-bounds.md)
-
 ---
+
+*Older activity (2026-01 → 2026-08-14): see the dated files in [history/](history/) and the checkbox records in [project-phases/](project-phases/).*
 
 *Older activity (2026-01 → 2026-08-08): see the dated files in [history/](history/) and the checkbox records in [project-phases/](project-phases/).*
 
