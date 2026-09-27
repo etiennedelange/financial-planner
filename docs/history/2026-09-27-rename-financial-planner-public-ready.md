@@ -71,9 +71,18 @@ GitHub secret scanning and push protection before the repo is made public.
 **Done 2026-09-27 via the Vercel API:** the Vercel project was renamed to
 `financial-planner` (id `prj_Lx2SIrcdlmRi5g4JD0P5CiojOh17`). The address
 `financial-planner.vercel.app` could not be used because another Vercel account
-owns it, so `sa-financial-planner.vercel.app` was added instead. The old
-`retirement-calculator-claude.vercel.app` address stays live. It becomes a 308
-redirect only after Supabase Auth and Turnstile accept the new hostname.
+owns it, so `sa-financial-planner.vercel.app` was added instead. Supabase Auth and Turnstile
+were then updated to the new hostname. The old
+`retirement-calculator-claude.vercel.app` address was **removed** at the
+owner's request rather than kept as a redirect. It now returns 404, and the
+subdomain is free for anyone to register, so old bookmarks, installed PWAs and
+auth emails that point at it no longer work. Preview deployments now need
+Vercel Authentication (`ssoProtection: preview`).
+
+GitHub, same day: the repo was renamed to `etiennedelange/financial-planner`
+and made public. Secret scanning, push protection, private vulnerability
+reporting and Dependabot security updates are on. `main` is protected: the
+`Checks` status check is required, and force-pushes and deletion are blocked.
 
 ## Verification
 
