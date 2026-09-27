@@ -41,7 +41,7 @@ export async function GET() {
   return new NextResponse(JSON.stringify(payload, null, 2), {
     headers: {
       "Content-Type": "application/json",
-      "Content-Disposition": `attachment; filename="retirement-calculator-export-${Date.now()}.json"`,
+      "Content-Disposition": `attachment; filename="financial-planner-export-${Date.now()}.json"`,
     },
   })
 }

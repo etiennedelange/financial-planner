@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
 /**
- * Playwright configuration for SA Retirement Calculator UI flow documentation
+ * Playwright configuration for SA Financial Planner UI flow documentation
  *
  * This configuration is optimized for documenting user flows and capturing
  * screenshots, not for E2E testing. Focus is on:

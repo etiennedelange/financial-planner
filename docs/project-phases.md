@@ -30,6 +30,10 @@ One line per work session, newest first, capped at the latest 10 entries — whe
 arrives, delete the oldest. Full detail lives in the linked history files, never here.
 Rules: [docs/README.md](README.md).
 
+## 2026-09-27 — Renamed to financial-planner; repo prepared for public visibility
+
+Slug `financial-planner`, display name "SA Financial Planner" (metadata, manifest, OG image, sidebar wordmark, download filenames); `retirement-calculator-storage` localStorage key deliberately unchanged so saved plans survive. Added README, all-rights-reserved LICENSE, SECURITY.md, least-privilege CI token. Full-history gitleaks scan: only published local-dev demo keys — no rewrite needed. 1003/1003 tests, typecheck/lint/build clean, shadscan 93/100 unchanged. → [full write-up](history/2026-09-27-rename-financial-planner-public-ready.md)
+
 ## 2026-08-29 — PWA icon: safe-zone padding, maskable manifest entries, single icon route
 
 Confirmed `icon.tsx`/`icon1.tsx`/`icon2.tsx`/`apple-icon.tsx` were all live Next file-convention routes, not dead code (verified in the rendered `<head>`), then collapsed the three near-identical `icon.tsx`/`icon1.tsx`/`icon2.tsx` files into one `app/icon.tsx` via `generateImageMetadata()` (now serves `/icon/32`, `/icon/192`, `/icon/512`); `apple-icon.tsx` stays separate as its own Next convention. Closed the `maskable-icon` advisory the PWA work below had left open: `PwaIconArtwork`'s foreground chart glyph now sits in an inset `<g transform="translate(2.3 2.14) scale(0.83)">` (background stays full-bleed) so OS icon masks — Windows taskbar/Start pinning, Android adaptive icons, iOS auto-rounding — can't clip the artwork; `app/manifest.ts` adds explicit `purpose: "maskable"` entries. 1003/1003 tests (4 new), typecheck/lint/build clean, shadscan 93/100 unchanged. → [full write-up](history/2026-08-29-pwa-maskable-icon-safe-zone.md)
@@ -65,14 +69,6 @@ Phase 9.4 shipped: one XState bootstrap coordinator owns hydration (once per gue
 ## 2026-08-15 — High-priority plan: bootstrap and data ownership hardening
 
 Phase 9.4 now tracks the architecture work needed to replace overlapping hydration/auth paths with serialized bootstrap, MFA-safe sync, explicit guest/user persistence scopes, and guarded remote writes. → [plan](superpowers/plans/2026-08-15-bootstrap-data-ownership-hardening.md) · [planning record](history/2026-08-15-bootstrap-data-ownership-hardening-plan.md)
-
-## 2026-08-15 — Persisted plan wiped on reload; pre-hydration writes gated
-
-Both stores use `skipHydration` + a layout-driven `rehydrate()`, and zustand persist writes to storage on every `set()`; `SupabaseProvider`'s `setSessionId` fired before rehydrate's read settled, persisting the pre-hydration defaults over the saved plan (signed-in reloads masked it via `syncFromDb`; signed-out reloads lost the plan permanently). New `createGatedPersistStorage` drops writes until the first rehydrate settles; `SupabaseProvider.init()` awaits rehydrate before auth writes. 7 new tests incl. a regression test that fails without the gate; 926/926 tests. → [history](history/2026-08-15-persist-write-gate.md)
-
----
-
-*Older activity (2026-01 → 2026-08-14): see the dated files in [history/](history/) and the checkbox records in [project-phases/](project-phases/).*
 
 ## Maintaining This File
 

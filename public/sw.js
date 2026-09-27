@@ -56,7 +56,7 @@ function offlineResponse() {
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Offline — SA Retirement Calculator</title>
+<title>Offline — SA Financial Planner</title>
 <style>
   body { font-family: system-ui, sans-serif; background: #faf9fb; color: #17242d; display: grid; place-items: center; min-height: 100vh; margin: 0; }
   .card { text-align: center; padding: 2rem; }

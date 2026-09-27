@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next"
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "SA Retirement Calculator",
-    short_name: "Retirement Calc",
-    description: "South African retirement planning with Monte Carlo simulations",
+    name: "SA Financial Planner",
+    short_name: "Fin Planner",
+    description: "South African retirement and financial planning with Monte Carlo simulations",
     start_url: "/calculator",
     display: "standalone",
     background_color: "#faf9fb",

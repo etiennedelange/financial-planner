@@ -80,7 +80,7 @@ function SocialCard() {
               textTransform: "uppercase",
             }}
           >
-            SA Retirement Calculator
+            SA Financial Planner
           </span>
           <span
             style={{

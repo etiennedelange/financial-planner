@@ -5,6 +5,11 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Least privilege: the workflow only needs to read the repo. Also limits what a
+# pull request from a fork could do with the GITHUB_TOKEN.
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true

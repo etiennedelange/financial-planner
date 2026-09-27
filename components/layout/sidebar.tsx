@@ -136,10 +136,10 @@ export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
           </div>
           <div className="flex flex-col gap-0.5">
             <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground leading-none">
-              Retirement
+              Financial
             </span>
             <span className="font-mono text-[8px] uppercase tracking-[0.14em] text-muted-foreground leading-none">
-              Calculator
+              Planner
             </span>
           </div>
         </div>

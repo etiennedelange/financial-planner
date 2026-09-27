@@ -16,8 +16,8 @@ describe("resolveSiteUrl", () => {
 
   it("normalises a protocol-less Vercel project URL to https", () => {
     delete process.env.NEXT_PUBLIC_SITE_URL
-    process.env.VERCEL_PROJECT_PRODUCTION_URL = "retirement-calculator-claude.vercel.app"
-    expect(resolveSiteUrl()).toBe("https://retirement-calculator-claude.vercel.app")
+    process.env.VERCEL_PROJECT_PRODUCTION_URL = "financial-planner.vercel.app"
+    expect(resolveSiteUrl()).toBe("https://financial-planner.vercel.app")
   })
 
   it("keeps a Vercel URL that already has a scheme", () => {
@@ -34,7 +34,7 @@ describe("resolveSiteUrl", () => {
 
   it("always returns a value new URL() accepts", () => {
     delete process.env.NEXT_PUBLIC_SITE_URL
-    process.env.VERCEL_PROJECT_PRODUCTION_URL = "retirement-calculator-claude.vercel.app"
+    process.env.VERCEL_PROJECT_PRODUCTION_URL = "financial-planner.vercel.app"
     expect(() => new URL(resolveSiteUrl())).not.toThrow()
   })
 })
