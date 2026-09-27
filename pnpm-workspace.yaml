@@ -1,8 +1,10 @@
 blockExoticSubdeps: true
 
 allowBuilds:
+  esbuild: true      # wrangler bundler (native binary)
   sharp: true        # next.js image optimisation
   unrs-resolver: true  # eslint-import-resolver-typescript (Rust native binary)
+  workerd: true      # wrangler local runtime (native binary)
 
 overrides:
   "@types/react": "19.2.17"
