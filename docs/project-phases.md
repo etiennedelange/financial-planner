@@ -30,6 +30,10 @@ One line per work session, newest first, capped at the latest 10 entries — whe
 arrives, delete the oldest. Full detail lives in the linked history files, never here.
 Rules: [docs/README.md](README.md).
 
+## 2026-09-27 — Sign-in dialog behind `NEXT_PUBLIC_AUTH_ENABLED` flag
+
+WIP Supabase auth disabled by default: sidebar "Sign in" shows a "Soon" tag, dialog opens with all controls disabled, no captcha, no Supabase calls. Opt in with `NEXT_PUBLIC_AUTH_ENABLED=true` (set in `.env.local`, leave unset on Vercel). 1012/1012 tests, shadscan 93/100 unchanged. → [full write-up](history/2026-09-27-auth-feature-flag.md)
+
 ## 2026-09-27 — Renamed to financial-planner; repo prepared for public visibility
 
 Slug `financial-planner`, display name "SA Financial Planner" (metadata, manifest, OG image, sidebar wordmark, download filenames); `retirement-calculator-storage` localStorage key deliberately unchanged so saved plans survive. Added README, all-rights-reserved LICENSE, SECURITY.md, least-privilege CI token. Full-history gitleaks scan: only published local-dev demo keys — no rewrite needed. 1003/1003 tests, typecheck/lint/build clean, shadscan 93/100 unchanged. → [full write-up](history/2026-09-27-rename-financial-planner-public-ready.md)
@@ -65,10 +69,6 @@ Deterministic `@shadscan/cli@0.16.0` audit (F → A): error-boundary retry butto
 ## 2026-08-15 — Bootstrap and data ownership hardening implemented
 
 Phase 9.4 shipped: one XState bootstrap coordinator owns hydration (once per guest/user scope), verified auth, MFA gating, claim, and sync; the auth listener is a pure event forwarder. Explicit `guest`/`user:<id>` persistence scopes with one-time legacy-key migration and sign-out eviction; remote writes guarded by identity+generation re-checks; claim takes an explicit `ClaimSource`; `/print` and the layout consume provider readiness. 985/985 tests, coverage gate green, journeys 08 (MFA) and 09 (bootstrap) pass e2e. → [implementation record](history/2026-08-15-bootstrap-data-ownership-hardening.md) · [plan](superpowers/plans/2026-08-15-bootstrap-data-ownership-hardening.md)
-
-## 2026-08-15 — High-priority plan: bootstrap and data ownership hardening
-
-Phase 9.4 now tracks the architecture work needed to replace overlapping hydration/auth paths with serialized bootstrap, MFA-safe sync, explicit guest/user persistence scopes, and guarded remote writes. → [plan](superpowers/plans/2026-08-15-bootstrap-data-ownership-hardening.md) · [planning record](history/2026-08-15-bootstrap-data-ownership-hardening-plan.md)
 
 ## Maintaining This File
 
