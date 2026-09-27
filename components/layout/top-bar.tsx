@@ -1,5 +1,6 @@
 "use client"
 
+import { AccountMenu } from "@/components/layout/account-menu"
 import { ScenarioSwitcher } from "@/components/scenarios/scenario-switcher"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
@@ -70,6 +71,8 @@ export function TopBar({ user }: TopBarProps) {
         <CommandPaletteTrigger />
         <DisplayModeDropdown />
         <ThemeToggle />
+        <div aria-hidden className="mx-1 h-5 w-px bg-border" />
+        <AccountMenu user={user} />
       </div>
       </div>
     </header>

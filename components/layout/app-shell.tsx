@@ -18,7 +18,7 @@ export function AppShell({ accountCount, user, isLoaded, children }: AppShellPro
     // (state-manager's waitForHydration polls it instead of a blind sleep).
     <div className="flex h-screen overflow-hidden" data-bootstrap-phase={isLoaded ? "ready" : "loading"}>
       {/* Sidebar — desktop only */}
-      <Sidebar accountCount={accountCount} user={user} isLoaded={isLoaded} />
+      <Sidebar accountCount={accountCount} isLoaded={isLoaded} />
 
       {/* Content area — offset by sidebar on desktop, full width on mobile */}
       <div className="flex flex-1 flex-col md:pl-(--sidebar-width) overflow-hidden">

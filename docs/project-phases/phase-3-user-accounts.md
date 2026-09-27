@@ -8,7 +8,7 @@
 - [x] **Supabase Auth integration** — `onAuthStateChange` listener in `SupabaseProvider`; `AuthContext` exposes current user to all components
 - [x] **Sign up flow** — `AuthModal` sign-up tab calls `supabase.auth.signUp()` with email/password; email confirmation required
 - [x] **Login flow** — `AuthModal` sign-in tab calls `signInWithPassword`; session change triggers `sessionId` update + DB sync
-- [x] **Logout** — inline account-menu dropdown in `components/layout/sidebar.tsx` calls `signOut()`; `user` becomes null
+- [x] **Logout** — account-menu dropdown in `components/layout/account-menu.tsx` (top bar; moved from the sidebar [2026-09-27](../history/2026-09-27-account-menu-top-bar.md)) calls `signOut()`; `user` becomes null
 - [x] **Password reset** — `AuthModal` reset tab calls `resetPasswordForEmail` with redirect to `/auth/callback`; now requires TOTP challenge for 2FA-enrolled users
 - [x] **Auth callback route** — `app/auth/callback/route.ts` exchanges OAuth code for session; handles email confirmation + password reset redirects
 - [x] **Local-dev email links fixed** — custom `supabase/templates/confirmation.html`/`recovery.html` route GoTrue's confirmation/recovery links through the app's own origin (`{{ .SiteURL }}/auth/callback?token_hash=...`) instead of the raw `127.0.0.1:54321` GoTrue `/verify` endpoint, which is unreachable from the browser in this devcontainer; `site_url` in `supabase/config.toml` aligned to `localhost:3000`; proxy (`app/supabase/[...path]/route.ts`) now forwards GoTrue redirects instead of following them internally, avoiding a CSP-nonce mismatch. See `docs/history/2026-08-08-local-dev-email-verification-fix.md`

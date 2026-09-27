@@ -1,32 +1,17 @@
 "use client"
 
-import { AuthModal } from "@/components/auth/auth-modal"
 import { Badge } from "@/components/ui/badge"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { createClient } from "@/lib/supabase/client"
-import type { User } from "@supabase/supabase-js"
 import {
   ChartColumnIcon,
   LayoutDashboardIcon,
   ReceiptIcon,
-  SettingsIcon,
   SlidersHorizontalIcon,
   TrendingUpIcon,
   WalletIcon,
 } from "@animateicons/react/lucide"
-import { LogOut, User as UserIcon } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
 import { cn } from "@/lib/utils"
-import { isAuthEnabled } from "@/lib/config/features"
 import { useAnimatedIcon, type AnimatedIconComponent } from "@/components/ui/animated-icon"
 
 const NAV_ITEMS: { href: string; label: string; icon: AnimatedIconComponent; showBadge?: boolean }[] = [
@@ -40,7 +25,6 @@ const NAV_ITEMS: { href: string; label: string; icon: AnimatedIconComponent; sho
 
 interface SidebarProps {
   accountCount: number
-  user: User | null
   isLoaded: boolean
 }
 
@@ -89,42 +73,8 @@ function NavItem({
   )
 }
 
-function SettingsNavLink({ active }: { active: boolean }) {
-  const { iconProps, controlProps } = useAnimatedIcon()
-
-  return (
-    <Link
-      {...controlProps}
-      href="/calculator/settings"
-      prefetch
-      aria-current={active ? "page" : undefined}
-      className={cn(
-        "group relative flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-all duration-150",
-        active
-          ? "bg-primary/10 text-primary"
-          : "text-muted-foreground hover:bg-accent hover:text-foreground"
-      )}
-    >
-      {active && (
-        <span className="absolute left-0 inset-y-1 w-[2px] rounded-full bg-primary" />
-      )}
-      <SettingsIcon {...iconProps} size={16} className="shrink-0" />
-      <span className="tracking-wide">Settings</span>
-    </Link>
-  )
-}
-
-export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
+export function Sidebar({ accountCount, isLoaded }: SidebarProps) {
   const pathname = usePathname()
-  const [authModalOpen, setAuthModalOpen] = useState(false)
-
-  const isAnon = !user
-  const email = user?.email
-
-  async function handleSignOut() {
-    await createClient().auth.signOut()
-  }
-
   return (
     <aside className="fixed left-0 top-0 z-30 hidden md:flex h-screen w-(--sidebar-width) flex-col bg-background border-r border-border">
       {/* Wordmark */}
@@ -158,56 +108,6 @@ export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
         ))}
       </nav>
 
-      {/* Bottom utility */}
-      <div className="px-3 pb-4 border-t border-border pt-3 space-y-0.5">
-        <SettingsNavLink active={pathname === "/calculator/settings"} />
-
-        <div>
-          {isAnon ? (
-            <button
-              onClick={() => setAuthModalOpen(true)}
-              aria-label="Sign in to your account"
-              className="flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-            >
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 border border-primary/25">
-                <UserIcon className="h-3 w-3 text-primary" />
-              </div>
-              <span className="flex-1 truncate text-left text-xs">Sign in</span>
-              {!isAuthEnabled() && (
-                <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Soon</span>
-              )}
-            </button>
-          ) : (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button aria-label="Account menu" className="flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 border border-primary/25">
-                    <UserIcon className="h-3 w-3 text-primary" />
-                  </div>
-                  <span className="flex-1 truncate text-left text-xs">{email}</span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="right" align="end" className="w-56">
-                <DropdownMenuLabel className="truncate">{email}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild className="cursor-pointer">
-                  <Link href="/calculator/settings">
-                    <SettingsIcon className="mr-2 h-4 w-4" size={16} />
-                    Manage Account
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
-      </div>
-
-      <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </aside>
   )
 }

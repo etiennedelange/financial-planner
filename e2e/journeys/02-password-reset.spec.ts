@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test"
+import { openSignIn } from "../helpers/auth-helper"
 
 // Local Supabase captures outbound mail in Mailpit on port 54324
 // (the [inbucket] config section is deprecated in favor of [local_smtp]/Mailpit;
@@ -22,14 +23,14 @@ test("password reset requires setting a new password", async ({ page }) => {
   const newPassword = "NewPassword456"
 
   await page.goto("/calculator")
-  await page.getByRole("button", { name: /sign in/i }).click()
+  await openSignIn(page)
   await page.getByRole("button", { name: /sign up/i }).click()
   await page.getByLabel("Email").fill(email)
   await page.getByLabel("Password").fill(oldPassword)
   await page.getByRole("button", { name: /create account/i }).click()
 
   await page.goto("/calculator")
-  await page.getByRole("button", { name: /sign in/i }).click()
+  await openSignIn(page)
   await page.getByRole("button", { name: /forgot password/i }).click()
   await page.getByLabel("Email").fill(email)
   await page.getByRole("button", { name: /send reset link/i }).click()
@@ -53,7 +54,7 @@ test("password reset requires setting a new password", async ({ page }) => {
   await page.getByRole("menuitem", { name: /sign out/i }).click()
 
   // The old password must be dead.
-  await page.getByRole("button", { name: /sign in/i }).click()
+  await openSignIn(page)
   await page.getByLabel("Email").fill(email)
   await page.getByLabel("Password").fill(oldPassword)
   await page.getByRole("button", { name: /^sign in$/i }).click()
@@ -65,14 +66,14 @@ test("recovery gate cannot be bypassed by stripping type=recovery from the callb
   const oldPassword = "OldPassword123"
 
   await page.goto("/calculator")
-  await page.getByRole("button", { name: /sign in/i }).click()
+  await openSignIn(page)
   await page.getByRole("button", { name: /sign up/i }).click()
   await page.getByLabel("Email").fill(email)
   await page.getByLabel("Password").fill(oldPassword)
   await page.getByRole("button", { name: /create account/i }).click()
 
   await page.goto("/calculator")
-  await page.getByRole("button", { name: /sign in/i }).click()
+  await openSignIn(page)
   await page.getByRole("button", { name: /forgot password/i }).click()
   await page.getByLabel("Email").fill(email)
   await page.getByRole("button", { name: /send reset link/i }).click()

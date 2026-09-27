@@ -20,10 +20,15 @@ export async function latestMailLink(email: string, subject: string): Promise<st
   return match[0]
 }
 
-// The sidebar's account-menu button sits bottom-left — exactly where Next's
-// dev-mode "issues" badge appears (e.g. the expected RLS rejection when
-// claimLocalData runs against a still-gated aal1 session), which then
-// intercepts clicks meant for the button underneath. Dev-overlay-only.
+/** Opens the sign-in dialog via the top-bar account menu (needs NEXT_PUBLIC_AUTH_ENABLED=true). */
+export async function openSignIn(page: Page) {
+  await page.getByRole("button", { name: "Account menu" }).click()
+  await page.getByRole("menuitem", { name: /sign in/i }).click()
+}
+
+// Next's dev-mode "issues" badge (e.g. the expected RLS rejection when
+// claimLocalData runs against a still-gated aal1 session) can intercept
+// clicks meant for controls underneath it. Dev-overlay-only.
 export async function dismissDevOverlay(page: Page) {
   const collapse = page.getByRole("button", { name: "Collapse issues badge" })
   if (await collapse.isVisible().catch(() => false)) await collapse.click()
@@ -36,7 +41,7 @@ export async function dismissDevOverlay(page: Page) {
  */
 export async function signUpAndConfirm(page: Page, email: string, password: string) {
   await page.goto("/calculator")
-  await page.getByRole("button", { name: /sign in/i }).click()
+  await openSignIn(page)
   await page.getByRole("button", { name: /sign up/i }).click()
   await page.getByLabel("Email").fill(email)
   await page.getByLabel("Password").fill(password)
@@ -48,7 +53,7 @@ export async function signUpAndConfirm(page: Page, email: string, password: stri
 }
 
 export async function signIn(page: Page, email: string, password: string) {
-  await page.getByRole("button", { name: /sign in/i }).click()
+  await openSignIn(page)
   await page.getByLabel("Email").fill(email)
   await page.getByLabel("Password").fill(password)
   await page.getByRole("button", { name: /^sign in$/i }).click()

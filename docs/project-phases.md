@@ -30,6 +30,10 @@ One line per work session, newest first, capped at the latest 10 entries — whe
 arrives, delete the oldest. Full detail lives in the linked history files, never here.
 Rules: [docs/README.md](README.md).
 
+## 2026-09-27 — Account control moved from sidebar to top bar
+
+Account icon menu (Settings + Sign in, "Soon" while auth is flagged off) now sits top-right in the top bar (new `components/layout/account-menu.tsx`) — fixes the misaligned sidebar row and makes sign-in reachable on mobile, where the sidebar is hidden. 1012/1012 tests, shadscan 93/100 unchanged. → [full write-up](history/2026-09-27-account-menu-top-bar.md)
+
 ## 2026-09-27 — Sign-in dialog behind `NEXT_PUBLIC_AUTH_ENABLED` flag
 
 WIP Supabase auth disabled by default: sidebar "Sign in" shows a "Soon" tag, dialog opens with all controls disabled, no captcha, no Supabase calls. Opt in with `NEXT_PUBLIC_AUTH_ENABLED=true` (set in `.env.local`, leave unset on Vercel). 1012/1012 tests, shadscan 93/100 unchanged. → [full write-up](history/2026-09-27-auth-feature-flag.md)
@@ -65,10 +69,6 @@ Deterministic `@shadscan/cli@0.16.0` audit (F → A): error-boundary retry butto
 ## 2026-08-15 — Phase 11 planned: knip-verified dead code cleanup
 
 `npx knip` findings hand-verified by grep; 8 unused files, `@radix-ui/react-tabs` (only used by the unused `tabs.tsx`), ~33 truly dead exports/types and 11 internal-only symbols to un-export are catalogued as a checklist. Excluded after verification: `SelectGroup` (false positive — used by `account-form-dialog.tsx`), `money-basis.type-test.ts` (intentional, exercised by `npm run typecheck`), `tailwindcss`/`tw-animate-css` (consumed via postcss/globals.css). → [phase 11](project-phases/phase-11-dead-code-cleanup.md)
-
-## 2026-08-15 — Bootstrap and data ownership hardening implemented
-
-Phase 9.4 shipped: one XState bootstrap coordinator owns hydration (once per guest/user scope), verified auth, MFA gating, claim, and sync; the auth listener is a pure event forwarder. Explicit `guest`/`user:<id>` persistence scopes with one-time legacy-key migration and sign-out eviction; remote writes guarded by identity+generation re-checks; claim takes an explicit `ClaimSource`; `/print` and the layout consume provider readiness. 985/985 tests, coverage gate green, journeys 08 (MFA) and 09 (bootstrap) pass e2e. → [implementation record](history/2026-08-15-bootstrap-data-ownership-hardening.md) · [plan](superpowers/plans/2026-08-15-bootstrap-data-ownership-hardening.md)
 
 ## Maintaining This File
 
