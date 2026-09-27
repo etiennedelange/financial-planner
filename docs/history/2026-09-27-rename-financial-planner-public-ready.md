@@ -12,7 +12,7 @@
 | Metadata | `app/layout.tsx` title + `appleWebApp.title`, `app/manifest.ts` name / `short_name` ("Fin Planner") / description, `app/opengraph-image.tsx`, `public/sw.js` offline page title |
 | UI copy | `components/layout/sidebar.tsx` wordmark, print footer (`app/print/print-client.tsx`), debug window header |
 | Download filenames | `financial-planner-export-<ts>.json` (account export, with its test), `financial-planner-recovery-codes.txt` |
-| Tests/fixtures | `lib/utils/site-url.test.ts` example host → `financial-planner.vercel.app` |
+| Tests/fixtures | `lib/utils/site-url.test.ts` example host → `sa-financial-planner.vercel.app` |
 | Local Supabase | `supabase/config.toml` `project_id` → `financial-planner` |
 | Devcontainer | `.devcontainer/post-create.sh` now resolves the repo path with `$(pwd)` instead of a hardcoded `/workspaces/retirement-calculator-claude`, so it keeps working whatever the clone folder is called |
 | Design docs | `DESIGN.md`, `.impeccable/design.json`, `playwright.config.ts`, `e2e/` comments |
@@ -57,9 +57,16 @@ plan docs are left as written because they are records of the past.
 
 These happen in GitHub, Vercel, Supabase, and Cloudflare, and are listed in the
 session summary. They cover renaming the GitHub repo and the Vercel project,
-adding `financial-planner.vercel.app`, updating the Supabase Auth Site URL and
+adding `sa-financial-planner.vercel.app`, updating the Supabase Auth Site URL and
 redirect allowlist and the Turnstile hostname allowlist, and turning on
 GitHub secret scanning and push protection before the repo is made public.
+
+**Done 2026-09-27 via the Vercel API:** the Vercel project was renamed to
+`financial-planner` (id `prj_Lx2SIrcdlmRi5g4JD0P5CiojOh17`). The address
+`financial-planner.vercel.app` could not be used because another Vercel account
+owns it, so `sa-financial-planner.vercel.app` was added instead. The old
+`retirement-calculator-claude.vercel.app` address stays live. It becomes a 308
+redirect only after Supabase Auth and Turnstile accept the new hostname.
 
 ## Verification
 
