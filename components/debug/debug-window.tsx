@@ -246,7 +246,7 @@ export function DebugWindow({
 
   const copyDebugInfo = async () => {
     const debugText = `
-SA RETIREMENT CALCULATOR - DEBUG INFORMATION
+SA FINANCIAL PLANNER - DEBUG INFORMATION
 Generated: ${new Date().toLocaleString("en-ZA")}
 
 =====================================================

@@ -372,7 +372,7 @@ export function PrintClient() {
         </div>
 
         <div style={{ marginTop: 24, fontSize: 9, color: "#9ca3af", borderTop: "1px solid #e5e7eb", paddingTop: 8 }}>
-          SA Retirement Calculator — projections are illustrative and based on the assumptions above. Past returns do not
+          SA Financial Planner — projections are illustrative and based on the assumptions above. Past returns do not
           guarantee future results. Consult a qualified financial adviser before making retirement decisions.
         </div>
       </div>

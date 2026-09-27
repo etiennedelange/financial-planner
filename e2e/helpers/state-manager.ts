@@ -22,7 +22,7 @@ export interface CalculatorState {
 /**
  * StateManager - Utility for manipulating localStorage state in Playwright tests
  *
- * The SA Retirement Calculator uses Zustand with localStorage persistence,
+ * The SA Financial Planner uses Zustand with localStorage persistence,
  * scoped per identity (guest or user:<id>) — see lib/store/persistence-scope.ts.
  * This helper provides methods to seed, clear, and inspect state for testing.
  *

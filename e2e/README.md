@@ -1,6 +1,6 @@
 # Playwright UI Flow Documentation
 
-This directory contains Playwright tests for documenting the SA Retirement Calculator's user flows and capturing UX pain points.
+This directory contains Playwright tests for documenting the SA Financial Planner's user flows and capturing UX pain points.
 
 ## Purpose
 

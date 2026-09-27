@@ -102,7 +102,7 @@ fi
 # # ─── Claude Code user settings ────────────────────────────────────────────────
 # # Symlink ~/.claude/settings.json to the repo file so changes are always committed
 # echo "--> Linking Claude Code user settings..."
-# ln -sf /workspaces/retirement-calculator-claude/.devcontainer/claude-settings.json "$HOME/.claude/settings.json"
+# ln -sf "$(pwd)"/.devcontainer/claude-settings.json "$HOME/.claude/settings.json"
 # ─── Claude Code user settings ────────────────────────────────────────────────
 
 # Symlink ~/.claude/settings.json to the repo file so changes are always committed.
@@ -133,7 +133,7 @@ fi
 # Keep settings.json in the repo so plugin installs persist across rebuilds.
 echo "--> Linking Claude settings to devcontainer config..."
 CLAUDE_SETTINGS="$HOME/.claude/settings.json"
-REPO_SETTINGS="/workspaces/retirement-calculator-claude/.devcontainer/claude-settings.json"
+REPO_SETTINGS="$(pwd)/.devcontainer/claude-settings.json"
 # Replace with symlink only if it's a regular file (or missing); skip if already linked correctly
 if [ ! -L "$CLAUDE_SETTINGS" ] || [ "$(readlink "$CLAUDE_SETTINGS")" != "$REPO_SETTINGS" ]; then
   # Seed repo file from existing settings if it has content

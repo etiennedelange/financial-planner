@@ -1,5 +1,5 @@
 ---
-name: SA Retirement Calculator
+name: SA Financial Planner
 description: Sharp financial planning tool for South African retirement modelling
 colors:
   primary-teal-dark: "#3CDDAC"
@@ -107,13 +107,13 @@ components:
     padding: "8px 12px"
 ---
 
-# Design System: SA Retirement Calculator
+# Design System: SA Financial Planner
 
 ## 1. Overview
 
 **Creative North Star: "The Precision Instrument"**
 
-This is a calibrated tool, not a dashboard. The SA Retirement Calculator surfaces exact financial projections for users who understand what they're looking at — RA contribution limits, TFSA tax treatment, Monte Carlo success rates, compounding methods. Every element exists to reduce the distance between the user and their number. Nothing decorates; everything informs.
+This is a calibrated tool, not a dashboard. The SA Financial Planner surfaces exact financial projections for users who understand what they're looking at — RA contribution limits, TFSA tax treatment, Monte Carlo success rates, compounding methods. Every element exists to reduce the distance between the user and their number. Nothing decorates; everything informs.
 
 The default theme is dark (deep navy that recedes so the data leads), with a single locked **teal accent** that marks the thing that matters — the primary value, the active state, the number you came here for. Teal replaces the system's original gold accent: same restraint, same one-signal discipline, a cooler and more clinical register that leans further into "instrument" than "vault." Both light and dark themes are fully supported and independently meet WCAG AA contrast requirements. IBM Plex Sans and IBM Plex Mono carry the voice: technical, neutral, precise. The monospace logotype sets the register immediately — this is a calculation environment, not a consumer app.
 

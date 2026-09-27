@@ -29,11 +29,11 @@ const siteUrl = resolveSiteUrl()
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "SA Retirement Calculator",
-  description: "South African retirement planning with Monte Carlo simulations",
+  title: "SA Financial Planner",
+  description: "South African retirement and financial planning with Monte Carlo simulations",
   appleWebApp: {
     capable: true,
-    title: "SA Retirement Calculator",
+    title: "SA Financial Planner",
     statusBarStyle: "default",
   },
 }

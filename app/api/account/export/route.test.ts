@@ -103,7 +103,7 @@ describe('GET /api/account/export', () => {
 
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toBe('application/json')
-    expect(response.headers.get('content-disposition')).toMatch(/^attachment; filename="retirement-calculator-export-\d+\.json"$/)
+    expect(response.headers.get('content-disposition')).toMatch(/^attachment; filename="financial-planner-export-\d+\.json"$/)
     expect(body.account).toEqual({ id: 'user-1', email: 'user@example.com', createdAt: '2026-01-01T00:00:00Z' })
     expect(body.scenarios).toEqual([{ id: 'scenario-1', session_id: 'user-1' }])
     expect(body.accounts).toEqual([{ id: 'account-1', scenario_id: 'scenario-1' }])

@@ -19,13 +19,13 @@ export function RecoveryCodesDialog({ open, codes, onClose }: RecoveryCodesDialo
 
   function handleDownload() {
     const blob = new Blob(
-      [`Retirement Calculator recovery codes\n\nEach code works once.\n\n${codes.join("\n")}\n`],
+      [`Financial Planner recovery codes\n\nEach code works once.\n\n${codes.join("\n")}\n`],
       { type: "text/plain" },
     )
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = "retirement-calculator-recovery-codes.txt"
+    a.download = "financial-planner-recovery-codes.txt"
     a.click()
     URL.revokeObjectURL(url)
     setAcknowledged(true)
