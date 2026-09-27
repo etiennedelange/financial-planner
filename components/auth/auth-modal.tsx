@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { FinanceAnimation } from "@/components/auth/finance-animation"
 import { Turnstile, type TurnstileHandle } from "@/components/auth/turnstile"
+import { isAuthEnabled } from "@/lib/config/features"
 
 const passwordSchema = z
   .string()
@@ -58,6 +59,9 @@ const modeConfig = {
 
 export function AuthModal({ open, onClose }: AuthModalProps) {
   const router = useRouter()
+  // Auth is WIP: when the flag is off the dialog still opens, but every
+  // control is disabled, no captcha is loaded and no Supabase call is made.
+  const authEnabled = isAuthEnabled()
   const [mode, setMode] = useState<Mode>("signin")
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [loading, setLoading] = useState(false)
@@ -90,6 +94,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   }
 
   async function handleSignIn(values: SignInForm) {
+    if (!authEnabled) return
     setLoading(true); setMessage(null)
     const { error } = await createClient().auth.signInWithPassword({
       email: values.email, password: values.password, options: { captchaToken },
@@ -110,6 +115,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   }
 
   async function handleSignUp(values: EmailPasswordForm) {
+    if (!authEnabled) return
     setLoading(true); setMessage(null)
     const { error } = await createClient().auth.signUp({
       email: values.email,
@@ -126,6 +132,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   }
 
   async function handleReset(values: EmailForm) {
+    if (!authEnabled) return
     setLoading(true); setMessage(null)
     const { error } = await createClient().auth.resetPasswordForEmail(values.email, {
       captchaToken,
@@ -140,7 +147,8 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
     }
   }
 
-  const { title, subtitle } = modeConfig[mode]
+  const { title } = modeConfig[mode]
+  const subtitle = authEnabled ? modeConfig[mode].subtitle : "Accounts are coming soon"
 
   // Handle-submit bindings are built once per render — the documented RHF v7
   // pattern (also used in account-form-dialog). React Compiler's react-hooks/refs
@@ -168,8 +176,14 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
           </div>
         </div>
 
+        <fieldset disabled={!authEnabled} aria-label={title} className="min-w-0 disabled:opacity-60">
         {/* Form body */}
         <div className="px-6 py-5 space-y-4">
+          {!authEnabled && (
+            <p role="note" className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
+              Sign-in isn&apos;t available yet. Your plan is saved in this browser in the meantime.
+            </p>
+          )}
           {mode === "signin" && (
             <form onSubmit={submitSignIn} className="space-y-3">
               <Field label="Email" id="si-email" type="email" autoComplete="email"
@@ -196,9 +210,9 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                 </p>
               )}
               <StatusMessage message={message} role="status" />
-              <Turnstile ref={turnstile} onToken={setCaptchaToken} />
+              {authEnabled && <Turnstile ref={turnstile} onToken={setCaptchaToken} />}
               <Button type="submit" className="w-full" disabled={loading || !captchaToken}>
-                {loading ? "Signing in…" : captchaToken ? "Sign In" : "Verifying…"}
+                {loading ? "Signing in…" : !authEnabled ? "Coming soon" : captchaToken ? "Sign In" : "Verifying…"}
               </Button>
             </form>
           )}
@@ -217,9 +231,9 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                 </p>
               )}
               <StatusMessage message={message} role="status" />
-              <Turnstile ref={turnstile} onToken={setCaptchaToken} />
+              {authEnabled && <Turnstile ref={turnstile} onToken={setCaptchaToken} />}
               <Button type="submit" className="w-full" disabled={loading || !captchaToken}>
-                {loading ? "Creating account…" : captchaToken ? "Create Account" : "Verifying…"}
+                {loading ? "Creating account…" : !authEnabled ? "Coming soon" : captchaToken ? "Create Account" : "Verifying…"}
               </Button>
             </form>
           )}
@@ -235,9 +249,9 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                 </p>
               )}
               <StatusMessage message={message} role="status" />
-              <Turnstile ref={turnstile} onToken={setCaptchaToken} />
+              {authEnabled && <Turnstile ref={turnstile} onToken={setCaptchaToken} />}
               <Button type="submit" className="w-full" disabled={loading || !captchaToken}>
-                {loading ? "Sending…" : captchaToken ? "Send Reset Link" : "Verifying…"}
+                {loading ? "Sending…" : !authEnabled ? "Coming soon" : captchaToken ? "Send Reset Link" : "Verifying…"}
               </Button>
             </form>
           )}
@@ -261,6 +275,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
             </>
           )}
         </div>
+        </fieldset>
       </DialogContent>
     </Dialog>
   )

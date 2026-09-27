@@ -26,6 +26,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
+import { isAuthEnabled } from "@/lib/config/features"
 import { useAnimatedIcon, type AnimatedIconComponent } from "@/components/ui/animated-icon"
 
 const NAV_ITEMS: { href: string; label: string; icon: AnimatedIconComponent; showBadge?: boolean }[] = [
@@ -172,6 +173,9 @@ export function Sidebar({ accountCount, user, isLoaded }: SidebarProps) {
                 <UserIcon className="h-3 w-3 text-primary" />
               </div>
               <span className="flex-1 truncate text-left text-xs">Sign in</span>
+              {!isAuthEnabled() && (
+                <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Soon</span>
+              )}
             </button>
           ) : (
             <DropdownMenu>

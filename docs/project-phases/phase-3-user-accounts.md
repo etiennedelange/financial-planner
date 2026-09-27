@@ -52,6 +52,7 @@
 
 ## Pending
 
+- [ ] **Ship auth publicly:** set `NEXT_PUBLIC_AUTH_ENABLED=true` on Vercel and redeploy — sign-in is disabled by default until then ([2026-09-27](../history/2026-09-27-auth-feature-flag.md))
 - [ ] Social login (Google OAuth) — optional
 - [ ] **Enable "Prevent use of leaked passwords"** in the hosted Supabase project (Dashboard → Authentication → Policies) on the day the project is deployed to production — this setting has no `config.toml` equivalent and cannot be applied locally
 - [ ] **WebAuthn/passkeys** — optional future enhancement for passwordless 2FA
