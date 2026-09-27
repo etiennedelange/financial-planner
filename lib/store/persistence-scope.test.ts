@@ -37,8 +37,8 @@ describe("persistence scopes", () => {
 
     useCalculatorStore.getState().setDisplayMode("nominal")
 
-    expect(localStorage.getItem("retirement-calculator-storage:guest")).not.toBeNull()
-    expect(localStorage.getItem("retirement-calculator-storage:user:user-a")).toBeNull()
+    expect(localStorage.getItem("financial-planner-storage:guest")).not.toBeNull()
+    expect(localStorage.getItem("financial-planner-storage:user:user-a")).toBeNull()
   })
 
   it("writes user state to the user-scoped key", async () => {
@@ -47,8 +47,8 @@ describe("persistence scopes", () => {
 
     useCalculatorStore.getState().setDisplayMode("real")
 
-    expect(localStorage.getItem("retirement-calculator-storage:user:user-a")).not.toBeNull()
-    expect(localStorage.getItem("retirement-calculator-storage:guest")).toBeNull()
+    expect(localStorage.getItem("financial-planner-storage:user:user-a")).not.toBeNull()
+    expect(localStorage.getItem("financial-planner-storage:guest")).toBeNull()
   })
 
   it("keeps user A's key distinct from user B's key", async () => {
@@ -60,10 +60,10 @@ describe("persistence scopes", () => {
     await useCalculatorStore.persist.rehydrate()
     useCalculatorStore.getState().setDisplayMode("nominal")
 
-    const a = storedCalculator("retirement-calculator-storage:user:user-a") as {
+    const a = storedCalculator("financial-planner-storage:user:user-a") as {
       state: { displayMode?: string }
     }
-    const b = storedCalculator("retirement-calculator-storage:user:user-b") as {
+    const b = storedCalculator("financial-planner-storage:user:user-b") as {
       state: { displayMode?: string }
     }
     expect(a.state.displayMode).toBe("real")
@@ -78,12 +78,12 @@ describe("persistence scopes", () => {
     // A write in the window before the user-scoped rehydrate settles:
     useCalculatorStore.getState().setDisplayMode("real")
 
-    expect(localStorage.getItem("retirement-calculator-storage:user:user-a")).toBeNull()
+    expect(localStorage.getItem("financial-planner-storage:user:user-a")).toBeNull()
 
     await useCalculatorStore.persist.rehydrate()
     // Only after the user scope has hydrated may writes land.
     useCalculatorStore.getState().setDisplayMode("nominal")
-    expect(localStorage.getItem("retirement-calculator-storage:user:user-a")).not.toBeNull()
+    expect(localStorage.getItem("financial-planner-storage:user:user-a")).not.toBeNull()
   })
 
   it("re-gates every registered store instance, not just the first", async () => {
@@ -102,7 +102,7 @@ describe("persistence scopes", () => {
   describe("legacy un-scoped key migration", () => {
     it("moves a legacy payload with a sessionId into that user's scoped key", () => {
       localStorage.setItem(
-        "retirement-calculator-storage",
+        "financial-planner-storage",
         JSON.stringify({ state: { sessionId: "user-legacy", accounts: [] }, version: 2 })
       )
       localStorage.setItem(
@@ -112,16 +112,16 @@ describe("persistence scopes", () => {
 
       const ambiguous = migrateLegacyKeys()
 
-      expect(localStorage.getItem("retirement-calculator-storage")).toBeNull()
+      expect(localStorage.getItem("financial-planner-storage")).toBeNull()
       expect(localStorage.getItem("expenses-store-v2")).toBeNull()
-      expect(localStorage.getItem("retirement-calculator-storage:user:user-legacy")).not.toBeNull()
+      expect(localStorage.getItem("financial-planner-storage:user:user-legacy")).not.toBeNull()
       expect(localStorage.getItem("expenses-store-v2:user:user-legacy")).not.toBeNull()
       expect(ambiguous).toEqual([])
     })
 
     it("routes a sessionId:null legacy payload to the ambiguous holding area, never auto-claimed", () => {
       localStorage.setItem(
-        "retirement-calculator-storage",
+        "financial-planner-storage",
         JSON.stringify({ state: { sessionId: null, accounts: [] }, version: 2 })
       )
       localStorage.setItem(
@@ -132,8 +132,8 @@ describe("persistence scopes", () => {
       const ambiguous = migrateLegacyKeys()
 
       // Moved out of the un-scoped keys, but not claimed by any account.
-      expect(localStorage.getItem("retirement-calculator-storage")).toBeNull()
-      expect(localStorage.getItem("retirement-calculator-storage:user:user-a")).toBeNull()
+      expect(localStorage.getItem("financial-planner-storage")).toBeNull()
+      expect(localStorage.getItem("financial-planner-storage:user:user-a")).toBeNull()
       expect(ambiguous).toHaveLength(2)
       expect(ambiguous[0].scope).toEqual({ kind: "guest" })
       expect(ambiguous[0].payload).toEqual(
@@ -143,7 +143,7 @@ describe("persistence scopes", () => {
 
     it("leaves the legacy key intact for retry when a copy fails", () => {
       localStorage.setItem(
-        "retirement-calculator-storage",
+        "financial-planner-storage",
         JSON.stringify({ state: { sessionId: "user-a", accounts: [] }, version: 2 })
       )
       // Make the scoped-key write throw by freezing storage mid-migration — the
@@ -170,7 +170,7 @@ describe("persistence scopes", () => {
 
       expect(threw).toBe(true)
       // Legacy key survives a failed migration for retry.
-      expect(localStorage.getItem("retirement-calculator-storage")).not.toBeNull()
+      expect(localStorage.getItem("financial-planner-storage")).not.toBeNull()
     })
 
     it("is a no-op when no legacy keys exist", () => {
@@ -183,7 +183,7 @@ describe("persistence scopes", () => {
       // payload still runs the load-bearing monetary clamp migrate on
       // rehydrate. Without the clamp, pre-cap absurd values resurface.
       localStorage.setItem(
-        "retirement-calculator-storage",
+        "financial-planner-storage",
         JSON.stringify({
           state: { sessionId: "user-a", personalInfo: { annualIncome: 1e15 } },
           version: 1,

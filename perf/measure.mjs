@@ -88,7 +88,7 @@ const stats = (samples) => {
 // ---- seed state for the interactive scenario ----------------------------
 //
 // Shape must match the output of Zustand's `persist` middleware using the
-// store at lib/store/calculator-store.ts (name: "retirement-calculator-storage").
+// store at lib/store/calculator-store.ts (name: "financial-planner-storage").
 // Three accounts gives the projection + Monte Carlo realistic work to do.
 
 const SEED_STATE = {
@@ -181,7 +181,7 @@ async function measureOnce(browser, runIndex) {
 
       if (scenario === 'interactive' || scenario === 'interaction') {
         try {
-          localStorage.setItem('retirement-calculator-storage', JSON.stringify(seed))
+          localStorage.setItem('financial-planner-storage', JSON.stringify(seed))
         } catch { /* private mode etc. */ }
       }
 

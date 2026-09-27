@@ -27,7 +27,7 @@ export interface CalculatorState {
  * This helper provides methods to seed, clear, and inspect state for testing.
  *
  * LocalStorage keys:
- *   retirement-calculator-storage:guest | :user:<userId>
+ *   financial-planner-storage:guest | :user:<userId>
  *   expenses-store-v2:guest | :user:<userId>
  */
 export class StateManager {
@@ -39,7 +39,7 @@ export class StateManager {
    */
   async clearState() {
     await this.page.evaluate(() => {
-      const prefix = ['retirement-calculator-storage', 'expenses-store-v2']
+      const prefix = ['financial-planner-storage', 'expenses-store-v2']
       const keysToRemove: string[] = []
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i)
@@ -60,7 +60,7 @@ export class StateManager {
    */
   async seedState(state: Partial<CalculatorState>) {
     await this.page.evaluate((stateData) => {
-      const storageKey = 'retirement-calculator-storage:guest'
+      const storageKey = 'financial-planner-storage:guest'
       const existing = localStorage.getItem(storageKey)
       const parsed = existing ? JSON.parse(existing) : { state: {} }
 
@@ -80,7 +80,7 @@ export class StateManager {
    */
   async getState(): Promise<CalculatorState | null> {
     return await this.page.evaluate(() => {
-      const storage = localStorage.getItem('retirement-calculator-storage:guest')
+      const storage = localStorage.getItem('financial-planner-storage:guest')
       return storage ? JSON.parse(storage).state : null
     })
   }

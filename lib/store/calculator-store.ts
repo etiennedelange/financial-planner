@@ -30,7 +30,7 @@ import {
 import { clampMonetaryAmount } from "@/lib/utils/monetary"
 
 // Sign-out must be able to evict this store's user-scoped keys.
-registerStorageBaseName("retirement-calculator-storage")
+registerStorageBaseName("financial-planner-storage")
 
 // See persist-gate.ts: writes are held back until the first rehydrate() settles,
 // so auth-driven set() calls that race the layout's manual rehydrate can never
@@ -418,7 +418,7 @@ export const useCalculatorStore = create<CalculatorState>()(
       },
     }),
     {
-      name: "retirement-calculator-storage",
+      name: "financial-planner-storage",
       storage,
       skipHydration: true,
       version: 2,

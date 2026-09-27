@@ -17,11 +17,18 @@
 | Devcontainer | `.devcontainer/post-create.sh` now resolves the repo path with `$(pwd)` instead of a hardcoded `/workspaces/retirement-calculator-claude`, so it keeps working whatever the clone folder is called |
 | Design docs | `DESIGN.md`, `.impeccable/design.json`, `playwright.config.ts`, `e2e/` comments |
 
-**Kept on purpose.** The `retirement-calculator-storage` localStorage key, with
-its `:guest` and `:user:<id>` scoped variants, is **not** renamed. Renaming it
-would make every existing browser drop its saved plan, and the legacy-scope
-migration would then have to handle two generations of keys. Dated history and
-plan docs are left as written because they are records of the past.
+**Storage key (follow-up, same day).** At first the localStorage key was kept
+as `retirement-calculator-storage` so saved plans would survive. The owner then
+chose to rename it too, accepting that plans stored only in the browser would be
+lost. Signed-in users reload their plans from Supabase. The key is now
+`financial-planner-storage`, along with its `:guest` and `:user:<id>` variants.
+`LEGACY_CALCULATOR_KEY` in `lib/store/legacy-scope-migration.ts` must stay equal
+to the calculator's storage name, because the migration writes the scoped key
+under the legacy key's own name. It was renamed with it, which makes the
+calculator half of the unscoped-key migration a no-op. The expenses key
+(`expenses-store-v2`) is unchanged. Old `retirement-calculator-storage*` entries
+stay in existing browsers unused. Dated history and plan docs are left as
+written because they are records of the past.
 
 **Public-readiness.**
 - `README.md` (new): overview, stack, layout, and local setup. It states that
