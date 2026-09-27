@@ -621,7 +621,7 @@ describe('persist write-gate (auth-before-rehydrate clobber regression)', () => 
 
   it('survives a setSessionId fired before the layout rehydrate reads storage', async () => {
     localStorage.setItem(
-      'retirement-calculator-storage:guest',
+      'financial-planner-storage:guest',
       JSON.stringify({ state: persistedSnapshot, version: 2 })
     )
 
@@ -639,14 +639,14 @@ describe('persist write-gate (auth-before-rehydrate clobber regression)', () => 
     expect(freshStore.getState().accounts[0].name).toBe('Persisted RA')
 
     // And localStorage must still hold the plan, not the pre-hydration defaults.
-    const stored = JSON.parse(localStorage.getItem('retirement-calculator-storage:guest')!)
+    const stored = JSON.parse(localStorage.getItem('financial-planner-storage:guest')!)
     expect(stored.state.personalInfo.currentAge).toBe(45)
     expect(stored.state.accounts).toHaveLength(1)
   })
 
   it('persists subsequent writes once rehydrate has settled', async () => {
     localStorage.setItem(
-      'retirement-calculator-storage:guest',
+      'financial-planner-storage:guest',
       JSON.stringify({ state: { ...persistedSnapshot, accounts: [] }, version: 2 })
     )
 
@@ -655,7 +655,7 @@ describe('persist write-gate (auth-before-rehydrate clobber regression)', () => 
     await freshStore.persist.rehydrate()
     freshStore.getState().setPersonalInfo({ currentAge: 52 })
 
-    const stored = JSON.parse(localStorage.getItem('retirement-calculator-storage:guest')!)
+    const stored = JSON.parse(localStorage.getItem('financial-planner-storage:guest')!)
     expect(stored.state.personalInfo.currentAge).toBe(52)
   })
 })
@@ -701,13 +701,13 @@ describe("identity transitions and stale-write guards", () => {
   })
 
   it("evicts the signed-out user's scoped storage keys", () => {
-    localStorage.setItem("retirement-calculator-storage:user:user-a", JSON.stringify({ state: {} }))
+    localStorage.setItem("financial-planner-storage:user:user-a", JSON.stringify({ state: {} }))
     localStorage.setItem("expenses-store-v2:user:user-a", JSON.stringify({ state: {} }))
     useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-a" })
 
     useCalculatorStore.getState().setIdentity({ kind: "guest" })
 
-    expect(localStorage.getItem("retirement-calculator-storage:user:user-a")).toBeNull()
+    expect(localStorage.getItem("financial-planner-storage:user:user-a")).toBeNull()
     expect(localStorage.getItem("expenses-store-v2:user:user-a")).toBeNull()
   })
 

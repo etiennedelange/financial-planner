@@ -32,7 +32,7 @@ export function getScope(): PersistenceScope {
   return activeScope
 }
 
-/** Scoped storage key for a base name, e.g. `retirement-calculator-storage` → `retirement-calculator-storage:user:user-a`. */
+/** Scoped storage key for a base name, e.g. `financial-planner-storage` → `financial-planner-storage:user:user-a`. */
 export function scopedKeyFor(baseName: string, scope: PersistenceScope): string {
   return scope.kind === "user" ? `${baseName}:user:${scope.userId}` : `${baseName}:guest`
 }

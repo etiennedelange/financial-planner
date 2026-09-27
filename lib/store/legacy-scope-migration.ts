@@ -21,12 +21,12 @@ import { scopedKeyFor } from "./persistence-scope"
 // monetary clamp) still runs for v1 payloads when the scoped key rehydrates.
 // Bumping to 3 would add nothing but a risk of skipping the clamp.
 
-export const LEGACY_CALCULATOR_KEY = "retirement-calculator-storage"
+export const LEGACY_CALCULATOR_KEY = "financial-planner-storage"
 export const LEGACY_EXPENSES_KEY = "expenses-store-v2"
 const AMBIGUOUS_HOLDING_PREFIX = "rc-legacy-ambiguous:"
 
 export interface AmbiguousLegacyState {
-  /** Base storage name the payload belongs to (e.g. `retirement-calculator-storage`). */
+  /** Base storage name the payload belongs to (e.g. `financial-planner-storage`). */
   baseName: string
   scope: { kind: "guest" }
   payload: unknown
