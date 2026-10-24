@@ -30,9 +30,9 @@ One line per work session, newest first, capped at the latest 10 entries — whe
 arrives, delete the oldest. Full detail lives in the linked history files, never here.
 Rules: [docs/README.md](README.md).
 
-## 2026-10-24 — CI and dependency supply-chain hardening
+## 2026-10-24 — CI supply-chain hardening; Next.js 16.4.3 for two critical RCEs
 
-Actions pinned to commit SHAs, checkout without persisted credentials, new weekly `pnpm audit` and zizmor workflows, Dependabot with a 7-day cooldown, and pnpm `strictDepBuilds`/`minimumReleaseAge`/`trustPolicy`. The audit starts red: Next 16.3.6 is hit by two critical unauthenticated RCEs (fixed in 16.4.1), not yet upgraded. No app code changed. → [full write-up](history/2026-10-24-ci-supply-chain-hardening.md)
+Actions pinned to commit SHAs, checkout without persisted credentials, new weekly `pnpm audit` and zizmor workflows, Dependabot with a 7-day cooldown, and pnpm `strictDepBuilds`/`minimumReleaseAge`/`trustPolicy`. The new audit caught two critical unauthenticated RCEs in Next 16.3.6; upgraded to 16.4.3 (plus zod, sharp, undici, source-map-js) and the audit is clean. 1012/1012 tests, typecheck/lint/build clean, shadscan 93/100 unchanged. → [full write-up](history/2026-10-24-ci-supply-chain-hardening.md)
 
 ## 2026-09-27 — Account control moved from sidebar to top bar
 
