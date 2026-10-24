@@ -1,0 +1,42 @@
+name: Security audit
+
+# Known vulnerabilities in dependencies. It runs when the lockfiles change and every Monday,
+# because advisories are published against dependencies that haven't changed.
+on:
+  push:
+    branches: [main]
+    paths:
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - .github/workflows/audit.yml
+  pull_request:
+    paths:
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - .github/workflows/audit.yml
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  pnpm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Reads the version from packageManager in package.json.
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: lts/*
+          package-manager-cache: false
+      # Production dependencies only: dev tools (test runners, linters) don't ship. High and
+      # critical fail the job; ignore one that doesn't apply under auditConfig.ignoreGhsas in
+      # pnpm-workspace.yaml, with a comment saying why.
+      - run: pnpm audit --prod --audit-level high
