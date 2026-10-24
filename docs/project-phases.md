@@ -30,6 +30,10 @@ One line per work session, newest first, capped at the latest 10 entries — whe
 arrives, delete the oldest. Full detail lives in the linked history files, never here.
 Rules: [docs/README.md](README.md).
 
+## 2026-10-24 — CI and dependency supply-chain hardening
+
+Actions pinned to commit SHAs, checkout without persisted credentials, new weekly `pnpm audit` and zizmor workflows, Dependabot with a 7-day cooldown, and pnpm `strictDepBuilds`/`minimumReleaseAge`/`trustPolicy`. The audit starts red: Next 16.3.6 is hit by two critical unauthenticated RCEs (fixed in 16.4.1), not yet upgraded. No app code changed. → [full write-up](history/2026-10-24-ci-supply-chain-hardening.md)
+
 ## 2026-09-27 — Account control moved from sidebar to top bar
 
 Account icon menu (Settings + Sign in, "Soon" while auth is flagged off) now sits top-right in the top bar (new `components/layout/account-menu.tsx`) — fixes the misaligned sidebar row and makes sign-in reachable on mobile, where the sidebar is hidden. 1012/1012 tests, shadscan 93/100 unchanged. → [full write-up](history/2026-09-27-account-menu-top-bar.md)
@@ -65,10 +69,6 @@ The cmdk palette was restyled from the shadcn-default look back to the pre-audit
 ## 2026-08-16 — shadscan accessibility & polish audit: 40 → 98/100
 
 Deterministic `@shadscan/cli@0.16.0` audit (F → A): error-boundary retry buttons in the `error.tsx` files, Suspense fallback, labels on every unlabeled control (Selects, Sliders, Inputs), focus-visible rings where outlines were suppressed, `d` theme hotkey, command palette rebuilt on cmdk + mounted at root, Toaster at root, `app/not-found.tsx`, OG/Twitter images, robots/sitemap, `data-icon` on 22 buttons, "No data yet" chart empty states, async pending states, and light `--primary` 34→30% / dark `--destructive` 50→58% contrast fixes — all browser-verified in both themes and at 320px. `mobile-nav-present` waived (bottom tab bar is the mobile pattern). 985/985 tests, coverage 92.7%. → [full write-up](history/2026-08-16-shadscan-accessibility-audit.md)
-
-## 2026-08-15 — Phase 11 planned: knip-verified dead code cleanup
-
-`npx knip` findings hand-verified by grep; 8 unused files, `@radix-ui/react-tabs` (only used by the unused `tabs.tsx`), ~33 truly dead exports/types and 11 internal-only symbols to un-export are catalogued as a checklist. Excluded after verification: `SelectGroup` (false positive — used by `account-form-dialog.tsx`), `money-basis.type-test.ts` (intentional, exercised by `npm run typecheck`), `tailwindcss`/`tw-animate-css` (consumed via postcss/globals.css). → [phase 11](project-phases/phase-11-dead-code-cleanup.md)
 
 ## Maintaining This File
 

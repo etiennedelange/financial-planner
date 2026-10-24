@@ -1,0 +1,32 @@
+version: 2
+
+# Minor and patch updates arrive as one grouped PR per ecosystem; majors stay separate.
+# The cooldown skips releases younger than 7 days (supply-chain safety). Security updates
+# ignore it and open as soon as an advisory is published.
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      npm:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns: ['*']
+
+  - package-ecosystem: devcontainers
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
