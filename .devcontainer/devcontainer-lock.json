@@ -1,10 +1,5 @@
 {
   "features": {
-    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {
-      "version": "1.0.5",
-      "resolved": "ghcr.io/anthropics/devcontainer-features/claude-code@sha256:cfc2e7d3e9fd3b9b01f8d5cb158508a884c8c0ede2e23ed10f32dea5d4ffe69a",
-      "integrity": "sha256:cfc2e7d3e9fd3b9b01f8d5cb158508a884c8c0ede2e23ed10f32dea5d4ffe69a"
-    },
     "ghcr.io/devcontainers/features/docker-in-docker:3.0.1": {
       "version": "3.0.1",
       "resolved": "ghcr.io/devcontainers/features/docker-in-docker@sha256:ca2508495b01ba29eba93e8153772a2daa65eaa86471cc6863fe2a3d21933df9",
@@ -19,6 +14,11 @@
       "version": "1.1.0",
       "resolved": "ghcr.io/devcontainers/features/github-cli@sha256:d22f50b70ed75339b4eed1ba9ecde3a1791f90e88d37936517e3bace0bbad671",
       "integrity": "sha256:d22f50b70ed75339b4eed1ba9ecde3a1791f90e88d37936517e3bace0bbad671"
+    },
+    "ghcr.io/etiennedelange/devcontainer-features/dev-setup:1": {
+      "version": "1.1.1",
+      "resolved": "ghcr.io/etiennedelange/devcontainer-features/dev-setup@sha256:367fb88d5e16516d32a3e3a85509529766fa282eb81109f802395c18008f332b",
+      "integrity": "sha256:367fb88d5e16516d32a3e3a85509529766fa282eb81109f802395c18008f332b"
     }
   }
 }

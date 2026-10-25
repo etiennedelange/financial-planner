@@ -3,7 +3,11 @@
   "image": "mcr.microsoft.com/devcontainers/typescript-node:dev-24-bookworm",
 
   "features": {
-    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
+    // Personal feature: Claude Code with the shared claude-code-config volume at
+    // /var/lib/claude-code, plus git identity and SSH commit signing through the
+    // forwarded agent (defaults are the personal identity and signing key).
+    // Needs `docker login ghcr.io` on the host (private package).
+    "ghcr.io/etiennedelange/devcontainer-features/dev-setup:1": {},
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/docker-in-docker:3.0.1": {}
@@ -41,11 +45,7 @@
     }
   },
 
-  "forwardPorts": [
-    3000,
-    54321,
-    54323
-  ],
+  "forwardPorts": [3000, 54321, 54323],
 
   "portsAttributes": {
     "3000": {
@@ -66,13 +66,12 @@
 
   "containerEnv": {
     "GITHUB_COPILOT_API_KEY": "${localEnv:GITHUB_COPILOT_API_KEY}",
-    "CLAUDE_CONFIG_DIR": "/home/node/.claude",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     // Long-lived token from `claude setup-token` (1 year), set as a host env
     // var or GitHub Codespaces secret. Lets Claude authenticate in a brand
     // new/ephemeral container without an interactive browser login — the
-    // volume mount below only carries auth across rebuilds of the *same*
-    // container, not across fresh Codespaces or throwaway sandboxes.
+    // shared claude-code-config volume only carries auth across containers on
+    // the same machine, not across fresh Codespaces or throwaway sandboxes.
     // Resolves to "" (falsy, ignored) when unset, so interactive /login
     // still works normally.
     "CLAUDE_CODE_OAUTH_TOKEN": "${localEnv:CLAUDE_CODE_OAUTH_TOKEN}"
@@ -84,12 +83,11 @@
   // sudo is required: postCreateCommand runs as remoteUser (node, non-root),
   // but a freshly created named volume starts out root-owned, so a plain
   // chown fails and the && chain would abort before post-create.sh ever runs.
-  "postCreateCommand": "sudo chown -R node:node /home/node/.claude /home/node/.local /home/node/.config 2>/dev/null; bash .devcontainer/post-create.sh",
+  "postCreateCommand": "sudo chown -R node:node /home/node/.local /home/node/.config 2>/dev/null; bash .devcontainer/post-create.sh",
 
   "remoteUser": "node",
 
   "mounts": [
-    "source=claude-code-config-${devcontainerId},target=/home/node/.claude,type=volume",
     "source=opencode-home-${devcontainerId},target=/home/node/.opencode,type=volume",
     "source=opencode-config-${devcontainerId},target=/home/node/.config/opencode,type=volume",
     "source=opencode-data-${devcontainerId},target=/home/node/.local/share/opencode,type=volume"

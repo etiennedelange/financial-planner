@@ -75,4 +75,4 @@
 
 ## Pending
 
-- **Phase 3 upgrade path** — when a user signs up, link their authenticated session to accounts/scenarios created as anon (now partially covered by migrateExpensesToSession)
+None. The former "anon → authenticated upgrade path" item is obsolete: Phase 3 removed anonymous sign-in (all users authenticate), and guest→user local data handling is covered by the 2026-08-15 [bootstrap and data ownership hardening](../history/2026-08-15-bootstrap-data-ownership-hardening.md). Remaining auth rollout work is tracked in [Phase 3](phase-3-user-accounts.md#pending).
