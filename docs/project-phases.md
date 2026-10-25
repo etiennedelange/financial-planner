@@ -12,7 +12,7 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 | **Phase 1.5** | ✅ P0 resolved | [Testing & Validation](project-phases/phase-1-5-testing-validation.md) — invariants rewritten, 12/12 mutations killed |
 | **Phase 1.6** | ✅ Complete | [Performance Optimization](project-phases/phase-1-6-performance-optimization.md) |
 | **Phase 1.7** | ✅ Complete | [Next 16 / React 19 / Tailwind v4 Modernization](project-phases/phase-1-7-modernization.md) |
-| **Phase 2** | 🔄 In Progress | [Supabase Integration](project-phases/phase-2-supabase.md) |
+| **Phase 2** | ✅ Complete | [Supabase Integration](project-phases/phase-2-supabase.md) |
 | **Phase 3** | ✅ Risk register resolved | [User Accounts](project-phases/phase-3-user-accounts.md) |
 | **Phase 4** | ✅ Complete | [Data Persistence](project-phases/phase-4-data-persistence.md) |
 | **Phase 5** | 🔄 In Progress | [Export Functionality](project-phases/phase-5-export-functionality.md) |
@@ -44,7 +44,7 @@ WIP Supabase auth disabled by default: sidebar "Sign in" shows a "Soon" tag, dia
 
 ## 2026-09-27 — Renamed to financial-planner; repo prepared for public visibility
 
-Slug `financial-planner`, display name "SA Financial Planner" (metadata, manifest, OG image, sidebar wordmark, download filenames); `retirement-calculator-storage` localStorage key deliberately unchanged so saved plans survive. Added README, all-rights-reserved LICENSE, SECURITY.md, least-privilege CI token. Full-history gitleaks scan: only published local-dev demo keys — no rewrite needed. 1003/1003 tests, typecheck/lint/build clean, shadscan 93/100 unchanged. → [full write-up](history/2026-09-27-rename-financial-planner-public-ready.md)
+Slug `financial-planner`, display name "SA Financial Planner" (metadata, manifest, OG image, sidebar wordmark, download filenames); localStorage key renamed to `financial-planner-storage` in a same-day follow-up (browser-only plans deliberately not migrated; signed-in users rehydrate from Supabase). Added README, all-rights-reserved LICENSE, SECURITY.md, least-privilege CI token. Full-history gitleaks scan: only published local-dev demo keys — no rewrite needed. 1003/1003 tests, typecheck/lint/build clean, shadscan 93/100 unchanged. → [full write-up](history/2026-09-27-rename-financial-planner-public-ready.md)
 
 ## 2026-08-29 — PWA icon: safe-zone padding, maskable manifest entries, single icon route
 

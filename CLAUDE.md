@@ -32,10 +32,14 @@ npm run shadscan:gate    # audit with --fail-under 90 (exits non-zero on regress
 container reload, so the audit works offline and can never drift versions.
 
 **Run `npm run shadscan` before committing** (or `shadscan:gate` for a
-hard-fail at <90/100). Baseline: 98/100 (A). Known non-passing finding, all
-deliberate and documented in
-[docs/history/2026-08-16-shadscan-accessibility-audit.md](docs/history/2026-08-16-shadscan-accessibility-audit.md):
-- `mobile-nav-present` — waived (mobile bottom tab bar is the pattern).
+hard-fail at <90/100). Baseline: 93/100 (A). Known non-passing findings
+(the only two that reduce the score; the "Worth checking" items do not):
+- `mobile-nav-present` — waived (mobile bottom tab bar is the pattern); see
+  [docs/history/2026-08-16-shadscan-accessibility-audit.md](docs/history/2026-08-16-shadscan-accessibility-audit.md).
+- `icon-buttons-have-labels` at `components/ui/animated-icon-button.tsx` — static
+  false positive: the wrapper spreads `...props` onto `Button`, so the scanner can't
+  see the label. All 11 call sites (`accounts-page.tsx`, `expenses-page.tsx`) pass
+  `aria-label` (verified 2026-10-25). New call sites must keep doing so.
 
 When a new finding appears, fix it or record an explicit implement/waive
 decision; never churn code just to move score-neutral advisories.
