@@ -1,7 +1,7 @@
 # Documentation Update Log
 
 ## 2026-10-30
-* **Update**: [docs/ converted to an Open Knowledge Format bundle](history/2026-10-30-docs-okf-bundle.md) - docs/ is now an OKF v0.2 bundle: frontmatter on every doc, generated index.md per directory, log.md replacing the Recent Activity feed, and a validator.
+* **Update**: [docs/ frontmatter, log.md and docs:check (OKF-style)](history/2026-10-30-docs-okf-bundle.md) - Frontmatter on every doc, log.md replacing the Recent Activity feed, and docs:check; generated OKF indexes were added then removed after an A/B test showed no benefit.
 
 ## 2026-10-24
 * **Update**: [CI supply-chain hardening; Next.js 16.4.3 for two critical RCEs](history/2026-10-24-ci-supply-chain-hardening.md) - CI supply-chain hardening, and Next.js 16.4.3 for two critical RCEs.

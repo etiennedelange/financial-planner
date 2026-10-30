@@ -1,12 +1,17 @@
 ---
 type: History Entry
 title: "2026-10-30 — docs/ converted to an Open Knowledge Format bundle"
-description: "docs/ is now an OKF v0.2 bundle: frontmatter on every doc, generated index.md per directory, log.md replacing the Recent Activity feed, and a validator."
+description: "Frontmatter on every doc, log.md replacing the Recent Activity feed, and docs:check; the generated OKF indexes were added then removed after an A/B test showed no benefit."
 date: 2026-10-30
 tags: [tooling]
 ---
 
 # 2026-10-30 — docs/ converted to an Open Knowledge Format bundle
+
+> **Follow-up, same day: the generated indexes were removed.** An A/B test (below) showed
+> they did not help, so `docs/` keeps the frontmatter, `log.md` and `docs:check` but is no
+> longer an OKF bundle in the conformance sense. Sections below describe what was first
+> built; read "Follow-up" at the end for the current state.
 
 ## Why
 
@@ -52,3 +57,25 @@ one small index and then opens only what it needs.
 - Conformance per SPEC §11: every non-reserved `.md` has parseable frontmatter with a
   non-empty `type`; `index.md` and `log.md` follow §8 and §9.
 - No application code or test changed, so the unit suite was not re-run.
+
+## Follow-up: A/B test and slimming down
+
+Two fresh read-only sessions answered the same three doc questions (2FA risk register,
+Section 11F credit, Phases 10/11), one on `main` (plain markdown) and one on the OKF branch.
+
+| | plain (`main`) | OKF branch |
+|---|---|---|
+| Tool calls before answering | 4 | 7 |
+| Cost | $0.19 | $0.40 |
+
+Both answers were correct. The OKF session read the root index but then grepped and listed
+directories like the other one, never opened `history/index.md`, and re-read two phase
+docs. One run each on three questions is a small sample, so this shows only that there was
+no large gain.
+
+**Removed:** the 7 generated `index.md` files, `pnpm docs:index`, `scripts/docs-okf.mjs`
+(replaced by the smaller `scripts/docs-check.mjs`), and the requirement for `type`.
+**Kept:** `title`/`description` frontmatter (still required), `date`/`tags`, `log.md`, and
+`pnpm docs:check` (frontmatter, broken links between docs, ISO log dates). Rules in
+`CLAUDE.md`, `docs/README.md`, `docs-sync`, `wrap-up` and house-rules were updated to match.
+Verified with `pnpm docs:check`.

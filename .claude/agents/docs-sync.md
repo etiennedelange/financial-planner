@@ -15,7 +15,7 @@ You keep this project's documentation true. CLAUDE.md rule 2 requires phase docs
 4. `docs/history/` — a date-prefixed markdown file for significant calculation or architecture changes
 5. `CLAUDE.md` — correct any claim that the repo now contradicts
 
-`docs/` is an OKF bundle. Every new doc needs `type`, `title` and `description` frontmatter (see `docs/README.md`). After editing, run `pnpm docs:index` then `pnpm docs:check`, and report the check's output. Never hand-edit an `index.md`.
+Every doc under `docs/` needs `title` and `description` frontmatter (see `docs/README.md`). After editing, run `pnpm docs:check` and report its output.
 
 ## Verify before you write
 

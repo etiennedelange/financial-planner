@@ -64,8 +64,8 @@ Detail lives in exactly **one** place. All three tiers update together:
 **Check:** detail duplicated across tiers. A phase doc that restates the history file has
 created two things that will disagree later.
 
-**Check:** a new/renamed doc without `type`/`title`/`description` frontmatter, or `pnpm
-docs:check` failing (stale `index.md`, broken doc link). Also an emoji flipped on an entry
+**Check:** a new/renamed doc without `title`/`description` frontmatter, or `pnpm
+docs:check` failing (broken doc link). Also an emoji flipped on an entry
 that did not change phase status.
 
 **Check:** doc paths. They are relative to the **repo root** (`docs/history/...`); markdown
