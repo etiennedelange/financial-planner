@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Display Mode Consistency and Lump Sum Bug Fixes (2026-04-27)"
+description: "Display-mode consistency in the calculations breakdown, and lump sum bug fixes."
+date: 2026-04-27
+tags: [tax]
+---
+
 # Display Mode Consistency and Lump Sum Bug Fixes (2026-04-27)
 
 ## Display Mode in Calculations Breakdown

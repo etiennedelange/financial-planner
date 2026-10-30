@@ -1,3 +1,10 @@
+---
+type: History Entry
+title: "2026-08-08 — Local-Dev Fix: Auth Email Links Unreachable (ERR_CONNECTION_REFUSED)"
+description: "Local-dev fix for unreachable auth email links (ERR_CONNECTION_REFUSED)."
+date: 2026-08-08
+---
+
 # 2026-08-08 — Local-Dev Fix: Auth Email Links Unreachable (ERR_CONNECTION_REFUSED)
 
 Follow-up on the `feature/auth-hardening-2fa` branch, after the 2026-08-08 auth-hardening

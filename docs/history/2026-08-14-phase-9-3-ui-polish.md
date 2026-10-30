@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Phase 9.3 — UI/UX polish: CSS-variable extraction, loading states, chart data tables, Zod messages"
+description: "Phase 9.3 UI/UX polish: CSS variable extraction, loading states, chart data tables, Zod messages."
+date: 2026-08-14
+tags: [ui]
+---
+
 # Phase 9.3 — UI/UX polish: CSS-variable extraction, loading states, chart data tables, Zod messages
 
 ## What changed

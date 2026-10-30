@@ -1,3 +1,9 @@
+---
+type: Phase
+title: "Phase 3: User Accounts"
+description: "Phase 3: authentication and profiles so plans sync across devices."
+---
+
 # Phase 3: User Accounts ✅ Security risk register resolved
 
 **Goal:** Implement user authentication and profile management so users can sync their retirement plan across devices, with hardened security including mandatory login and optional 2FA.

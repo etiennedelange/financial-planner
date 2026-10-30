@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Drawdown Strategy Divergence After Year 1"
+description: "Fix for drawdown strategies diverging after year 1; introduces shared drawdown-withdrawal.ts."
+date: 2026-06-21
+tags: [calculations]
+---
+
 # Drawdown Strategy Divergence After Year 1
 
 **Date:** 2026-06-21

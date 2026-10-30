@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "2026-08-24 — AnimateIcons icon motion: the instrument responds to touch"
+description: "AnimateIcons path-level icon motion on interactive controls."
+date: 2026-08-24
+tags: [ui]
+---
+
 # 2026-08-24 — AnimateIcons icon motion: the instrument responds to touch
 
 ## What changed

@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Section 11F Excess Contribution Credit (2026-05-10)"
+description: "Carry-forward credit for pension/RA/preservation contributions exceeding the Section 11F cap."
+date: 2026-05-10
+tags: [tax]
+---
+
 # Section 11F Excess Contribution Credit (2026-05-10)
 
 ## What changed

@@ -10,9 +10,12 @@ You keep this project's documentation true. CLAUDE.md rule 2 requires phase docs
 ## Targets
 
 1. `docs/project-phases/` — mark tasks complete, update the pending list
-2. `docs/project-phases.md` — add a dated entry to "Current Status Summary", update the status emoji
-3. `docs/history/` — a date-prefixed markdown file for significant calculation or architecture changes
-4. `CLAUDE.md` — correct any claim that the repo now contradicts
+2. `docs/log.md` — add a one-line entry under a `## YYYY-MM-DD` heading (newest first) linking to the history file
+3. `docs/project-phases.md` — update a phase's status emoji only when its status actually changed
+4. `docs/history/` — a date-prefixed markdown file for significant calculation or architecture changes
+5. `CLAUDE.md` — correct any claim that the repo now contradicts
+
+`docs/` is an OKF bundle. Every new doc needs `type`, `title` and `description` frontmatter (see `docs/README.md`). After editing, run `pnpm docs:index` then `pnpm docs:check`, and report the check's output. Never hand-edit an `index.md`.
 
 ## Verify before you write
 

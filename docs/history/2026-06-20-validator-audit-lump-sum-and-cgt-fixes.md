@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "SA Retirement Calc Validator Audit: Lump Sum, Annuitisation Cap, MC Tax, CGT Exclusion"
+description: "Validator audit fixes: lump sum, annuitisation cap, Monte Carlo tax and CGT exclusion."
+date: 2026-06-20
+tags: [tax, quality]
+---
+
 # SA Retirement Calc Validator Audit: Lump Sum, Annuitisation Cap, MC Tax, CGT Exclusion
 
 **Date:** 2026-06-20

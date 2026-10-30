@@ -55,17 +55,18 @@ Detail lives in exactly **one** place. All three tiers update together:
    verified
 2. **`docs/project-phases/<phase>.md`** — flip checkboxes, update the pending list, link to
    the history file; do not repeat its content
-3. **`docs/project-phases.md`** — one-line Recent Activity entry (date + title + history
-   link). Keep the latest 10, drop the oldest. Status emoji (✅ complete · 🔄 in progress ·
-   📋 planned) changes **only** when a phase's status actually changes.
+3. **`docs/log.md`** — one-line entry under a `## YYYY-MM-DD` heading, newest first (title +
+   history link + one sentence). The `docs/project-phases.md` status emoji (✅ complete · 🔄
+   in progress · 📋 planned) changes **only** when a phase's status actually changes.
 
 **Check:** a meaningful change with no `docs/history/` entry.
 
 **Check:** detail duplicated across tiers. A phase doc that restates the history file has
 created two things that will disagree later.
 
-**Check:** Recent Activity longer than 10 entries, or an emoji flipped on an entry that did
-not change phase status.
+**Check:** a new/renamed doc without `type`/`title`/`description` frontmatter, or `pnpm
+docs:check` failing (stale `index.md`, broken doc link). Also an emoji flipped on an entry
+that did not change phase status.
 
 **Check:** doc paths. They are relative to the **repo root** (`docs/history/...`); markdown
 links from inside `project-phases/` need a `../` prefix. A stray `docs/docs/` tree once went

@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Retirement Calculator Accuracy Validation Report"
+description: "Accuracy validation of the calculator by the sa-retirement-calc-validator agent."
+date: 2026-01-02
+tags: [quality]
+---
+
 # Retirement Calculator Accuracy Validation Report
 
 **Date:** 2026-01-02

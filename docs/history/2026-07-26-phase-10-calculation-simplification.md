@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "2026-07-26 — Phase 10: Calculation Simplification (complete)"
+description: "Phase 10 complete: engine deduplicated, money units type-safe, Monte Carlo seeded."
+date: 2026-07-26
+tags: [calculations]
+---
+
 # 2026-07-26 — Phase 10: Calculation Simplification (complete)
 
 Companion to [2026-07-26-audit-batch-1-fixes.md](2026-07-26-audit-batch-1-fixes.md), which

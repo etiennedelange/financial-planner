@@ -1,3 +1,10 @@
+---
+type: History Entry
+title: "2026-08-08 — Manage Account Moved from Modal to `/calculator/settings`"
+description: "Manage Account moved from a modal to /calculator/settings."
+date: 2026-08-08
+---
+
 # 2026-08-08 — Manage Account Moved from Modal to `/calculator/settings`
 
 Follow-up on the `feature/auth-hardening-2fa` branch, layered on top of the same-day

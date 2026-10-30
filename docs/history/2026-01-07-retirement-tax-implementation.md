@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Retirement Tax Implementation - 2026-01-07"
+description: "Complete SA retirement tax calculation system with full UI integration."
+date: 2026-01-07
+tags: [tax]
+---
+
 # Retirement Tax Implementation - 2026-01-07
 
 ## Summary

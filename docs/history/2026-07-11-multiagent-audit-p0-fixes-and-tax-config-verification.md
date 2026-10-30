@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Multi-Agent Audit: P0 Fixes + Tax Config Primary-Source Verification"
+description: "Multi-agent audit P0 fixes and primary-source verification of the tax config."
+date: 2026-07-11
+tags: [tax, quality]
+---
+
 # Multi-Agent Audit: P0 Fixes + Tax Config Primary-Source Verification
 
 **Date:** 2026-07-11

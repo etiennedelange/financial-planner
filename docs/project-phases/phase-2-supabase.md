@@ -1,3 +1,9 @@
+---
+type: Phase
+title: "Phase 2: Supabase Integration"
+description: "Phase 2: Supabase database infrastructure for persistent data."
+---
+
 # Phase 2: Supabase Integration ✅ Complete
 
 **Goal:** Set up database infrastructure for persistent data storage.

@@ -1,3 +1,9 @@
+---
+type: Phase
+title: "Phase 9: Site-Wide Improvement"
+description: "Phase 9: site-wide improvements found by a parallel agent audit (calculations, UI/UX, test coverage)."
+---
+
 # Phase 9: Site-Wide Improvement
 
 _Identified 2026-06-07 via parallel agent audit (UI/UX, calculations, test coverage)._

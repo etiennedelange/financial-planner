@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "2026-09-27 — Rename to financial-planner and prepare the repo to go public"
+description: "Rename to financial-planner and preparation for making the repo public."
+date: 2026-09-27
+tags: [security]
+---
+
 # 2026-09-27 — Rename to financial-planner and prepare the repo to go public
 
 ## What changed

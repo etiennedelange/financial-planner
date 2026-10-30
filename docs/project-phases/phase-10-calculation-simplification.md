@@ -1,3 +1,10 @@
+---
+type: Phase
+title: "Phase 10: Calculation Simplification"
+description: "Phase 10: remove the structural conditions that let calculation errors in (engine deduplication, typed money units, seeded Monte Carlo)."
+tags: [calculations]
+---
+
 # Phase 10: Calculation Simplification ✅ COMPLETE
 
 **Goal:** Reduce the margin of error in the calculation layer by removing the structural

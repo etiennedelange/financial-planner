@@ -1,3 +1,10 @@
+---
+type: Phase
+title: "Phase 7: UI Redesign — Sidebar App Shell"
+description: "Phase 7: replace the single-column layout with a left sidebar app shell."
+tags: [ui]
+---
+
 # Phase 7: UI Redesign — Sidebar App Shell ✅ Complete
 
 _Implemented 2026-06-07 on `feature/redesign` branch._

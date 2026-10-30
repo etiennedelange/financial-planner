@@ -1,3 +1,10 @@
+---
+type: Design Spec
+title: "What-If Sensitivity Panel — Design Spec"
+description: "What-if sensitivity panel driven by sliders such as retirement age."
+date: 2026-08-01
+---
+
 # What-If Sensitivity Panel — Design Spec
 
 Date: 2026-08-01

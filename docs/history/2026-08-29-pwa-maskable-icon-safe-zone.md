@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "PWA icon: safe-zone padding, maskable manifest entries, and a single icon route"
+description: "PWA icon safe-zone padding, maskable manifest entries and a single icon route."
+date: 2026-08-29
+tags: [pwa, ui]
+---
+
 # PWA icon: safe-zone padding, maskable manifest entries, and a single icon route
 
 Date: 2026-08-29

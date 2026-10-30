@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Scenario Comparison Methodology Fix"
+description: "Fix to the scenario comparison methodology."
+date: 2026-01-15
+tags: [calculations]
+---
+
 # Scenario Comparison Methodology Fix
 
 **Date:** 2026-01-15

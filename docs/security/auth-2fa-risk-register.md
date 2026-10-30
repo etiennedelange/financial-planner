@@ -1,3 +1,10 @@
+---
+type: Risk Register
+title: "Auth and 2FA Risk Register"
+description: "Findings and remediation status from the Supabase Auth, password, TOTP and recovery-code security review."
+tags: [security]
+---
+
 # Auth and 2FA Risk Register
 
 **Review date:** 2026-08-10

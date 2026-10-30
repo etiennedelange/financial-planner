@@ -1,3 +1,9 @@
+---
+type: Phase
+title: "Phase 1.6: Performance Optimization"
+description: "Phase 1.6: Next.js rendering, bundle size and UX performance work."
+---
+
 # Phase 1.6: Performance Optimization 🔄 IN PROGRESS
 
 **Goal:** Optimize Next.js application performance for faster rendering, smaller bundles, and smoother UX.

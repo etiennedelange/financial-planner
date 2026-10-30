@@ -1,3 +1,10 @@
+---
+type: History Entry
+title: "High-priority bootstrap and data ownership hardening plan"
+description: "Decision and plan for hardening bootstrap and data ownership after the persist write-gate fix."
+date: 2026-08-15
+---
+
 # High-priority bootstrap and data ownership hardening plan
 
 ## Decision

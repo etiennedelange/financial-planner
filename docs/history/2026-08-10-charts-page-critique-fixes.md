@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Charts page: design-critique fixes (MC live on route, honest copy, success-rate hierarchy, contrast)"
+description: "Charts-page critique fixes: Monte Carlo live on route, honest copy, success-rate hierarchy, contrast."
+date: 2026-08-10
+tags: [ui]
+---
+
 # Charts page: design-critique fixes (MC live on route, honest copy, success-rate hierarchy, contrast)
 
 **Date:** 2026-08-10

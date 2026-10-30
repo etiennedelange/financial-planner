@@ -1,3 +1,9 @@
+---
+type: Phase
+title: "Phase 5: Export Functionality"
+description: "Phase 5: downloadable reports and data exports."
+---
+
 # Phase 5: Export Functionality 🔄 Mostly Complete
 
 **Goal:** Generate downloadable reports and data exports.

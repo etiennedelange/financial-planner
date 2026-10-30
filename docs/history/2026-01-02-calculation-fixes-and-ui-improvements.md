@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Project Changes: 2026-01-02"
+description: "Calculation accuracy fixes to match Excel FV, plus UI improvements."
+date: 2026-01-02
+tags: [ui, calculations]
+---
+
 # Project Changes: 2026-01-02
 
 ## SA Retirement Calculator - Calculation Fixes & UI Improvements
