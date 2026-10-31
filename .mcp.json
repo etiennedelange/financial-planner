@@ -2,20 +2,12 @@
   "mcpServers": {
     "playwright": {
       "command": "npx",
-      "args": [
-        "@playwright/mcp@latest",
-        "--browser",
-        "chromium",
-        "--headless"
-      ],
+      "args": ["@playwright/mcp@latest", "--browser", "chromium", "--headless"],
       "env": {}
     },
     "shadcn": {
       "command": "npx",
-      "args": [
-        "shadcn@latest",
-        "mcp"
-      ]
+      "args": ["shadcn@latest", "mcp"]
     },
     "supabase": {
       "type": "http",
@@ -27,18 +19,11 @@
     },
     "filesystem": {
       "command": "sh",
-      "args": [
-        "-c",
-        "npx -y @modelcontextprotocol/server-filesystem \"$CLAUDE_PROJECT_DIR\""
-      ]
+      "args": ["-c", "npx -y @modelcontextprotocol/server-filesystem \"$CLAUDE_PROJECT_DIR\""]
     },
     "fetch": {
       "command": "uvx",
-      "args": [
-        "mcp-server-fetch",
-        "--with",
-        "mcp<2.0.0"
-      ]
+      "args": ["mcp-server-fetch", "--with", "mcp<2.0.0"]
     },
     "github": {
       "type": "http",

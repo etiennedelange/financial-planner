@@ -17,9 +17,11 @@ function makeDeferred() {
 
 const stubActors = {
   hydrateGuestScope: fromPromise<void, void>(async () => {}),
-  resolveIdentity: fromPromise<User | null, { pendingEvent: AuthEvent | null }>(async ({ input }) => {
-    return input.pendingEvent?.userId != null ? ({ id: input.pendingEvent.userId } as User) : null
-  }),
+  resolveIdentity: fromPromise<User | null, { pendingEvent: AuthEvent | null }>(
+    async ({ input }) => {
+      return input.pendingEvent?.userId != null ? ({ id: input.pendingEvent.userId } as User) : null
+    },
+  ),
   hydrateUserScope: fromPromise<void, { userId: string }>(async ({ input }) => {
     void input.userId
   }),
@@ -27,15 +29,15 @@ const stubActors = {
     async ({ input }) => {
       void input.event
       void input.generation
-    }
+    },
   ),
   checkAal: fromPromise<{ current: string | null; next: string | null }, { userId: string }>(
-    async () => ({ current: "aal2", next: null })
+    async () => ({ current: "aal2", next: null }),
   ),
   claimAndSync: fromPromise<void, { userId: string; event: AuthEvent; generation: number }>(
     async ({ input }) => {
       void input
-    }
+    },
   ),
 }
 
@@ -67,14 +69,17 @@ describe("bootstrapMachine", () => {
           hydrateCalls += 1
           await deferred.promise
         }),
-      })
+      }),
     )
     actor.start()
 
     // The listener is registered before start(), so INITIAL_SESSION lands while
     // hydratingGuest is still running. It must be captured, not re-targeted —
     // a re-target would exit hydratingGuest and cancel the in-flight migration.
-    actor.send({ type: "AUTH_EVENT", event: { type: "INITIAL_SESSION", userId: null, hasSession: false } })
+    actor.send({
+      type: "AUTH_EVENT",
+      event: { type: "INITIAL_SESSION", userId: null, hasSession: false },
+    })
 
     expect(actor.getSnapshot().matches("hydratingGuest")).toBe(true)
     expect(actor.getSnapshot().context.pendingEvent).toEqual({
@@ -95,7 +100,7 @@ describe("bootstrapMachine", () => {
     const actor = createActor(
       makeMachine({
         resolveIdentity: fromPromise<User | null, { pendingEvent: AuthEvent | null }>(
-          async () => ({ id: "user-a" } as User)
+          async () => ({ id: "user-a" }) as User,
         ),
         hydrateUserScope: fromPromise(async () => {
           await deferred.promise
@@ -103,15 +108,18 @@ describe("bootstrapMachine", () => {
         applyTransition: fromPromise(
           async ({ input }: { input: { event: AuthEvent; generation: number } }) => {
             applied.push(input.event)
-          }
+          },
         ),
-      })
+      }),
     )
     actor.start()
 
     await waitFor(actor, (s) => s.matches("hydratingUser"))
 
-    actor.send({ type: "AUTH_EVENT", event: { type: "SIGNED_OUT", userId: null, hasSession: false } })
+    actor.send({
+      type: "AUTH_EVENT",
+      event: { type: "SIGNED_OUT", userId: null, hasSession: false },
+    })
     expect(actor.getSnapshot().matches("hydratingUser")).toBe(true)
 
     deferred.resolve()
@@ -126,7 +134,10 @@ describe("bootstrapMachine", () => {
     const actor = startWith()
     await waitFor(actor, (s) => s.matches("ready"))
 
-    actor.send({ type: "AUTH_EVENT", event: { type: "SIGNED_IN", userId: "user-a", hasSession: true } })
+    actor.send({
+      type: "AUTH_EVENT",
+      event: { type: "SIGNED_IN", userId: "user-a", hasSession: true },
+    })
 
     await waitFor(actor, (s) => s.matches("ready"))
     expect(actor.getSnapshot().context.userId).toBe("user-a")
@@ -143,22 +154,32 @@ describe("bootstrapMachine", () => {
     const actor = createActor(
       makeMachine({
         claimAndSync: fromPromise(
-          async ({ input }: { input: { userId: string; event: AuthEvent; generation: number } }) => {
+          async ({
+            input,
+          }: {
+            input: { userId: string; event: AuthEvent; generation: number }
+          }) => {
             started.push(input.userId)
             if (input.userId === "user-a") {
               await neverResolves()
             }
             completed.push(input.userId)
-          }
+          },
         ),
-      })
+      }),
     )
     actor.start()
 
     await waitFor(actor, (s) => s.matches("ready"))
-    actor.send({ type: "AUTH_EVENT", event: { type: "SIGNED_IN", userId: "user-a", hasSession: true } })
+    actor.send({
+      type: "AUTH_EVENT",
+      event: { type: "SIGNED_IN", userId: "user-a", hasSession: true },
+    })
     await waitFor(actor, (s) => s.matches("syncing"))
-    actor.send({ type: "AUTH_EVENT", event: { type: "SIGNED_IN", userId: "user-b", hasSession: true } })
+    actor.send({
+      type: "AUTH_EVENT",
+      event: { type: "SIGNED_IN", userId: "user-b", hasSession: true },
+    })
 
     await waitFor(actor, (s) => s.matches("ready"))
     expect(started).toEqual(["user-a", "user-b"])
@@ -173,14 +194,17 @@ describe("bootstrapMachine", () => {
         claimAndSync: fromPromise<void, { userId: string; event: AuthEvent; generation: number }>(
           async ({ input }) => {
             syncCalls.push(`${input.event.type}:${input.userId}`)
-          }
+          },
         ),
-      })
+      }),
     )
     actor.start()
 
     await waitFor(actor, (s) => s.matches("ready"))
-    actor.send({ type: "AUTH_EVENT", event: { type: "TOKEN_REFRESHED", userId: "user-a", hasSession: true } })
+    actor.send({
+      type: "AUTH_EVENT",
+      event: { type: "TOKEN_REFRESHED", userId: "user-a", hasSession: true },
+    })
 
     await waitFor(actor, (s) => s.matches("ready"))
     expect(syncCalls).toEqual([])
@@ -190,12 +214,12 @@ describe("bootstrapMachine", () => {
     const actor = createActor(
       makeMachine({
         resolveIdentity: fromPromise<User | null, { pendingEvent: AuthEvent | null }>(
-          async () => ({ id: "user-a" } as User)
+          async () => ({ id: "user-a" }) as User,
         ),
         checkAal: fromPromise<{ current: string | null; next: string | null }, { userId: string }>(
-          async () => ({ current: "aal1", next: "aal2" })
+          async () => ({ current: "aal1", next: "aal2" }),
         ),
-      })
+      }),
     )
     actor.start()
 
@@ -216,15 +240,18 @@ describe("bootstrapMachine", () => {
                 : null
             }
             throw new Error("network down")
-          }
+          },
         ),
-      })
+      }),
     )
     actor.start()
 
     await waitFor(actor, (s) => s.matches("error"))
 
-    actor.send({ type: "AUTH_EVENT", event: { type: "SIGNED_OUT", userId: null, hasSession: false } })
+    actor.send({
+      type: "AUTH_EVENT",
+      event: { type: "SIGNED_OUT", userId: null, hasSession: false },
+    })
     await waitFor(actor, (s) => s.matches("ready"))
   })
 })

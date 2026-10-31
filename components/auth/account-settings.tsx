@@ -70,7 +70,9 @@ export function AccountSettings({ user }: AccountSettingsProps) {
   const [totpFactorId, setTotpFactorId] = useState<string | null>(null)
 
   useEffect(() => {
-    listFactors().then((factors) => setTotpFactorId(factors[0]?.id ?? null)).catch(() => setTotpFactorId(null))
+    listFactors()
+      .then((factors) => setTotpFactorId(factors[0]?.id ?? null))
+      .catch(() => setTotpFactorId(null))
   }, [])
 
   const emailForm = useForm<EmailForm>({ resolver: zodResolver(emailSchema) })
@@ -84,7 +86,8 @@ export function AccountSettings({ user }: AccountSettingsProps) {
   >(null)
 
   async function runEmailChange(values: EmailForm) {
-    setEmailLoading(true); setEmailMsg(null)
+    setEmailLoading(true)
+    setEmailMsg(null)
     const { error } = await createClient().auth.updateUser({ email: values.email })
     setEmailLoading(false)
     if (error) setEmailMsg({ type: "error", text: error.message })
@@ -95,7 +98,8 @@ export function AccountSettings({ user }: AccountSettingsProps) {
   }
 
   async function runPasswordChange(values: PasswordForm) {
-    setPwLoading(true); setPwMsg(null)
+    setPwLoading(true)
+    setPwMsg(null)
     const { error } = await createClient().auth.updateUser({ password: values.password })
     setPwLoading(false)
     if (error) setPwMsg({ type: "error", text: error.message })
@@ -122,13 +126,20 @@ export function AccountSettings({ user }: AccountSettingsProps) {
       <PageCard label="Account" contentClassName="space-y-6">
         <p className="text-sm text-muted-foreground -mt-1">{user.email}</p>
 
-        <form onSubmit={emailForm.handleSubmit((values) => setPendingAction({ kind: "email", values }))}
+        <form
+          onSubmit={emailForm.handleSubmit((values) => setPendingAction({ kind: "email", values }))}
           aria-busy={isSubmitting}
-          className="space-y-3 max-w-sm">
-          <Field label="New email" id="acct-email" type="email" autoComplete="email"
+          className="space-y-3 max-w-sm"
+        >
+          <Field
+            label="New email"
+            id="acct-email"
+            type="email"
+            autoComplete="email"
             placeholder={user.email}
             error={emailForm.formState.errors.email?.message}
-            {...emailForm.register("email")} />
+            {...emailForm.register("email")}
+          />
           <StatusMessage message={emailMsg} />
           <Button type="submit" variant="outline" size="sm" disabled={isSubmitting}>
             {emailLoading ? "Sending confirmation…" : "Update Email"}
@@ -137,15 +148,27 @@ export function AccountSettings({ user }: AccountSettingsProps) {
 
         <div className="border-t" />
 
-        <form onSubmit={pwForm.handleSubmit((values) => setPendingAction({ kind: "password", values }))}
+        <form
+          onSubmit={pwForm.handleSubmit((values) => setPendingAction({ kind: "password", values }))}
           aria-busy={isSubmitting}
-          className="space-y-3 max-w-sm">
-          <Field label="New password" id="acct-pw" type="password" autoComplete="new-password"
+          className="space-y-3 max-w-sm"
+        >
+          <Field
+            label="New password"
+            id="acct-pw"
+            type="password"
+            autoComplete="new-password"
             error={pwForm.formState.errors.password?.message}
-            {...pwForm.register("password")} />
-          <Field label="Confirm password" id="acct-pw2" type="password" autoComplete="new-password"
+            {...pwForm.register("password")}
+          />
+          <Field
+            label="Confirm password"
+            id="acct-pw2"
+            type="password"
+            autoComplete="new-password"
             error={pwForm.formState.errors.confirm?.message}
-            {...pwForm.register("confirm")} />
+            {...pwForm.register("confirm")}
+          />
           <StatusMessage message={pwMsg} />
           <Button type="submit" variant="outline" size="sm" disabled={isSubmitting}>
             {pwLoading ? "Updating…" : "Update Password"}
@@ -163,15 +186,22 @@ export function AccountSettings({ user }: AccountSettingsProps) {
         <SessionList />
       </PageCard>
 
-      <PageCard label="Delete Account" labelVariant="destructive"
-        className="border-destructive/40" contentClassName="space-y-3">
+      <PageCard
+        label="Delete Account"
+        labelVariant="destructive"
+        className="border-destructive/40"
+        contentClassName="space-y-3"
+      >
         <p className="text-sm text-muted-foreground max-w-prose">
-          Deleting your account removes every scenario, account and expense permanently.
-          This cannot be undone — export your data first if you want a copy.
+          Deleting your account removes every scenario, account and expense permanently. This cannot
+          be undone — export your data first if you want a copy.
         </p>
         {deleteMsg && <p className="text-sm text-destructive">{deleteMsg}</p>}
-        <Button variant="destructive" size="sm"
-          onClick={() => setPendingAction({ kind: "delete" })}>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => setPendingAction({ kind: "delete" })}
+        >
           Delete My Account
         </Button>
       </PageCard>
@@ -189,7 +219,10 @@ export function AccountSettings({ user }: AccountSettingsProps) {
         factorId={totpFactorId ?? ""}
         action="delete your account permanently"
         onCancel={() => setPendingAction(null)}
-        onConfirmed={() => { setPendingAction(null); void runDelete() }}
+        onConfirmed={() => {
+          setPendingAction(null)
+          void runDelete()
+        }}
       />
 
       <ReauthenticateDialog
@@ -215,24 +248,37 @@ export function AccountSettings({ user }: AccountSettingsProps) {
   )
 }
 
-function Field({ label, id, error, ...props }: { label: string; id: string; error?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+function Field({
+  label,
+  id,
+  error,
+  ...props
+}: { label: string; id: string; error?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <div className="space-y-1">
-      <Label htmlFor={id} className="text-sm font-medium">{label}</Label>
+      <Label htmlFor={id} className="text-sm font-medium">
+        {label}
+      </Label>
       <Input id={id} className={error ? "border-destructive" : ""} {...props} />
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   )
 }
 
-function StatusMessage({ message }: { message: { type: "success" | "error"; text: string } | null }) {
+function StatusMessage({
+  message,
+}: {
+  message: { type: "success" | "error"; text: string } | null
+}) {
   if (!message) return null
   return (
-    <p className={`text-sm rounded-md px-3 py-2 ${
-      message.type === "error"
-        ? "bg-destructive/10 text-destructive"
-        : "bg-success/10 text-success"
-    }`}>
+    <p
+      className={`text-sm rounded-md px-3 py-2 ${
+        message.type === "error"
+          ? "bg-destructive/10 text-destructive"
+          : "bg-success/10 text-success"
+      }`}
+    >
       {message.text}
     </p>
   )

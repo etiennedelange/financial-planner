@@ -6,9 +6,13 @@ interface StaticFinanceChartProps {
   height?: number
 }
 
-export function StaticFinanceChart({ className, width = 80, height = 65 }: StaticFinanceChartProps) {
+export function StaticFinanceChart({
+  className,
+  width = 80,
+  height = 65,
+}: StaticFinanceChartProps) {
   const bars = [
-    { x: 4,  h: 20 },
+    { x: 4, h: 20 },
     { x: 16, h: 30 },
     { x: 28, h: 22 },
     { x: 40, h: 38 },
@@ -25,15 +29,7 @@ export function StaticFinanceChart({ className, width = 80, height = 65 }: Stati
       aria-hidden
     >
       {bars.map(({ x, h }) => (
-        <rect
-          key={x}
-          x={x}
-          y={52 - h}
-          width={8}
-          height={h}
-          rx={2}
-          className="fill-primary/25"
-        />
+        <rect key={x} x={x} y={52 - h} width={8} height={h} rx={2} className="fill-primary/25" />
       ))}
 
       <path

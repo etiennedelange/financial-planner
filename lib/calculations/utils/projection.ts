@@ -25,7 +25,7 @@ export function projectFinalSavings(
   years: number,
   contributionGrowth: number,
   annualReturn: number,
-  compoundingMethod: CompoundingMethod
+  compoundingMethod: CompoundingMethod,
 ): number {
   if (years <= 0) return currentSavings
 
@@ -64,13 +64,10 @@ export function projectFinalSavings(
  * // Compound (Actuarially correct): (1.12)^(1/12) - 1 ≈ 0.9489%
  * calculateMonthlyReturn(0.12, 'compound') // 0.009488793
  */
-export function calculateMonthlyReturn(
-  annualReturn: number,
-  method: CompoundingMethod
-): number {
-  return method === 'compound'
-    ? Math.pow(1 + annualReturn, 1 / 12) - 1  // Actuarially correct: (1 + r)^(1/12) - 1
-    : annualReturn / 12  // Excel-compatible nominal: r / 12
+export function calculateMonthlyReturn(annualReturn: number, method: CompoundingMethod): number {
+  return method === "compound"
+    ? Math.pow(1 + annualReturn, 1 / 12) - 1 // Actuarially correct: (1 + r)^(1/12) - 1
+    : annualReturn / 12 // Excel-compatible nominal: r / 12
 }
 
 /**
@@ -90,12 +87,12 @@ export function calculateMonthlyReturn(
  */
 export function formatMonthlyReturnFormula(
   annualReturn: number,
-  method: CompoundingMethod
+  method: CompoundingMethod,
 ): string {
   const monthlyReturn = calculateMonthlyReturn(annualReturn, method)
   const monthlyPercent = (monthlyReturn * 100).toFixed(3)
 
-  if (method === 'compound') {
+  if (method === "compound") {
     return `(1 + ${annualReturn.toFixed(4)})^(1/12) - 1 = ${monthlyReturn.toFixed(6)} (${monthlyPercent}% per month)`
   } else {
     return `${annualReturn.toFixed(4)} / 12 = ${monthlyReturn.toFixed(6)} (${monthlyPercent}% per month)`

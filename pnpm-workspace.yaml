@@ -13,9 +13,9 @@ trustPolicyExclude:
   - undici-types@6.21.0
 
 allowBuilds:
-  esbuild: true      # wrangler bundler (native binary)
-  sharp: true        # next.js image optimisation
-  workerd: true      # wrangler local runtime (native binary)
+  esbuild: true # wrangler bundler (native binary)
+  sharp: true # next.js image optimisation
+  workerd: true # wrangler local runtime (native binary)
 
 overrides:
   "@types/react": "19.2.17"

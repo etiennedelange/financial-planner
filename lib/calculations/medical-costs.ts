@@ -53,8 +53,11 @@ export function projectMedicalCosts(params: MedicalCostParams): MedicalCostProje
   const yearsInRetirement = lifeExpectancy - retirementAge
 
   // Calculate medical cost at retirement (inflated from today)
-  const medicalCostAtRetirementMonthly =
-    escalate(currentMedicalCostMonthly, yearsToRetirement, medicalInflation)
+  const medicalCostAtRetirementMonthly = escalate(
+    currentMedicalCostMonthly,
+    yearsToRetirement,
+    medicalInflation,
+  )
 
   const yearlyBreakdown: YearlyMedicalCost[] = []
   let cumulativeCost = 0
@@ -101,8 +104,7 @@ export function projectMedicalCosts(params: MedicalCostParams): MedicalCostProje
 
   const averageMonthlyMedicalCost =
     yearlyBreakdown.length > 0
-      ? yearlyBreakdown.reduce((sum, y) => sum + y.monthlyMedicalCost, 0) /
-        yearlyBreakdown.length
+      ? yearlyBreakdown.reduce((sum, y) => sum + y.monthlyMedicalCost, 0) / yearlyBreakdown.length
       : 0
 
   return {
@@ -125,7 +127,7 @@ export function projectMedicalCosts(params: MedicalCostParams): MedicalCostProje
  */
 export function calculateMedicalPercentage(
   medicalCostMonthly: number,
-  totalMonthlyExpenses: number
+  totalMonthlyExpenses: number,
 ): number {
   if (totalMonthlyExpenses <= 0) return 0
   return (medicalCostMonthly / totalMonthlyExpenses) * 100

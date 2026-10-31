@@ -1,10 +1,7 @@
 "use client"
 
 import { Button, type ButtonProps } from "@/components/ui/button"
-import {
-  useAnimatedIcon,
-  type AnimatedIconComponent,
-} from "@/components/ui/animated-icon"
+import { useAnimatedIcon, type AnimatedIconComponent } from "@/components/ui/animated-icon"
 
 export interface AnimatedIconButtonProps extends Omit<ButtonProps, "children"> {
   icon: AnimatedIconComponent

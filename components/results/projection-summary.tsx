@@ -19,7 +19,6 @@ interface ProjectionSummaryProps {
   isSimulating?: boolean
 }
 
-
 export function ProjectionSummary({
   projection,
   retirementAge,
@@ -44,13 +43,23 @@ export function ProjectionSummary({
   const baseMetrics = [
     {
       label: "Portfolio at Retirement",
-      value: formatCurrency(projection.portfolioAtRetirement, displayMode, yearsToRetirement, inflationRate / 100),
+      value: formatCurrency(
+        projection.portfolioAtRetirement,
+        displayMode,
+        yearsToRetirement,
+        inflationRate / 100,
+      ),
       icon: Wallet,
       description: `At age ${retirementAge}${displayMode === "real" ? " (today's value)" : ""}`,
     },
     {
       label: "Monthly Income",
-      value: formatCurrency(projection.monthlyIncomeAtRetirement, displayMode, yearsToRetirement, inflationRate / 100),
+      value: formatCurrency(
+        projection.monthlyIncomeAtRetirement,
+        displayMode,
+        yearsToRetirement,
+        inflationRate / 100,
+      ),
       icon: TrendingUp,
       description: `Gross withdrawal (before tax)${displayMode === "real" ? " (today's value)" : ""}`,
     },
@@ -63,7 +72,12 @@ export function ProjectionSummary({
     },
     {
       label: "Final Balance",
-      value: formatCurrency(projection.surplusAmount, displayMode, yearsToLifeExpectancy, inflationRate / 100),
+      value: formatCurrency(
+        projection.surplusAmount,
+        displayMode,
+        yearsToLifeExpectancy,
+        inflationRate / 100,
+      ),
       icon: Calendar,
       description: `At life expectancy${displayMode === "real" ? " (today's value)" : ""}`,
     },
@@ -89,7 +103,11 @@ export function ProjectionSummary({
                     <dt className="text-sm text-muted-foreground">Plan Success Rate</dt>
                     <dd className="text-2xl font-bold font-mono">{successRate.toFixed(0)}%</dd>
                   </dl>
-                  <Badge variant="outline" className={cn("border-current", successTier.text)} aria-label={`Retirement success rate: ${successTier.label}`}>
+                  <Badge
+                    variant="outline"
+                    className={cn("border-current", successTier.text)}
+                    aria-label={`Retirement success rate: ${successTier.label}`}
+                  >
                     {successTier.label}
                   </Badge>
                 </>
@@ -106,13 +124,21 @@ export function ProjectionSummary({
               <div className="flex items-start justify-between">
                 <dl>
                   <dt className="text-sm text-muted-foreground">{metric.label}</dt>
-                  <dd className={cn("text-2xl font-bold font-mono", metric.isWarning ? "text-warning" : "")}>
+                  <dd
+                    className={cn(
+                      "text-2xl font-bold font-mono",
+                      metric.isWarning ? "text-warning" : "",
+                    )}
+                  >
                     {metric.value}
                   </dd>
                   <dd className="text-xs text-muted-foreground">{metric.description}</dd>
                 </dl>
                 <metric.icon
-                  className={cn("h-5 w-5 flex-none", metric.isWarning ? "text-warning" : "text-muted-foreground")}
+                  className={cn(
+                    "h-5 w-5 flex-none",
+                    metric.isWarning ? "text-warning" : "text-muted-foreground",
+                  )}
                   aria-hidden="true"
                 />
               </div>

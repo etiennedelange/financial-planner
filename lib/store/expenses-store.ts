@@ -47,32 +47,38 @@ const storage = createGatedPersistStorage<PersistedExpensesState>()
 function scheduleGroupSync(group: ExpenseGroup, sessionId: string) {
   const existing = groupSyncTimers.get(group.id)
   if (existing) clearTimeout(existing)
-  groupSyncTimers.set(group.id, setTimeout(() => {
-    groupSyncTimers.delete(group.id)
-    // Re-check the owner at fire time: a sign-out between schedule and fire
-    // must not upsert under a previous user's identity.
-    const { identity } = useExpensesStore.getState()
-    if (identity.kind !== "user" || identity.userId !== sessionId) return
-    upsertGroup(sessionId, group).catch(console.error)
-  }, 800))
+  groupSyncTimers.set(
+    group.id,
+    setTimeout(() => {
+      groupSyncTimers.delete(group.id)
+      // Re-check the owner at fire time: a sign-out between schedule and fire
+      // must not upsert under a previous user's identity.
+      const { identity } = useExpensesStore.getState()
+      if (identity.kind !== "user" || identity.userId !== sessionId) return
+      upsertGroup(sessionId, group).catch(console.error)
+    }, 800),
+  )
 }
 
 function scheduleExpenseSync(expense: Expense, group: ExpenseGroup, sessionId: string) {
   const existing = expenseSyncTimers.get(expense.id)
   if (existing) clearTimeout(existing)
-  expenseSyncTimers.set(expense.id, setTimeout(async () => {
-    expenseSyncTimers.delete(expense.id)
-    // Re-check the owner at fire time (see scheduleGroupSync).
-    const { identity } = useExpensesStore.getState()
-    if (identity.kind !== "user" || identity.userId !== sessionId) return
-    try {
-      // Group must exist before expense due to FK constraint — upsert is idempotent.
-      await upsertGroup(sessionId, group)
-      await upsertExpense(sessionId, expense)
-    } catch (e) {
-      console.error(e)
-    }
-  }, 800))
+  expenseSyncTimers.set(
+    expense.id,
+    setTimeout(async () => {
+      expenseSyncTimers.delete(expense.id)
+      // Re-check the owner at fire time (see scheduleGroupSync).
+      const { identity } = useExpensesStore.getState()
+      if (identity.kind !== "user" || identity.userId !== sessionId) return
+      try {
+        // Group must exist before expense due to FK constraint — upsert is idempotent.
+        await upsertGroup(sessionId, group)
+        await upsertExpense(sessionId, expense)
+      } catch (e) {
+        console.error(e)
+      }
+    }, 800),
+  )
 }
 
 interface ExpensesState {
@@ -91,7 +97,10 @@ interface ExpensesState {
   removeGroup: (id: string) => void
 
   addExpense: (groupId: string, name: string, amount: number) => void
-  updateExpense: (id: string, patch: Partial<Pick<Expense, "name" | "amount" | "inRetirement">>) => void
+  updateExpense: (
+    id: string,
+    patch: Partial<Pick<Expense, "name" | "amount" | "inRetirement">>,
+  ) => void
   removeExpense: (id: string) => void
   toggleRetirement: (id: string) => void
 
@@ -141,7 +150,11 @@ export const useExpensesStore = create<ExpensesState>()(
             // Stale check before committing: the same user must still own the
             // store, and no newer generation may have superseded this one.
             const current = get().identity
-            if (current.kind !== "user" || current.userId !== userId || generation < latestGeneration) {
+            if (
+              current.kind !== "user" ||
+              current.userId !== userId ||
+              generation < latestGeneration
+            ) {
               return
             }
             set({ identity: { kind: "user", userId }, groups, expenses })
@@ -261,7 +274,7 @@ export const useExpensesStore = create<ExpensesState>()(
         const userId = identity.kind === "user" ? identity.userId : null
         set((s) => ({
           expenses: s.expenses.map((e) =>
-            e.id === id ? { ...e, inRetirement: !e.inRetirement } : e
+            e.id === id ? { ...e, inRetirement: !e.inRetirement } : e,
           ),
         }))
         const updated = get().expenses.find((e) => e.id === id)
@@ -273,7 +286,9 @@ export const useExpensesStore = create<ExpensesState>()(
 
       setMonthlyIncome: (income) => set({ monthlyIncome: income }),
     }),
-    { name: "expenses-store-v2", storage,
+    {
+      name: "expenses-store-v2",
+      storage,
       skipHydration: true,
       version: 2,
       onRehydrateStorage: () => () => storage?.release(),
@@ -291,6 +306,6 @@ export const useExpensesStore = create<ExpensesState>()(
           })),
         }
       },
-    }
-  )
+    },
+  ),
 )

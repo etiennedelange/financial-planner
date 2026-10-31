@@ -2,7 +2,16 @@
 
 import { formatCurrency } from "@/lib/utils/currency"
 import type { ProjectionResult, SimulationResult } from "@/types"
-import { AlertTriangle, DollarSign, Gauge, Loader2, Target, TrendingDown, TrendingUp, Wallet } from "lucide-react"
+import {
+  AlertTriangle,
+  DollarSign,
+  Gauge,
+  Loader2,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  Wallet,
+} from "lucide-react"
 import { getSuccessRateStyle } from "@/lib/utils/success-rate"
 
 interface StickyResultsBarProps {
@@ -49,7 +58,7 @@ export function StickyResultsBar({
         projection.portfolioAtRetirement,
         displayMode,
         yearsToRetirement,
-        inflationRate / 100
+        inflationRate / 100,
       ),
       colorClass: "",
     },
@@ -60,7 +69,7 @@ export function StickyResultsBar({
         projection.monthlyNetIncomeAtRetirement,
         displayMode,
         yearsToRetirement,
-        inflationRate / 100
+        inflationRate / 100,
       ),
       colorClass: "",
     },
@@ -71,7 +80,7 @@ export function StickyResultsBar({
         projection.monthlyIncomeAtRetirement,
         displayMode,
         yearsToRetirement,
-        inflationRate / 100
+        inflationRate / 100,
       ),
       colorClass: "text-muted-foreground",
     },
@@ -82,7 +91,7 @@ export function StickyResultsBar({
         hasSurplus ? projection.surplusAmount : projection.shortfallAmount,
         displayMode,
         yearsToRetirement,
-        inflationRate / 100
+        inflationRate / 100,
       ),
       colorClass: hasSurplus ? "text-success" : "text-destructive",
     },
@@ -113,7 +122,9 @@ export function StickyResultsBar({
               <div key={m.label} className="flex items-center gap-1.5">
                 <m.icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 <span className="text-xs text-muted-foreground whitespace-nowrap">{m.label}:</span>
-                <span className={`text-sm font-semibold tabular-nums ${m.colorClass}`}>{m.value}</span>
+                <span className={`text-sm font-semibold tabular-nums ${m.colorClass}`}>
+                  {m.value}
+                </span>
               </div>
             ))}
           </div>

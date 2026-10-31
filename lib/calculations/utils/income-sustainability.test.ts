@@ -41,7 +41,7 @@ describe("buildIncomeSustainabilitySeries", () => {
     [baseAccount],
     basePersonalInfo,
     baseRetirementGoals,
-    baseDrawdownConfig
+    baseDrawdownConfig,
   )
 
   describe("Nominal mode", () => {

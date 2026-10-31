@@ -18,9 +18,7 @@ type ToastState = {
   toasts: ToastProps[]
 }
 
-type Action =
-  | { type: "ADD_TOAST"; toast: ToastProps }
-  | { type: "REMOVE_TOAST"; toastId: string }
+type Action = { type: "ADD_TOAST"; toast: ToastProps } | { type: "REMOVE_TOAST"; toastId: string }
 
 let count = 0
 function genId() {
@@ -55,7 +53,7 @@ function toast(props: Omit<ToastProps, "id">) {
     setTimeout(() => {
       dispatch({ type: "REMOVE_TOAST", toastId: id })
       toastTimeouts.delete(id)
-    }, props.duration ?? TOAST_REMOVE_DELAY)
+    }, props.duration ?? TOAST_REMOVE_DELAY),
   )
 }
 

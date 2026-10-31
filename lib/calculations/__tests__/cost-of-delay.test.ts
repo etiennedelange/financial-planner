@@ -21,7 +21,7 @@ describe("calculateCostOfDelay", () => {
     monthlyContribution: 10000,
     personalInfo: basePersonalInfo,
     retirementGoals: baseRetirementGoals,
-    expectedReturn: 0.10, // 10%
+    expectedReturn: 0.1, // 10%
     fees: 0.01, // 1%
     contributionEscalation: 0.06, // 6%
     compoundingMethod: "nominal" as CompoundingMethod,
@@ -73,15 +73,15 @@ describe("calculateCostOfDelay", () => {
 
       expect(result.costOfOneYearDelay).toBeCloseTo(
         result.baselineNestEgg - result.oneYearDelayNestEgg,
-        0
+        0,
       )
       expect(result.costOfTwoYearDelay).toBeCloseTo(
         result.baselineNestEgg - result.twoYearDelayNestEgg,
-        0
+        0,
       )
       expect(result.costOfFiveYearDelay).toBeCloseTo(
         result.baselineNestEgg - result.fiveYearDelayNestEgg,
-        0
+        0,
       )
     })
 
@@ -307,7 +307,7 @@ describe("calculateCostOfDelay", () => {
     it("should handle high contribution escalation", () => {
       const result = calculateCostOfDelay({
         ...baseParams,
-        contributionEscalation: 0.10, // 10% escalation
+        contributionEscalation: 0.1, // 10% escalation
       })
 
       expect(result.baselineNestEgg).toBeGreaterThan(0)
@@ -348,7 +348,7 @@ describe("calculateCostOfDelay", () => {
           retirementAge: 65, // 20 years
         },
         retirementGoals: baseRetirementGoals,
-        expectedReturn: 0.10,
+        expectedReturn: 0.1,
         fees: 0.01,
         contributionEscalation: 0.06,
         compoundingMethod: "nominal",
@@ -376,7 +376,7 @@ describe("calculateCostOfDelay", () => {
         monthlyContribution: 0, // Can't contribute more
         personalInfo: basePersonalInfo,
         retirementGoals: baseRetirementGoals,
-        expectedReturn: 0.10,
+        expectedReturn: 0.1,
         fees: 0.005, // Low fees for ETF
         contributionEscalation: 0,
         compoundingMethod: "nominal",

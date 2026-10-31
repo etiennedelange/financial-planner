@@ -35,7 +35,7 @@ export function resolveTooltipLabelValue(
     labelKey?: string
     payload?: TooltipItemLike[]
     config: TooltipConfig
-  }
+  },
 ): string | number | null {
   const { labelKey, payload, config } = opts
   if (!payload?.length) {
@@ -65,7 +65,7 @@ export function resolveTooltipLabelValue(
 export function formatPercentileTooltip(
   value: unknown,
   item: TooltipItemLike | undefined,
-  config: TooltipConfig
+  config: TooltipConfig,
 ): string {
   const key = String(item?.dataKey ?? item?.name ?? "value")
   const label = (config[key]?.label as string | undefined) ?? key
@@ -78,10 +78,7 @@ export function formatPercentileTooltip(
  * Keyed off `dataKey`, never the display `name`, so a renamed Bar label
  * cannot silently turn a percentage into a currency amount.
  */
-export function formatScenarioTooltip(
-  value: unknown,
-  item: TooltipItemLike | undefined
-): string {
+export function formatScenarioTooltip(value: unknown, item: TooltipItemLike | undefined): string {
   const dataKey = String(item?.dataKey ?? "")
   if (dataKey === "success") {
     return `${Math.round(Number(value) || 0)}%`
@@ -96,35 +93,24 @@ export function formatScenarioTooltip(
 export function getPayloadConfigFromPayload(
   config: TooltipConfig,
   payload: TooltipItemLike | null | undefined,
-  key: string
+  key: string,
 ): TooltipConfigEntry | undefined {
   if (typeof payload !== "object" || payload === null) {
     return undefined
   }
 
   const payloadPayload =
-    "payload" in payload &&
-    typeof payload.payload === "object" &&
-    payload.payload !== null
+    "payload" in payload && typeof payload.payload === "object" && payload.payload !== null
       ? payload.payload
       : undefined
 
   let configLabelKey: string = key
 
-  if (
-    key in payload &&
-    typeof payload[key as keyof TooltipItemLike] === "string"
-  ) {
+  if (key in payload && typeof payload[key as keyof TooltipItemLike] === "string") {
     configLabelKey = payload[key as keyof TooltipItemLike] as string
-  } else if (
-    payloadPayload &&
-    key in payloadPayload &&
-    typeof payloadPayload[key] === "string"
-  ) {
+  } else if (payloadPayload && key in payloadPayload && typeof payloadPayload[key] === "string") {
     configLabelKey = payloadPayload[key] as string
   }
 
-  return configLabelKey in config
-    ? config[configLabelKey]
-    : config[key]
+  return configLabelKey in config ? config[configLabelKey] : config[key]
 }

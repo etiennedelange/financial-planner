@@ -9,12 +9,7 @@
  */
 import { describe, test } from "vite-plus/test"
 import { runMonteCarloSimulation } from "../simulation-engine"
-import type {
-  Account,
-  PersonalInfo,
-  RetirementGoals,
-  DrawdownConfig,
-} from "@/types"
+import type { Account, PersonalInfo, RetirementGoals, DrawdownConfig } from "@/types"
 
 const account: Account = {
   id: "1",
@@ -52,37 +47,25 @@ const drawdownConfig: DrawdownConfig = {
 describe("Monte Carlo simulation throughput", () => {
   test("100 runs  (baseline)", async ({ bench }) => {
     await bench("100 runs  (baseline)", () => {
-      runMonteCarloSimulation(
-        [account],
-        personalInfo,
-        retirementGoals,
-        drawdownConfig,
-        { numberOfRuns: 100 }
-      )
+      runMonteCarloSimulation([account], personalInfo, retirementGoals, drawdownConfig, {
+        numberOfRuns: 100,
+      })
     }).run()
   })
 
   test("1 000 runs (production default)", async ({ bench }) => {
     await bench("1 000 runs (production default)", () => {
-      runMonteCarloSimulation(
-        [account],
-        personalInfo,
-        retirementGoals,
-        drawdownConfig,
-        { numberOfRuns: 1_000 }
-      )
+      runMonteCarloSimulation([account], personalInfo, retirementGoals, drawdownConfig, {
+        numberOfRuns: 1_000,
+      })
     }).run()
   })
 
   test("5 000 runs (stress)", async ({ bench }) => {
     await bench("5 000 runs (stress)", () => {
-      runMonteCarloSimulation(
-        [account],
-        personalInfo,
-        retirementGoals,
-        drawdownConfig,
-        { numberOfRuns: 5_000 }
-      )
+      runMonteCarloSimulation([account], personalInfo, retirementGoals, drawdownConfig, {
+        numberOfRuns: 5_000,
+      })
     }).run()
   })
 })
@@ -113,13 +96,9 @@ describe("Multi-account portfolio throughput (realistic)", () => {
 
   test("3 accounts × 1 000 runs (production)", async ({ bench }) => {
     await bench("3 accounts × 1 000 runs (production)", () => {
-      runMonteCarloSimulation(
-        accounts,
-        personalInfo,
-        retirementGoals,
-        drawdownConfig,
-        { numberOfRuns: 1_000 }
-      )
+      runMonteCarloSimulation(accounts, personalInfo, retirementGoals, drawdownConfig, {
+        numberOfRuns: 1_000,
+      })
     }).run()
   })
 })

@@ -129,16 +129,14 @@ function ExpandButton({
       }}
       aria-expanded={expanded}
       aria-label={
-        expanded
-          ? `Collapse details for ${accountName}`
-          : `Expand details for ${accountName}`
+        expanded ? `Collapse details for ${accountName}` : `Expand details for ${accountName}`
       }
       icon={ChevronDownIcon}
       iconSize={14}
       iconAriaHidden
       iconClassName={cn(
         "text-muted-foreground/50 transition-transform duration-200",
-        expanded && "rotate-180"
+        expanded && "rotate-180",
       )}
     />
   )
@@ -167,7 +165,8 @@ function PortfolioSummaryCard({
   segments,
 }: PortfolioSummaryCardProps) {
   const nonZero = segments.filter((s) => s.pct > 0.5)
-  const prefersReducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  const prefersReducedMotion =
+    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
   return (
     <PageCard
@@ -184,10 +183,7 @@ function PortfolioSummaryCard({
         </m.p>
 
         {nonZero.length > 0 && (
-          <m.div
-            className="space-y-2"
-            layout={!prefersReducedMotion}
-          >
+          <m.div className="space-y-2" layout={!prefersReducedMotion}>
             {/* Allocation bar — morphs smoothly with spring physics */}
             <m.div
               className="flex h-1.5 w-full overflow-hidden rounded-full gap-[2px]"
@@ -276,21 +272,20 @@ function TfsaLimitBars({ account }: { account: Account }) {
 
   return (
     <div className="space-y-2.5 pt-3 mt-3 border-t border-border/50">
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-        TFSA Limits
-      </p>
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">TFSA Limits</p>
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
           <span className="text-[11px] text-muted-foreground">Lifetime contributed</span>
           <span
             className={cn(
               "font-mono text-[11px] tabular-nums",
-              isLifetimeFull ? "text-destructive" : "text-foreground"
+              isLifetimeFull ? "text-destructive" : "text-foreground",
             )}
           >
             {formatCurrency(contributed)}
             <span className="text-muted-foreground">
-              {" "}/ {formatCurrency(TFSA_LIMITS_CONFIG.lifetimeLimit)}
+              {" "}
+              / {formatCurrency(TFSA_LIMITS_CONFIG.lifetimeLimit)}
             </span>
           </span>
         </div>
@@ -302,8 +297,8 @@ function TfsaLimitBars({ account }: { account: Account }) {
               backgroundColor: isLifetimeFull
                 ? "hsl(var(--destructive))"
                 : lifetimePct > 80
-                ? "hsl(var(--warning))"
-                : typeColor("tfsa"),
+                  ? "hsl(var(--warning))"
+                  : typeColor("tfsa"),
             }}
           />
         </div>
@@ -318,7 +313,7 @@ function TfsaLimitBars({ account }: { account: Account }) {
         <span
           className={cn(
             "font-mono text-[11px] tabular-nums text-right",
-            isAnnualOver ? "text-destructive" : "text-muted-foreground"
+            isAnnualOver ? "text-destructive" : "text-muted-foreground",
           )}
         >
           {formatCurrency(annualRate)}/yr
@@ -411,7 +406,7 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
                 <AlertTriangle
                   className={cn(
                     "h-3 w-3 flex-none",
-                    tfsaWarning === "lifetime" ? "text-destructive" : "text-warning"
+                    tfsaWarning === "lifetime" ? "text-destructive" : "text-warning",
                   )}
                   aria-label={
                     tfsaWarning === "lifetime"
@@ -447,13 +442,19 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
               <RowIconButton
                 icon={PencilIcon}
                 label="Edit account"
-                onClick={(e) => { e.stopPropagation(); onEdit(account) }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onEdit(account)
+                }}
               />
               <RowIconButton
                 icon={Trash2Icon}
                 label="Delete account"
                 className="text-muted-foreground hover:text-destructive"
-                onClick={(e) => { e.stopPropagation(); setDeleteOpen(true) }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setDeleteOpen(true)
+                }}
               />
             </div>
             <ExpandButton expanded={expanded} accountName={account.name} onToggle={toggle} />
@@ -462,10 +463,7 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
 
         {/* Expanded detail panel — smooth morphing with motion library */}
         <m.div
-          className={cn(
-            "grid overflow-hidden",
-            expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-          )}
+          className={cn("grid overflow-hidden", expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}
           animate={{
             gridTemplateRows: expanded ? "1fr" : "0fr",
           }}
@@ -477,9 +475,7 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
         >
           <div className="min-h-0">
             <m.div
-              className={cn(
-                "px-6 pb-4 bg-muted/50 border-t border-border/40"
-              )}
+              className={cn("px-6 pb-4 bg-muted/50 border-t border-border/40")}
               animate={{
                 opacity: expanded ? 1 : 0,
               }}
@@ -493,7 +489,9 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
                     Expected return
                   </p>
-                  <p className="font-mono text-sm tabular-nums">{account.expectedReturn.toFixed(1)}%</p>
+                  <p className="font-mono text-sm tabular-nums">
+                    {account.expectedReturn.toFixed(1)}%
+                  </p>
                 </div>
                 <div>
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
@@ -529,8 +527,8 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
               Delete {account.name} — {formatCurrency(account.currentBalance)}?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This removes the account and its settings from all projections. You can undo this
-              from the confirmation toast right after.
+              This removes the account and its settings from all projections. You can undo this from
+              the confirmation toast right after.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -559,7 +557,13 @@ interface AccountGroupCardProps {
   onDelete: (account: Account) => void
 }
 
-function AccountGroupCard({ type, accounts, totalBalance, onEdit, onDelete }: AccountGroupCardProps) {
+function AccountGroupCard({
+  type,
+  accounts,
+  totalBalance,
+  onEdit,
+  onDelete,
+}: AccountGroupCardProps) {
   const groupBalance = accounts.reduce((s, a) => s + a.currentBalance, 0)
   const groupPct = totalBalance > 0 ? (groupBalance / totalBalance) * 100 : 0
 
@@ -583,12 +587,7 @@ function AccountGroupCard({ type, accounts, totalBalance, onEdit, onDelete }: Ac
     >
       <div className="mt-2 divide-y divide-border/40">
         {accounts.map((account) => (
-          <AccountRow
-            key={account.id}
-            account={account}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
+          <AccountRow key={account.id} account={account} onEdit={onEdit} onDelete={onDelete} />
         ))}
       </div>
     </PageCard>
@@ -613,11 +612,21 @@ function EmptyState({ onAdd, onSeed }: { onAdd: () => void; onSeed: () => void }
         </div>
         <div className="flex flex-wrap items-center justify-center gap-2">
           <Button {...seedButton.controlProps} variant="outline" onClick={onSeed}>
-            <ServerIcon {...seedButton.iconProps} size={16} className="mr-2" data-icon="inline-start" />
+            <ServerIcon
+              {...seedButton.iconProps}
+              size={16}
+              className="mr-2"
+              data-icon="inline-start"
+            />
             Seed Accounts
           </Button>
           <Button {...addButton.controlProps} onClick={onAdd}>
-            <PlusIcon {...addButton.iconProps} size={16} className="mr-2" data-icon="inline-start" />
+            <PlusIcon
+              {...addButton.iconProps}
+              size={16}
+              className="mr-2"
+              data-icon="inline-start"
+            />
             Add Your First Account
           </Button>
         </div>
@@ -636,19 +645,16 @@ export function AccountsPage() {
       seedAccounts: state.seedAccounts,
       updateAccount: state.updateAccount,
       removeAccount: state.removeAccount,
-    }))
+    })),
   )
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
 
-  const totalBalance = useMemo(
-    () => accounts.reduce((s, a) => s + a.currentBalance, 0),
-    [accounts]
-  )
+  const totalBalance = useMemo(() => accounts.reduce((s, a) => s + a.currentBalance, 0), [accounts])
   const totalMonthly = useMemo(
     () => accounts.reduce((s, a) => s + a.monthlyContribution, 0),
-    [accounts]
+    [accounts],
   )
   const weightedNetReturn = useMemo(() => {
     if (totalBalance === 0) return 0
@@ -676,7 +682,7 @@ export function AccountsPage() {
         if (group.length > 0) acc[type] = group
         return acc
       }, {}),
-    [accounts]
+    [accounts],
   )
 
   const handleAddClick = () => {

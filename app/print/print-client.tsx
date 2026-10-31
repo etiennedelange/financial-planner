@@ -29,7 +29,7 @@ export function PrintClient() {
       assumptions: s.assumptions,
       drawdownConfig: s.drawdownConfig,
       displayMode: s.displayMode,
-    }))
+    })),
   )
 
   const plan = storeState
@@ -43,14 +43,14 @@ export function PrintClient() {
             plan.personalInfo,
             plan.retirementGoals,
             plan.drawdownConfig,
-            plan.assumptions
+            plan.assumptions,
           ),
-    [plan]
+    [plan],
   )
 
   // Read the clock once, not on every render (React Compiler purity rule).
   const [today] = useState(() =>
-    new Date().toLocaleDateString("en-ZA", { year: "numeric", month: "long", day: "numeric" })
+    new Date().toLocaleDateString("en-ZA", { year: "numeric", month: "long", day: "numeric" }),
   )
 
   // Give the DOM a moment to paint before triggering the print dialog.
@@ -93,7 +93,10 @@ export function PrintClient() {
     return (
       // data-bootstrap-phase mirrors the app-shell signal so e2e journeys can
       // wait for the /print bootstrap without a blind sleep.
-      <div data-bootstrap-phase="loading" className="flex min-h-screen items-center justify-center text-muted-foreground">
+      <div
+        data-bootstrap-phase="loading"
+        className="flex min-h-screen items-center justify-center text-muted-foreground"
+      >
         Loading your plan…
       </div>
     )
@@ -101,7 +104,10 @@ export function PrintClient() {
 
   if (!projection) {
     return (
-      <div data-bootstrap-phase="ready" className="flex min-h-screen items-center justify-center text-muted-foreground">
+      <div
+        data-bootstrap-phase="ready"
+        className="flex min-h-screen items-center justify-center text-muted-foreground"
+      >
         No projection data. Add accounts before printing.
       </div>
     )
@@ -111,8 +117,12 @@ export function PrintClient() {
   // assumptions.inflationRate is stored as a percentage (e.g. 5.5); formatCurrency expects a decimal
   const inflationRate = assumptions.inflationRate / 100
   const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
-  const retirementRows = projection.yearlyProjections.filter((r) => r.age >= personalInfo.retirementAge)
-  const accumulationRows = projection.yearlyProjections.filter((r) => r.age < personalInfo.retirementAge)
+  const retirementRows = projection.yearlyProjections.filter(
+    (r) => r.age >= personalInfo.retirementAge,
+  )
+  const accumulationRows = projection.yearlyProjections.filter(
+    (r) => r.age < personalInfo.retirementAge,
+  )
 
   // Currency formatter that respects displayMode and age-based deflation
   function f(value: number, age: number) {
@@ -155,33 +165,62 @@ export function PrintClient() {
       <div className="no-print fixed top-4 right-4 z-50 flex gap-2">
         <button
           onClick={() => window.print()}
-          style={{ padding: "8px 16px", background: "#111", color: "#fff", borderRadius: 6, cursor: "pointer", fontSize: 13 }}
+          style={{
+            padding: "8px 16px",
+            background: "#111",
+            color: "#fff",
+            borderRadius: 6,
+            cursor: "pointer",
+            fontSize: 13,
+          }}
         >
           Print / Save PDF
         </button>
         <button
           onClick={() => window.close()}
-          style={{ padding: "8px 16px", background: "#f3f4f6", borderRadius: 6, cursor: "pointer", fontSize: 13 }}
+          style={{
+            padding: "8px 16px",
+            background: "#f3f4f6",
+            borderRadius: 6,
+            cursor: "pointer",
+            fontSize: 13,
+          }}
         >
           Close
         </button>
       </div>
 
-      <div data-bootstrap-phase="ready" style={{ maxWidth: 900, margin: "0 auto", padding: "24px 20px" }}>
+      <div
+        data-bootstrap-phase="ready"
+        style={{ maxWidth: 900, margin: "0 auto", padding: "24px 20px" }}
+      >
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            marginBottom: 16,
+          }}
+        >
           <div>
             <h1>SA Retirement Plan Report</h1>
             <div className="subtitle">Generated {today}</div>
             <div className="subtitle" style={{ marginTop: 2 }}>
-              All values in {displayMode === "real" ? "today's money (real, inflation-adjusted)" : "future Rands (nominal)"}
+              All values in{" "}
+              {displayMode === "real"
+                ? "today's money (real, inflation-adjusted)"
+                : "future Rands (nominal)"}
             </div>
           </div>
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 11, color: "#6b7280" }}>
-              Age {personalInfo.currentAge} → {personalInfo.retirementAge} → {personalInfo.lifeExpectancy}
+              Age {personalInfo.currentAge} → {personalInfo.retirementAge} →{" "}
+              {personalInfo.lifeExpectancy}
             </div>
-            <div style={{ fontSize: 11, color: "#6b7280" }}>{yearsToRetirement} years to retirement</div>
+            <div style={{ fontSize: 11, color: "#6b7280" }}>
+              {yearsToRetirement} years to retirement
+            </div>
             <div
               className={`badge ${
                 projection.portfolioDepletionAge
@@ -209,12 +248,16 @@ export function PrintClient() {
           </div>
           <div className="metric">
             <div className="metric-label">Monthly Net Income</div>
-            <div className="metric-value">{fRetirement(projection.monthlyNetIncomeAtRetirement)}</div>
+            <div className="metric-value">
+              {fRetirement(projection.monthlyNetIncomeAtRetirement)}
+            </div>
           </div>
           <div className="metric">
             <div className="metric-label">Depletion Age</div>
             <div className="metric-value">
-              {projection.portfolioDepletionAge ? `Age ${projection.portfolioDepletionAge}` : "Never"}
+              {projection.portfolioDepletionAge
+                ? `Age ${projection.portfolioDepletionAge}`
+                : "Never"}
             </div>
           </div>
           <div className="metric">
@@ -322,7 +365,12 @@ export function PrintClient() {
             </thead>
             <tbody>
               {accumulationRows
-                .filter((r, i) => i === 0 || i === accumulationRows.length - 1 || (r.age - personalInfo.currentAge) % 5 === 0)
+                .filter(
+                  (r, i) =>
+                    i === 0 ||
+                    i === accumulationRows.length - 1 ||
+                    (r.age - personalInfo.currentAge) % 5 === 0,
+                )
                 .map((r) => (
                   <tr key={r.year}>
                     <td>{r.year}</td>
@@ -366,7 +414,9 @@ export function PrintClient() {
                   <td>{f(r.incomeTax, r.age)}</td>
                   <td style={{ fontWeight: 600 }}>{f(r.netIncome, r.age)}</td>
                   <td>{f(r.growth, r.age)}</td>
-                  <td style={{ fontWeight: 600, color: r.endingBalance <= 0 ? "#dc2626" : undefined }}>
+                  <td
+                    style={{ fontWeight: 600, color: r.endingBalance <= 0 ? "#dc2626" : undefined }}
+                  >
                     {r.endingBalance <= 0 ? "Depleted" : f(r.endingBalance, r.age)}
                   </td>
                 </tr>
@@ -375,9 +425,18 @@ export function PrintClient() {
           </table>
         </div>
 
-        <div style={{ marginTop: 24, fontSize: 9, color: "#9ca3af", borderTop: "1px solid #e5e7eb", paddingTop: 8 }}>
-          SA Financial Planner — projections are illustrative and based on the assumptions above. Past returns do not
-          guarantee future results. Consult a qualified financial adviser before making retirement decisions.
+        <div
+          style={{
+            marginTop: 24,
+            fontSize: 9,
+            color: "#9ca3af",
+            borderTop: "1px solid #e5e7eb",
+            paddingTop: 8,
+          }}
+        >
+          SA Financial Planner — projections are illustrative and based on the assumptions above.
+          Past returns do not guarantee future results. Consult a qualified financial adviser before
+          making retirement decisions.
         </div>
       </div>
     </>

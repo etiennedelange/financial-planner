@@ -56,7 +56,10 @@ const noHandRolledInflation = defineRule({
       },
       // (1 + <…inflation…>) ** n
       BinaryExpression(node) {
-        if (node.operator === "**" && (isOnePlusInflation(node.left) || isOnePlusInflation(node.right))) {
+        if (
+          node.operator === "**" &&
+          (isOnePlusInflation(node.left) || isOnePlusInflation(node.right))
+        ) {
           context.report({ node, messageId: "exponent" })
         }
       },

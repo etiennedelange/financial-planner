@@ -23,7 +23,10 @@ new RuleTester().run("money-time/no-hand-rolled-inflation", rule, {
   ],
   invalid: [
     { code: "Math.pow(1 + inflationRate, years)", errors: [{ messageId: "mathPow" }] },
-    { code: "Math.pow(1 + inflation, yearsToRetirement + year)", errors: [{ messageId: "mathPow" }] },
+    {
+      code: "Math.pow(1 + inflation, yearsToRetirement + year)",
+      errors: [{ messageId: "mathPow" }],
+    },
     { code: "Math.pow(1 + generalInflation, n)", errors: [{ messageId: "mathPow" }] },
     { code: "(1 + inflationRate) ** years", errors: [{ messageId: "exponent" }] },
     { code: "const f = (1 + medicalInflation) ** (age - 65)", errors: [{ messageId: "exponent" }] },

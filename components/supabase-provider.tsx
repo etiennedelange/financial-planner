@@ -102,8 +102,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         // The listener only forwards event type + session presence; the verified
         // user is resolved here, outside the auth callback (never await Supabase
         // inside onAuthStateChange — it deadlocks against its own init promise).
-        const current =
-          event.userId != null ? (await supabase.auth.getUser()).data.user : null
+        const current = event.userId != null ? (await supabase.auth.getUser()).data.user : null
 
         setUser(current)
 
@@ -136,7 +135,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
             expenseGroups: exp.groups,
             expenses: exp.expenses,
           },
-          source
+          source,
         )
       },
       syncFromDb: async (userId: string, generation: number) => {
@@ -159,7 +158,9 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     // Register the listener BEFORE starting the coordinator: supabase-js's
     // INITIAL_SESSION typically arrives while the guest hydration is still
     // running, and the machine captures it (never cancelling the hydration).
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       const type = event as AuthEventType
       coordinator.enqueueAuthEvent({
         type,
@@ -192,7 +193,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       error,
       isLoaded: phase === "ready",
     }),
-    [user, phase, error]
+    [user, phase, error],
   )
 
   const handleUseLocalPlan = () => {
@@ -200,10 +201,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     // normal claim path (on the next sign-in) carry them into the account.
     setScope({ kind: "guest" })
     for (const state of ambiguousLegacy) adoptAmbiguousLegacy(state)
-    void Promise.all([
-      useCalculatorStore.persist.rehydrate(),
-      useExpensesStore.persist.rehydrate(),
-    ])
+    void Promise.all([useCalculatorStore.persist.rehydrate(), useExpensesStore.persist.rehydrate()])
     setAmbiguousLegacy([])
   }
 

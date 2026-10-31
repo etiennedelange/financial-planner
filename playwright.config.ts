@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test'
+import { defineConfig, devices } from "@playwright/test"
 
 /**
  * Playwright configuration for SA Financial Planner UI flow documentation
@@ -11,7 +11,7 @@ import { defineConfig, devices } from '@playwright/test'
  * - Screenshot capture on every step
  */
 export default defineConfig({
-  testDir: './e2e/journeys',
+  testDir: "./e2e/journeys",
 
   // Run tests sequentially for consistent screenshot numbering
   fullyParallel: false,
@@ -24,38 +24,38 @@ export default defineConfig({
   timeout: 60000,
 
   // Output directory for test artifacts
-  outputDir: './e2e/output/test-results',
+  outputDir: "./e2e/output/test-results",
 
   use: {
     baseURL: process.env.BASE_URL ?? "http://localhost:3000",
-    screenshot: 'on',
-    trace: 'on',
-    video: 'on',
+    screenshot: "on",
+    trace: "on",
+    video: "on",
     launchOptions: {
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
     },
   },
 
   // Multiple viewport configurations for responsive documentation
   projects: [
     {
-      name: 'desktop-chrome',
+      name: "desktop-chrome",
       use: {
-        ...devices['Desktop Chrome'],
+        ...devices["Desktop Chrome"],
         viewport: { width: 1920, height: 1080 },
       },
     },
     {
-      name: 'tablet',
+      name: "tablet",
       use: {
-        ...devices['iPad Pro'],
+        ...devices["iPad Pro"],
         viewport: { width: 1024, height: 768 },
       },
     },
     {
-      name: 'mobile',
+      name: "mobile",
       use: {
-        ...devices['iPhone 14 Pro'],
+        ...devices["iPhone 14 Pro"],
         viewport: { width: 393, height: 852 },
       },
     },
@@ -63,8 +63,8 @@ export default defineConfig({
 
   // Development server configuration
   webServer: {
-    command: 'npm run dev',
-    url: process.env.BASE_URL ?? 'http://localhost:3000',
+    command: "npm run dev",
+    url: process.env.BASE_URL ?? "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },

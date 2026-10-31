@@ -1,11 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vite-plus/test'
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test"
 
 const getUser = vi.fn()
 const rpc = vi.fn()
 const listFactors = vi.fn()
 const deleteFactor = vi.fn()
 
-vi.mock('@/lib/supabase/server', () => ({
+vi.mock("@/lib/supabase/server", () => ({
   createClient: () =>
     Promise.resolve({
       auth: { getUser, mfa: { listFactors } },
@@ -13,13 +13,13 @@ vi.mock('@/lib/supabase/server', () => ({
     }),
 }))
 
-vi.mock('@supabase/supabase-js', () => ({
+vi.mock("@supabase/supabase-js", () => ({
   createClient: () => ({
     auth: { admin: { mfa: { deleteFactor } } },
   }),
 }))
 
-import { POST } from './route'
+import { POST } from "./route"
 
 function makeRequest(body: unknown, headers: Record<string, string> = {}) {
   return {
@@ -31,26 +31,26 @@ function makeRequest(body: unknown, headers: Record<string, string> = {}) {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role-key'
-  process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://project.supabase.co'
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role-key"
+  process.env.NEXT_PUBLIC_SUPABASE_URL = "https://project.supabase.co"
 })
 
-describe('POST /api/auth/recover', () => {
-  it('rejects an unauthenticated request without redeeming a code or touching factor deletion', async () => {
+describe("POST /api/auth/recover", () => {
+  it("rejects an unauthenticated request without redeeming a code or touching factor deletion", async () => {
     getUser.mockResolvedValue({ data: { user: null } })
 
-    const response = await POST(makeRequest({ code: 'ABCD1234' }))
+    const response = await POST(makeRequest({ code: "ABCD1234" }))
 
     expect(response.status).toBe(401)
     expect(rpc).not.toHaveBeenCalled()
     expect(deleteFactor).not.toHaveBeenCalled()
   })
 
-  it('rejects a wrong or already-used recovery code without deleting any factor', async () => {
-    getUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+  it("rejects a wrong or already-used recovery code without deleting any factor", async () => {
+    getUser.mockResolvedValue({ data: { user: { id: "user-1" } } })
     rpc.mockResolvedValue({ data: false, error: null })
 
-    const response = await POST(makeRequest({ code: 'WRONGCODE' }))
+    const response = await POST(makeRequest({ code: "WRONGCODE" }))
     const body = await response.json()
 
     expect(response.status).toBe(401)
@@ -59,54 +59,54 @@ describe('POST /api/auth/recover', () => {
     expect(deleteFactor).not.toHaveBeenCalled()
   })
 
-  it('scopes factor deletion to the authenticated caller, ignoring any id in the request body', async () => {
-    getUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+  it("scopes factor deletion to the authenticated caller, ignoring any id in the request body", async () => {
+    getUser.mockResolvedValue({ data: { user: { id: "user-1" } } })
     rpc.mockResolvedValue({ data: true, error: null })
-    listFactors.mockResolvedValue({ data: { totp: [{ id: 'factor-1' }] }, error: null })
+    listFactors.mockResolvedValue({ data: { totp: [{ id: "factor-1" }] }, error: null })
     deleteFactor.mockResolvedValue({ error: null })
 
-    const response = await POST(makeRequest({ code: 'GOODCODE', userId: 'attacker-controlled' }))
+    const response = await POST(makeRequest({ code: "GOODCODE", userId: "attacker-controlled" }))
     const body = await response.json()
 
     expect(response.status).toBe(200)
     expect(body).toEqual({ recovered: true })
-    expect(deleteFactor).toHaveBeenCalledWith({ id: 'factor-1', userId: 'user-1' })
+    expect(deleteFactor).toHaveBeenCalledWith({ id: "factor-1", userId: "user-1" })
   })
 
-  it('never reports success to the client when a factor deletion fails', async () => {
-    getUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+  it("never reports success to the client when a factor deletion fails", async () => {
+    getUser.mockResolvedValue({ data: { user: { id: "user-1" } } })
     rpc.mockResolvedValue({ data: true, error: null })
-    listFactors.mockResolvedValue({ data: { totp: [{ id: 'factor-1' }] }, error: null })
-    deleteFactor.mockResolvedValue({ error: { message: 'Admin API rejected the request' } })
+    listFactors.mockResolvedValue({ data: { totp: [{ id: "factor-1" }] }, error: null })
+    deleteFactor.mockResolvedValue({ error: { message: "Admin API rejected the request" } })
 
-    const response = await POST(makeRequest({ code: 'GOODCODE' }))
+    const response = await POST(makeRequest({ code: "GOODCODE" }))
     const body = await response.json()
 
     expect(response.status).toBe(500)
     expect(body.recovered).toBeUndefined()
   })
 
-  it('rejects a body larger than the declared limit before parsing it', async () => {
-    const response = await POST(makeRequest({ code: 'X' }, { 'content-length': '5000' }))
+  it("rejects a body larger than the declared limit before parsing it", async () => {
+    const response = await POST(makeRequest({ code: "X" }, { "content-length": "5000" }))
     expect(response.status).toBe(413)
     expect(rpc).not.toHaveBeenCalled()
   })
 
-  it('rejects an oversized code string', async () => {
-    getUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
-    const response = await POST(makeRequest({ code: 'X'.repeat(100) }))
+  it("rejects an oversized code string", async () => {
+    getUser.mockResolvedValue({ data: { user: { id: "user-1" } } })
+    const response = await POST(makeRequest({ code: "X".repeat(100) }))
     expect(response.status).toBe(400)
     expect(rpc).not.toHaveBeenCalled()
   })
 
-  it('rate-limits repeated attempts from the same IP', async () => {
-    getUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+  it("rate-limits repeated attempts from the same IP", async () => {
+    getUser.mockResolvedValue({ data: { user: { id: "user-1" } } })
     rpc.mockResolvedValue({ data: false, error: null })
 
-    const ipHeaders = { 'x-forwarded-for': '203.0.113.9' }
+    const ipHeaders = { "x-forwarded-for": "203.0.113.9" }
     let lastResponse
     for (let i = 0; i < 11; i++) {
-      lastResponse = await POST(makeRequest({ code: 'WRONGCODE' }, ipHeaders))
+      lastResponse = await POST(makeRequest({ code: "WRONGCODE" }, ipHeaders))
     }
 
     expect(lastResponse!.status).toBe(429)

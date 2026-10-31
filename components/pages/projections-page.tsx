@@ -13,14 +13,20 @@ interface ProjectionsPageProps {
   isSimulating?: boolean
 }
 
-export function ProjectionsPage({ projection, simulationResult, isSimulating }: ProjectionsPageProps) {
+export function ProjectionsPage({
+  projection,
+  simulationResult,
+  isSimulating,
+}: ProjectionsPageProps) {
   const { personalInfo, retirementGoals } = useCalculatorStore()
 
   return (
     <div className="space-y-6">
       <div>
         <div className="text-lg font-semibold text-foreground">Projections</div>
-        <p className="text-sm text-muted-foreground">Your retirement outlook based on current inputs</p>
+        <p className="text-sm text-muted-foreground">
+          Your retirement outlook based on current inputs
+        </p>
       </div>
 
       <ProjectionSummary

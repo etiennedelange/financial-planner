@@ -9,19 +9,19 @@
  * Source: https://www.sars.gov.za/wp-content/uploads/Docs/Budget/Budget2026/Budget-tax-guide-2026-web-version.pdf
  */
 
-export const TAX_YEAR = '2026/2027'
+export const TAX_YEAR = "2026/2027"
 
 // ---------------------------------------------------------------------------
 // Income tax brackets
 // min = lower bound of bracket (inclusive), max = upper bound (inclusive)
 // ---------------------------------------------------------------------------
 export const INCOME_TAX_BRACKETS_CONFIG = [
-  { min: 0,       max: 245100,   rate: 0.18, baseTax: 0      },
-  { min: 245100,  max: 383100,   rate: 0.26, baseTax: 44118  },
-  { min: 383100,  max: 530200,   rate: 0.31, baseTax: 79998  },
-  { min: 530200,  max: 695800,   rate: 0.36, baseTax: 125599 },
-  { min: 695800,  max: 887000,   rate: 0.39, baseTax: 185215 },
-  { min: 887000,  max: 1878600,  rate: 0.41, baseTax: 259783 },
+  { min: 0, max: 245100, rate: 0.18, baseTax: 0 },
+  { min: 245100, max: 383100, rate: 0.26, baseTax: 44118 },
+  { min: 383100, max: 530200, rate: 0.31, baseTax: 79998 },
+  { min: 530200, max: 695800, rate: 0.36, baseTax: 125599 },
+  { min: 695800, max: 887000, rate: 0.39, baseTax: 185215 },
+  { min: 887000, max: 1878600, rate: 0.41, baseTax: 259783 },
   { min: 1878600, max: Infinity, rate: 0.45, baseTax: 666339 },
 ] as const
 
@@ -30,9 +30,9 @@ export const INCOME_TAX_BRACKETS_CONFIG = [
 // threshold = upper bound of tier; previousTax = cumulative tax at lower bound
 // ---------------------------------------------------------------------------
 export const RETIREMENT_LUMP_SUM_CONFIG = [
-  { threshold: 550000,  rate: 0,    previousTax: 0      },
-  { threshold: 770000,  rate: 0.18, previousTax: 0      },
-  { threshold: 1155000, rate: 0.27, previousTax: 39600  },
+  { threshold: 550000, rate: 0, previousTax: 0 },
+  { threshold: 770000, rate: 0.18, previousTax: 0 },
+  { threshold: 1155000, rate: 0.27, previousTax: 39600 },
   { threshold: Infinity, rate: 0.36, previousTax: 143550 },
 ] as const
 
@@ -54,16 +54,16 @@ export const CGT_ANNUAL_EXCLUSION_CONFIG = {
 // Rebates (reduce tax liability directly)
 // ---------------------------------------------------------------------------
 export const TAX_REBATES_CONFIG = {
-  primary:   17820, // All individuals
-  secondary:  9765, // Age 65–74
-  tertiary:   3249, // Age 75+
+  primary: 17820, // All individuals
+  secondary: 9765, // Age 65–74
+  tertiary: 3249, // Age 75+
 } as const
 
 // ---------------------------------------------------------------------------
 // Tax-free thresholds (income below these = zero tax after rebates)
 // ---------------------------------------------------------------------------
 export const TAX_THRESHOLDS_CONFIG = {
-  under65:  99000,
+  under65: 99000,
   age65to74: 153250,
   age75plus: 171300,
 } as const
@@ -72,15 +72,15 @@ export const TAX_THRESHOLDS_CONFIG = {
 // Retirement fund contribution limits
 // ---------------------------------------------------------------------------
 export const RETIREMENT_CONTRIBUTION_LIMITS_CONFIG = {
-  pensionRaDeductionRate: 0.275,  // 27.5% of greater of remuneration or taxable income
-  pensionRaMaxDeduction:  430000, // Annual rand cap (R430,000 from Budget 2026)
+  pensionRaDeductionRate: 0.275, // 27.5% of greater of remuneration or taxable income
+  pensionRaMaxDeduction: 430000, // Annual rand cap (R430,000 from Budget 2026)
 } as const
 
 // ---------------------------------------------------------------------------
 // Tax-Free Savings Account limits
 // ---------------------------------------------------------------------------
 export const TFSA_LIMITS_CONFIG = {
-  annualLimit:   46000,  // R46,000 p.a. (increased from R36,000 effective 1 March 2026)
+  annualLimit: 46000, // R46,000 p.a. (increased from R36,000 effective 1 March 2026)
   lifetimeLimit: 500000, // R500,000 lifetime
 } as const
 
@@ -94,8 +94,8 @@ export const TFSA_LIMITS_CONFIG = {
 // medical expenses credit, which this app does not model.
 // ---------------------------------------------------------------------------
 export const MEDICAL_AID_CREDITS_CONFIG = {
-  primaryMemberMonthly:      376, // Principal member
-  firstDependantMonthly:     376, // First additional beneficiary
+  primaryMemberMonthly: 376, // Principal member
+  firstDependantMonthly: 376, // First additional beneficiary
   additionalDependantMonthly: 254, // Each further beneficiary
 } as const
 

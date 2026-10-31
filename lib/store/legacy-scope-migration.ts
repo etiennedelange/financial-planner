@@ -108,7 +108,7 @@ export function readAmbiguousLegacyStates(): AmbiguousLegacyState[] {
 export function adoptAmbiguousLegacy(state: AmbiguousLegacyState): void {
   window.localStorage.setItem(
     scopedKeyFor(state.baseName, { kind: "guest" }),
-    JSON.stringify(state.payload)
+    JSON.stringify(state.payload),
   )
   window.localStorage.removeItem(holdingKeyFor(state.baseName))
 }

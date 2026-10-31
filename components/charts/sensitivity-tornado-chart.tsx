@@ -1,14 +1,6 @@
 "use client"
 
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ReferenceLine,
-  XAxis,
-  YAxis,
-} from "recharts"
+import { Bar, BarChart, CartesianGrid, Cell, ReferenceLine, XAxis, YAxis } from "recharts"
 import { Card, CardContent } from "@/components/ui/card"
 import { SectionLabel } from "@/components/ui/section-label"
 import { ChartDataTable } from "@/components/ui/chart-data-table"
@@ -20,7 +12,13 @@ import {
 } from "@/components/ui/chart"
 import { buildSensitivityTornado } from "@/lib/calculations/utils/sensitivity-tornado"
 import { formatCurrency } from "@/lib/utils/currency"
-import type { Account, PersonalInfo, RetirementGoals, DrawdownConfig, MarketAssumptions } from "@/types"
+import type {
+  Account,
+  PersonalInfo,
+  RetirementGoals,
+  DrawdownConfig,
+  MarketAssumptions,
+} from "@/types"
 import { SlidersHorizontal } from "lucide-react"
 import { memo, useMemo } from "react"
 
@@ -52,15 +50,25 @@ export const SensitivityTornadoChart = memo(function SensitivityTornadoChart({
         drawdownConfig,
         assumptions,
       }),
-    [accounts, personalInfo, retirementGoals, drawdownConfig, assumptions]
+    [accounts, personalInfo, retirementGoals, drawdownConfig, assumptions],
   )
 
   // Flatten into one row per direction, signed value renders left/right of the baseline.
   const data = useMemo(() => {
     const rows: { key: string; label: string; side: string; delta: number }[] = []
     for (const bar of bars) {
-      rows.push({ key: bar.key, label: `${bar.label} ${bar.highLabel}`, side: "high", delta: bar.highDelta })
-      rows.push({ key: bar.key, label: `${bar.label} ${bar.lowLabel}`, side: "low", delta: bar.lowDelta })
+      rows.push({
+        key: bar.key,
+        label: `${bar.label} ${bar.highLabel}`,
+        side: "high",
+        delta: bar.highDelta,
+      })
+      rows.push({
+        key: bar.key,
+        label: `${bar.label} ${bar.lowLabel}`,
+        side: "low",
+        delta: bar.lowDelta,
+      })
     }
     return rows
   }, [bars])
@@ -83,7 +91,11 @@ export const SensitivityTornadoChart = memo(function SensitivityTornadoChart({
   }
 
   return (
-    <Card className="dashboard-card shadow-none" role="figure" aria-label="Sensitivity tornado chart showing how contributions, return, and retirement age affect the nest egg">
+    <Card
+      className="dashboard-card shadow-none"
+      role="figure"
+      aria-label="Sensitivity tornado chart showing how contributions, return, and retirement age affect the nest egg"
+    >
       <div className="px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-3 space-y-1">
         <SectionLabel>Sensitivity to Assumptions</SectionLabel>
         <p className="text-sm text-muted-foreground pl-3">
@@ -91,7 +103,10 @@ export const SensitivityTornadoChart = memo(function SensitivityTornadoChart({
         </p>
       </div>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
-        <ChartContainer config={chartConfig} className="h-(--chart-height-compact) md:h-(--chart-height-full) w-full">
+        <ChartContainer
+          config={chartConfig}
+          className="h-(--chart-height-compact) md:h-(--chart-height-full) w-full"
+        >
           <BarChart
             data={data}
             layout="vertical"
@@ -129,11 +144,7 @@ export const SensitivityTornadoChart = memo(function SensitivityTornadoChart({
               {data.map((row) => (
                 <Cell
                   key={`${row.key}-${row.side}`}
-                  fill={
-                    row.delta >= 0
-                      ? "hsl(var(--chart-2))"
-                      : "hsl(var(--destructive))"
-                  }
+                  fill={row.delta >= 0 ? "hsl(var(--chart-2))" : "hsl(var(--destructive))"}
                 />
               ))}
             </Bar>
@@ -143,7 +154,12 @@ export const SensitivityTornadoChart = memo(function SensitivityTornadoChart({
       <ChartDataTable
         columns={[
           { key: "label", label: "Lever", align: "left" },
-          { key: "delta", label: "Change in nest egg", align: "right", format: (v) => formatCurrency(Number(v)) },
+          {
+            key: "delta",
+            label: "Change in nest egg",
+            align: "right",
+            format: (v) => formatCurrency(Number(v)),
+          },
         ]}
         rows={data}
         caption="Change in projected nest egg when each lever is pulled"

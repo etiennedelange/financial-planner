@@ -41,15 +41,22 @@ export function RecoveryCodesDialog({ open, codes, onClose }: RecoveryCodesDialo
         </DialogDescription>
 
         <div className="grid grid-cols-2 gap-2 rounded-md border bg-muted/30 p-3 font-mono text-sm">
-          {codes.map((code) => <span key={code}>{code}</span>)}
+          {codes.map((code) => (
+            <span key={code}>{code}</span>
+          ))}
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" className="flex-1" onClick={handleDownload}>Download</Button>
+          <Button variant="outline" className="flex-1" onClick={handleDownload}>
+            Download
+          </Button>
           <Button
             variant="outline"
             className="flex-1"
-            onClick={() => { void navigator.clipboard.writeText(codes.join("\n")); setAcknowledged(true) }}
+            onClick={() => {
+              void navigator.clipboard.writeText(codes.join("\n"))
+              setAcknowledged(true)
+            }}
           >
             Copy
           </Button>

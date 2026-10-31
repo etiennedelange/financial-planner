@@ -65,7 +65,10 @@ export async function upsertAccount(account: Account, scenarioId: string): Promi
   if (error) throw error
 }
 
-export async function cloneAccounts(accounts: Account[], newScenarioId: string): Promise<Account[]> {
+export async function cloneAccounts(
+  accounts: Account[],
+  newScenarioId: string,
+): Promise<Account[]> {
   const supabase = createClient()
   const cloned = accounts.map((acc) => ({
     ...acc,

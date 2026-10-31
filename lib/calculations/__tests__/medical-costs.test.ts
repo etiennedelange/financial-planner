@@ -82,7 +82,7 @@ describe("projectMedicalCosts", () => {
       // Should be higher than default 9%
       const defaultResult = projectMedicalCosts(baseParams)
       expect(result.totalMedicalCostInRetirement).toBeGreaterThan(
-        defaultResult.totalMedicalCostInRetirement
+        defaultResult.totalMedicalCostInRetirement,
       )
     })
   })
@@ -108,7 +108,7 @@ describe("projectMedicalCosts", () => {
         retirementAge: 65,
         lifeExpectancy: 70, // 5 years
         currentMedicalCostMonthly: 1000, // Simplified base
-        medicalInflation: 0.10, // 10%
+        medicalInflation: 0.1, // 10%
       })
 
       // Year 0: 1000 * (1 + 0.02 * 0) = 1000
@@ -138,11 +138,11 @@ describe("projectMedicalCosts", () => {
       expect(result.yearlyBreakdown[0].cumulativeMedicalCost).toBeCloseTo(year1Annual, 0)
       expect(result.yearlyBreakdown[1].cumulativeMedicalCost).toBeCloseTo(
         year1Annual + year2Annual,
-        0
+        0,
       )
       expect(result.yearlyBreakdown[2].cumulativeMedicalCost).toBeCloseTo(
         year1Annual + year2Annual + year3Annual,
-        0
+        0,
       )
     })
 
@@ -431,10 +431,10 @@ describe("calculateMedicalInflationPremium", () => {
 
     for (let year = 0; year < yearsInRetirement; year++) {
       // Without age multiplier
-      totalMedical += baseParams.baseMedicalCostMonthly *
-        Math.pow(1 + baseParams.medicalInflation, year) * 12
-      totalGeneral += baseParams.baseMedicalCostMonthly *
-        Math.pow(1 + baseParams.generalInflation, year) * 12
+      totalMedical +=
+        baseParams.baseMedicalCostMonthly * Math.pow(1 + baseParams.medicalInflation, year) * 12
+      totalGeneral +=
+        baseParams.baseMedicalCostMonthly * Math.pow(1 + baseParams.generalInflation, year) * 12
     }
 
     const withoutAgeGrowth = totalMedical - totalGeneral

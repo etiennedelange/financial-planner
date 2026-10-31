@@ -55,6 +55,8 @@ export default defineConfig({
       ".claude/**",
       ".impeccable/**",
       "types/supabase.ts",
+      // Email templates: hand-laid-out HTML that GoTrue sends as written.
+      "supabase/templates/**",
       "pnpm-lock.yaml",
       "*.md",
     ],

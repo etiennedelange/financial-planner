@@ -1,4 +1,10 @@
-import type { Account, DrawdownConfig, MarketAssumptions, PersonalInfo, RetirementGoals } from "@/types"
+import type {
+  Account,
+  DrawdownConfig,
+  MarketAssumptions,
+  PersonalInfo,
+  RetirementGoals,
+} from "@/types"
 import type { Expense, ExpenseGroup } from "@/types/expenses"
 import { createScenario, listScenarios, markScenarioClaimComplete } from "./scenarios"
 import { cloneAccounts, fetchAccounts } from "./accounts"
@@ -73,7 +79,7 @@ function pendingClaimKey(userId: string): string {
 export async function claimLocalData(
   userId: string,
   local: LocalSnapshot,
-  source: ClaimSource
+  source: ClaimSource,
 ): Promise<ClaimResult> {
   // Ownership gate, decided by the caller: a non-guest snapshot is never
   // automatically copied into an account.
@@ -113,7 +119,7 @@ export async function claimLocalData(
       displayMode: local.displayMode,
     },
     false,
-    scenarioId
+    scenarioId,
   )
 
   await cloneAccounts(local.accounts, scenarioId)

@@ -33,33 +33,44 @@ function ScenarioTrigger({ name, disabled }: { name: string; disabled: boolean }
   return (
     <Button {...controlProps} variant="outline" className="max-w-44 px-3" disabled={disabled}>
       <span className="truncate text-sm font-medium">{name}</span>
-      <ChevronDownIcon {...iconProps} size={14} className="ml-2 shrink-0 text-muted-foreground" data-icon="inline-end" />
+      <ChevronDownIcon
+        {...iconProps}
+        size={14}
+        className="ml-2 shrink-0 text-muted-foreground"
+        data-icon="inline-end"
+      />
     </Button>
   )
 }
 
 export function ScenarioSwitcher() {
-  const { scenarioList, activeScenarioId, switchScenario, createNewScenario, renameScenario, deleteScenario } =
-    useCalculatorStore(
-      useShallow((s) => ({
-        scenarioList: s.scenarioList,
-        activeScenarioId: s.activeScenarioId,
-        switchScenario: s.switchScenario,
-        createNewScenario: s.createNewScenario,
-        renameScenario: s.renameScenario,
-        deleteScenario: s.deleteScenario,
-      }))
-    )
-    useCalculatorStore(
-      useShallow((s) => ({
-        scenarioList: s.scenarioList,
-        activeScenarioId: s.activeScenarioId,
-        switchScenario: s.switchScenario,
-        createNewScenario: s.createNewScenario,
-        renameScenario: s.renameScenario,
-        deleteScenario: s.deleteScenario,
-      }))
-    )
+  const {
+    scenarioList,
+    activeScenarioId,
+    switchScenario,
+    createNewScenario,
+    renameScenario,
+    deleteScenario,
+  } = useCalculatorStore(
+    useShallow((s) => ({
+      scenarioList: s.scenarioList,
+      activeScenarioId: s.activeScenarioId,
+      switchScenario: s.switchScenario,
+      createNewScenario: s.createNewScenario,
+      renameScenario: s.renameScenario,
+      deleteScenario: s.deleteScenario,
+    })),
+  )
+  useCalculatorStore(
+    useShallow((s) => ({
+      scenarioList: s.scenarioList,
+      activeScenarioId: s.activeScenarioId,
+      switchScenario: s.switchScenario,
+      createNewScenario: s.createNewScenario,
+      renameScenario: s.renameScenario,
+      deleteScenario: s.deleteScenario,
+    })),
+  )
 
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
   const [renamingId, setRenamingId] = useState<string | null>(null)
@@ -153,7 +164,10 @@ export function ScenarioSwitcher() {
                 </button>
                 <button
                   className="shrink-0 rounded p-1 text-muted-foreground hover:text-foreground"
-                  onClick={(e) => { e.stopPropagation(); startRename(s.id, s.name) }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    startRename(s.id, s.name)
+                  }}
                   title="Rename"
                   aria-label={`Rename scenario ${s.name}`}
                 >
@@ -162,7 +176,10 @@ export function ScenarioSwitcher() {
                 {scenarioList.length > 1 && (
                   <button
                     className="shrink-0 rounded p-1 text-muted-foreground hover:text-destructive"
-                    onClick={(e) => { e.stopPropagation(); setPendingDeleteId(s.id) }}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setPendingDeleteId(s.id)
+                    }}
                     title="Delete"
                     aria-label={`Delete scenario ${s.name}`}
                   >
@@ -186,18 +203,29 @@ export function ScenarioSwitcher() {
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleCreate()
-                if (e.key === "Escape") { setCreatingNew(false); setNewName("") }
+                if (e.key === "Escape") {
+                  setCreatingNew(false)
+                  setNewName("")
+                }
               }}
               className="h-7 text-sm"
             />
-            <Button size="sm" className="h-7 px-2 text-xs" onClick={handleCreate} disabled={!newName.trim()}>
+            <Button
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={handleCreate}
+              disabled={!newName.trim()}
+            >
               Add
             </Button>
           </div>
         ) : (
           <DropdownMenuItem
             className="cursor-pointer text-muted-foreground"
-            onClick={(e) => { e.preventDefault(); setCreatingNew(true) }}
+            onClick={(e) => {
+              e.preventDefault()
+              setCreatingNew(true)
+            }}
           >
             <PlusIcon size={16} className="mr-2" />
             New Scenario
@@ -205,7 +233,12 @@ export function ScenarioSwitcher() {
         )}
       </DropdownMenuContent>
 
-      <AlertDialog open={pendingDeleteId !== null} onOpenChange={(open) => { if (!open) setPendingDeleteId(null) }}>
+      <AlertDialog
+        open={pendingDeleteId !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDeleteId(null)
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>

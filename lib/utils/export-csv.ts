@@ -11,7 +11,7 @@ function row(...cells: (string | number | null | undefined)[]): string {
 
 export function exportProjectionCsv(
   projections: YearlyProjection[],
-  filename = `retirement-projection-${new Date().toISOString().split("T")[0]}.csv`
+  filename = `retirement-projection-${new Date().toISOString().split("T")[0]}.csv`,
 ): void {
   const header = row(
     "Year",
@@ -26,7 +26,7 @@ export function exportProjectionCsv(
     "Medical Aid (R)",
     "Net Income (R)",
     "Ending Balance (R)",
-    "Inflation-Adj Withdrawal (R)"
+    "Inflation-Adj Withdrawal (R)",
   )
 
   const lines = [
@@ -45,8 +45,8 @@ export function exportProjectionCsv(
         p.medicalAidContribution.toFixed(2),
         p.netIncome.toFixed(2),
         p.endingBalance.toFixed(2),
-        p.inflationAdjustedWithdrawal.toFixed(2)
-      )
+        p.inflationAdjustedWithdrawal.toFixed(2),
+      ),
     ),
   ]
 

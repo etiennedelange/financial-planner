@@ -26,7 +26,7 @@ export function useBoundedMonetary(value: string | number, max?: number) {
 
   const onChange = (
     e: ChangeEvent<HTMLInputElement>,
-    accept: (e: ChangeEvent<HTMLInputElement>) => void
+    accept: (e: ChangeEvent<HTMLInputElement>) => void,
   ) => {
     const raw = e.target.value
     if (raw === "" || isAllowedMonetaryInput(raw, max)) {
@@ -45,7 +45,7 @@ export function useBoundedMonetary(value: string | number, max?: number) {
       target.value,
       native.data,
       target.selectionStart,
-      target.selectionEnd
+      target.selectionEnd,
     )
     if (candidate !== "" && !isAllowedMonetaryInput(candidate, max)) {
       e.preventDefault()

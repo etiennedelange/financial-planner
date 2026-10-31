@@ -13,9 +13,7 @@ export function PageHeader({ title, description, action }: PageHeaderProps) {
         <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">
           {title}
         </p>
-        {description && (
-          <p className="text-sm text-muted-foreground mt-1">{description}</p>
-        )}
+        {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
     </div>

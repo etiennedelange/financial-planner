@@ -14,7 +14,12 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useAnimatedIcon, type AnimatedIconComponent } from "@/components/ui/animated-icon"
 
-const NAV_ITEMS: { href: string; label: string; icon: AnimatedIconComponent; showBadge?: boolean }[] = [
+const NAV_ITEMS: {
+  href: string
+  label: string
+  icon: AnimatedIconComponent
+  showBadge?: boolean
+}[] = [
   { href: "/calculator/overview", label: "Overview", icon: LayoutDashboardIcon },
   { href: "/calculator/accounts", label: "Accounts", icon: WalletIcon, showBadge: true },
   { href: "/calculator/plan", label: "Plan", icon: SlidersHorizontalIcon },
@@ -50,12 +55,10 @@ function NavItem({
         "group relative flex w-full items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-all duration-150",
         active
           ? "bg-primary/10 text-primary"
-          : "text-muted-foreground hover:bg-accent hover:text-foreground"
+          : "text-muted-foreground hover:bg-accent hover:text-foreground",
       )}
     >
-      {active && (
-        <span className="absolute left-0 inset-y-1 w-[2px] rounded-full bg-primary" />
-      )}
+      {active && <span className="absolute left-0 inset-y-1 w-[2px] rounded-full bg-primary" />}
       <Icon {...iconProps} size={16} className="shrink-0" />
       <span className="flex-1 text-left tracking-wide">{item.label}</span>
       {item.showBadge && accountCount > 0 && (
@@ -63,7 +66,7 @@ function NavItem({
           variant="outline"
           className={cn(
             "ml-auto h-4 min-w-4 px-1 text-[10px]",
-            active ? "border-primary/30 bg-primary/10 text-primary" : ""
+            active ? "border-primary/30 bg-primary/10 text-primary" : "",
           )}
         >
           {accountCount}
@@ -97,7 +100,10 @@ export function Sidebar({ accountCount, isLoaded }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav aria-label="Main navigation" className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-0.5">
+      <nav
+        aria-label="Main navigation"
+        className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-0.5"
+      >
         {NAV_ITEMS.map((item) => (
           <NavItem
             key={item.href}
@@ -107,7 +113,6 @@ export function Sidebar({ accountCount, isLoaded }: SidebarProps) {
           />
         ))}
       </nav>
-
     </aside>
   )
 }

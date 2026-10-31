@@ -10,13 +10,8 @@ export default function PlanRoute() {
   const { displayMode } = useCalculatorStore(
     useShallow((s) => ({
       displayMode: s.displayMode,
-    }))
+    })),
   )
 
-  return (
-    <PlanPage
-      projection={projection}
-      displayMode={displayMode}
-    />
-  )
+  return <PlanPage projection={projection} displayMode={displayMode} />
 }

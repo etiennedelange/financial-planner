@@ -5,7 +5,7 @@ import dynamic from "next/dynamic"
 
 const SettingsPage = dynamic(
   () => import("@/components/pages/settings-page").then((m) => ({ default: m.SettingsPage })),
-  { ssr: false }
+  { ssr: false },
 )
 
 export default function SettingsRoute() {

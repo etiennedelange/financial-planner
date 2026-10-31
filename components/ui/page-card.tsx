@@ -89,9 +89,7 @@ export function PageCard({
             <SectionLabel variant={labelVariant}>{label}</SectionLabel>
             {trailing}
           </div>
-          {description && (
-            <p className="text-sm text-muted-foreground mt-1 pl-3">{description}</p>
-          )}
+          {description && <p className="text-sm text-muted-foreground mt-1 pl-3">{description}</p>}
         </div>
         {children}
       </CardContent>

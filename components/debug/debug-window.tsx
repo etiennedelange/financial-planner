@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Bug, Copy, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react"
+import { Bug, Copy, Check } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -10,75 +10,56 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { useCalculatorStore } from "@/lib/store/calculator-store";
-import { useShallow } from "zustand/react/shallow";
-import { SA_DEFAULTS } from "@/lib/constants/defaults";
+} from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { useShallow } from "zustand/react/shallow"
+import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import {
   calculateMonthlyReturn,
   formatMonthlyReturnFormula,
-} from "@/lib/calculations/utils/projection";
+} from "@/lib/calculations/utils/projection"
 import {
   calculateRetirementTax,
   calculateReplacementRatio,
-} from "@/lib/calculations/retirement-tax";
-import { SA_TAX_LIMITS } from "@/lib/constants/limits";
-import { calculateInitialWithdrawal } from "@/lib/calculations/utils/drawdown-withdrawal";
+} from "@/lib/calculations/retirement-tax"
+import { SA_TAX_LIMITS } from "@/lib/constants/limits"
+import { calculateInitialWithdrawal } from "@/lib/calculations/utils/drawdown-withdrawal"
 import {
   escalate,
   escalateToRetirement,
   retirementRands,
   todayRands,
-} from "@/lib/calculations/utils/money-time";
-import {
-  COMPOUNDING_METHOD_LABELS,
-  COMPOUNDING_METHOD_DESCRIPTIONS,
-} from "@/types";
-import type { Account, ProjectionResult, SimulationResult } from "@/types";
+} from "@/lib/calculations/utils/money-time"
+import { COMPOUNDING_METHOD_LABELS, COMPOUNDING_METHOD_DESCRIPTIONS } from "@/types"
+import type { Account, ProjectionResult, SimulationResult } from "@/types"
 
 interface DebugWindowProps {
-  className?: string;
-  projection?: ProjectionResult | null;
-  simulationResult?: SimulationResult | null;
+  className?: string
+  projection?: ProjectionResult | null
+  simulationResult?: SimulationResult | null
 }
 
-export function DebugWindow({
-  className,
-  projection,
-  simulationResult,
-}: DebugWindowProps) {
-  const {
-    accounts,
-    personalInfo,
-    retirementGoals,
-    assumptions,
-    drawdownConfig,
-    displayMode,
-  } = useCalculatorStore(
-    useShallow((state) => ({
-      accounts: state.accounts,
-      personalInfo: state.personalInfo,
-      retirementGoals: state.retirementGoals,
-      assumptions: state.assumptions,
-      drawdownConfig: state.drawdownConfig,
-      displayMode: state.displayMode,
-    })),
-  );
+export function DebugWindow({ className, projection, simulationResult }: DebugWindowProps) {
+  const { accounts, personalInfo, retirementGoals, assumptions, drawdownConfig, displayMode } =
+    useCalculatorStore(
+      useShallow((state) => ({
+        accounts: state.accounts,
+        personalInfo: state.personalInfo,
+        retirementGoals: state.retirementGoals,
+        assumptions: state.assumptions,
+        drawdownConfig: state.drawdownConfig,
+        displayMode: state.displayMode,
+      })),
+    )
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [isOpen, setIsOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   // Calculate derived parameters (matching the calculation engine)
-  const totalBalance = accounts.reduce(
-    (sum, acc) => sum + acc.currentBalance,
-    0,
-  );
-  const totalMonthlyContribution = accounts.reduce(
-    (sum, acc) => sum + acc.monthlyContribution,
-    0,
-  );
+  const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
+  const totalMonthlyContribution = accounts.reduce((sum, acc) => sum + acc.monthlyContribution, 0)
 
   // Match the calculation engine logic exactly (projection-engine.ts:37-81)
   // When balance is 0, weight by contributions instead of balance
@@ -89,16 +70,13 @@ export function DebugWindow({
         : accounts.reduce(
             (sum, acc) =>
               sum +
-              (acc.expectedReturn / 100) *
-                (acc.monthlyContribution / totalMonthlyContribution),
+              (acc.expectedReturn / 100) * (acc.monthlyContribution / totalMonthlyContribution),
             0,
           )
       : accounts.reduce(
-          (sum, acc) =>
-            sum +
-            (acc.expectedReturn / 100) * (acc.currentBalance / totalBalance),
+          (sum, acc) => sum + (acc.expectedReturn / 100) * (acc.currentBalance / totalBalance),
           0,
-        );
+        )
 
   const weightedFees =
     totalBalance === 0
@@ -106,62 +84,47 @@ export function DebugWindow({
         ? 0.01
         : accounts.reduce(
             (sum, acc) =>
-              sum +
-              (acc.annualFees / 100) *
-                (acc.monthlyContribution / totalMonthlyContribution),
+              sum + (acc.annualFees / 100) * (acc.monthlyContribution / totalMonthlyContribution),
             0,
           )
       : accounts.reduce(
-          (sum, acc) =>
-            sum + (acc.annualFees / 100) * (acc.currentBalance / totalBalance),
+          (sum, acc) => sum + (acc.annualFees / 100) * (acc.currentBalance / totalBalance),
           0,
-        );
+        )
 
   const avgEscalation =
     accounts.length > 0
-      ? accounts.reduce(
-          (sum, acc) => sum + acc.contributionEscalation / 100,
-          0,
-        ) / accounts.length
-      : SA_DEFAULTS.contributionEscalation;
+      ? accounts.reduce((sum, acc) => sum + acc.contributionEscalation / 100, 0) / accounts.length
+      : SA_DEFAULTS.contributionEscalation
 
-  const yearsToRetirement =
-    personalInfo.retirementAge - personalInfo.currentAge;
-  const yearsInRetirement =
-    personalInfo.lifeExpectancy - personalInfo.retirementAge;
-  const inflationRate = retirementGoals.inflationRate / 100;
-  const netReturn = weightedReturn - weightedFees;
+  const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
+  const yearsInRetirement = personalInfo.lifeExpectancy - personalInfo.retirementAge
+  const inflationRate = retirementGoals.inflationRate / 100
+  const netReturn = weightedReturn - weightedFees
 
   // Calculate monthly return using the proper compounding method
-  const compoundingMethod = assumptions?.compoundingMethod || "nominal";
-  const monthlyReturn = calculateMonthlyReturn(netReturn, compoundingMethod);
-  const monthlyReturnFormula = formatMonthlyReturnFormula(
-    netReturn,
-    compoundingMethod,
-  );
-  const monthlyFeeRate = Math.pow(1 + weightedFees, 1 / 12) - 1;
+  const compoundingMethod = assumptions?.compoundingMethod || "nominal"
+  const monthlyReturn = calculateMonthlyReturn(netReturn, compoundingMethod)
+  const monthlyReturnFormula = formatMonthlyReturnFormula(netReturn, compoundingMethod)
+  const monthlyFeeRate = Math.pow(1 + weightedFees, 1 / 12) - 1
 
   // Volatility from assumptions or defaults
-  const volatility =
-    assumptions?.equityVolatility || SA_DEFAULTS.equityVolatility * 100;
+  const volatility = assumptions?.equityVolatility || SA_DEFAULTS.equityVolatility * 100
 
   // Display mode labels
   const displayModeLabel =
-    displayMode === "real" ? "Today's Value (Real)" : "Future Value (Nominal)";
+    displayMode === "real" ? "Today's Value (Real)" : "Future Value (Nominal)"
 
   // ===== PRIORITY 1 CALCULATIONS =====
 
   // 1. Weighting method indicator
   const weightingMethod =
-    totalBalance === 0
-      ? "CONTRIBUTION weights (balance = R0)"
-      : "BALANCE weights";
+    totalBalance === 0 ? "CONTRIBUTION weights (balance = R0)" : "BALANCE weights"
 
   // 2. Initial withdrawal calculation (at retirement)
   // Use projection result if available, otherwise estimate
   const portfolioAtRetirementEstimate =
-    projection?.portfolioAtRetirement ||
-    totalBalance * Math.pow(1 + netReturn, yearsToRetirement);
+    projection?.portfolioAtRetirement || totalBalance * Math.pow(1 + netReturn, yearsToRetirement)
   // Prefer the engine's own figure: it is derived from the post-commutation
   // `remainingPortfolio`, so it does not promise income out of capital the
   // retiree already withdrew (and paid lump-sum tax on) as a lump sum.
@@ -178,23 +141,23 @@ export function DebugWindow({
         yearsToRetirement,
         inflationRate,
         "strategy",
-      );
-  const initialWithdrawalMonthly = initialWithdrawalAnnual / 12;
+      )
+  const initialWithdrawalMonthly = initialWithdrawalAnnual / 12
 
   // Desired monthly income inflated to retirement
   const desiredMonthlyAtRetirement = escalate(
     retirementGoals.desiredMonthlyIncome,
     yearsToRetirement,
     inflationRate,
-  );
+  )
 
   // 3. Tax calculations at retirement (first year)
-  const retirementAge = personalInfo.retirementAge;
+  const retirementAge = personalInfo.retirementAge
   const taxAtRetirement = calculateRetirementTax(initialWithdrawalAnnual, {
     age: retirementAge,
     monthlyMedicalAid: 0, // Could be made configurable
     preRetirementIncome: personalInfo.annualIncome,
-  });
+  })
 
   // Replacement ratio: gross retirement income / gross pre-retirement income.
   // Both sides must be in the same money. `initialWithdrawalAnnual` is nominal at
@@ -206,43 +169,38 @@ export function DebugWindow({
   // mismatch rather than letting it reach the screen as a wrong percentage.
   const replacementRatio = calculateReplacementRatio(
     retirementRands(initialWithdrawalAnnual),
-    escalateToRetirement(
-      todayRands(personalInfo.annualIncome),
-      yearsToRetirement,
-      inflationRate,
-    ),
-  );
+    escalateToRetirement(todayRands(personalInfo.annualIncome), yearsToRetirement, inflationRate),
+  )
 
   // Tax threshold for retirement age
-  let taxThreshold: number = SA_TAX_LIMITS.taxThresholdUnder65;
+  let taxThreshold: number = SA_TAX_LIMITS.taxThresholdUnder65
   if (retirementAge >= 75) {
-    taxThreshold = SA_TAX_LIMITS.taxThreshold75Plus;
+    taxThreshold = SA_TAX_LIMITS.taxThreshold75Plus
   } else if (retirementAge >= 65) {
-    taxThreshold = SA_TAX_LIMITS.taxThreshold65To74;
+    taxThreshold = SA_TAX_LIMITS.taxThreshold65To74
   }
-  const isBelowThreshold = initialWithdrawalAnnual <= taxThreshold;
+  const isBelowThreshold = initialWithdrawalAnnual <= taxThreshold
 
   // Use projection tax data if available
-  const effectiveTaxRate =
-    projection?.averageEffectiveTaxRate || taxAtRetirement.effectiveTaxRate;
-  const lifetimeIncomeTax = projection?.totalLifetimeIncomeTax || 0;
+  const effectiveTaxRate = projection?.averageEffectiveTaxRate || taxAtRetirement.effectiveTaxRate
+  const lifetimeIncomeTax = projection?.totalLifetimeIncomeTax || 0
 
-  const formatPercent = (value: number) => `${(value * 100).toFixed(2)}%`;
+  const formatPercent = (value: number) => `${(value * 100).toFixed(2)}%`
   const formatCurrency = (value: number) =>
-    `R ${value.toLocaleString("en-ZA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    `R ${value.toLocaleString("en-ZA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
   // Calculate retirement eligibility and tax deductions
-  const taxableIncome = personalInfo.annualIncome;
-  const annualContribution = totalMonthlyContribution * 12;
+  const taxableIncome = personalInfo.annualIncome
+  const annualContribution = totalMonthlyContribution * 12
   const maxRADeduction = Math.min(
     annualContribution,
     taxableIncome * SA_TAX_LIMITS.pensionRaDeductionRate,
     SA_TAX_LIMITS.pensionRaMaxDeduction,
-  );
-  const taxSavings = maxRADeduction * 0.45; // Assume max marginal rate of 45%
-  const retirementEligible = personalInfo.currentAge >= 55 && totalBalance > 0;
-  const canAccessRA = personalInfo.currentAge >= 55;
-  const canAccessPreservation = totalBalance > 0; // Can access 1/3 lump sum before retirement
+  )
+  const taxSavings = maxRADeduction * 0.45 // Assume max marginal rate of 45%
+  const retirementEligible = personalInfo.currentAge >= 55 && totalBalance > 0
+  const canAccessRA = personalInfo.currentAge >= 55
+  const canAccessPreservation = totalBalance > 0 // Can access 1/3 lump sum before retirement
 
   const copyDebugInfo = async () => {
     const debugText = `
@@ -462,16 +420,16 @@ Key calculation details:
 Single Source of Truth:
 - All projections use lib/calculations/utils/projection.ts::projectFinalSavings
 - Ensures consistency across all tabs (Projection, Insights, Scenarios)
-`.trim();
+`.trim()
 
     try {
-      await navigator.clipboard.writeText(debugText);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      await navigator.clipboard.writeText(debugText)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
     } catch (err) {
-      console.error("Failed to copy:", err);
+      console.error("Failed to copy:", err)
     }
-  };
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -501,11 +459,7 @@ Single Source of Truth:
               className="shrink-0"
               title={copied ? "Copied!" : "Copy all debug parameters"}
             >
-              {copied ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             </Button>
           </div>
         </DialogHeader>
@@ -516,9 +470,7 @@ Single Source of Truth:
             <CategorySection title="Critical Metrics" category="critical">
               <div className="space-y-3">
                 <div>
-                  <div className="text-xs text-muted-foreground mb-1">
-                    Compounding Method:
-                  </div>
+                  <div className="text-xs text-muted-foreground mb-1">Compounding Method:</div>
                   <div className="font-semibold text-primary text-base">
                     {COMPOUNDING_METHOD_LABELS[compoundingMethod]}
                   </div>
@@ -528,21 +480,15 @@ Single Source of Truth:
                 </div>
 
                 <div className="pt-2 border-t border-primary/20">
-                  <div className="text-xs text-muted-foreground mb-1">
-                    Monthly Return Formula:
-                  </div>
+                  <div className="text-xs text-muted-foreground mb-1">Monthly Return Formula:</div>
                   <div className="font-mono text-xs bg-muted/50 p-2 rounded">
                     {monthlyReturnFormula}
                   </div>
                 </div>
 
                 <div className="pt-2 border-t border-primary/20">
-                  <div className="text-xs text-muted-foreground mb-1">
-                    Display Mode:
-                  </div>
-                  <div className="font-semibold text-sm">
-                    {displayModeLabel}
-                  </div>
+                  <div className="text-xs text-muted-foreground mb-1">Display Mode:</div>
+                  <div className="font-semibold text-sm">{displayModeLabel}</div>
                   <div className="text-xs text-muted-foreground mt-1">
                     {displayMode === "real"
                       ? "Currency values show purchasing power in today's terms (inflation-adjusted)"
@@ -555,36 +501,16 @@ Single Source of Truth:
                     CALCULATION CHECKSUMS:
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <Param
-                      label="Total Accounts"
-                      value={accounts.length}
-                      small
-                    />
-                    <Param
-                      label="Total Balance"
-                      value={formatCurrency(totalBalance)}
-                      small
-                    />
+                    <Param label="Total Accounts" value={accounts.length} small />
+                    <Param label="Total Balance" value={formatCurrency(totalBalance)} small />
                     <Param
                       label="Monthly Contrib"
                       value={formatCurrency(totalMonthlyContribution)}
                       small
                     />
-                    <Param
-                      label="Weighted Return"
-                      value={formatPercent(weightedReturn)}
-                      small
-                    />
-                    <Param
-                      label="Weighted Fees"
-                      value={formatPercent(weightedFees)}
-                      small
-                    />
-                    <Param
-                      label="Net Return"
-                      value={formatPercent(netReturn)}
-                      small
-                    />
+                    <Param label="Weighted Return" value={formatPercent(weightedReturn)} small />
+                    <Param label="Weighted Fees" value={formatPercent(weightedFees)} small />
+                    <Param label="Net Return" value={formatPercent(netReturn)} small />
                   </div>
                 </div>
 
@@ -602,9 +528,7 @@ Single Source of Truth:
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">
-                      Success Rate:
-                    </div>
+                    <div className="text-xs text-muted-foreground mb-1">Success Rate:</div>
                     <div className="font-semibold text-primary">
                       {simulationResult
                         ? `${simulationResult.successRate.toFixed(2)}%`
@@ -612,9 +536,7 @@ Single Source of Truth:
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">
-                      Years to Depletion:
-                    </div>
+                    <div className="text-xs text-muted-foreground mb-1">Years to Depletion:</div>
                     <div className="font-semibold text-primary">
                       {projection?.portfolioDepletionAge
                         ? `Age ${projection.portfolioDepletionAge}`
@@ -622,12 +544,8 @@ Single Source of Truth:
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">
-                      Replacement Ratio:
-                    </div>
-                    <div className="font-semibold text-primary">
-                      {replacementRatio.toFixed(1)}%
-                    </div>
+                    <div className="text-xs text-muted-foreground mb-1">Replacement Ratio:</div>
+                    <div className="font-semibold text-primary">{replacementRatio.toFixed(1)}%</div>
                   </div>
                 </div>
               </div>
@@ -637,28 +555,11 @@ Single Source of Truth:
             <CategorySection title="Calculation Inputs" category="inputs">
               <Section title="Personal Information">
                 <Param label="Current Age" value={personalInfo.currentAge} />
-                <Param
-                  label="Retirement Age"
-                  value={personalInfo.retirementAge}
-                />
-                <Param
-                  label="Life Expectancy"
-                  value={personalInfo.lifeExpectancy}
-                />
-                <Param
-                  label="Annual Income"
-                  value={formatCurrency(personalInfo.annualIncome)}
-                />
-                <Param
-                  label="Years to Retirement"
-                  value={yearsToRetirement}
-                  highlight
-                />
-                <Param
-                  label="Years in Retirement"
-                  value={yearsInRetirement}
-                  highlight
-                />
+                <Param label="Retirement Age" value={personalInfo.retirementAge} />
+                <Param label="Life Expectancy" value={personalInfo.lifeExpectancy} />
+                <Param label="Annual Income" value={formatCurrency(personalInfo.annualIncome)} />
+                <Param label="Years to Retirement" value={yearsToRetirement} highlight />
+                <Param label="Years in Retirement" value={yearsInRetirement} highlight />
               </Section>
 
               <Section title="Retirement Goals">
@@ -666,19 +567,13 @@ Single Source of Truth:
                   label="Desired Monthly Income (Today)"
                   value={formatCurrency(retirementGoals.desiredMonthlyIncome)}
                 />
-                <Param
-                  label="Inflation Rate"
-                  value={`${retirementGoals.inflationRate}%`}
-                />
+                <Param label="Inflation Rate" value={`${retirementGoals.inflationRate}%`} />
                 <Param
                   label="Inflation Rate (Decimal)"
                   value={inflationRate.toFixed(4)}
                   highlight
                 />
-                <Param
-                  label="Legacy Amount"
-                  value={formatCurrency(retirementGoals.legacyAmount)}
-                />
+                <Param label="Legacy Amount" value={formatCurrency(retirementGoals.legacyAmount)} />
               </Section>
 
               <Section title="Retirement Eligibility (SA Tax Rules)">
@@ -697,13 +592,8 @@ Single Source of Truth:
                   highlight={retirementEligible}
                 />
                 <div className="mt-4 pt-4 border-t">
-                  <p className="text-xs font-semibold mb-2">
-                    TAX DEDUCTIONS (2026/2027):
-                  </p>
-                  <Param
-                    label="Annual Contribution"
-                    value={formatCurrency(annualContribution)}
-                  />
+                  <p className="text-xs font-semibold mb-2">TAX DEDUCTIONS (2026/2027):</p>
+                  <Param label="Annual Contribution" value={formatCurrency(annualContribution)} />
                   <Param
                     label="Max RA Deduction"
                     value={`${formatCurrency(maxRADeduction)} (27.5% of income, max R430k)`}
@@ -723,24 +613,15 @@ Single Source of Truth:
 
               <Section title={`Accounts (${accounts.length})`}>
                 {accounts.length === 0 ? (
-                  <p className="text-sm text-muted-foreground italic">
-                    No accounts configured
-                  </p>
+                  <p className="text-sm text-muted-foreground italic">No accounts configured</p>
                 ) : (
                   accounts.map((account, index) => (
-                    <div
-                      key={account.id}
-                      className="mb-4 p-3 bg-muted/50 rounded-md"
-                    >
+                    <div key={account.id} className="mb-4 p-3 bg-muted/50 rounded-md">
                       <h4 className="font-semibold text-sm mb-2">
                         {index + 1}. {account.name} ({account.type})
                       </h4>
                       <div className="grid grid-cols-2 gap-2 text-xs">
-                        <Param
-                          label="Provider"
-                          value={account.provider}
-                          small
-                        />
+                        <Param label="Provider" value={account.provider} small />
                         <Param
                           label="Balance"
                           value={formatCurrency(account.currentBalance)}
@@ -751,16 +632,8 @@ Single Source of Truth:
                           value={formatCurrency(account.monthlyContribution)}
                           small
                         />
-                        <Param
-                          label="Expected Return"
-                          value={`${account.expectedReturn}%`}
-                          small
-                        />
-                        <Param
-                          label="Annual Fees"
-                          value={`${account.annualFees}%`}
-                          small
-                        />
+                        <Param label="Expected Return" value={`${account.expectedReturn}%`} small />
+                        <Param label="Annual Fees" value={`${account.annualFees}%`} small />
                         <Param
                           label="Escalation"
                           value={`${account.contributionEscalation}%`}
@@ -791,16 +664,10 @@ Single Source of Truth:
                   value={`${drawdownConfig.lumpSumPercentage}%`}
                 />
                 {drawdownConfig.upperGuardrail && (
-                  <Param
-                    label="Upper Guardrail"
-                    value={`${drawdownConfig.upperGuardrail}%`}
-                  />
+                  <Param label="Upper Guardrail" value={`${drawdownConfig.upperGuardrail}%`} />
                 )}
                 {drawdownConfig.lowerGuardrail && (
-                  <Param
-                    label="Lower Guardrail"
-                    value={`${drawdownConfig.lowerGuardrail}%`}
-                  />
+                  <Param label="Lower Guardrail" value={`${drawdownConfig.lowerGuardrail}%`} />
                 )}
                 {drawdownConfig.monthlyMedicalAid && (
                   <Param
@@ -818,30 +685,12 @@ Single Source of Truth:
 
               {assumptions && (
                 <Section title="Market Assumptions">
-                  <Param
-                    label="Equity Return"
-                    value={`${assumptions.equityReturn}%`}
-                  />
-                  <Param
-                    label="Bond Return"
-                    value={`${assumptions.bondReturn}%`}
-                  />
-                  <Param
-                    label="Cash Return"
-                    value={`${assumptions.cashReturn}%`}
-                  />
-                  <Param
-                    label="Equity Volatility"
-                    value={`${assumptions.equityVolatility}%`}
-                  />
-                  <Param
-                    label="Bond Volatility"
-                    value={`${assumptions.bondVolatility}%`}
-                  />
-                  <Param
-                    label="Inflation Rate"
-                    value={`${assumptions.inflationRate}%`}
-                  />
+                  <Param label="Equity Return" value={`${assumptions.equityReturn}%`} />
+                  <Param label="Bond Return" value={`${assumptions.bondReturn}%`} />
+                  <Param label="Cash Return" value={`${assumptions.cashReturn}%`} />
+                  <Param label="Equity Volatility" value={`${assumptions.equityVolatility}%`} />
+                  <Param label="Bond Volatility" value={`${assumptions.bondVolatility}%`} />
+                  <Param label="Inflation Rate" value={`${assumptions.inflationRate}%`} />
                 </Section>
               )}
             </CategorySection>
@@ -849,16 +698,8 @@ Single Source of Truth:
             {/* CALCULATED RESULTS */}
             <CategorySection title="Calculated Results" category="results">
               <Section title="Portfolio Aggregates (Calculated)">
-                <Param
-                  label="Weighting Method"
-                  value={weightingMethod}
-                  highlight
-                />
-                <Param
-                  label="Total Balance"
-                  value={formatCurrency(totalBalance)}
-                  highlight
-                />
+                <Param label="Weighting Method" value={weightingMethod} highlight />
+                <Param label="Total Balance" value={formatCurrency(totalBalance)} highlight />
                 <Param
                   label="Total Monthly Contribution"
                   value={formatCurrency(totalMonthlyContribution)}
@@ -869,36 +710,16 @@ Single Source of Truth:
                   value={formatCurrency(totalMonthlyContribution * 12)}
                   highlight
                 />
-                <Param
-                  label="Weighted Return"
-                  value={formatPercent(weightedReturn)}
-                  highlight
-                />
-                <Param
-                  label="Weighted Fees"
-                  value={formatPercent(weightedFees)}
-                  highlight
-                />
-                <Param
-                  label="Average Escalation"
-                  value={formatPercent(avgEscalation)}
-                  highlight
-                />
+                <Param label="Weighted Return" value={formatPercent(weightedReturn)} highlight />
+                <Param label="Weighted Fees" value={formatPercent(weightedFees)} highlight />
+                <Param label="Average Escalation" value={formatPercent(avgEscalation)} highlight />
                 <Param
                   label="Net Return (Return - Fees)"
                   value={formatPercent(netReturn)}
                   highlight
                 />
-                <Param
-                  label="Monthly Return Rate"
-                  value={formatPercent(monthlyReturn)}
-                  highlight
-                />
-                <Param
-                  label="Monthly Fee Rate"
-                  value={formatPercent(monthlyFeeRate)}
-                  highlight
-                />
+                <Param label="Monthly Return Rate" value={formatPercent(monthlyReturn)} highlight />
+                <Param label="Monthly Fee Rate" value={formatPercent(monthlyFeeRate)} highlight />
               </Section>
 
               <Section title="Withdrawal Details (At Retirement)">
@@ -921,10 +742,7 @@ Single Source of Truth:
                   value={formatCurrency(initialWithdrawalMonthly)}
                   highlight
                 />
-                <Param
-                  label="Withdrawal Strategy"
-                  value={drawdownConfig.strategy}
-                />
+                <Param label="Withdrawal Strategy" value={drawdownConfig.strategy} />
                 <Param
                   label="Replacement Ratio"
                   value={`${replacementRatio.toFixed(1)}%`}
@@ -948,18 +766,12 @@ Single Source of Truth:
                   value={`${effectiveTaxRate.toFixed(2)}%`}
                   highlight
                 />
-                <Param
-                  label="Lifetime Income Tax"
-                  value={formatCurrency(lifetimeIncomeTax)}
-                />
+                <Param label="Lifetime Income Tax" value={formatCurrency(lifetimeIncomeTax)} />
                 <Param
                   label="Age-Based Rebate"
                   value={formatCurrency(taxAtRetirement.applicableRebate)}
                 />
-                <Param
-                  label="Tax-Free Threshold"
-                  value={formatCurrency(taxThreshold)}
-                />
+                <Param label="Tax-Free Threshold" value={formatCurrency(taxThreshold)} />
                 <Param
                   label="Below Tax Threshold?"
                   value={isBelowThreshold ? "YES" : "NO"}
@@ -987,8 +799,7 @@ Single Source of Truth:
                   <Param
                     label="Portfolio Depletion Age"
                     value={
-                      projection.portfolioDepletionAge ||
-                      "Never (survives to life expectancy)"
+                      projection.portfolioDepletionAge || "Never (survives to life expectancy)"
                     }
                     highlight={!projection.portfolioDepletionAge}
                   />
@@ -1020,19 +831,14 @@ Single Source of Truth:
                   />
                   <Param
                     label="Median Depletion Age"
-                    value={
-                      simulationResult.medianDepletionAge ||
-                      "N/A (most runs succeed)"
-                    }
+                    value={simulationResult.medianDepletionAge || "N/A (most runs succeed)"}
                   />
                   <Param
                     label="Average Final Balance"
                     value={formatCurrency(simulationResult.averageFinalBalance)}
                   />
                   <div className="mt-4 pt-4 border-t">
-                    <p className="text-xs font-semibold mb-2">
-                      PERCENTILE ANALYSIS (Final Year):
-                    </p>
+                    <p className="text-xs font-semibold mb-2">PERCENTILE ANALYSIS (Final Year):</p>
                     <Param
                       label="P10 (10th percentile)"
                       value={formatCurrency(
@@ -1087,11 +893,7 @@ Single Source of Truth:
             <CategorySection title="Reference Data" category="reference">
               <Section title="Monte Carlo Simulation">
                 <Param label="Number of Runs" value="1,000" />
-                <Param
-                  label="Volatility Used"
-                  value={`${volatility}%`}
-                  highlight
-                />
+                <Param label="Volatility Used" value={`${volatility}%`} highlight />
                 <Param
                   label="Volatility (Decimal)"
                   value={(volatility / 100).toFixed(4)}
@@ -1102,36 +904,18 @@ Single Source of Truth:
               <Section title="Spending Phase Multipliers">
                 <Param label="Go-Go Phase (Years 0-15)" value="100%" />
                 <Param label="Slow-Go Phase (Years 15-25)" value="80%" />
-                <Param
-                  label="No-Go Phase (Years 25+)"
-                  value="70% + Medical (cap 120%)"
-                />
+                <Param label="No-Go Phase (Years 25+)" value="70% + Medical (cap 120%)" />
                 <div className="text-xs text-muted-foreground mt-2 italic">
                   Medical premium: +15% per 10 years after year 25
                 </div>
               </Section>
 
               <Section title="SA Default Constants">
-                <Param
-                  label="Default Inflation"
-                  value={`${SA_DEFAULTS.inflation * 100}%`}
-                />
-                <Param
-                  label="Medical Inflation"
-                  value={`${SA_DEFAULTS.medicalInflation * 100}%`}
-                />
-                <Param
-                  label="Default Equity Return"
-                  value={`${SA_DEFAULTS.equityReturn * 100}%`}
-                />
-                <Param
-                  label="Default Bond Return"
-                  value={`${SA_DEFAULTS.bondReturn * 100}%`}
-                />
-                <Param
-                  label="Default Cash Return"
-                  value={`${SA_DEFAULTS.cashReturn * 100}%`}
-                />
+                <Param label="Default Inflation" value={`${SA_DEFAULTS.inflation * 100}%`} />
+                <Param label="Medical Inflation" value={`${SA_DEFAULTS.medicalInflation * 100}%`} />
+                <Param label="Default Equity Return" value={`${SA_DEFAULTS.equityReturn * 100}%`} />
+                <Param label="Default Bond Return" value={`${SA_DEFAULTS.bondReturn * 100}%`} />
+                <Param label="Default Cash Return" value={`${SA_DEFAULTS.cashReturn * 100}%`} />
                 <Param
                   label="Default Equity Volatility"
                   value={`${SA_DEFAULTS.equityVolatility * 100}%`}
@@ -1149,9 +933,7 @@ Single Source of Truth:
               {/* Accuracy Notes */}
               <Section title="Accuracy Notes">
                 <div className="text-xs text-muted-foreground space-y-2">
-                  <p>
-                    This data can be used to verify calculations independently.
-                  </p>
+                  <p>This data can be used to verify calculations independently.</p>
                   <p className="font-semibold">
                     Compounding Method: {compoundingMethod.toUpperCase()}
                   </p>
@@ -1159,28 +941,16 @@ Single Source of Truth:
                   <p>- Formula used: {monthlyReturnFormula}</p>
                   <p className="font-semibold mt-2">Key calculation details:</p>
                   <ul className="list-disc list-inside space-y-1">
-                    <li>
-                      Weighted metrics use contribution weights when balance = 0
-                    </li>
-                    <li>
-                      Monte Carlo uses log-normal distribution with volatility
-                      adjustment
-                    </li>
-                    <li>
-                      Spending phases: Go-Go (100%), Slow-Go (80%), No-Go
-                      (70%+medical)
-                    </li>
+                    <li>Weighted metrics use contribution weights when balance = 0</li>
+                    <li>Monte Carlo uses log-normal distribution with volatility adjustment</li>
+                    <li>Spending phases: Go-Go (100%), Slow-Go (80%), No-Go (70%+medical)</li>
                     <li>Display mode: {displayModeLabel}</li>
                   </ul>
                   <p className="font-semibold mt-2">Single Source of Truth:</p>
                   <p>
-                    - All projections use
-                    lib/calculations/utils/projection.ts::projectFinalSavings
+                    - All projections use lib/calculations/utils/projection.ts::projectFinalSavings
                   </p>
-                  <p>
-                    - Ensures consistency across all tabs (Projection, Insights,
-                    Scenarios)
-                  </p>
+                  <p>- Ensures consistency across all tabs (Projection, Insights, Scenarios)</p>
                 </div>
               </Section>
             </CategorySection>
@@ -1188,12 +958,12 @@ Single Source of Truth:
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 interface SectionProps {
-  title: string;
-  children: React.ReactNode;
+  title: string
+  children: React.ReactNode
 }
 
 function Section({ title, children }: SectionProps) {
@@ -1203,14 +973,14 @@ function Section({ title, children }: SectionProps) {
       <div className="space-y-2">{children}</div>
       <Separator className="mt-4" />
     </div>
-  );
+  )
 }
 
 interface ParamProps {
-  label: string;
-  value: string | number;
-  highlight?: boolean;
-  small?: boolean;
+  label: string
+  value: string | number
+  highlight?: boolean
+  small?: boolean
 }
 
 function Param({ label, value, highlight, small }: ParamProps) {
@@ -1221,13 +991,13 @@ function Param({ label, value, highlight, small }: ParamProps) {
       <span className="text-muted-foreground">{label}:</span>
       <span className="font-mono">{value}</span>
     </div>
-  );
+  )
 }
 
 interface CategorySectionProps {
-  title: string;
-  category: "critical" | "inputs" | "results" | "reference";
-  children: React.ReactNode;
+  title: string
+  category: "critical" | "inputs" | "results" | "reference"
+  children: React.ReactNode
 }
 
 function CategorySection({ title, category, children }: CategorySectionProps) {
@@ -1236,19 +1006,19 @@ function CategorySection({ title, category, children }: CategorySectionProps) {
     inputs: "bg-primary/5",
     results: "bg-primary/10",
     reference: "bg-muted/30",
-  }[category];
+  }[category]
 
   const borderColor = {
     critical: "border-primary",
     inputs: "border-primary/40",
     results: "border-primary",
     reference: "border-muted-foreground/40",
-  }[category];
+  }[category]
 
   return (
     <div className={`rounded-lg border-l-4 ${borderColor} ${bgColor} p-4`}>
       <h3 className="font-semibold text-sm mb-3 text-primary">{title}</h3>
       <div className="space-y-2">{children}</div>
     </div>
-  );
+  )
 }

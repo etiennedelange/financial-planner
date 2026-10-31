@@ -9,10 +9,7 @@ const RATE_LIMIT_PER_HOUR = 10
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000
 
 function tooManyRequests() {
-  return NextResponse.json(
-    { error: "Too many attempts. Try again later." },
-    { status: 429 },
-  )
+  return NextResponse.json({ error: "Too many attempts. Try again later." }, { status: 429 })
 }
 
 /**
@@ -58,12 +55,18 @@ export async function POST(request: Request) {
   }
 
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
   }
 
-  const userLimit = checkRateLimit(`recover:user:${user.id}`, RATE_LIMIT_PER_HOUR, RATE_LIMIT_WINDOW_MS)
+  const userLimit = checkRateLimit(
+    `recover:user:${user.id}`,
+    RATE_LIMIT_PER_HOUR,
+    RATE_LIMIT_WINDOW_MS,
+  )
   if (!userLimit.allowed) {
     return tooManyRequests()
   }
@@ -89,7 +92,10 @@ export async function POST(request: Request) {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   if (!serviceKey || !url) {
-    return NextResponse.json({ error: "Server not configured for account recovery" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Server not configured for account recovery" },
+      { status: 500 },
+    )
   }
   const admin = createAdminClient(url, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },

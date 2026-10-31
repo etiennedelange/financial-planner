@@ -20,11 +20,11 @@
  *   5. Beware clamps. `Math.max(0, x) >= 0` is guaranteed by the clamp, not the logic.
  */
 
-import { describe, it, expect } from 'vite-plus/test'
-import { calculateProjection } from '../projection-engine'
-import { calculateReplacementRatio } from '../retirement-tax'
-import type { Account, DrawdownConfig, PersonalInfo, RetirementGoals } from '@/types'
-import { todayRands } from '../utils/money-time'
+import { describe, it, expect } from "vite-plus/test"
+import { calculateProjection } from "../projection-engine"
+import { calculateReplacementRatio } from "../retirement-tax"
+import type { Account, DrawdownConfig, PersonalInfo, RetirementGoals } from "@/types"
+import { todayRands } from "../utils/money-time"
 
 const basePersonalInfo: PersonalInfo = {
   currentAge: 35,
@@ -40,7 +40,7 @@ const baseRetirementGoals: RetirementGoals = {
 }
 
 const baseDrawdownConfig: DrawdownConfig = {
-  strategy: 'fixed_percentage',
+  strategy: "fixed_percentage",
   initialWithdrawalRate: 4,
   minimumWithdrawal: 15000,
   maximumWithdrawal: 60000,
@@ -51,10 +51,10 @@ const RETIREMENT_IDX = basePersonalInfo.retirementAge - basePersonalInfo.current
 
 /** Well-funded: survives to life expectancy with a large surplus, never depletes. */
 const survivingAccount: Account = {
-  id: '1',
-  name: 'Test RA',
-  type: 'retirement_annuity',
-  provider: 'Test Provider',
+  id: "1",
+  name: "Test RA",
+  type: "retirement_annuity",
+  provider: "Test Provider",
   currentBalance: 500000,
   monthlyContribution: 5000,
   expectedReturn: 10,
@@ -75,7 +75,7 @@ const depletingAccount: Account = {
 }
 const depletingConfig: DrawdownConfig = {
   ...baseDrawdownConfig,
-  strategy: 'fixed_amount_inflation_adjusted',
+  strategy: "fixed_amount_inflation_adjusted",
 }
 
 const surviving = () =>
@@ -84,24 +84,24 @@ const surviving = () =>
 const depleting = () =>
   calculateProjection([depletingAccount], basePersonalInfo, baseRetirementGoals, depletingConfig)
 
-describe('Projection Invariants', () => {
-  describe('Fixture preconditions', () => {
+describe("Projection Invariants", () => {
+  describe("Fixture preconditions", () => {
     // If these fail, every test below is testing something other than what it claims.
-    it('the surviving fixture really does survive with a surplus', () => {
+    it("the surviving fixture really does survive with a surplus", () => {
       const r = surviving()
       expect(r.portfolioDepletionAge).toBeNull()
       expect(r.surplusAmount).toBeGreaterThan(50_000_000)
     })
 
-    it('the depleting fixture really does run out of money', () => {
+    it("the depleting fixture really does run out of money", () => {
       const r = depleting()
-      expect(typeof r.portfolioDepletionAge).toBe('number')
+      expect(typeof r.portfolioDepletionAge).toBe("number")
       expect(r.portfolioDepletionAge).toBe(67)
       expect(r.surplusAmount).toBe(0)
     })
   })
 
-  describe('Conservation of money', () => {
+  describe("Conservation of money", () => {
     /**
      * The strongest invariant available: money cannot appear or vanish.
      *
@@ -112,7 +112,7 @@ describe('Projection Invariants', () => {
      * The `fees` field is reporting-only. A future refactor that starts subtracting fees
      * twice — an easy and expensive mistake — fails here.
      */
-    it('INV-001: every year balances exactly (accumulation and drawdown)', () => {
+    it("INV-001: every year balances exactly (accumulation and drawdown)", () => {
       const rows = surviving().yearlyProjections
       expect(rows.length).toBeGreaterThan(50)
 
@@ -122,12 +122,12 @@ describe('Projection Invariants', () => {
           Math.abs(y.endingBalance - expected),
           `year at age ${y.age} does not balance: ` +
             `start ${y.startingBalance} + contrib ${y.contributions} + growth ${y.growth} ` +
-            `- withdrawals ${y.withdrawals} != end ${y.endingBalance}`
+            `- withdrawals ${y.withdrawals} != end ${y.endingBalance}`,
         ).toBeLessThan(0.01)
       })
     })
 
-    it('INV-002: the same identity holds for a portfolio that depletes', () => {
+    it("INV-002: the same identity holds for a portfolio that depletes", () => {
       const rows = depleting().yearlyProjections
       rows.forEach((y) => {
         const expected = y.startingBalance + y.contributions + y.growth - y.withdrawals
@@ -135,7 +135,7 @@ describe('Projection Invariants', () => {
       })
     })
 
-    it('INV-003: year N starting balance equals year N-1 ending balance', () => {
+    it("INV-003: year N starting balance equals year N-1 ending balance", () => {
       const rows = surviving().yearlyProjections
       for (let i = 1; i < rows.length; i++) {
         expect(rows[i].startingBalance).toBeCloseTo(rows[i - 1].endingBalance, 2)
@@ -143,8 +143,8 @@ describe('Projection Invariants', () => {
     })
   })
 
-  describe('Depletion semantics', () => {
-    it('INV-004: a depleted portfolio reports zero surplus and a real depletion age', () => {
+  describe("Depletion semantics", () => {
+    it("INV-004: a depleted portfolio reports zero surplus and a real depletion age", () => {
       const r = depleting()
       // Asserted unconditionally — the preconditions above guarantee this fixture depletes.
       expect(r.surplusAmount).toBe(0)
@@ -152,13 +152,13 @@ describe('Projection Invariants', () => {
       expect(r.portfolioDepletionAge).toBeLessThanOrEqual(basePersonalInfo.lifeExpectancy)
     })
 
-    it('INV-005: a surviving portfolio reports no depletion age and positive surplus', () => {
+    it("INV-005: a surviving portfolio reports no depletion age and positive surplus", () => {
       const r = surviving()
       expect(r.portfolioDepletionAge).toBeNull()
       expect(r.surplusAmount).toBeGreaterThan(0)
     })
 
-    it('INV-006: balances stay at zero for every year after depletion', () => {
+    it("INV-006: balances stay at zero for every year after depletion", () => {
       const r = depleting()
       const depletionAge = r.portfolioDepletionAge as number
       const after = r.yearlyProjections.filter((y) => y.age > depletionAge)
@@ -172,7 +172,7 @@ describe('Projection Invariants', () => {
       })
     })
 
-    it('INV-007: a depleted plan reports a materially large shortfall', () => {
+    it("INV-007: a depleted plan reports a materially large shortfall", () => {
       // Absolute magnitude, not a relationship. If the shortfall metric silently
       // collapses to 0 again — the 75f68f7 regression — this fails.
       const r = depleting()
@@ -180,8 +180,8 @@ describe('Projection Invariants', () => {
     })
   })
 
-  describe('Withdrawals', () => {
-    it('INV-008: drawdown withdrawals are substantial and never negative', () => {
+  describe("Withdrawals", () => {
+    it("INV-008: drawdown withdrawals are substantial and never negative", () => {
       const rows = surviving().yearlyProjections.slice(RETIREMENT_IDX)
       expect(rows.length).toBe(basePersonalInfo.lifeExpectancy - basePersonalInfo.retirementAge)
 
@@ -192,36 +192,36 @@ describe('Projection Invariants', () => {
       rows.forEach((y) => expect(y.withdrawals).toBeGreaterThanOrEqual(0))
     })
 
-    it('INV-009: no withdrawals occur before retirement', () => {
+    it("INV-009: no withdrawals occur before retirement", () => {
       const rows = surviving().yearlyProjections.slice(0, RETIREMENT_IDX)
       expect(rows.length).toBe(RETIREMENT_IDX)
       rows.forEach((y) => expect(y.withdrawals, `age ${y.age}`).toBe(0))
     })
   })
 
-  describe('Replacement ratio', () => {
-    it('INV-010: ratio is computed against an independently derived value', () => {
+  describe("Replacement ratio", () => {
+    it("INV-010: ratio is computed against an independently derived value", () => {
       // 1,601,625 / 1,275,000 = 1.2562... -> 125.6%. Derived by hand, NOT by
       // recomputing the implementation formula in the test body.
       const ratio = calculateReplacementRatio(todayRands(1601625), todayRands(1275000))
       expect(ratio).toBeCloseTo(125.6, 1)
     })
 
-    it('INV-011: a 60% ratio is reported as 60', () => {
+    it("INV-011: a 60% ratio is reported as 60", () => {
       expect(calculateReplacementRatio(todayRands(240000), todayRands(400000))).toBeCloseTo(60, 6)
     })
 
-    it('INV-012: a negative retirement income yields a negative ratio, not a clamped 0', () => {
+    it("INV-012: a negative retirement income yields a negative ratio, not a clamped 0", () => {
       // The old INV-011 was titled "always non-negative" but only tested one positive
       // pair, so it asserted nothing about the property in its own name. The function
       // does NOT clamp, and this pins that actual behaviour.
       expect(calculateReplacementRatio(todayRands(-100000), todayRands(600000))).toBeCloseTo(
         -16.667,
-        3
+        3,
       )
     })
 
-    it('INV-013: ratio is 0 when EITHER income is 0', () => {
+    it("INV-013: ratio is 0 when EITHER income is 0", () => {
       // The old INV-012 claimed "0 only when pre-retirement income is 0", which is false:
       // a zero retirement income also gives 0.
       expect(calculateReplacementRatio(todayRands(100000), todayRands(0))).toBe(0)
@@ -229,19 +229,19 @@ describe('Projection Invariants', () => {
     })
   })
 
-  describe('Projection shape', () => {
-    it('INV-014: projections cover every year from current age to life expectancy', () => {
+  describe("Projection shape", () => {
+    it("INV-014: projections cover every year from current age to life expectancy", () => {
       const r = surviving()
       expect(r.yearlyProjections.length).toBe(
-        basePersonalInfo.lifeExpectancy - basePersonalInfo.currentAge
+        basePersonalInfo.lifeExpectancy - basePersonalInfo.currentAge,
       )
       expect(r.yearlyProjections[0].age).toBe(basePersonalInfo.currentAge)
       expect(r.yearlyProjections[r.yearlyProjections.length - 1].age).toBe(
-        basePersonalInfo.lifeExpectancy - 1
+        basePersonalInfo.lifeExpectancy - 1,
       )
     })
 
-    it('INV-015: ages increase by exactly one year per row', () => {
+    it("INV-015: ages increase by exactly one year per row", () => {
       const rows = surviving().yearlyProjections
       for (let i = 1; i < rows.length; i++) {
         expect(rows[i].age).toBe(rows[i - 1].age + 1)
@@ -249,8 +249,8 @@ describe('Projection Invariants', () => {
     })
   })
 
-  describe('Tax and fees', () => {
-    it('INV-016: net income equals withdrawals minus income tax and medical aid', () => {
+  describe("Tax and fees", () => {
+    it("INV-016: net income equals withdrawals minus income tax and medical aid", () => {
       // Asserted only over drawdown years, and only against fields the engine actually
       // populates. `lumpSumTax` is deliberately NOT an operand here — see INV-018.
       const rows = surviving()
@@ -264,7 +264,7 @@ describe('Projection Invariants', () => {
       })
     })
 
-    it('INV-017: drawdown years incur real, non-negative income tax', () => {
+    it("INV-017: drawdown years incur real, non-negative income tax", () => {
       const rows = surviving().yearlyProjections.slice(RETIREMENT_IDX)
       rows.forEach((y) => expect(y.incomeTax).toBeGreaterThanOrEqual(0))
 
@@ -274,7 +274,7 @@ describe('Projection Invariants', () => {
       expect(totalTax).toBeGreaterThan(1_000_000)
     })
 
-    it('INV-018: lump-sum tax is reported in the total but NOT attributed per-year', () => {
+    it("INV-018: lump-sum tax is reported in the total but NOT attributed per-year", () => {
       // KNOWN MODELLING GAP, pinned deliberately rather than asserted away.
       // `totalLumpSumTax` is populated, but `yearlyProjections[].lumpSumTax` is 0 for
       // EVERY year including the retirement year. The old INV-017 claimed to verify
@@ -284,19 +284,17 @@ describe('Projection Invariants', () => {
       // If per-year attribution is implemented later, this test fails and must be
       // rewritten to assert the retirement year carries the tax. That failure is the
       // point: it marks the gap instead of hiding it.
-      const r = calculateProjection(
-        [survivingAccount],
-        basePersonalInfo,
-        baseRetirementGoals,
-        { ...baseDrawdownConfig, lumpSumPercentage: 30 }
-      )
+      const r = calculateProjection([survivingAccount], basePersonalInfo, baseRetirementGoals, {
+        ...baseDrawdownConfig,
+        lumpSumPercentage: 30,
+      })
 
       expect(r.totalLumpSumTax).toBeGreaterThan(1_000_000)
       const perYearNonZero = r.yearlyProjections.filter((y) => y.lumpSumTax !== 0)
       expect(perYearNonZero.length).toBe(0)
     })
 
-    it('INV-019: accumulation growth is positive and fees are reported non-negative', () => {
+    it("INV-019: accumulation growth is positive and fees are reported non-negative", () => {
       const rows = surviving().yearlyProjections.slice(0, RETIREMENT_IDX)
       expect(rows.length).toBe(RETIREMENT_IDX)
 

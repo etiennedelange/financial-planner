@@ -26,7 +26,9 @@ export function SecuritySection({ email }: { email: string }) {
   // Defer the initial load out of the effect's synchronous body: the state
   // updates land after the listFactors/recoveryCodesRemaining promises resolve.
   useEffect(() => {
-    const id = requestAnimationFrame(() => { void load() })
+    const id = requestAnimationFrame(() => {
+      void load()
+    })
     return () => cancelAnimationFrame(id)
   }, [load])
 
@@ -52,7 +54,9 @@ export function SecuritySection({ email }: { email: string }) {
             Two-factor authentication is on. Sign-in requires a code from your authenticator app.
           </p>
           {remaining !== null && (
-            <p className={`text-sm ${remaining <= 2 ? "text-destructive" : "text-muted-foreground"}`}>
+            <p
+              className={`text-sm ${remaining <= 2 ? "text-destructive" : "text-muted-foreground"}`}
+            >
               {remaining} recovery {remaining === 1 ? "code" : "codes"} remaining
               {remaining <= 2 && " — disable and re-enrol to get a fresh set."}
             </p>
@@ -68,7 +72,10 @@ export function SecuritySection({ email }: { email: string }) {
         factorId={factorId ?? ""}
         action="disable two-factor authentication"
         onCancel={() => setConfirmingDisable(false)}
-        onConfirmed={() => { setConfirmingDisable(false); void disable() }}
+        onConfirmed={() => {
+          setConfirmingDisable(false)
+          void disable()
+        }}
       />
     </PageCard>
   )

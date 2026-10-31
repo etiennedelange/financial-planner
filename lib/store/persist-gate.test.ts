@@ -17,7 +17,10 @@ describe("createGatedPersistStorage", () => {
 
     storage.release()
     storage.setItem(KEY, { state: { n: 2 }, version: 2 })
-    expect(JSON.parse(localStorage.getItem(`${KEY}:guest`)!)).toEqual({ state: { n: 2 }, version: 2 })
+    expect(JSON.parse(localStorage.getItem(`${KEY}:guest`)!)).toEqual({
+      state: { n: 2 },
+      version: 2,
+    })
   })
 
   it("reads persisted values regardless of gate state", () => {

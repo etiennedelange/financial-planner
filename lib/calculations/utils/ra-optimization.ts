@@ -1,19 +1,19 @@
-import { calculateIncomeTax } from '@/lib/constants/tax-tables'
-import { SA_TAX_LIMITS } from '@/lib/constants/limits'
-import type { Account, AccountType } from '@/types'
+import { calculateIncomeTax } from "@/lib/constants/tax-tables"
+import { SA_TAX_LIMITS } from "@/lib/constants/limits"
+import type { Account, AccountType } from "@/types"
 
-const RA_TYPES: AccountType[] = ['pension_fund', 'retirement_annuity', 'preservation_fund']
+const RA_TYPES: AccountType[] = ["pension_fund", "retirement_annuity", "preservation_fund"]
 
 export interface RAOptimizationResult {
-  annualDeductionLimit: number        // min(income × 27.5%, R430k)
-  currentAnnualContributions: number  // sum of RA/pension/preservation monthly × 12
-  remainingRoom: number               // how much more can be deducted tax-free
-  utilizationPct: number             // currentAnnualContributions / annualDeductionLimit × 100
-  annualTaxSaving: number            // tax saved if full remaining room is used
-  optimalMonthlyContribution: number  // annualDeductionLimit / 12
+  annualDeductionLimit: number // min(income × 27.5%, R430k)
+  currentAnnualContributions: number // sum of RA/pension/preservation monthly × 12
+  remainingRoom: number // how much more can be deducted tax-free
+  utilizationPct: number // currentAnnualContributions / annualDeductionLimit × 100
+  annualTaxSaving: number // tax saved if full remaining room is used
+  optimalMonthlyContribution: number // annualDeductionLimit / 12
   currentMonthlyContributions: number
   isFullyUtilized: boolean
-  isOverLimit: boolean               // contributions exceed deduction limit (excess not deductible)
+  isOverLimit: boolean // contributions exceed deduction limit (excess not deductible)
 }
 
 /**
@@ -27,15 +27,15 @@ export interface RAOptimizationResult {
  */
 export function calculateRAOptimization(
   annualIncome: number,
-  accounts: Account[]
+  accounts: Account[],
 ): RAOptimizationResult {
   const annualDeductionLimit = Math.min(
     annualIncome * SA_TAX_LIMITS.pensionRaDeductionRate,
-    SA_TAX_LIMITS.pensionRaMaxDeduction
+    SA_TAX_LIMITS.pensionRaMaxDeduction,
   )
 
   const currentMonthlyContributions = accounts
-    .filter(a => RA_TYPES.includes(a.type))
+    .filter((a) => RA_TYPES.includes(a.type))
     .reduce((sum, a) => sum + a.monthlyContribution, 0)
 
   const currentAnnualContributions = currentMonthlyContributions * 12

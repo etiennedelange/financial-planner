@@ -2,7 +2,6 @@
   "name": "financial-planner",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@12.6.0",
   "scripts": {
     "preinstall": "npx -y only-allow pnpm",
     "dev": "next dev",
@@ -98,5 +97,6 @@
     "vite-plus": "catalog:",
     "vitest": "catalog:",
     "wrangler": "^4.141.0"
-  }
+  },
+  "packageManager": "pnpm@12.6.0"
 }

@@ -85,7 +85,7 @@ export function deflate(amount: number, years: number, rate: DecimalRate): numbe
 declare const BASIS: unique symbol
 
 /** The date whose purchasing power an amount is expressed in. */
-export type MoneyBasis = 'today' | 'atRetirement'
+export type MoneyBasis = "today" | "atRetirement"
 
 /**
  * A rand amount tagged with the point in time it is expressed in.
@@ -98,29 +98,29 @@ export type MoneyBasis = 'today' | 'atRetirement'
 export type Rands<B extends MoneyBasis> = number & { readonly [BASIS]: (basis: B) => B }
 
 /** Tag an amount as being in today's rands. */
-export function todayRands(amount: number): Rands<'today'> {
-  return amount as Rands<'today'>
+export function todayRands(amount: number): Rands<"today"> {
+  return amount as Rands<"today">
 }
 
 /** Tag an amount as being in nominal rands at the retirement date. */
-export function retirementRands(amount: number): Rands<'atRetirement'> {
-  return amount as Rands<'atRetirement'>
+export function retirementRands(amount: number): Rands<"atRetirement"> {
+  return amount as Rands<"atRetirement">
 }
 
 /** Today's rands → nominal rands at the retirement date. */
 export function escalateToRetirement(
-  amount: Rands<'today'>,
+  amount: Rands<"today">,
   yearsToRetirement: number,
-  rate: DecimalRate
-): Rands<'atRetirement'> {
-  return escalate(amount, yearsToRetirement, rate) as Rands<'atRetirement'>
+  rate: DecimalRate,
+): Rands<"atRetirement"> {
+  return escalate(amount, yearsToRetirement, rate) as Rands<"atRetirement">
 }
 
 /** Nominal rands at the retirement date → today's rands. */
 export function deflateToToday(
-  amount: Rands<'atRetirement'>,
+  amount: Rands<"atRetirement">,
   yearsToRetirement: number,
-  rate: DecimalRate
-): Rands<'today'> {
-  return deflate(amount, yearsToRetirement, rate) as Rands<'today'>
+  rate: DecimalRate,
+): Rands<"today"> {
+  return deflate(amount, yearsToRetirement, rate) as Rands<"today">
 }

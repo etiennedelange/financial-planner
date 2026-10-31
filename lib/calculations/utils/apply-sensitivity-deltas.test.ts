@@ -58,7 +58,7 @@ describe("applySensitivityDeltas", () => {
         [ra, tfsa],
         personalInfo,
         retirementGoals,
-        DEFAULT_SENSITIVITY_DELTAS
+        DEFAULT_SENSITIVITY_DELTAS,
       )
       expect(result.personalInfo).toEqual(personalInfo)
       expect(result.retirementGoals).toEqual(retirementGoals)
@@ -70,7 +70,7 @@ describe("applySensitivityDeltas", () => {
         [ra, tfsa],
         personalInfo,
         retirementGoals,
-        deltas({ contributionScalePct: 20 })
+        deltas({ contributionScalePct: 20 }),
       )
       expect(result.accounts[0].monthlyContribution).toBeCloseTo(4800, 2) // 4000 * 1.2
       expect(result.accounts[1].monthlyContribution).toBeCloseTo(2400, 2) // 2000 * 1.2
@@ -81,7 +81,7 @@ describe("applySensitivityDeltas", () => {
         [ra, zeroContributionDiscretionary],
         personalInfo,
         retirementGoals,
-        deltas({ contributionScalePct: 50 })
+        deltas({ contributionScalePct: 50 }),
       )
       expect(result.accounts[0].monthlyContribution).toBeCloseTo(6000, 2) // 4000 * 1.5
       expect(result.accounts[1].monthlyContribution).toBe(0)
@@ -92,7 +92,7 @@ describe("applySensitivityDeltas", () => {
         [ra],
         personalInfo,
         retirementGoals,
-        deltas({ contributionScalePct: 10 })
+        deltas({ contributionScalePct: 10 }),
       )
       expect(result.accounts[0].monthlyContribution).toBeCloseTo(4400, 2)
     })
@@ -102,13 +102,18 @@ describe("applySensitivityDeltas", () => {
         [ra],
         personalInfo,
         retirementGoals,
-        deltas({ targetMonthlyIncomeOverride: 25000 })
+        deltas({ targetMonthlyIncomeOverride: 25000 }),
       )
       expect(result.retirementGoals.desiredMonthlyIncome).toBe(25000)
     })
 
     it("adds the return delta on top of the account's existing expected return", () => {
-      const result = applySensitivityDeltas([ra], personalInfo, retirementGoals, deltas({ returnDeltaPts: 2 }))
+      const result = applySensitivityDeltas(
+        [ra],
+        personalInfo,
+        retirementGoals,
+        deltas({ returnDeltaPts: 2 }),
+      )
       expect(result.accounts[0].expectedReturn).toBe(12)
     })
   })
@@ -119,13 +124,18 @@ describe("applySensitivityDeltas", () => {
         [ra],
         personalInfo,
         retirementGoals,
-        deltas({ contributionScalePct: -150 })
+        deltas({ contributionScalePct: -150 }),
       )
       expect(result.accounts[0].monthlyContribution).toBe(0)
     })
 
     it("floors expectedReturn at 0% instead of going negative", () => {
-      const result = applySensitivityDeltas([ra], personalInfo, retirementGoals, deltas({ returnDeltaPts: -20 }))
+      const result = applySensitivityDeltas(
+        [ra],
+        personalInfo,
+        retirementGoals,
+        deltas({ returnDeltaPts: -20 }),
+      )
       expect(result.accounts[0].expectedReturn).toBe(0)
     })
 
@@ -134,7 +144,7 @@ describe("applySensitivityDeltas", () => {
         [ra],
         personalInfo,
         retirementGoals,
-        deltas({ retirementAgeOffset: -30 })
+        deltas({ retirementAgeOffset: -30 }),
       )
       expect(result.personalInfo.retirementAge).toBe(personalInfo.currentAge + 1)
     })
@@ -144,7 +154,7 @@ describe("applySensitivityDeltas", () => {
         [ra],
         personalInfo,
         retirementGoals,
-        deltas({ retirementAgeOffset: 100 })
+        deltas({ retirementAgeOffset: 100 }),
       )
       expect(result.personalInfo.retirementAge).toBe(personalInfo.lifeExpectancy)
     })
@@ -154,7 +164,7 @@ describe("applySensitivityDeltas", () => {
         [],
         personalInfo,
         retirementGoals,
-        deltas({ contributionScalePct: 20, returnDeltaPts: 2 })
+        deltas({ contributionScalePct: 20, returnDeltaPts: 2 }),
       )
       expect(result.accounts).toEqual([])
     })

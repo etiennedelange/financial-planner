@@ -20,28 +20,43 @@ export function MfaEnrollment({ onEnrolled }: MfaEnrollmentProps) {
   const [loading, setLoading] = useState(false)
 
   async function start() {
-    setLoading(true); setError(null)
-    try { setEnrollment(await enrollTotp()) }
-    catch (e) { setError(e instanceof Error ? e.message : "Could not start enrolment") }
-    finally { setLoading(false) }
+    setLoading(true)
+    setError(null)
+    try {
+      setEnrollment(await enrollTotp())
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not start enrolment")
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function confirm() {
     if (!enrollment) return
-    setLoading(true); setError(null)
-    try { setCodes(await verifyEnrollment(enrollment.factorId, code)) }
-    catch (e) { setError(e instanceof Error ? e.message : "Could not verify the code") }
-    finally { setLoading(false) }
+    setLoading(true)
+    setError(null)
+    try {
+      setCodes(await verifyEnrollment(enrollment.factorId, code))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not verify the code")
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function cancel() {
     if (!enrollment) return
-    setLoading(true); setError(null)
+    setLoading(true)
+    setError(null)
     try {
       await unenrollTotp(enrollment.factorId)
-      setEnrollment(null); setCode("")
-    } catch (e) { setError(e instanceof Error ? e.message : "Could not cancel enrolment") }
-    finally { setLoading(false) }
+      setEnrollment(null)
+      setCode("")
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not cancel enrolment")
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (!enrollment) {
@@ -65,16 +80,30 @@ export function MfaEnrollment({ onEnrolled }: MfaEnrollmentProps) {
           Scan this with your authenticator app, then enter the six-digit code it shows.
         </p>
         <div className="flex justify-center rounded-md border bg-background p-3">
-          <Image src={enrollment.qrCode} alt="TOTP enrolment QR code" width={180} height={180} unoptimized />
+          <Image
+            src={enrollment.qrCode}
+            alt="TOTP enrolment QR code"
+            width={180}
+            height={180}
+            unoptimized
+          />
         </div>
         <p className="text-center font-mono text-xs text-muted-foreground break-all">
           {enrollment.secret}
         </p>
         <div className="space-y-1">
-          <Label htmlFor="totp-code" className="text-sm font-medium">Six-digit code</Label>
-          <Input id="totp-code" inputMode="numeric" autoComplete="one-time-code" maxLength={6}
-            value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-            className={error ? "border-destructive" : ""} />
+          <Label htmlFor="totp-code" className="text-sm font-medium">
+            Six-digit code
+          </Label>
+          <Input
+            id="totp-code"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={6}
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+            className={error ? "border-destructive" : ""}
+          />
           {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
         <div className="flex gap-2">
@@ -90,7 +119,10 @@ export function MfaEnrollment({ onEnrolled }: MfaEnrollmentProps) {
       <RecoveryCodesDialog
         open={codes !== null}
         codes={codes ?? []}
-        onClose={() => { setCodes(null); onEnrolled() }}
+        onClose={() => {
+          setCodes(null)
+          onEnrolled()
+        }}
       />
     </>
   )

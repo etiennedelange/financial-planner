@@ -2,14 +2,17 @@ import { act } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test"
 
-
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({ auth: {} }),
 }))
 vi.mock("@/components/auth/turnstile", async () => {
   const { forwardRef } = await import("react")
-  return { Turnstile: forwardRef(function Turnstile() { return <div data-testid="turnstile" /> }) }
+  return {
+    Turnstile: forwardRef(function Turnstile() {
+      return <div data-testid="turnstile" />
+    }),
+  }
 })
 vi.mock("@/components/auth/finance-animation", () => ({ FinanceAnimation: () => null }))
 

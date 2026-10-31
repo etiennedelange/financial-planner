@@ -35,11 +35,7 @@ export async function listScenarios(userId: string): Promise<ScenarioMeta[]> {
 
 export async function fetchScenario(scenarioId: string): Promise<ScenarioData | null> {
   const supabase = createClient()
-  const { data, error } = await supabase
-    .from("scenarios")
-    .select("*")
-    .eq("id", scenarioId)
-    .single()
+  const { data, error } = await supabase.from("scenarios").select("*").eq("id", scenarioId).single()
   if (error) {
     if (error.code === "PGRST116") return null
     throw error
@@ -58,7 +54,7 @@ export async function createScenario(
   name: string,
   data: ScenarioData,
   claimComplete: boolean = true,
-  id?: string
+  id?: string,
 ): Promise<string> {
   const supabase = createClient()
   const { data: row, error } = await supabase
@@ -106,10 +102,7 @@ export async function markScenarioClaimComplete(scenarioId: string): Promise<voi
 
 export async function renameScenario(scenarioId: string, name: string): Promise<void> {
   const supabase = createClient()
-  const { error } = await supabase
-    .from("scenarios")
-    .update({ name })
-    .eq("id", scenarioId)
+  const { error } = await supabase.from("scenarios").update({ name }).eq("id", scenarioId)
   if (error) throw error
 }
 

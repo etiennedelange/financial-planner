@@ -1,6 +1,6 @@
-import { calculateIncomeTax, calculateLumpSumTax } from '../constants/tax-tables'
-import { SA_TAX_LIMITS } from '../constants/limits'
-import { MEDICAL_AID_CREDITS_CONFIG } from '../constants/tax-year.config'
+import { calculateIncomeTax, calculateLumpSumTax } from "../constants/tax-tables"
+import { SA_TAX_LIMITS } from "../constants/limits"
+import { MEDICAL_AID_CREDITS_CONFIG } from "../constants/tax-year.config"
 import type { MoneyBasis, Rands } from "./utils/money-time"
 
 /**
@@ -59,7 +59,7 @@ export interface RetirementTaxResult {
 export function calculateIncomeTaxWithRebates(
   annualIncome: number,
   age: number,
-  medicalAidDependants?: number
+  medicalAidDependants?: number,
 ): number {
   if (annualIncome <= 0) return 0
 
@@ -68,17 +68,13 @@ export function calculateIncomeTaxWithRebates(
   let rebate = SA_TAX_LIMITS.primaryRebate
   if (age >= 75) {
     rebate =
-      SA_TAX_LIMITS.primaryRebate +
-      SA_TAX_LIMITS.secondaryRebate +
-      SA_TAX_LIMITS.tertiaryRebate
+      SA_TAX_LIMITS.primaryRebate + SA_TAX_LIMITS.secondaryRebate + SA_TAX_LIMITS.tertiaryRebate
   } else if (age >= 65) {
     rebate = SA_TAX_LIMITS.primaryRebate + SA_TAX_LIMITS.secondaryRebate
   }
 
   const medicalCredit =
-    medicalAidDependants !== undefined
-      ? calculateMedicalAidTaxCredit(medicalAidDependants)
-      : 0
+    medicalAidDependants !== undefined ? calculateMedicalAidTaxCredit(medicalAidDependants) : 0
 
   return Math.max(0, grossTax - rebate - medicalCredit)
 }
@@ -107,7 +103,7 @@ export function isBelowTaxThreshold(annualIncome: number, age: number): boolean 
  */
 export function calculateRetirementTax(
   grossWithdrawal: number,
-  config: RetirementTaxConfig
+  config: RetirementTaxConfig,
 ): RetirementTaxResult {
   // Gross tax before any credits
   const grossTax = grossWithdrawal > 0 ? calculateIncomeTax(grossWithdrawal) : 0
@@ -116,9 +112,7 @@ export function calculateRetirementTax(
   let applicableRebate = SA_TAX_LIMITS.primaryRebate
   if (config.age >= 75) {
     applicableRebate =
-      SA_TAX_LIMITS.primaryRebate +
-      SA_TAX_LIMITS.secondaryRebate +
-      SA_TAX_LIMITS.tertiaryRebate
+      SA_TAX_LIMITS.primaryRebate + SA_TAX_LIMITS.secondaryRebate + SA_TAX_LIMITS.tertiaryRebate
   } else if (config.age >= 65) {
     applicableRebate = SA_TAX_LIMITS.primaryRebate + SA_TAX_LIMITS.secondaryRebate
   }
@@ -231,7 +225,7 @@ export function calculateLumpSumCommutation(
  */
 export function calculateReplacementRatio<B extends MoneyBasis>(
   annualRetirementIncome: Rands<B>,
-  preRetirementIncome: Rands<B>
+  preRetirementIncome: Rands<B>,
 ): number {
   // `NaN <= 0` is false, so a bare `<= 0` guard would let NaN reach the UI and
   // render as the literal string "NaN%". Check finiteness on both arguments.
@@ -255,7 +249,7 @@ export function calculateReplacementRatio<B extends MoneyBasis>(
 export function calculateLifetimeTaxBurden(
   yearlyWithdrawals: number[],
   startAge: number,
-  monthlyMedicalAid: number = 0
+  monthlyMedicalAid: number = 0,
 ): {
   totalIncomeTax: number
   totalMedicalAid: number
@@ -282,9 +276,7 @@ export function calculateLifetimeTaxBurden(
   const totalNetIncome = totalGrossWithdrawals - totalIncomeTax - totalMedicalAid
 
   const averageEffectiveTaxRate =
-    totalGrossWithdrawals > 0
-      ? (totalIncomeTax / totalGrossWithdrawals) * 100
-      : 0
+    totalGrossWithdrawals > 0 ? (totalIncomeTax / totalGrossWithdrawals) * 100 : 0
 
   return {
     totalIncomeTax,

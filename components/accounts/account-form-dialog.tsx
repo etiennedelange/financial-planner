@@ -1,41 +1,41 @@
 "use client"
 
-import { PortfolioImpactStrip } from "@/components/accounts/portfolio-impact-strip";
-import { Button } from "@/components/ui/button";
+import { PortfolioImpactStrip } from "@/components/accounts/portfolio-impact-strip"
+import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
-    Drawer,
-    DrawerContent,
-    DrawerDescription,
-    DrawerHeader,
-    DrawerTitle,
-} from "@/components/ui/drawer";
-import { InfoTooltip } from "@/components/ui/info-tooltip";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer"
+import { InfoTooltip } from "@/components/ui/info-tooltip"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { SA_DEFAULTS } from "@/lib/constants/defaults";
-import { MAX_MONETARY_AMOUNT, SA_TAX_LIMITS } from "@/lib/constants/limits";
-import { useBoundedMonetary } from "@/lib/hooks/use-bounded-monetary";
-import type { Account } from "@/types";
-import { ACCOUNT_TYPE_LABELS } from "@/types";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
-import { Controller, useForm, useFormState } from "react-hook-form";
-import { z } from "zod";
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { SA_DEFAULTS } from "@/lib/constants/defaults"
+import { MAX_MONETARY_AMOUNT, SA_TAX_LIMITS } from "@/lib/constants/limits"
+import { useBoundedMonetary } from "@/lib/hooks/use-bounded-monetary"
+import type { Account } from "@/types"
+import { ACCOUNT_TYPE_LABELS } from "@/types"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useEffect, useState } from "react"
+import { Controller, useForm, useFormState } from "react-hook-form"
+import { z } from "zod"
 
 // ─── Schema ─────────────────────────────────────────────────────────────────
 
@@ -49,12 +49,34 @@ const accountSchema = z.object({
     "tfsa",
     "discretionary",
   ]),
-  currentBalance: z.number({ error: "Enter a balance" }).min(0, "Balance must be positive").max(MAX_MONETARY_AMOUNT, "Enter a realistic balance (R1 trillion or less)"),
-  monthlyContribution: z.number({ error: "Enter a monthly contribution" }).min(0, "Monthly contribution cannot be negative").max(MAX_MONETARY_AMOUNT, "Enter a realistic contribution (R1 trillion or less)"),
-  expectedReturn: z.number({ error: "Enter an expected return" }).min(0, "Expected return must be between 0% and 30%").max(30, "Expected return must be between 0% and 30%"),
-  annualFees: z.number({ error: "Enter annual fees" }).min(0, "Annual fees must be between 0% and 5%").max(5, "Annual fees must be between 0% and 5%"),
-  contributionEscalation: z.number({ error: "Enter contribution escalation" }).min(0, "Escalation must be between 0% and 20%").max(20, "Escalation must be between 0% and 20%"),
-  tfsaContributionsToDate: z.number({ error: "Enter contributions to date" }).min(0, "Contributions cannot be negative").max(SA_TAX_LIMITS.tfsaLifetimeLimit, `Max lifetime limit is R${SA_TAX_LIMITS.tfsaLifetimeLimit.toLocaleString()}`).optional(),
+  currentBalance: z
+    .number({ error: "Enter a balance" })
+    .min(0, "Balance must be positive")
+    .max(MAX_MONETARY_AMOUNT, "Enter a realistic balance (R1 trillion or less)"),
+  monthlyContribution: z
+    .number({ error: "Enter a monthly contribution" })
+    .min(0, "Monthly contribution cannot be negative")
+    .max(MAX_MONETARY_AMOUNT, "Enter a realistic contribution (R1 trillion or less)"),
+  expectedReturn: z
+    .number({ error: "Enter an expected return" })
+    .min(0, "Expected return must be between 0% and 30%")
+    .max(30, "Expected return must be between 0% and 30%"),
+  annualFees: z
+    .number({ error: "Enter annual fees" })
+    .min(0, "Annual fees must be between 0% and 5%")
+    .max(5, "Annual fees must be between 0% and 5%"),
+  contributionEscalation: z
+    .number({ error: "Enter contribution escalation" })
+    .min(0, "Escalation must be between 0% and 20%")
+    .max(20, "Escalation must be between 0% and 20%"),
+  tfsaContributionsToDate: z
+    .number({ error: "Enter contributions to date" })
+    .min(0, "Contributions cannot be negative")
+    .max(
+      SA_TAX_LIMITS.tfsaLifetimeLimit,
+      `Max lifetime limit is R${SA_TAX_LIMITS.tfsaLifetimeLimit.toLocaleString()}`,
+    )
+    .optional(),
 })
 
 type AccountFormData = z.infer<typeof accountSchema>
@@ -114,9 +136,14 @@ function EssentialFields({ form }: { form: FormRef }) {
   const { errors } = useFormState({ control })
 
   // Physically block monetary input above the cap.
-  const { onChange: balanceOnChange, ...balanceRegister } = register("currentBalance", { valueAsNumber: true })
+  const { onChange: balanceOnChange, ...balanceRegister } = register("currentBalance", {
+    valueAsNumber: true,
+  })
   const guardBalance = useBoundedMonetary(watch("currentBalance") ?? 0)
-  const { onChange: contributionOnChange, ...contributionRegister } = register("monthlyContribution", { valueAsNumber: true })
+  const { onChange: contributionOnChange, ...contributionRegister } = register(
+    "monthlyContribution",
+    { valueAsNumber: true },
+  )
   const guardContribution = useBoundedMonetary(watch("monthlyContribution") ?? 0)
 
   return (
@@ -125,16 +152,12 @@ function EssentialFields({ form }: { form: FormRef }) {
         <div className="space-y-2">
           <Label htmlFor="af-name">Account Name</Label>
           <Input id="af-name" placeholder="e.g. My RA" {...register("name")} />
-          {errors.name && (
-            <p className="text-xs text-destructive">{errors.name.message}</p>
-          )}
+          {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="af-provider">Provider</Label>
           <Input id="af-provider" placeholder="e.g. Allan Gray" {...register("provider")} />
-          {errors.provider && (
-            <p className="text-xs text-destructive">{errors.provider.message}</p>
-          )}
+          {errors.provider && <p className="text-xs text-destructive">{errors.provider.message}</p>}
         </div>
       </div>
 
@@ -153,7 +176,9 @@ function EssentialFields({ form }: { form: FormRef }) {
               <SelectContent>
                 <SelectGroup>
                   {Object.entries(ACCOUNT_TYPE_LABELS).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
                   ))}
                 </SelectGroup>
               </SelectContent>
@@ -206,8 +231,13 @@ function PerformanceFields({ form }: { form: FormRef }) {
   const selectedType = watch("type")
 
   // Physically block TFSA contribution input above the lifetime limit.
-  const { onChange: tfsaOnChange, ...tfsaRegister } = register("tfsaContributionsToDate", { valueAsNumber: true })
-  const guardTfsa = useBoundedMonetary(watch("tfsaContributionsToDate") ?? "", SA_TAX_LIMITS.tfsaLifetimeLimit)
+  const { onChange: tfsaOnChange, ...tfsaRegister } = register("tfsaContributionsToDate", {
+    valueAsNumber: true,
+  })
+  const guardTfsa = useBoundedMonetary(
+    watch("tfsaContributionsToDate") ?? "",
+    SA_TAX_LIMITS.tfsaLifetimeLimit,
+  )
 
   return (
     <div className="space-y-4">
@@ -293,7 +323,8 @@ function PerformanceFields({ form }: { form: FormRef }) {
             onBeforeInput={guardTfsa.onBeforeInput}
           />
           <p className="text-xs text-muted-foreground">
-            Cumulative amount contributed to all TFSAs since 2015 (not current balance). Used to enforce the R500 000 lifetime limit.
+            Cumulative amount contributed to all TFSAs since 2015 (not current balance). Used to
+            enforce the R500 000 lifetime limit.
           </p>
           {errors.tfsaContributionsToDate && (
             <p className="text-xs text-destructive">{errors.tfsaContributionsToDate.message}</p>
@@ -353,7 +384,7 @@ function FormBody({ account, onSave, onClose }: FormBodyProps) {
   const form = useForm<AccountFormData>({
     resolver: zodResolver(accountSchema),
     defaultValues: getDefaultValues(account),
-    mode: 'onChange', // Validate as user types for immediate feedback
+    mode: "onChange", // Validate as user types for immediate feedback
   })
 
   const { isSubmitting, errors: formErrors } = useFormState({ control: form.control })
@@ -403,7 +434,8 @@ function FormBody({ account, onSave, onClose }: FormBodyProps) {
     <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="space-y-5">
       {fieldErrorCount > 0 && (
         <p role="alert" className="text-xs text-destructive">
-          Please fix the {fieldErrorCount} highlighted field{fieldErrorCount === 1 ? "" : "s"} below.
+          Please fix the {fieldErrorCount} highlighted field{fieldErrorCount === 1 ? "" : "s"}{" "}
+          below.
         </p>
       )}
       {isEdit ? (
@@ -462,12 +494,7 @@ interface AccountFormDialogProps {
   onSave: (data: AccountFormData) => void
 }
 
-export function AccountFormDialog({
-  open,
-  onOpenChange,
-  account,
-  onSave,
-}: AccountFormDialogProps) {
+export function AccountFormDialog({ open, onOpenChange, account, onSave }: AccountFormDialogProps) {
   const isMobile = useIsMobile()
 
   const handleClose = () => onOpenChange(false)

@@ -32,15 +32,8 @@ export interface WorkerResponse {
 }
 
 addEventListener("message", (event: MessageEvent<WorkerRequest>) => {
-  const {
-    id,
-    accounts,
-    personalInfo,
-    retirementGoals,
-    drawdownConfig,
-    config,
-    marketAssumptions,
-  } = event.data
+  const { id, accounts, personalInfo, retirementGoals, drawdownConfig, config, marketAssumptions } =
+    event.data
 
   const result = runMonteCarloSimulation(
     accounts,
@@ -48,7 +41,7 @@ addEventListener("message", (event: MessageEvent<WorkerRequest>) => {
     retirementGoals,
     drawdownConfig,
     config,
-    marketAssumptions
+    marketAssumptions,
   )
 
   postMessage({ id, result } as WorkerResponse)

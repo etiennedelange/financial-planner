@@ -55,7 +55,7 @@ export function FloatingActionBar({ primary, secondary, hint, className }: Float
         "border-t border-border bg-card/90 backdrop-blur-sm",
         "transition-transform duration-200 ease-out",
         hidden ? "translate-y-full" : "translate-y-0",
-        className
+        className,
       )}
     >
       <div className="mx-auto flex h-12 max-w-6xl items-center gap-3 px-4 md:px-8">

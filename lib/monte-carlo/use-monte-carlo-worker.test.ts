@@ -13,7 +13,7 @@ describe("simReducer", () => {
   it("stores the finished result and clears the running flag", () => {
     const done = simReducer(
       { ...initialSimState, result: fakeResult, isRunning: true },
-      { type: "DONE", result: fakeResult }
+      { type: "DONE", result: fakeResult },
     )
     expect(done).toEqual({ result: fakeResult, isRunning: false, hasError: false })
   })
@@ -21,7 +21,7 @@ describe("simReducer", () => {
   it("marks a worker error without discarding the last good result", () => {
     const errored = simReducer(
       { ...initialSimState, result: fakeResult, isRunning: true },
-      { type: "ERROR" }
+      { type: "ERROR" },
     )
     expect(errored).toEqual({ result: fakeResult, isRunning: false, hasError: true })
   })
@@ -29,7 +29,7 @@ describe("simReducer", () => {
   it("clears the error flag when a new run starts", () => {
     const running = simReducer(
       { ...initialSimState, result: fakeResult, isRunning: false, hasError: true },
-      { type: "START" }
+      { type: "START" },
     )
     expect(running.hasError).toBe(false)
   })

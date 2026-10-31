@@ -18,10 +18,7 @@ const LIFE_EXPECTANCY = 90
  * depletion that happens before life expectancy overrides the verdict —
  * running out of money is always the headline even when the median succeeds.
  */
-export function buildPlanVerdict({
-  successRate,
-  depletionAge,
-}: PlanVerdictInput): PlanVerdict {
+export function buildPlanVerdict({ successRate, depletionAge }: PlanVerdictInput): PlanVerdict {
   if (depletionAge !== null && depletionAge < LIFE_EXPECTANCY) {
     return {
       tone: "danger",

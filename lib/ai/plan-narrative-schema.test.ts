@@ -4,7 +4,13 @@ import { planNarrativeRequestSchema } from "./plan-narrative-schema"
 function validPayload() {
   return {
     accounts: [
-      { type: "tfsa", currentBalance: 10000, monthlyContribution: 500, expectedReturn: 10, annualFees: 1 },
+      {
+        type: "tfsa",
+        currentBalance: 10000,
+        monthlyContribution: 500,
+        expectedReturn: 10,
+        annualFees: 1,
+      },
     ],
     personalInfo: { currentAge: 30, retirementAge: 65, lifeExpectancy: 90, annualIncome: 500000 },
     retirementGoals: { desiredMonthlyIncome: 20000, inflationRate: 5.5, legacyAmount: 0 },

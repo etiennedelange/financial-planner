@@ -1,4 +1,10 @@
-import type { Account, PersonalInfo, RetirementGoals, DrawdownConfig, MarketAssumptions } from "@/types"
+import type {
+  Account,
+  PersonalInfo,
+  RetirementGoals,
+  DrawdownConfig,
+  MarketAssumptions,
+} from "@/types"
 import { calculateProjection } from "../projection-engine"
 import {
   applySensitivityDeltas,
@@ -79,7 +85,7 @@ export function buildSensitivityTornado({
     personalInfo,
     retirementGoals,
     drawdownConfig,
-    assumptions
+    assumptions,
   ).portfolioAtRetirement
 
   if (baseline <= 0) return []
@@ -91,7 +97,7 @@ export function buildSensitivityTornado({
       scaled.personalInfo,
       scaled.retirementGoals,
       drawdownConfig,
-      assumptions
+      assumptions,
     ).portfolioAtRetirement
   }
 

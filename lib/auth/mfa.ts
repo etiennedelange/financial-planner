@@ -27,12 +27,13 @@ export async function enrollTotp(): Promise<TotpEnrollment> {
 export async function verifyEnrollment(factorId: string, code: string): Promise<string[]> {
   const supabase = createClient()
 
-  const { data: challenge, error: challengeError } =
-    await supabase.auth.mfa.challenge({ factorId })
+  const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId })
   if (challengeError) throw new Error(challengeError.message)
 
   const { error: verifyError } = await supabase.auth.mfa.verify({
-    factorId, challengeId: challenge.id, code,
+    factorId,
+    challengeId: challenge.id,
+    code,
   })
   if (verifyError) throw new Error(verifyError.message)
 
@@ -85,12 +86,13 @@ export async function unenrollAbandonedFactors(): Promise<void> {
 export async function elevateWithTotp(factorId: string, code: string): Promise<void> {
   const supabase = createClient()
 
-  const { data: challenge, error: challengeError } =
-    await supabase.auth.mfa.challenge({ factorId })
+  const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId })
   if (challengeError) throw new Error(challengeError.message)
 
   const { error: verifyError } = await supabase.auth.mfa.verify({
-    factorId, challengeId: challenge.id, code,
+    factorId,
+    challengeId: challenge.id,
+    code,
   })
   if (verifyError) throw new Error(verifyError.message)
 }
@@ -106,8 +108,12 @@ export async function currentAal(): Promise<{ current: string | null; next: stri
   // takes the getUser(jwt) path. The argument-less cookie-cached form computes
   // nextLevel from the session's own cached user.factors and never notices a factor
   // an admin action removed since then (see lib/supabase/proxy.ts for the same fix).
-  const { data: { session } } = await supabase.auth.getSession()
-  const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(session?.access_token)
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(
+    session?.access_token,
+  )
   if (error) throw new Error(error.message)
   return { current: data.currentLevel, next: data.nextLevel }
 }

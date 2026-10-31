@@ -13,7 +13,9 @@ const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000
 
 export async function POST(request: Request) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
   }
@@ -23,7 +25,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Request body too large" }, { status: 413 })
   }
 
-  const { allowed } = checkRateLimit(`plan-narrative:${user.id}`, RATE_LIMIT_PER_HOUR, RATE_LIMIT_WINDOW_MS)
+  const { allowed } = checkRateLimit(
+    `plan-narrative:${user.id}`,
+    RATE_LIMIT_PER_HOUR,
+    RATE_LIMIT_WINDOW_MS,
+  )
   if (!allowed) {
     return NextResponse.json({ error: "Too many requests. Try again later." }, { status: 429 })
   }
@@ -45,7 +51,10 @@ export async function POST(request: Request) {
 
   const parsed = planNarrativeRequestSchema.safeParse(body)
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid request body", issues: parsed.error.issues }, { status: 400 })
+    return NextResponse.json(
+      { error: "Invalid request body", issues: parsed.error.issues },
+      { status: 400 },
+    )
   }
 
   const { tier: _tier, ...payload } = parsed.data

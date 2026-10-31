@@ -19,64 +19,82 @@
  * declared in the type but never read by the engine. Wiring that seed through is a
  * prerequisite for extending this harness to Monte Carlo.
  */
-import { describe, expect, it } from 'vite-plus/test'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
-import path from 'path'
-import type { Account, DrawdownConfig, PersonalInfo, RetirementGoals } from '@/types'
-import { calculateProjection } from '../projection-engine'
+import { describe, expect, it } from "vite-plus/test"
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs"
+import path from "path"
+import type { Account, DrawdownConfig, PersonalInfo, RetirementGoals } from "@/types"
+import { calculateProjection } from "../projection-engine"
 
-const GOLDEN_PATH = path.resolve(__dirname, '__golden__/projection.json')
-const UPDATE = process.env.UPDATE_GOLDEN === '1'
+const GOLDEN_PATH = path.resolve(__dirname, "__golden__/projection.json")
+const UPDATE = process.env.UPDATE_GOLDEN === "1"
 
 const ra: Account = {
-  id: '1', name: 'RA', type: 'retirement_annuity', provider: 'P',
-  currentBalance: 900000, monthlyContribution: 6000,
-  expectedReturn: 11, annualFees: 1.2, contributionEscalation: 6,
+  id: "1",
+  name: "RA",
+  type: "retirement_annuity",
+  provider: "P",
+  currentBalance: 900000,
+  monthlyContribution: 6000,
+  expectedReturn: 11,
+  annualFees: 1.2,
+  contributionEscalation: 6,
 }
 const tfsa: Account = {
-  id: '2', name: 'TFSA', type: 'tfsa', provider: 'P',
-  currentBalance: 250000, monthlyContribution: 3000,
-  expectedReturn: 10, annualFees: 0.8, contributionEscalation: 5,
+  id: "2",
+  name: "TFSA",
+  type: "tfsa",
+  provider: "P",
+  currentBalance: 250000,
+  monthlyContribution: 3000,
+  expectedReturn: 10,
+  annualFees: 0.8,
+  contributionEscalation: 5,
 }
 const discretionary: Account = {
-  id: '3', name: 'Discretionary', type: 'discretionary', provider: 'P',
-  currentBalance: 400000, monthlyContribution: 2000,
-  expectedReturn: 9, annualFees: 1.0, contributionEscalation: 5,
+  id: "3",
+  name: "Discretionary",
+  type: "discretionary",
+  provider: "P",
+  currentBalance: 400000,
+  monthlyContribution: 2000,
+  expectedReturn: 9,
+  annualFees: 1.0,
+  contributionEscalation: 5,
 }
 
 const strategies = [
-  'fixed_percentage',
-  'fixed_amount_inflation_adjusted',
-  'variable_percentage',
-  'guardrails',
+  "fixed_percentage",
+  "fixed_amount_inflation_adjusted",
+  "variable_percentage",
+  "guardrails",
 ] as const
 
 // Spans desired income falling inside, below and above the [min, max] band, since that
 // band is where the strategies diverge most.
 const bands = [
-  { minimumWithdrawal: 10000, maximumWithdrawal: 200000, label: 'inside-band' },
-  { minimumWithdrawal: 90000, maximumWithdrawal: 200000, label: 'below-min' },
-  { minimumWithdrawal: 5000, maximumWithdrawal: 20000, label: 'above-max' },
+  { minimumWithdrawal: 10000, maximumWithdrawal: 200000, label: "inside-band" },
+  { minimumWithdrawal: 90000, maximumWithdrawal: 200000, label: "below-min" },
+  { minimumWithdrawal: 5000, maximumWithdrawal: 20000, label: "above-max" },
 ]
 
 const personas: Array<{ label: string; p: PersonalInfo; g: RetirementGoals }> = [
   {
-    label: 'mid-career',
+    label: "mid-career",
     p: { currentAge: 40, retirementAge: 65, lifeExpectancy: 90, annualIncome: 750000 },
     g: { desiredMonthlyIncome: 35000, inflationRate: 5.5, legacyAmount: 0 },
   },
   {
-    label: 'near-retirement',
+    label: "near-retirement",
     p: { currentAge: 60, retirementAge: 65, lifeExpectancy: 90, annualIncome: 1200000 },
     g: { desiredMonthlyIncome: 55000, inflationRate: 5.5, legacyAmount: 0 },
   },
   {
-    label: 'underfunded',
+    label: "underfunded",
     p: { currentAge: 45, retirementAge: 65, lifeExpectancy: 90, annualIncome: 400000 },
     g: { desiredMonthlyIncome: 40000, inflationRate: 5.5, legacyAmount: 0 },
   },
   {
-    label: 'zero-inflation',
+    label: "zero-inflation",
     p: { currentAge: 50, retirementAge: 65, lifeExpectancy: 85, annualIncome: 600000 },
     g: { desiredMonthlyIncome: 30000, inflationRate: 0, legacyAmount: 0 },
   },
@@ -146,22 +164,22 @@ function fx(n: number): number | string {
   return Math.round(n * 100) / 100
 }
 
-describe('golden projection output', () => {
-  it('matches the committed golden file across the scenario matrix', () => {
+describe("golden projection output", () => {
+  it("matches the committed golden file across the scenario matrix", () => {
     const actual = buildMatrix()
 
     if (UPDATE) {
       mkdirSync(path.dirname(GOLDEN_PATH), { recursive: true })
-      writeFileSync(GOLDEN_PATH, JSON.stringify(actual, null, 2) + '\n')
+      writeFileSync(GOLDEN_PATH, JSON.stringify(actual, null, 2) + "\n")
       return
     }
 
     expect(
       existsSync(GOLDEN_PATH),
-      `Golden file missing. Generate it with:\n  UPDATE_GOLDEN=1 npx vitest run ${path.relative(process.cwd(), __filename)}`
+      `Golden file missing. Generate it with:\n  UPDATE_GOLDEN=1 npx vitest run ${path.relative(process.cwd(), __filename)}`,
     ).toBe(true)
 
-    const expected = JSON.parse(readFileSync(GOLDEN_PATH, 'utf-8'))
+    const expected = JSON.parse(readFileSync(GOLDEN_PATH, "utf-8"))
 
     // Compare key-by-key so a failure names the offending scenario rather than
     // dumping the whole matrix.
@@ -171,12 +189,15 @@ describe('golden projection output', () => {
     }
   })
 
-  it('covers every strategy and both lump-sum settings', () => {
+  it("covers every strategy and both lump-sum settings", () => {
     const keys = Object.keys(buildMatrix())
     for (const s of strategies) {
-      expect(keys.some((k) => k.includes(`|${s}|`)), `no scenario for ${s}`).toBe(true)
+      expect(
+        keys.some((k) => k.includes(`|${s}|`)),
+        `no scenario for ${s}`,
+      ).toBe(true)
     }
-    expect(keys.some((k) => k.endsWith('lump30'))).toBe(true)
+    expect(keys.some((k) => k.endsWith("lump30"))).toBe(true)
     expect(keys.length).toBe(personas.length * strategies.length * bands.length * 2)
   })
 })

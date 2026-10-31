@@ -104,7 +104,7 @@ describe("getPayloadConfigFromPayload", () => {
     const entry = getPayloadConfigFromPayload(
       config,
       { dataKey: "x", payload: { name: "p75" } },
-      "name"
+      "name",
     )
     expect(entry?.label).toBe("Likely range")
   })
