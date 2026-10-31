@@ -30,7 +30,7 @@ npm run docs:check       # validate docs/ (frontmatter title+description, doc li
 
 ## shadscan audit (run regularly)
 
-`@shadscan/cli@0.16.0` is a pinned devDependency — `pnpm install` restores it on
+`@shadscan/cli@0.17.0` is a pinned devDependency — `pnpm install` restores it on
 container reload, so the audit works offline and can never drift versions.
 
 **Run `npm run shadscan` before committing** (or `shadscan:gate` for a
