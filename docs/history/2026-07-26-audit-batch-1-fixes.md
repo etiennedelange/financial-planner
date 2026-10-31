@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "2026-07-26 — Multi-Agent Audit of `75f68f7` + Batch 1 Fixes"
+description: "Multi-agent audit of commit 75f68f7 and the first batch of fixes."
+date: 2026-07-26
+tags: [quality]
+---
+
 # 2026-07-26 — Multi-Agent Audit of `75f68f7` + Batch 1 Fixes
 
 Scope of the audit: commit `75f68f7` ("enhance replacement ratio calculations and add

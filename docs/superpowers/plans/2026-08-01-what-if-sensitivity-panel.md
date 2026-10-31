@@ -1,3 +1,10 @@
+---
+type: Implementation Plan
+title: "What-If Sensitivity Panel Implementation Plan"
+description: "Implementation plan for the what-if sensitivity panel."
+date: 2026-08-01
+---
+
 # What-If Sensitivity Panel Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

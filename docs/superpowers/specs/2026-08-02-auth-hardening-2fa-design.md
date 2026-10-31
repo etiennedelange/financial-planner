@@ -1,3 +1,11 @@
+---
+type: Design Spec
+title: "Auth Hardening & 2FA — Design"
+description: "Auth hardening and 2FA, superseding the anonymous-first account model."
+date: 2026-08-02
+tags: [security]
+---
+
 # Auth Hardening & 2FA — Design
 
 **Date:** 2026-08-02

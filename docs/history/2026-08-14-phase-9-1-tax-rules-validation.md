@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Phase 9 §9.1 (High): Tax-rule validation against SARS Budget Tax Guide 2026/2027"
+description: "Tax-rule validation against the SARS Budget Tax Guide 2026/2027 (Phase 9.1)."
+date: 2026-08-14
+tags: [tax, quality]
+---
+
 # Phase 9 §9.1 (High): Tax-rule validation against SARS Budget Tax Guide 2026/2027
 
 ## What changed

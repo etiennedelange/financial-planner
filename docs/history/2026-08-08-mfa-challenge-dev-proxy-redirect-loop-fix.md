@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "2026-08-08 — Fix: `/auth/mfa` \"Could not load your authentication factors.\" (dev-proxy redirect loop)"
+description: "Fix for /auth/mfa failing to load authentication factors because of a dev-proxy redirect loop."
+date: 2026-08-08
+tags: [security]
+---
+
 # 2026-08-08 — Fix: `/auth/mfa` "Could not load your authentication factors." (dev-proxy redirect loop)
 
 Follow-up on the `feature/auth-hardening-2fa` branch, layered on top of the same-day

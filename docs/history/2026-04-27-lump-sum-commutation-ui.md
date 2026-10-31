@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Lump Sum Commutation UI & Slider Performance Fix (2026-04-27)"
+description: "Lump sum commutation UI (Phase 6) and a slider performance fix."
+date: 2026-04-27
+tags: [tax]
+---
+
 # Lump Sum Commutation UI & Slider Performance Fix (2026-04-27)
 
 ## What Changed

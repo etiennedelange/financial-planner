@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "2026-09-27 — Sign-in dialog behind `NEXT_PUBLIC_AUTH_ENABLED`"
+description: "Sign-in dialog gated behind NEXT_PUBLIC_AUTH_ENABLED."
+date: 2026-09-27
+tags: [security]
+---
+
 # 2026-09-27 — Sign-in dialog behind `NEXT_PUBLIC_AUTH_ENABLED`
 
 ## What changed

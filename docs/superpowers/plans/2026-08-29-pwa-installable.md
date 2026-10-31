@@ -1,3 +1,11 @@
+---
+type: Implementation Plan
+title: "PWA Installable + Offline Assets Implementation Plan"
+description: "Implementation plan for the installable, offline-capable PWA."
+date: 2026-08-29
+tags: [pwa]
+---
+
 # PWA Installable + Offline Assets Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

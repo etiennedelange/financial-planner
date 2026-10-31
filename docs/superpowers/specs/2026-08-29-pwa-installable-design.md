@@ -1,3 +1,11 @@
+---
+type: Design Spec
+title: "PWA Installable + Offline Assets — Design"
+description: "Making the app an installable, offline-capable PWA."
+date: 2026-08-29
+tags: [pwa]
+---
+
 # PWA Installable + Offline Assets — Design
 
 Date: 2026-08-29

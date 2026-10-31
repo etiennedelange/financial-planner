@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "2026-05-09: TFSA Lifetime Limits and Medical Aid Tax Credits"
+description: "Phase 6 tax features: TFSA lifetime limit tracking and medical aid tax credits."
+date: 2026-05-09
+tags: [tax]
+---
+
 # 2026-05-09: TFSA Lifetime Limits and Medical Aid Tax Credits
 
 ## Summary

@@ -1,3 +1,10 @@
+---
+type: History Entry
+title: "Bootstrap and Data Ownership Hardening — Implemented"
+description: "Implemented bootstrap and data ownership hardening (Phase 9.4)."
+date: 2026-08-15
+---
+
 # Bootstrap and Data Ownership Hardening — Implemented
 
 ## What changed

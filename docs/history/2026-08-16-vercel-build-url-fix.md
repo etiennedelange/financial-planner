@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Vercel build failure: protocol-less VERCEL_PROJECT_PRODUCTION_URL"
+description: "Vercel build failure caused by a protocol-less VERCEL_PROJECT_PRODUCTION_URL."
+date: 2026-08-16
+tags: [tooling]
+---
+
 # Vercel build failure: protocol-less VERCEL_PROJECT_PRODUCTION_URL
 
 **Date:** 2026-08-16

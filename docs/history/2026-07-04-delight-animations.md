@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Plan Page Delight Enhancement — 2026-07-04"
+description: "Micro-interaction enhancements on the Plan page."
+date: 2026-07-04
+tags: [ui]
+---
+
 # Plan Page Delight Enhancement — 2026-07-04
 
 ## Summary

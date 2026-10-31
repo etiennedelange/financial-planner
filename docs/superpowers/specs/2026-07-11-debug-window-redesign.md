@@ -1,3 +1,11 @@
+---
+type: Design Spec
+title: "Debug Window Redesign Spec"
+description: "Debug window redesigned from a side Sheet to a centred Dialog."
+date: 2026-07-11
+tags: [ui]
+---
+
 # Debug Window Redesign Spec
 
 **Date:** 2026-07-11  

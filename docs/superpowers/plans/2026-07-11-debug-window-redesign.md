@@ -1,3 +1,11 @@
+---
+type: Implementation Plan
+title: "Debug Window Redesign Implementation Plan"
+description: "Implementation plan for the debug window redesign."
+date: 2026-07-11
+tags: [ui]
+---
+
 # Debug Window Redesign Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

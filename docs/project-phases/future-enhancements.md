@@ -1,3 +1,9 @@
+---
+type: Phase
+title: "Future Enhancements (Post-MVP)"
+description: "Post-MVP enhancement ideas, split into completed and still pending."
+---
+
 # Future Enhancements (Post-MVP)
 
 ## Completed (moved from pending)

@@ -13,6 +13,7 @@
     "shadscan": "shadscan --no-roast",
     "shadscan:json": "shadscan --json",
     "shadscan:gate": "shadscan --no-roast --fail-under 90",
+    "docs:check": "node scripts/docs-check.mjs",
     "analyze": "ANALYZE=true pnpm build",
     "test": "vitest run",
     "test:watch": "vitest",

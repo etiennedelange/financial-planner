@@ -1,3 +1,10 @@
+---
+type: History Entry
+title: "2026-06-16: Form Persistence Fixes & Anon→Auth Migration"
+description: "Form state restoration fixes and anonymous-to-authenticated data migration."
+date: 2026-06-16
+---
+
 # 2026-06-16: Form Persistence Fixes & Anon→Auth Migration
 
 ## Summary

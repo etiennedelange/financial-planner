@@ -1,3 +1,10 @@
+---
+type: History Entry
+title: "2026-05-10 — Phase 5 Export Functionality + Bug Fixes"
+description: "Phase 5 export functionality (print/PDF route) and bug fixes."
+date: 2026-05-10
+---
+
 # 2026-05-10 — Phase 5 Export Functionality + Bug Fixes
 
 ## Phase 5: Export Functionality

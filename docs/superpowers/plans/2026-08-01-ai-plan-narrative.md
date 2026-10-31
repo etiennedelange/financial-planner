@@ -1,3 +1,10 @@
+---
+type: Implementation Plan
+title: "AI Plan Narrative Implementation Plan"
+description: "Implementation plan for the AI plan narrative."
+date: 2026-08-01
+---
+
 # AI Plan Narrative Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

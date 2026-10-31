@@ -1,3 +1,10 @@
+---
+type: History Entry
+title: "Persisted plan wiped on reload — pre-hydration writes clobber localStorage"
+description: "Fix for a persisted plan wiped on reload by pre-hydration writes clobbering localStorage."
+date: 2026-08-15
+---
+
 # Persisted plan wiped on reload — pre-hydration writes clobber localStorage
 
 ## The bug

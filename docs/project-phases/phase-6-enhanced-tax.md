@@ -1,3 +1,10 @@
+---
+type: Phase
+title: "Phase 6: Enhanced Tax Calculations"
+description: "Phase 6: complete SA tax treatment (lump sums, TFSA limits, medical credits, Section 11F)."
+tags: [tax]
+---
+
 # Phase 6: Enhanced Tax Calculations ✅ COMPLETE
 
 **Goal:** Complete SA tax treatment implementation.

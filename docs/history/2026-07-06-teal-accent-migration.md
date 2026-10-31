@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "2026-07-06 — Locked Accent Migration: Gold → Teal"
+description: "Migration from the gold accent to the locked teal accent, ending the dual-theme experiment."
+date: 2026-07-06
+tags: [ui]
+---
+
 # 2026-07-06 — Locked Accent Migration: Gold → Teal
 
 ## Context

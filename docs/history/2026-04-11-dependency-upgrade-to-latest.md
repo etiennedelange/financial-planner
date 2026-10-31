@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Dependency Upgrade to Latest Versions"
+description: "Upgrade of dependencies to their latest versions, with the config changes it needed."
+date: 2026-04-11
+tags: [tooling, quality]
+---
+
 # Dependency Upgrade to Latest Versions
 
 **Date:** 2026-04-11

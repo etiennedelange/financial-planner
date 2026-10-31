@@ -1,3 +1,9 @@
+---
+type: Phase
+title: "Phase 1.7: Next 16 / React 19 / Tailwind v4 Modernization"
+description: "Phase 1.7: adopting the features shipped by the Next 16, React 19 and Tailwind v4 upgrade."
+---
+
 # Phase 1.7: Next 16 / React 19 / Tailwind v4 Modernization ✅ COMPLETE
 
 **Goal:** Fully adopt the features shipped by the recent stack upgrade (Next 14 → 16, React 18 → 19.2, Tailwind 3 → 4, Zustand 4 → 5, Zod 3 → 4). Reduce boilerplate, fix real correctness issues uncovered during audit, and produce measurable deltas against the committed perf baselines.

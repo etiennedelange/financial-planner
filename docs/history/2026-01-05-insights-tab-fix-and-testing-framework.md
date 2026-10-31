@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "2026-01-05: Insights Tab Fix & Testing Framework Documentation"
+description: "Insights tab fix and the start of the testing and validation framework."
+date: 2026-01-05
+tags: [quality]
+---
+
 # 2026-01-05: Insights Tab Fix & Testing Framework Documentation
 
 **Date:** 2026-01-05

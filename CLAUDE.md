@@ -24,6 +24,7 @@ npm run test:watch
 npm run shadscan         # shadcn UI-fundamentals audit (human output)
 npm run shadscan:json    # same audit, machine-readable JSON
 npm run shadscan:gate    # audit with --fail-under 90 (exits non-zero on regression)
+npm run docs:check       # validate docs/ (frontmatter title+description, doc links, log dates)
 ```
 
 ## shadscan audit (run regularly)
@@ -71,6 +72,7 @@ Pension Funds, Retirement Annuities (RAs), Preservation Funds, TFSA, Discretiona
   accumulated there unnoticed; test fixtures had drifted from the real types and were
   exercising shapes that could not occur in production
 - `npm run shadscan` — audit stays ≥90/100 (or `shadscan:gate` for the hard fail)
+- `npm run docs:check` — if you touched anything under `docs/`
 - Check Debug Window (`components/debug/debug-window.tsx`) — correct compounding method + consistent values across tabs
 
 **Test structure** (see `projection.test.ts` as reference):
@@ -173,7 +175,9 @@ After a meaningful change, update all three tiers — detail lives in exactly ON
 
 1. `docs/history/YYYY-MM-DD-<slug>.md` — the ONLY full write-up: what changed, why, verification
 2. `docs/project-phases/<phase>.md` — flip checkboxes, update pending list, link to the history file; don't repeat its content
-3. `docs/project-phases.md` — one-line Recent Activity entry (date + title + history link); keep the latest 10, drop the oldest. Status emoji only when a phase's status actually changes
+3. `docs/log.md` — one-line entry under a `## YYYY-MM-DD` heading, newest first (title + history link + one sentence). `docs/project-phases.md` changes only when a phase's status emoji actually changes
+
+Every doc under `docs/` needs `title` and `description` frontmatter (OKF-style; the description is how an agent decides whether to open it). Run `pnpm docs:check` after adding or renaming one.
 
 Full conventions: `docs/README.md`
 

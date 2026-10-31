@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Command palette: restyled to pre-audit design on cmdk + account-search fix"
+description: "Command palette restyled to the pre-audit design on cmdk, plus an account-search fix."
+date: 2026-08-16
+tags: [ui]
+---
+
 # Command palette: restyled to pre-audit design on cmdk + account-search fix
 
 Date: 2026-08-16

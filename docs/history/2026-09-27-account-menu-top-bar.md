@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "2026-09-27 — Account control moved from sidebar to top bar"
+description: "Account control moved from the sidebar to the top bar."
+date: 2026-09-27
+tags: [ui]
+---
+
 # 2026-09-27 — Account control moved from sidebar to top bar
 
 ## What changed

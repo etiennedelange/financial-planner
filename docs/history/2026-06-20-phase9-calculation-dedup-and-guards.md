@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Phase 9 §9.1 (Critical): Calculation Correctness & Deduplication"
+description: "Phase 9 §9.1 critical calculation correctness fixes and deduplication."
+date: 2026-06-20
+tags: [calculations]
+---
+
 # Phase 9 §9.1 (Critical): Calculation Correctness & Deduplication
 
 **Date:** 2026-06-20

@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Second Audit Pass: 2026/2027 Tax Config, Net-Income Reconciliation, MC Lump Sum Tax"
+description: "Second audit pass: 2026/2027 tax config, net-income reconciliation, Monte Carlo lump sum tax."
+date: 2026-06-20
+tags: [tax, monte-carlo, quality]
+---
+
 # Second Audit Pass: 2026/2027 Tax Config, Net-Income Reconciliation, MC Lump Sum Tax
 
 **Date:** 2026-06-20

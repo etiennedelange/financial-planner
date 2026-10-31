@@ -1,3 +1,10 @@
+---
+type: Implementation Plan
+title: "AI Narrative Model Picker Implementation Plan"
+description: "Implementation plan for the AI narrative model picker."
+date: 2026-08-01
+---
+
 # AI Narrative Model Picker Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

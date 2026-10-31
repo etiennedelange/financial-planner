@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "2026-10-24 — CI supply-chain hardening; Next.js 16.4.3 for two critical RCEs"
+description: "CI supply-chain hardening, and Next.js 16.4.3 for two critical RCEs."
+date: 2026-10-24
+tags: [security, tooling]
+---
+
 # 2026-10-24 — CI supply-chain hardening; Next.js 16.4.3 for two critical RCEs
 
 ## What changed
