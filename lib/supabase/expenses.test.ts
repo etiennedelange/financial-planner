@@ -1,5 +1,5 @@
 // lib/supabase/expenses.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vite-plus/test'
 import { fetchExpenses, upsertGroup, upsertExpense, deleteGroup, deleteExpense, seedExpenses, migrateExpensesToSession } from './expenses'
 import type { Expense, ExpenseGroup } from '@/types/expenses'
 

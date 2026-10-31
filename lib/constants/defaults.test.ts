@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import { SA_DEFAULTS, SA_DEFAULTS_DISPLAY } from './defaults'
 
 describe('SA_DEFAULTS_DISPLAY', () => {

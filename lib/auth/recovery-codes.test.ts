@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect } from 'vite-plus/test'
 import { generateRecoveryCodes, normaliseRecoveryCode, RECOVERY_CODE_COUNT } from './recovery-codes'
 
 describe('generateRecoveryCodes', () => {

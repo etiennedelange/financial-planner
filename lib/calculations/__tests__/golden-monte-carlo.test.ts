@@ -13,7 +13,7 @@
  *
  *     UPDATE_GOLDEN=1 npx vitest run lib/calculations/__tests__/golden-monte-carlo.test.ts
  */
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import path from 'path'
 import type { Account, DrawdownConfig, PersonalInfo, RetirementGoals } from '@/types'

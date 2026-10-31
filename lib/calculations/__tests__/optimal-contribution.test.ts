@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect } from 'vite-plus/test'
 import { calculateOptimalContribution } from '../optimal-contribution'
 import type { PersonalInfo, RetirementGoals, DrawdownConfig, Account } from '@/types'
 

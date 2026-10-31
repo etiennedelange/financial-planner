@@ -5,9 +5,9 @@
  * Before workers: the main thread blocked for the full duration of each run.
  * After workers:  the main thread is free; only serialisation overhead remains.
  *
- * Run with:  npx vitest bench lib/monte-carlo/__tests__/performance.bench.ts
+ * Run with:  pnpm exec vp test bench lib/monte-carlo/__tests__/performance.bench.ts
  */
-import { bench, describe } from "vitest"
+import { describe, test } from "vite-plus/test"
 import { runMonteCarloSimulation } from "../simulation-engine"
 import type {
   Account,
@@ -50,34 +50,40 @@ const drawdownConfig: DrawdownConfig = {
 }
 
 describe("Monte Carlo simulation throughput", () => {
-  bench("100 runs  (baseline)", () => {
-    runMonteCarloSimulation(
-      [account],
-      personalInfo,
-      retirementGoals,
-      drawdownConfig,
-      { numberOfRuns: 100 }
-    )
+  test("100 runs  (baseline)", async ({ bench }) => {
+    await bench("100 runs  (baseline)", () => {
+      runMonteCarloSimulation(
+        [account],
+        personalInfo,
+        retirementGoals,
+        drawdownConfig,
+        { numberOfRuns: 100 }
+      )
+    }).run()
   })
 
-  bench("1 000 runs (production default)", () => {
-    runMonteCarloSimulation(
-      [account],
-      personalInfo,
-      retirementGoals,
-      drawdownConfig,
-      { numberOfRuns: 1_000 }
-    )
+  test("1 000 runs (production default)", async ({ bench }) => {
+    await bench("1 000 runs (production default)", () => {
+      runMonteCarloSimulation(
+        [account],
+        personalInfo,
+        retirementGoals,
+        drawdownConfig,
+        { numberOfRuns: 1_000 }
+      )
+    }).run()
   })
 
-  bench("5 000 runs (stress)", () => {
-    runMonteCarloSimulation(
-      [account],
-      personalInfo,
-      retirementGoals,
-      drawdownConfig,
-      { numberOfRuns: 5_000 }
-    )
+  test("5 000 runs (stress)", async ({ bench }) => {
+    await bench("5 000 runs (stress)", () => {
+      runMonteCarloSimulation(
+        [account],
+        personalInfo,
+        retirementGoals,
+        drawdownConfig,
+        { numberOfRuns: 5_000 }
+      )
+    }).run()
   })
 })
 
@@ -105,13 +111,15 @@ describe("Multi-account portfolio throughput (realistic)", () => {
     },
   ]
 
-  bench("3 accounts × 1 000 runs (production)", () => {
-    runMonteCarloSimulation(
-      accounts,
-      personalInfo,
-      retirementGoals,
-      drawdownConfig,
-      { numberOfRuns: 1_000 }
-    )
+  test("3 accounts × 1 000 runs (production)", async ({ bench }) => {
+    await bench("3 accounts × 1 000 runs (production)", () => {
+      runMonteCarloSimulation(
+        accounts,
+        personalInfo,
+        retirementGoals,
+        drawdownConfig,
+        { numberOfRuns: 1_000 }
+      )
+    }).run()
   })
 })

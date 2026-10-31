@@ -5,7 +5,7 @@ import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useAuth } from "@/components/supabase-provider"
 import { formatCurrency } from "@/lib/utils/currency"
 import type { ProjectionResult } from "@/types"
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useShallow } from "zustand/react/shallow"
 
@@ -46,6 +46,11 @@ export function PrintClient() {
             plan.assumptions
           ),
     [plan]
+  )
+
+  // Read the clock once, not on every render (React Compiler purity rule).
+  const [today] = useState(() =>
+    new Date().toLocaleDateString("en-ZA", { year: "numeric", month: "long", day: "numeric" })
   )
 
   // Give the DOM a moment to paint before triggering the print dialog.
@@ -108,7 +113,6 @@ export function PrintClient() {
   const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
   const retirementRows = projection.yearlyProjections.filter((r) => r.age >= personalInfo.retirementAge)
   const accumulationRows = projection.yearlyProjections.filter((r) => r.age < personalInfo.retirementAge)
-  const today = new Date().toLocaleDateString("en-ZA", { year: "numeric", month: "long", day: "numeric" })
 
   // Currency formatter that respects displayMode and age-based deflation
   function f(value: number, age: number) {

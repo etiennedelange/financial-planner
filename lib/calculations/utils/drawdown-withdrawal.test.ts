@@ -1,5 +1,5 @@
 import type { DrawdownConfig } from "@/types"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it } from "vite-plus/test"
 import { calculateInitialWithdrawal, calculateNextWithdrawal } from "./drawdown-withdrawal"
 
 describe("calculateNextWithdrawal", () => {

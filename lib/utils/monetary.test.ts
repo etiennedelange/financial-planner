@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import { MAX_MONETARY_AMOUNT } from '@/lib/constants/limits'
 import { clampMonetaryAmount, isAllowedMonetaryInput, predictInsertedValue } from './monetary'
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it } from "vite-plus/test"
 import { initialSimState, simReducer } from "./use-monte-carlo-worker"
 import type { SimulationResult } from "@/types"
 

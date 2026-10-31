@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test'
 import { encodeShareToken, decodeShareToken, buildShareUrl, copyShareUrl } from './share-link'
 import type { ShareablePlan } from './share-link'
 

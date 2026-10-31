@@ -9,19 +9,37 @@ trustPolicy: no-downgrade
 # Maintenance releases on older version lines, published by their usual maintainers before
 # those lines had provenance. pnpm reads the missing provenance as a downgrade; it isn't one.
 trustPolicyExclude:
-  - eslint-import-resolver-typescript@3.10.1
   - semver@6.3.1
   - undici-types@6.21.0
 
 allowBuilds:
   esbuild: true      # wrangler bundler (native binary)
   sharp: true        # next.js image optimisation
-  unrs-resolver: true  # eslint-import-resolver-typescript (Rust native binary)
   workerd: true      # wrangler local runtime (native binary)
 
 overrides:
   "@types/react": "19.2.17"
   "@types/react-dom": "19.2.3"
-  # AUTH-004: dev-only transitive dep of vitest; GHSA-fx2h-pf6j-xcff /
-  # GHSA-v6wh-96g9-6wx3 (both Windows-only, but pin regardless).
-  vite: ">=8.0.16"
+  vite@*: "catalog:"
+  vitest@*: "catalog:"
+
+# Vite+ (`vp`): one toolchain for test, lint and format (Next.js still owns dev
+# and build). Its `vite` is a repackaged Vite core; the override above makes
+# everything that asks for vite get that same copy. AUTH-004: vite-plus-core
+# 1.4.0 is newer than 8.0.16, the floor for GHSA-fx2h-pf6j-xcff /
+# GHSA-v6wh-96g9-6wx3 that the old `vite: ">=8.0.16"` override pinned.
+# Coverage and UI must match the bundled Vitest exactly.
+catalog:
+  vite: npm:@voidzero-dev/vite-plus-core@1.4.0
+  vitest: 5.0.5
+  vite-plus: 1.4.0
+  "@vitest/coverage-v8": 5.0.5
+  "@vitest/ui": 5.0.5
+
+peerDependencyRules:
+  allowAny:
+    - vite
+    - vitest
+  allowedVersions:
+    vite: "*"
+    vitest: "*"

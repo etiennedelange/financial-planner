@@ -19,7 +19,7 @@
  * declared in the type but never read by the engine. Wiring that seed through is a
  * prerequisite for extending this harness to Monte Carlo.
  */
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import path from 'path'
 import type { Account, DrawdownConfig, PersonalInfo, RetirementGoals } from '@/types'

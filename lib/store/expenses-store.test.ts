@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest"
+import { describe, it, expect, beforeEach, vi, afterEach } from "vite-plus/test"
 import { useExpensesStore } from "./expenses-store"
 import * as expensesApi from "@/lib/supabase/expenses"
 

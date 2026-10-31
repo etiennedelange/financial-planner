@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect } from "vite-plus/test"
 import { safeNext } from "./safe-redirect"
 
 const origin = "https://app.example.com"

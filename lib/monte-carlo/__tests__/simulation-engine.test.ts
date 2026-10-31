@@ -1,4 +1,4 @@
-import { afterEach, describe, it, expect, vi } from 'vitest'
+import { afterEach, describe, it, expect, vi } from 'vite-plus/test'
 import { runMonteCarloSimulation } from '../simulation-engine'
 import { calculateIncomeTaxWithRebates, calculateLumpSumCommutation } from '@/lib/calculations/retirement-tax'
 import { SA_TAX_LIMITS } from '@/lib/constants/limits'

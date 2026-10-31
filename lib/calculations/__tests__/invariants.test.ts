@@ -20,7 +20,7 @@
  *   5. Beware clamps. `Math.max(0, x) >= 0` is guaranteed by the clamp, not the logic.
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect } from 'vite-plus/test'
 import { calculateProjection } from '../projection-engine'
 import { calculateReplacementRatio } from '../retirement-tax'
 import type { Account, DrawdownConfig, PersonalInfo, RetirementGoals } from '@/types'

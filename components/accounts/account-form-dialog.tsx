@@ -360,7 +360,7 @@ function FormBody({ account, onSave, onClose }: FormBodyProps) {
 
   // RHF's watch() array subscription is the documented API; the React Compiler
   // lint flags it as incompatible with memoization (a known false positive).
-  // eslint-disable-next-line react-hooks/incompatible-library
+  // oxlint-disable-next-line react-hooks/incompatible-library
   const [currentBalance, monthlyContribution, expectedReturn, annualFees] = form.watch([
     "currentBalance",
     "monthlyContribution",

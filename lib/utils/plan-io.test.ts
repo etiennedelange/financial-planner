@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vite-plus/test'
 import { exportPlan, parsePlanFile } from './plan-io'
 import type { Account, DrawdownConfig, MarketAssumptions, PersonalInfo, RetirementGoals } from '@/types'
 

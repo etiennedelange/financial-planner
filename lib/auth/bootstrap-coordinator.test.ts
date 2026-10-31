@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect, vi } from "vite-plus/test"
 import type { User } from "@supabase/supabase-js"
 import { createBootstrapCoordinator } from "./bootstrap-coordinator"
 import type { BootstrapDependencies, AuthEvent } from "./bootstrap-machine"

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest"
+import { describe, it, expect, beforeEach, vi, afterEach } from "vite-plus/test"
 import { useCalculatorStore, type CalculatorState } from "./calculator-store"
 // Bare side-effect import: the expenses store registers its base name with the
 // scope registry at module load, which evictUserScopedKeys iterates on sign-out.

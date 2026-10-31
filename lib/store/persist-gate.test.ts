@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest"
+import { describe, it, expect, beforeEach } from "vite-plus/test"
 import { createGatedPersistStorage } from "./persist-gate"
 import { setScope } from "./persistence-scope"
 

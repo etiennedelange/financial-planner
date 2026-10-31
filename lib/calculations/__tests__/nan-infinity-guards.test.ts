@@ -6,7 +6,7 @@
  * into NaN/Infinity. The guards return a degenerate-but-finite result rather
  * than throwing, matching the negative-years guard's behaviour.
  */
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import { calculateProjection, runAccumulationPhase, runDrawdownPhase } from '../projection-engine'
 import { runMonteCarloSimulation } from '@/lib/monte-carlo/simulation-engine'
 import { calculateOptimalContribution } from '../optimal-contribution'

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest"
+import { describe, it, expect, beforeEach, vi, afterEach } from "vite-plus/test"
 import { useCalculatorStore } from "./calculator-store"
 import { useExpensesStore } from "./expenses-store"
 import { setScope, type PersistenceScope } from "./persistence-scope"

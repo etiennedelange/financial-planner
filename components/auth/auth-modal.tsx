@@ -155,11 +155,11 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   // rule flags calling handleSubmit() during render as a potential ref read; this
   // is a known false positive on react-hook-form v7, which has no React Compiler
   // support (added first-class in v8). Disabling the rule here is deliberate.
-  // eslint-disable-next-line react-hooks/refs
+  // oxlint-disable-next-line react-hooks/refs
   const submitSignIn = signinForm.handleSubmit(handleSignIn)
-  // eslint-disable-next-line react-hooks/refs
+  // oxlint-disable-next-line react-hooks/refs
   const submitSignUp = signupForm.handleSubmit(handleSignUp)
-  // eslint-disable-next-line react-hooks/refs
+  // oxlint-disable-next-line react-hooks/refs
   const submitReset = resetForm.handleSubmit(handleReset)
 
   return (

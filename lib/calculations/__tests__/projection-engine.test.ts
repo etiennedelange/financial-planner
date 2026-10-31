@@ -1,5 +1,5 @@
 import type { Account, DrawdownConfig, PersonalInfo, RetirementGoals } from '@/types'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import { calculateProjection } from '../projection-engine'
 import { SA_TAX_LIMITS } from '@/lib/constants/limits'
 import { SA_DEFAULTS } from '@/lib/constants/defaults'

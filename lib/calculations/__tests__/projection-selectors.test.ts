@@ -6,7 +6,7 @@
  * directly with the exact row shapes that matter, including the boundaries a full
  * projection rarely produces.
  */
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import {
   selectAverageEffectiveTaxRate,
   selectMonthlyNetIncomeAtRetirement,

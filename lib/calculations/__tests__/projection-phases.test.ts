@@ -6,7 +6,7 @@
  * two phases are now separate functions with an explicit value passed between them; these
  * tests pin that boundary directly, which was not possible before.
  */
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import {
   runAccumulationPhase,
   runDrawdownPhase,

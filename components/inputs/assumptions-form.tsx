@@ -76,7 +76,7 @@ export function AssumptionsForm() {
     reset(saDefaults)
     setAssumptions({ compoundingMethod: "nominal" })
     setResetSpins((n) => n + 1)
-  }, [reset, setAssumptions]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [reset, setAssumptions]) // oxlint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const subscription = watch((value) => {

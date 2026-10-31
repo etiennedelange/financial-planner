@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect } from 'vite-plus/test'
 import { calculateProjection } from '@/lib/calculations/projection-engine'
 import { calculateOptimalContribution } from '@/lib/calculations/optimal-contribution'
 import { runMonteCarloSimulation } from '@/lib/monte-carlo/simulation-engine'

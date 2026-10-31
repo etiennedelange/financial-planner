@@ -16,8 +16,8 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
+        // Oxc (through Vite+) lints and formats; its extension is the editor's formatter.
+        "oxc.oxc-vscode",
         "bradlc.vscode-tailwindcss",
         "supabase.supabase-vscode",
         "ms-vscode.vscode-typescript-next",
@@ -29,17 +29,14 @@
       ],
       "settings": {
         "editor.formatOnSave": true,
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.defaultFormatter": "oxc.oxc-vscode",
         "editor.codeActionsOnSave": {
-          "source.fixAll.eslint": "explicit"
+          "source.fixAll.oxc": "explicit"
         },
         "typescript.tsdk": "node_modules/typescript/lib",
         "typescript.enablePromptUseWorkspaceTsdk": true,
-        "[typescriptreact]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
-        },
-        "[typescript]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        "[javascript][typescript][typescriptreact][json][jsonc][css]": {
+          "editor.defaultFormatter": "oxc.oxc-vscode"
         }
       }
     }

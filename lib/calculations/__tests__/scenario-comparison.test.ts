@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect } from "vite-plus/test"
 import { compareScenarios, INVESTMENT_SCENARIOS } from "../scenario-comparison"
 import type { PersonalInfo, RetirementGoals, DrawdownConfig, CompoundingMethod } from "@/types"
 
