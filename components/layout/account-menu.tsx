@@ -39,14 +39,19 @@ export function AccountMenu({ user }: { user: User | null }) {
           >
             <UserIcon className="h-4 w-4" />
             {user && (
-              <span aria-hidden className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-primary" />
+              <span
+                aria-hidden
+                className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-primary"
+              />
             )}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           {user && (
             <>
-              <DropdownMenuLabel className="truncate font-normal text-muted-foreground">{user.email}</DropdownMenuLabel>
+              <DropdownMenuLabel className="truncate font-normal text-muted-foreground">
+                {user.email}
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
             </>
           )}
@@ -74,7 +79,10 @@ export function AccountMenu({ user }: { user: User | null }) {
               <LogIn className="mr-2 h-4 w-4" />
               Sign in
               {!authEnabled && (
-                <Badge variant="outline" className="ml-auto h-4 px-1.5 font-mono text-[9px] font-normal uppercase tracking-wider">
+                <Badge
+                  variant="outline"
+                  className="ml-auto h-4 px-1.5 font-mono text-[9px] font-normal uppercase tracking-wider"
+                >
                   Soon
                 </Badge>
               )}

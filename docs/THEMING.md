@@ -1,3 +1,10 @@
+---
+type: Guide
+title: "Theming System"
+description: "Theming architecture: one locked teal accent with light/dark mode, tokens and usage rules."
+tags: [ui]
+---
+
 # Theming System
 
 This document explains the theming architecture for the SA Retirement Calculator: a single locked **teal accent** combined with a **light/dark mode** toggle, built on Tailwind CSS v4.

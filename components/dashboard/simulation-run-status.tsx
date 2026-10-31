@@ -56,7 +56,12 @@ export function SimulationRunStatus({
         {simulationResult.successRate.toFixed(0)}% success
         {displayMode === "real" ? " · shown in today's value" : ""}
       </p>
-      <Button asChild size="sm" variant="ghost" className="h-7 shrink-0 px-2 text-xs text-muted-foreground hover:text-foreground">
+      <Button
+        asChild
+        size="sm"
+        variant="ghost"
+        className="h-7 shrink-0 px-2 text-xs text-muted-foreground hover:text-foreground"
+      >
         <Link href="/calculator/charts">View charts →</Link>
       </Button>
     </div>

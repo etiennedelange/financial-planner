@@ -1,3 +1,10 @@
+---
+type: Design Spec
+title: "AI Narrative Model Picker — Design Spec"
+description: "Let users choose which model generates the AI plan narrative."
+date: 2026-08-01
+---
+
 # AI Narrative Model Picker — Design Spec
 
 Date: 2026-08-01

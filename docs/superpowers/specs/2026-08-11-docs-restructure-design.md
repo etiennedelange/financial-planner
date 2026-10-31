@@ -1,3 +1,10 @@
+---
+type: Design Spec
+title: "Docs Restructure & CLAUDE.md Documentation Rules — Design"
+description: "Docs restructure and the CLAUDE.md documentation rules (the three-tier model)."
+date: 2026-08-11
+---
+
 # Docs Restructure & CLAUDE.md Documentation Rules — Design
 
 **Date:** 2026-08-11

@@ -16,7 +16,11 @@ interface TotpReauthDialogProps {
 }
 
 export function TotpReauthDialog({
-  open, factorId, action, onCancel, onConfirmed,
+  open,
+  factorId,
+  action,
+  onCancel,
+  onConfirmed,
 }: TotpReauthDialogProps) {
   const [code, setCode] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -46,7 +50,9 @@ export function TotpReauthDialog({
         </DialogDescription>
         <form onSubmit={handleConfirm} className="space-y-3">
           <div className="space-y-1">
-            <Label htmlFor="totp-reauth-code" className="text-xs font-medium">Six-digit code</Label>
+            <Label htmlFor="totp-reauth-code" className="text-xs font-medium">
+              Six-digit code
+            </Label>
             <Input
               id="totp-reauth-code"
               inputMode="numeric"

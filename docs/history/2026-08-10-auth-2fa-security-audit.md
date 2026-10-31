@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Auth and 2FA Security Audit"
+description: "Security review of authentication, TOTP, recovery codes and AAL handling."
+date: 2026-08-10
+tags: [security, quality]
+---
+
 # Auth and 2FA Security Audit
 
 **Date:** 2026-08-10

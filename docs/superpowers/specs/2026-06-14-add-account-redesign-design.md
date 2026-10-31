@@ -1,3 +1,11 @@
+---
+type: Design Spec
+title: "Add Account — Redesign Spec"
+description: "Redesign of the Add/Edit Account flow away from a Sheet."
+date: 2026-06-14
+tags: [ui]
+---
+
 # Add Account — Redesign Spec
 
 **Date:** 2026-06-14

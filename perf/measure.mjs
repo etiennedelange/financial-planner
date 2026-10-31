@@ -24,44 +24,50 @@
  *   pnpm build && pnpm start
  */
 
-import { chromium } from '@playwright/test'
-import { execSync } from 'node:child_process'
-import { mkdirSync, writeFileSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { chromium } from "@playwright/test"
+import { execSync } from "node:child_process"
+import { mkdirSync, writeFileSync } from "node:fs"
+import { dirname, resolve } from "node:path"
 
 // ---- arg parsing ---------------------------------------------------------
 
 const argv = process.argv.slice(2)
 const args = {}
 for (let i = 0; i < argv.length; i++) {
-  if (argv[i].startsWith('--')) {
+  if (argv[i].startsWith("--")) {
     args[argv[i].slice(2)] = argv[i + 1]
     i++
   }
 }
 
-const URL_ARG      = args.url      ?? 'http://localhost:3000/calculator'
-const OUT_PATH     = resolve(args.out ?? 'perf/baseline.json')
-const RUNS         = Number(args.runs ?? 5)
-const LABEL        = args.label    ?? 'baseline'
+const URL_ARG = args.url ?? "http://localhost:3000/calculator"
+const OUT_PATH = resolve(args.out ?? "perf/baseline.json")
+const RUNS = Number(args.runs ?? 5)
+const LABEL = args.label ?? "baseline"
 const CPU_THROTTLE = Number(args.cpu ?? 4)
-const MODE         = args.mode     ?? 'cold'
-const SCENARIO     = args.scenario ?? 'empty'
+const MODE = args.mode ?? "cold"
+const SCENARIO = args.scenario ?? "empty"
 
-if (!['empty', 'interactive', 'interaction'].includes(SCENARIO)) {
-  console.error(`Invalid --scenario: ${SCENARIO} (expected 'empty', 'interactive', or 'interaction')`)
+if (!["empty", "interactive", "interaction"].includes(SCENARIO)) {
+  console.error(
+    `Invalid --scenario: ${SCENARIO} (expected 'empty', 'interactive', or 'interaction')`,
+  )
   process.exit(1)
 }
 
 // ---- git context ---------------------------------------------------------
 
 const safeGit = (cmd) => {
-  try { return execSync(cmd, { encoding: 'utf8' }).trim() } catch { return '' }
+  try {
+    return execSync(cmd, { encoding: "utf8" }).trim()
+  } catch {
+    return ""
+  }
 }
 const git = {
-  commit: safeGit('git rev-parse --short HEAD'),
-  branch: safeGit('git rev-parse --abbrev-ref HEAD'),
-  dirty:  safeGit('git status --porcelain').length > 0,
+  commit: safeGit("git rev-parse --short HEAD"),
+  branch: safeGit("git rev-parse --abbrev-ref HEAD"),
+  dirty: safeGit("git status --porcelain").length > 0,
 }
 
 // ---- stats helpers -------------------------------------------------------
@@ -74,13 +80,13 @@ const pct = (arr, p) => {
 const round = (n, d = 1) => Math.round(n * 10 ** d) / 10 ** d
 
 const stats = (samples) => {
-  const clean = samples.filter((v) => typeof v === 'number' && !Number.isNaN(v))
+  const clean = samples.filter((v) => typeof v === "number" && !Number.isNaN(v))
   if (clean.length === 0) return null
   return {
     median: round(pct(clean, 0.5)),
-    p75:    round(pct(clean, 0.75)),
-    min:    round(Math.min(...clean)),
-    max:    round(Math.max(...clean)),
+    p75: round(pct(clean, 0.75)),
+    min: round(Math.min(...clean)),
+    max: round(Math.max(...clean)),
     samples: clean.map((v) => round(v)),
   }
 }
@@ -95,10 +101,10 @@ const SEED_STATE = {
   state: {
     accounts: [
       {
-        id: 'perf-acc-1',
-        name: 'Discovery RA',
-        provider: 'Discovery',
-        type: 'retirement_annuity',
+        id: "perf-acc-1",
+        name: "Discovery RA",
+        provider: "Discovery",
+        type: "retirement_annuity",
         currentBalance: 850000,
         monthlyContribution: 5500,
         expectedReturn: 11,
@@ -106,10 +112,10 @@ const SEED_STATE = {
         contributionEscalation: 6,
       },
       {
-        id: 'perf-acc-2',
-        name: 'Company Pension',
-        provider: 'Alexander Forbes',
-        type: 'pension_fund',
+        id: "perf-acc-2",
+        name: "Company Pension",
+        provider: "Alexander Forbes",
+        type: "pension_fund",
         currentBalance: 1200000,
         monthlyContribution: 8500,
         expectedReturn: 10.5,
@@ -117,10 +123,10 @@ const SEED_STATE = {
         contributionEscalation: 5,
       },
       {
-        id: 'perf-acc-3',
-        name: 'TFSA',
-        provider: 'EasyEquities',
-        type: 'tfsa',
+        id: "perf-acc-3",
+        name: "TFSA",
+        provider: "EasyEquities",
+        type: "tfsa",
         currentBalance: 320000,
         monthlyContribution: 3000,
         expectedReturn: 12,
@@ -137,15 +143,15 @@ const SEED_STATE = {
       equityVolatility: 16.5,
       bondVolatility: 6,
       inflationRate: 5.5,
-      compoundingMethod: 'nominal',
+      compoundingMethod: "nominal",
     },
     drawdownConfig: {
-      strategy: 'fixed_percentage',
+      strategy: "fixed_percentage",
       initialWithdrawalRate: 3.5,
       minimumWithdrawal: 15000,
       maximumWithdrawal: 60000,
     },
-    displayMode: 'nominal',
+    displayMode: "nominal",
   },
   version: 0,
 }
@@ -158,11 +164,11 @@ async function measureOnce(browser, runIndex) {
   const client = await context.newCDPSession(page)
 
   if (CPU_THROTTLE > 1) {
-    await client.send('Emulation.setCPUThrottlingRate', { rate: CPU_THROTTLE })
+    await client.send("Emulation.setCPUThrottlingRate", { rate: CPU_THROTTLE })
   }
-  if (MODE === 'cold') {
-    await client.send('Network.clearBrowserCache')
-    await client.send('Network.clearBrowserCookies')
+  if (MODE === "cold") {
+    await client.send("Network.clearBrowserCache")
+    await client.send("Network.clearBrowserCookies")
   }
 
   // Run BEFORE any page JS — installs a longtask observer that accumulates
@@ -176,25 +182,28 @@ async function measureOnce(browser, runIndex) {
           for (const e of list.getEntries()) {
             window.__longTasks.push({ startTime: e.startTime, duration: e.duration })
           }
-        }).observe({ type: 'longtask', buffered: true })
-      } catch { /* longtask not supported */ }
-
-      if (scenario === 'interactive' || scenario === 'interaction') {
-        try {
-          localStorage.setItem('financial-planner-storage', JSON.stringify(seed))
-        } catch { /* private mode etc. */ }
+        }).observe({ type: "longtask", buffered: true })
+      } catch {
+        /* longtask not supported */
       }
 
+      if (scenario === "interactive" || scenario === "interaction") {
+        try {
+          localStorage.setItem("financial-planner-storage", JSON.stringify(seed))
+        } catch {
+          /* private mode etc. */
+        }
+      }
     },
-    { scenario: SCENARIO, seed: SEED_STATE }
+    { scenario: SCENARIO, seed: SEED_STATE },
   )
 
   const start = Date.now()
-  await page.goto(URL_ARG, { waitUntil: 'load', timeout: 30_000 })
+  await page.goto(URL_ARG, { waitUntil: "load", timeout: 30_000 })
 
   // Give React effects + the 300ms Monte Carlo debounce + the sim itself
   // room to run. Empty scenario has no work to wait for — keep it short.
-  const settleMs = SCENARIO === 'interaction' ? 1800 : SCENARIO === 'interactive' ? 1500 : 300
+  const settleMs = SCENARIO === "interaction" ? 1800 : SCENARIO === "interactive" ? 1500 : 300
   await page.waitForTimeout(settleMs)
 
   // ---- interaction scenario: measure TBT from a single input change --------
@@ -202,26 +211,28 @@ async function measureOnce(browser, runIndex) {
   // the Zustand store setter directly via window.__setGoals (injected below)
   // to re-trigger projection + Monte Carlo.  Measures only the tasks that occur
   // during that window — the key metric for web worker main-thread impact.
-  if (SCENARIO === 'interaction') {
+  if (SCENARIO === "interaction") {
     // Open "Planning Inputs" accordion and change a form value to re-trigger
     // the full projection + Monte Carlo pipeline.  We measure only the long
     // tasks that happen AFTER the reset, isolating simulation overhead.
 
     // Open the accordion.
-    await page.getByRole('button', { name: /Planning Inputs/i }).click()
+    await page.getByRole("button", { name: /Planning Inputs/i }).click()
     // Wait for accordion animation to complete (content becomes visible).
     await page.waitForSelector('[data-state="open"] input', { timeout: 5000 })
     await page.waitForTimeout(100) // small settle
 
     // Reset long-task buffer NOW — after accordion open, before the input change.
-    await page.evaluate(() => { window.__longTasks = [] })
+    await page.evaluate(() => {
+      window.__longTasks = []
+    })
 
     // Find and change the first visible number input (current age in PersonalInfoForm).
     const input = page.locator('[data-state="open"] input').first()
     const val = await input.inputValue()
     const numVal = parseFloat(val) || 42
     await input.fill(String(numVal + 1))
-    await input.press('Tab')
+    await input.press("Tab")
 
     // Wait for useDeferredValue to settle + simulation to complete.
     await page.waitForTimeout(2000)
@@ -230,8 +241,8 @@ async function measureOnce(browser, runIndex) {
   const wallClock = Date.now() - start
 
   const metrics = await page.evaluate(async () => {
-    const nav = performance.getEntriesByType('navigation')[0] ?? {}
-    const paint = performance.getEntriesByType('paint')
+    const nav = performance.getEntriesByType("navigation")[0] ?? {}
+    const paint = performance.getEntriesByType("paint")
 
     // LCP via buffered PerformanceObserver.
     const lcp = await new Promise((res) => {
@@ -241,7 +252,7 @@ async function measureOnce(browser, runIndex) {
           clearTimeout(timeout)
           const entries = list.getEntries()
           res(entries.at(-1)?.startTime ?? null)
-        }).observe({ type: 'largest-contentful-paint', buffered: true })
+        }).observe({ type: "largest-contentful-paint", buffered: true })
       } catch {
         clearTimeout(timeout)
         res(null)
@@ -251,34 +262,36 @@ async function measureOnce(browser, runIndex) {
     // Prefer the pre-installed observer's data; fall back to getEntriesByType.
     const longTasks = window.__longTasks?.length
       ? window.__longTasks
-      : performance.getEntriesByType('longtask').map((t) => ({ startTime: t.startTime, duration: t.duration }))
+      : performance
+          .getEntriesByType("longtask")
+          .map((t) => ({ startTime: t.startTime, duration: t.duration }))
 
-    const longTaskMs  = longTasks.reduce((s, t) => s + t.duration, 0)
-    const tbt         = longTasks.reduce((s, t) => s + Math.max(0, t.duration - 50), 0)
+    const longTaskMs = longTasks.reduce((s, t) => s + t.duration, 0)
+    const tbt = longTasks.reduce((s, t) => s + Math.max(0, t.duration - 50), 0)
     const longestTask = longTasks.reduce((m, t) => Math.max(m, t.duration), 0)
 
     // Next.js emits these performance.measure entries in dev mode only.
-    const measures = performance.getEntriesByType('measure')
-    const hydrationMeasure = measures.find((m) => m.name === 'Next.js-hydration')?.duration ?? null
-    const renderMeasure    = measures.find((m) => m.name === 'Next.js-render')?.duration ?? null
+    const measures = performance.getEntriesByType("measure")
+    const hydrationMeasure = measures.find((m) => m.name === "Next.js-hydration")?.duration ?? null
+    const renderMeasure = measures.find((m) => m.name === "Next.js-render")?.duration ?? null
 
-    const resources = performance.getEntriesByType('resource')
+    const resources = performance.getEntriesByType("resource")
     const byKind = (fn) => resources.filter(fn).reduce((s, r) => s + (r.transferSize || 0), 0)
-    const jsBytes  = byKind((r) => r.initiatorType === 'script' || r.name.endsWith('.js'))
-    const cssBytes = byKind((r) => r.initiatorType === 'link'   || r.name.endsWith('.css'))
+    const jsBytes = byKind((r) => r.initiatorType === "script" || r.name.endsWith(".js"))
+    const cssBytes = byKind((r) => r.initiatorType === "link" || r.name.endsWith(".css"))
 
     return {
-      ttfb:             nav.responseStart ?? null,
-      fcp:              paint.find((p) => p.name === 'first-contentful-paint')?.startTime ?? null,
+      ttfb: nav.responseStart ?? null,
+      fcp: paint.find((p) => p.name === "first-contentful-paint")?.startTime ?? null,
       lcp,
       domContentLoaded: nav.domContentLoadedEventEnd ?? null,
-      loadEvent:        nav.loadEventEnd ?? null,
-      transferSize:     nav.transferSize ?? null,
-      encodedSize:      nav.encodedBodySize ?? null,
+      loadEvent: nav.loadEventEnd ?? null,
+      transferSize: nav.transferSize ?? null,
+      encodedSize: nav.encodedBodySize ?? null,
       jsBytes,
       cssBytes,
-      resourceCount:    resources.length,
-      longTaskCount:    longTasks.length,
+      resourceCount: resources.length,
+      longTaskCount: longTasks.length,
       longTaskMs,
       longestTask,
       tbt,
@@ -290,12 +303,12 @@ async function measureOnce(browser, runIndex) {
   metrics.wallClock = wallClock
   await context.close()
 
-  const tbtLabel = SCENARIO === 'interaction' ? 'interaction-tbt' : 'tbt'
+  const tbtLabel = SCENARIO === "interaction" ? "interaction-tbt" : "tbt"
   process.stdout.write(
     `  run ${runIndex + 1}/${RUNS}  fcp=${round(metrics.fcp ?? 0)}ms  ` +
-    `lcp=${round(metrics.lcp ?? 0)}ms  ${tbtLabel}=${round(metrics.tbt)}ms  ` +
-    `tasks=${metrics.longTaskCount}  ` +
-    `js=${round((metrics.jsBytes || 0) / 1024)}KB\n`
+      `lcp=${round(metrics.lcp ?? 0)}ms  ${tbtLabel}=${round(metrics.tbt)}ms  ` +
+      `tasks=${metrics.longTaskCount}  ` +
+      `js=${round((metrics.jsBytes || 0) / 1024)}KB\n`,
   )
 
   return metrics
@@ -306,8 +319,8 @@ async function measureOnce(browser, runIndex) {
 async function main() {
   console.log(
     `▶ ${LABEL}: ${URL_ARG}\n` +
-    `  runs=${RUNS}  cpu=×${CPU_THROTTLE}  mode=${MODE}  scenario=${SCENARIO}  ` +
-    `commit=${git.commit}${git.dirty ? '*' : ''}`
+      `  runs=${RUNS}  cpu=×${CPU_THROTTLE}  mode=${MODE}  scenario=${SCENARIO}  ` +
+      `commit=${git.commit}${git.dirty ? "*" : ""}`,
   )
 
   const browser = await chromium.launch()
@@ -322,14 +335,12 @@ async function main() {
   await browser.close()
 
   if (samples.length === 0) {
-    console.error('\nNo successful runs — is the server running?')
+    console.error("\nNo successful runs — is the server running?")
     process.exit(1)
   }
 
   const keys = Object.keys(samples[0])
-  const aggregated = Object.fromEntries(
-    keys.map((k) => [k, stats(samples.map((s) => s[k]))])
-  )
+  const aggregated = Object.fromEntries(keys.map((k) => [k, stats(samples.map((s) => s[k]))]))
 
   const result = {
     label: LABEL,

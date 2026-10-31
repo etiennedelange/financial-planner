@@ -29,7 +29,7 @@ SA-specific tax treatment.
 
 Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · shadcn/ui ·
 Zustand · Supabase (Postgres + Auth with row-level security) · Vercel AI SDK ·
-Vitest · Playwright. Hosted on Vercel.
+Vite+ (Vitest, Oxlint, Oxfmt) · Playwright. Hosted on Vercel.
 
 ## Project layout
 
@@ -59,9 +59,9 @@ pnpm dev                     # http://localhost:3000
 
 ```bash
 pnpm typecheck   # includes test files, which `next build` does not check
-pnpm test        # Vitest unit tests
+pnpm check       # format, lint and types (Vite+: Oxfmt, Oxlint)
+pnpm test        # Vitest unit tests (via Vite+)
 pnpm build
-pnpm lint
 ```
 
 CI runs all of these on every push and pull request.

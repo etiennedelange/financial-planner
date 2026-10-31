@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Phase 9.1 — NaN/Infinity guards (calculation engines)"
+description: "NaN/Infinity guards in the calculation engines (Phase 9.1)."
+date: 2026-08-14
+tags: [quality]
+---
+
 # Phase 9.1 — NaN/Infinity guards (calculation engines)
 
 ## What changed

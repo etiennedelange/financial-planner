@@ -99,65 +99,10 @@ if [ ! -f ".env.local" ] && [ -f ".env.example" ]; then
   echo "    .env.local created. Edit it if you need to point at a different Supabase project."
 fi
 
-# # ─── Claude Code user settings ────────────────────────────────────────────────
-# # Symlink ~/.claude/settings.json to the repo file so changes are always committed
-# echo "--> Linking Claude Code user settings..."
-# ln -sf "$(pwd)"/.devcontainer/claude-settings.json "$HOME/.claude/settings.json"
-# ─── Claude Code user settings ────────────────────────────────────────────────
-
-# Symlink ~/.claude/settings.json to the repo file so changes are always committed.
-# postCreateCommand runs with cwd = workspace folder, so $(pwd) resolves correctly
-# regardless of what the repo/workspace folder is named.
-echo "--> Linking Claude Code user settings..."
-ln -sf "$(pwd)/.devcontainer/claude-settings.json" "$HOME/.claude/settings.json"
-
-# Ensure the node user owns the Claude config directory for credential storage
-sudo chown node:node /home/node/.claude
-
-# ─── Claude statusline symlink ──────────────────────────────────────────────────
-# Keep the statusline script in the repo (referenced by claude-settings.json) so
-# it survives rebuilds. claude-settings.json points at ~/.claude/statusline-command.sh.
-echo "--> Linking Claude statusline script..."
-STATUSLINE_SCRIPT="$HOME/.claude/statusline-command.sh"
-REPO_STATUSLINE_SCRIPT="$(pwd)/.devcontainer/statusline-command.sh"
-if [ ! -L "$STATUSLINE_SCRIPT" ] || [ "$(readlink "$STATUSLINE_SCRIPT")" != "$REPO_STATUSLINE_SCRIPT" ]; then
-  rm -f "$STATUSLINE_SCRIPT"
-  ln -s "$REPO_STATUSLINE_SCRIPT" "$STATUSLINE_SCRIPT"
-  chmod +x "$REPO_STATUSLINE_SCRIPT"
-  echo "    Linked $STATUSLINE_SCRIPT -> $REPO_STATUSLINE_SCRIPT"
-else
-  echo "    Already linked — skipping"
-fi
-
-# ─── Claude settings symlink (robust re-check) ─────────────────────────────────
-# Keep settings.json in the repo so plugin installs persist across rebuilds.
-echo "--> Linking Claude settings to devcontainer config..."
-CLAUDE_SETTINGS="$HOME/.claude/settings.json"
-REPO_SETTINGS="$(pwd)/.devcontainer/claude-settings.json"
-# Replace with symlink only if it's a regular file (or missing); skip if already linked correctly
-if [ ! -L "$CLAUDE_SETTINGS" ] || [ "$(readlink "$CLAUDE_SETTINGS")" != "$REPO_SETTINGS" ]; then
-  # Seed repo file from existing settings if it has content
-  if [ -f "$CLAUDE_SETTINGS" ] && [ ! -L "$CLAUDE_SETTINGS" ] && [ -s "$CLAUDE_SETTINGS" ] && [ ! -s "$REPO_SETTINGS" ]; then
-    cp "$CLAUDE_SETTINGS" "$REPO_SETTINGS"
-  fi
-  rm -f "$CLAUDE_SETTINGS"
-  ln -s "$REPO_SETTINGS" "$CLAUDE_SETTINGS"
-  echo "    Linked $CLAUDE_SETTINGS -> $REPO_SETTINGS"
-else
-  echo "    Already linked — skipping"
-fi
-
-# Fix claude-code ownership: the devcontainer feature installs as root, which
-# blocks auto-updates. Transfer ownership to node so npm can write to the prefix.
-echo "--> Fixing Claude Code npm prefix ownership..."
-sudo chown -R node:npm \
-  /usr/local/share/npm-global/lib/node_modules/@anthropic-ai \
-  /usr/local/share/npm-global/bin/claude 2>/dev/null || true
-
 # ─── OpenCode user config ────────────────────────────────────────────────────
 # Symlink the global opencode config to a committed file in .devcontainer/ so
-# changes are always version-controlled, mirroring the Claude settings link
-# above. The named volume mount keeps auth + plugins persisted across rebuilds.
+# changes are always version-controlled. The named volume mount keeps auth +
+# plugins persisted across rebuilds.
 echo "--> Linking OpenCode user config..."
 OPENCODE_CONFIG="$HOME/.config/opencode/opencode.jsonc"
 REPO_OPENCODE_CONFIG="$(pwd)/.devcontainer/opencode-settings.jsonc"

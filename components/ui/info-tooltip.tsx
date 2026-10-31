@@ -1,12 +1,7 @@
 "use client"
 
 import { Info } from "lucide-react"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface InfoTooltipProps {
   content: string | React.ReactNode
@@ -24,7 +19,7 @@ export function InfoTooltip({ content, side = "top", className }: InfoTooltipPro
       <Tooltip>
         <TooltipTrigger asChild>
           <Info
-            className={`inline-block h-4 w-4 text-muted-foreground hover:text-foreground cursor-help transition-colors ${className || ''}`}
+            className={`inline-block h-4 w-4 text-muted-foreground hover:text-foreground cursor-help transition-colors ${className || ""}`}
             aria-label="More information"
           />
         </TooltipTrigger>

@@ -33,20 +33,21 @@ export function applySensitivityDeltas(
   accounts: Account[],
   personalInfo: PersonalInfo,
   retirementGoals: RetirementGoals,
-  deltas: SensitivityDeltas
+  deltas: SensitivityDeltas,
 ): AppliedSensitivity {
   const scaledPersonalInfo: PersonalInfo = {
     ...personalInfo,
     retirementAge: clamp(
       personalInfo.retirementAge + deltas.retirementAgeOffset,
       personalInfo.currentAge + 1,
-      personalInfo.lifeExpectancy
+      personalInfo.lifeExpectancy,
     ),
   }
 
   const scaledRetirementGoals: RetirementGoals = {
     ...retirementGoals,
-    desiredMonthlyIncome: deltas.targetMonthlyIncomeOverride ?? retirementGoals.desiredMonthlyIncome,
+    desiredMonthlyIncome:
+      deltas.targetMonthlyIncomeOverride ?? retirementGoals.desiredMonthlyIncome,
   }
 
   const scaledAccounts: Account[] = accounts.map((account) => {
@@ -58,7 +59,7 @@ export function applySensitivityDeltas(
 
     const scaledContribution = Math.max(
       0,
-      account.monthlyContribution * (1 + deltas.contributionScalePct / 100)
+      account.monthlyContribution * (1 + deltas.contributionScalePct / 100),
     )
 
     return {

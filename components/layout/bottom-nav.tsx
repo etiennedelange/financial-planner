@@ -36,9 +36,7 @@ export function BottomNav() {
       <div className="flex h-14">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href
-          return (
-            <BottomNavItem key={item.href} item={item} active={isActive} />
-          )
+          return <BottomNavItem key={item.href} item={item} active={isActive} />
         })}
       </div>
     </nav>
@@ -56,7 +54,7 @@ function BottomNavItem({ item, active }: { item: (typeof NAV_ITEMS)[number]; act
       prefetch
       className={cn(
         "relative flex flex-1 flex-col items-center justify-center gap-0.5 transition-colors active:bg-accent/40",
-        active ? "text-primary" : "text-muted-foreground"
+        active ? "text-primary" : "text-muted-foreground",
       )}
     >
       {active && (

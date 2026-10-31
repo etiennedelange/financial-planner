@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "shadscan accessibility & polish audit (F → A)"
+description: "shadscan accessibility and polish audit, F to A; records the waived findings."
+date: 2026-08-16
+tags: [ui, quality]
+---
+
 # shadscan accessibility & polish audit (F → A)
 
 Date: 2026-08-16

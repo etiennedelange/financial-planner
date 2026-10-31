@@ -1,3 +1,9 @@
+---
+type: Phase
+title: "Phase 11: Dead Code Cleanup"
+description: "Phase 11: delete or un-export the code knip proves unreferenced."
+---
+
 # Phase 11: Dead Code Cleanup 📋 PLANNED
 
 **Goal:** Delete or un-export the code that `knip` (v6.32.2) proves unreferenced, so the

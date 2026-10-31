@@ -1,6 +1,6 @@
-import type { Page, Locator } from '@playwright/test'
-import path from 'path'
-import fs from 'fs'
+import type { Page, Locator } from "@playwright/test"
+import path from "path"
+import fs from "fs"
 
 /**
  * ScreenshotHelper - Utility for consistent screenshot capture and organization
@@ -16,7 +16,10 @@ export class ScreenshotHelper {
   private journeyName: string
   private screenshots: Array<{ filename: string; description: string }> = []
 
-  constructor(private page: Page, journeyName: string) {
+  constructor(
+    private page: Page,
+    journeyName: string,
+  ) {
     this.journeyName = journeyName
     this.ensureDirectoryExists()
   }
@@ -33,10 +36,10 @@ export class ScreenshotHelper {
     options?: {
       fullPage?: boolean
       description?: string
-    }
+    },
   ) {
     this.screenshotCounter++
-    const paddedNumber = String(this.screenshotCounter).padStart(2, '0')
+    const paddedNumber = String(this.screenshotCounter).padStart(2, "0")
     const filename = `${paddedNumber}-${this.slugify(name)}.png`
     const filepath = this.getScreenshotPath(filename)
 
@@ -62,11 +65,11 @@ export class ScreenshotHelper {
    */
   async captureElement(selector: string | Locator, name: string) {
     this.screenshotCounter++
-    const paddedNumber = String(this.screenshotCounter).padStart(2, '0')
+    const paddedNumber = String(this.screenshotCounter).padStart(2, "0")
     const filename = `${paddedNumber}-${this.slugify(name)}.png`
     const filepath = this.getScreenshotPath(filename)
 
-    const element = typeof selector === 'string' ? this.page.locator(selector) : selector
+    const element = typeof selector === "string" ? this.page.locator(selector) : selector
     await element.screenshot({ path: filepath })
 
     this.screenshots.push({ filename, description: name })
@@ -80,9 +83,9 @@ export class ScreenshotHelper {
    */
   async waitForCharts(timeoutMs = 5000) {
     // Wait for at least one chart to be present
-    await this.page.waitForSelector('svg.recharts-surface', {
+    await this.page.waitForSelector("svg.recharts-surface", {
       timeout: timeoutMs,
-      state: 'visible',
+      state: "visible",
     })
 
     // Wait for animation to settle
@@ -95,9 +98,9 @@ export class ScreenshotHelper {
    */
   async waitForMonteCarloSimulation(timeoutMs = 5000) {
     // Wait for success rate indicator
-    await this.page.waitForSelector('text=Success Rate', {
+    await this.page.waitForSelector("text=Success Rate", {
       timeout: timeoutMs,
-      state: 'visible',
+      state: "visible",
     })
 
     // Wait for simulation to complete
@@ -137,19 +140,14 @@ export class ScreenshotHelper {
    * Get screenshot path
    */
   private getScreenshotPath(filename: string): string {
-    return path.join(
-      process.cwd(),
-      'e2e/output/screenshots',
-      this.journeyName,
-      filename
-    )
+    return path.join(process.cwd(), "e2e/output/screenshots", this.journeyName, filename)
   }
 
   /**
    * Ensure directory exists
    */
   private ensureDirectoryExists() {
-    const dir = path.join(process.cwd(), 'e2e/output/screenshots', this.journeyName)
+    const dir = path.join(process.cwd(), "e2e/output/screenshots", this.journeyName)
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true })
     }
@@ -161,7 +159,7 @@ export class ScreenshotHelper {
   private slugify(text: string): string {
     return text
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
   }
 }

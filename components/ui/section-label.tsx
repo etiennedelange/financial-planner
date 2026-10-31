@@ -23,7 +23,7 @@ export function SectionLabel({ variant = "default", className, children }: Secti
         variant === "destructive"
           ? "text-destructive border-l-2 border-destructive pl-2"
           : "text-muted-foreground",
-        className
+        className,
       )}
     >
       {children}

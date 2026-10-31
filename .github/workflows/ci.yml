@@ -53,8 +53,13 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Lint
-        run: npm run lint
+      # Format, lint (incl. the money-time guard) and typecheck: Vite+ runs Oxfmt and
+      # Oxlint with type-aware rules. `vp lint` alone would skip formatting.
+      - name: Check
+        run: pnpm check
+
+      - name: Docs check
+        run: pnpm docs:check
 
       - name: shadscan gate
         run: npm run shadscan:gate

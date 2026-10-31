@@ -20,7 +20,8 @@ export function buildCsp(nonce: string, supabaseUrl: string, isDev: boolean): st
   // path, not "/supabase/auth/v1/user". This was masked whenever the app and
   // Supabase proxy shared an origin (connect-src 'self' covered everything
   // regardless of path); it only bites once they're on different ports/hosts.
-  const connectSupabaseUrl = supabaseUrl && !supabaseUrl.endsWith("/") ? `${supabaseUrl}/` : supabaseUrl
+  const connectSupabaseUrl =
+    supabaseUrl && !supabaseUrl.endsWith("/") ? `${supabaseUrl}/` : supabaseUrl
 
   const scriptSrc = [
     "'self'",
@@ -29,7 +30,9 @@ export function buildCsp(nonce: string, supabaseUrl: string, isDev: boolean): st
     "https://challenges.cloudflare.com",
     // React Fast Refresh compiles with eval in development only.
     isDev ? "'unsafe-eval'" : "",
-  ].filter(Boolean).join(" ")
+  ]
+    .filter(Boolean)
+    .join(" ")
 
   return [
     `default-src 'self'`,
@@ -48,5 +51,7 @@ export function buildCsp(nonce: string, supabaseUrl: string, isDev: boolean): st
     // plain HTTP — background Next.js route prefetches fail outright
     // (ERR_SSL_PROTOCOL_ERROR) instead of just staying on http.
     isDev ? "" : `upgrade-insecure-requests`,
-  ].filter(Boolean).join("; ")
+  ]
+    .filter(Boolean)
+    .join("; ")
 }

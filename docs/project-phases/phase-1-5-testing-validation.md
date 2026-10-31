@@ -1,3 +1,10 @@
+---
+type: Phase
+title: "Phase 1.5: Testing & Validation Framework"
+description: "Phase 1.5: test-suite invariants, mutation testing and validation of the calculation layer."
+tags: [quality]
+---
+
 # Phase 1.5: Testing & Validation Framework ✅ P0 RESOLVED
 
 > **Reopened and resolved 2026-07-26.** The audit showed the suite could not catch a

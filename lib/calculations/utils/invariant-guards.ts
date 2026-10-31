@@ -40,7 +40,7 @@ export function assertNonNegativeBalance(value: number, context: string): number
     throw new Error(
       `projection-engine invariant violated: negative balance (${value}) at ${context}. ` +
         `Withdrawals are capped at the available balance, so this indicates an arithmetic ` +
-        `defect in the engine rather than an input problem.`
+        `defect in the engine rather than an input problem.`,
     )
   }
   return value
@@ -69,7 +69,7 @@ export function finiteOrZero(value: number): number {
 export function safePositiveDivide(
   numerator: number,
   denominator: number,
-  fallback: number = 0
+  fallback: number = 0,
 ): number {
   return Number.isFinite(numerator) && Number.isFinite(denominator) && denominator > 0
     ? numerator / denominator

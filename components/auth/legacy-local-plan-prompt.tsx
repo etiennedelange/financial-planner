@@ -38,12 +38,12 @@ export function LegacyLocalPlanPrompt({
         <div className="space-y-3">
           <SectionLabel>Legacy local data</SectionLabel>
           <p className="text-sm text-muted-foreground">
-            This browser has a saved plan from before account scoping. It could not be
-            linked to an account automatically, so nothing has been loaded or overwritten.
+            This browser has a saved plan from before account scoping. It could not be linked to an
+            account automatically, so nothing has been loaded or overwritten.
           </p>
           <p className="text-sm text-muted-foreground">
-            {states.length} saved {states.length === 1 ? "state" : "states"} found in this
-            browser. What would you like to do?
+            {states.length} saved {states.length === 1 ? "state" : "states"} found in this browser.
+            What would you like to do?
           </p>
           <div className="flex flex-col gap-2 pt-2">
             <Button onClick={onUseLocalPlan}>Use this local plan</Button>

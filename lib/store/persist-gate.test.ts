@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest"
+import { describe, it, expect, beforeEach } from "vite-plus/test"
 import { createGatedPersistStorage } from "./persist-gate"
 import { setScope } from "./persistence-scope"
 
@@ -17,7 +17,10 @@ describe("createGatedPersistStorage", () => {
 
     storage.release()
     storage.setItem(KEY, { state: { n: 2 }, version: 2 })
-    expect(JSON.parse(localStorage.getItem(`${KEY}:guest`)!)).toEqual({ state: { n: 2 }, version: 2 })
+    expect(JSON.parse(localStorage.getItem(`${KEY}:guest`)!)).toEqual({
+      state: { n: 2 },
+      version: 2,
+    })
   })
 
   it("reads persisted values regardless of gate state", () => {

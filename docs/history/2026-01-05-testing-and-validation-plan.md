@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Testing & Validation Plan"
+description: "Plan for the Phase 1.5 testing and validation framework."
+date: 2026-01-05
+tags: [quality]
+---
+
 # Testing & Validation Plan
 
 **Created:** 2026-01-05

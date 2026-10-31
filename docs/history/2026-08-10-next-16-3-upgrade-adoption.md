@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "2026-08-10 — Next.js 16.3 upgrade adoption: error boundaries, Rust React Compiler, Instant Navigations"
+description: "Adopting Next.js 16.3 features: error boundaries, Rust React Compiler, Instant Navigations."
+date: 2026-08-10
+tags: [tooling]
+---
+
 # 2026-08-10 — Next.js 16.3 upgrade adoption: error boundaries, Rust React Compiler, Instant Navigations
 
 **Date:** 2026-08-10

@@ -1,15 +1,15 @@
-import type { Account, DrawdownConfig, PersonalInfo, RetirementGoals } from '@/types'
-import { describe, expect, it } from 'vitest'
-import { calculateProjection } from '../projection-engine'
-import { SA_TAX_LIMITS } from '@/lib/constants/limits'
-import { SA_DEFAULTS } from '@/lib/constants/defaults'
+import type { Account, DrawdownConfig, PersonalInfo, RetirementGoals } from "@/types"
+import { describe, expect, it } from "vite-plus/test"
+import { calculateProjection } from "../projection-engine"
+import { SA_TAX_LIMITS } from "@/lib/constants/limits"
+import { SA_DEFAULTS } from "@/lib/constants/defaults"
 
-describe('calculateProjection', () => {
+describe("calculateProjection", () => {
   const baseAccount: Account = {
-    id: '1',
-    name: 'Test RA',
-    type: 'retirement_annuity',
-    provider: 'Test Provider',
+    id: "1",
+    name: "Test RA",
+    type: "retirement_annuity",
+    provider: "Test Provider",
     currentBalance: 100000,
     monthlyContribution: 2000,
     expectedReturn: 12,
@@ -31,20 +31,20 @@ describe('calculateProjection', () => {
   }
 
   const baseDrawdownConfig: DrawdownConfig = {
-    strategy: 'fixed_percentage',
+    strategy: "fixed_percentage",
     initialWithdrawalRate: 4,
     minimumWithdrawal: 15000,
     maximumWithdrawal: 60000,
     lumpSumPercentage: 0,
   }
 
-  describe('Basic accumulation phase', () => {
-    it('should calculate portfolio growth during accumulation', () => {
+  describe("Basic accumulation phase", () => {
+    it("should calculate portfolio growth during accumulation", () => {
       const result = calculateProjection(
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       // Portfolio should grow over 30 years
@@ -52,12 +52,12 @@ describe('calculateProjection', () => {
       expect(result.yearlyProjections.length).toBeGreaterThan(30)
     })
 
-    it('should have correct number of years in projection', () => {
+    it("should have correct number of years in projection", () => {
       const result = calculateProjection(
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       const yearsToRetirement = 65 - 35 // 30 years
@@ -67,12 +67,12 @@ describe('calculateProjection', () => {
       expect(result.yearlyProjections.length).toBe(totalYears)
     })
 
-    it('should include contributions in accumulation phase', () => {
+    it("should include contributions in accumulation phase", () => {
       const result = calculateProjection(
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       const accumulationYears = 30
@@ -87,12 +87,12 @@ describe('calculateProjection', () => {
       expect(totalContributions).toBeGreaterThan(baseAccount.monthlyContribution * 12 * 30)
     })
 
-    it('should show zero contributions in drawdown phase', () => {
+    it("should show zero contributions in drawdown phase", () => {
       const result = calculateProjection(
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       const accumulationYears = 30
@@ -102,13 +102,13 @@ describe('calculateProjection', () => {
     })
   })
 
-  describe('Drawdown phase', () => {
-    it('should show positive withdrawals in retirement', () => {
+  describe("Drawdown phase", () => {
+    it("should show positive withdrawals in retirement", () => {
       const result = calculateProjection(
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       const accumulationYears = 30
@@ -124,27 +124,27 @@ describe('calculateProjection', () => {
       expect(totalWithdrawals).toBeGreaterThan(0)
     })
 
-    it('should calculate monthly income at retirement correctly', () => {
+    it("should calculate monthly income at retirement correctly", () => {
       const result = calculateProjection(
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       // Monthly income should be approximately 4% of portfolio divided by 12
       const expectedMonthly =
-        (result.portfolioAtRetirement * baseDrawdownConfig.initialWithdrawalRate / 100) / 12
+        (result.portfolioAtRetirement * baseDrawdownConfig.initialWithdrawalRate) / 100 / 12
 
       expect(result.monthlyIncomeAtRetirement).toBeCloseTo(expectedMonthly, -1) // Within R10
     })
 
-    it('should derive monthlyNetIncomeAtRetirement from the first drawdown year, not a flat re-tax of gross income', () => {
+    it("should derive monthlyNetIncomeAtRetirement from the first drawdown year, not a flat re-tax of gross income", () => {
       const result = calculateProjection(
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       const yearsToRetirement = 65 - 35
@@ -161,12 +161,12 @@ describe('calculateProjection', () => {
       expect(result.monthlyNetIncomeAtRetirement).toBeLessThan(result.monthlyIncomeAtRetirement)
     })
 
-    it('should not over-tax monthlyNetIncomeAtRetirement when withdrawals are sourced from a tax-free TFSA', () => {
+    it("should not over-tax monthlyNetIncomeAtRetirement when withdrawals are sourced from a tax-free TFSA", () => {
       const tfsaAccount: Account = {
-        id: 'tfsa-1',
-        name: 'TFSA',
-        type: 'tfsa',
-        provider: 'Test Provider',
+        id: "tfsa-1",
+        name: "TFSA",
+        type: "tfsa",
+        provider: "Test Provider",
         currentBalance: 2_000_000,
         monthlyContribution: 0,
         expectedReturn: 8,
@@ -179,7 +179,7 @@ describe('calculateProjection', () => {
         [tfsaAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       // TFSA withdrawals are entirely tax-free, so net income should equal gross —
@@ -187,7 +187,7 @@ describe('calculateProjection', () => {
       expect(result.monthlyNetIncomeAtRetirement).toBeCloseTo(result.monthlyIncomeAtRetirement, 2)
     })
 
-    it('should return zero monthlyNetIncomeAtRetirement when there are no years in retirement', () => {
+    it("should return zero monthlyNetIncomeAtRetirement when there are no years in retirement", () => {
       const noRetirementYears: PersonalInfo = {
         ...basePersonalInfo,
         retirementAge: 90,
@@ -198,13 +198,13 @@ describe('calculateProjection', () => {
         [baseAccount],
         noRetirementYears,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       expect(result.monthlyNetIncomeAtRetirement).toBe(0)
     })
 
-    it('should track portfolio depletion age if applicable', () => {
+    it("should track portfolio depletion age if applicable", () => {
       const insufficientFunds: Account = {
         ...baseAccount,
         currentBalance: 10000, // Very small starting balance
@@ -215,7 +215,7 @@ describe('calculateProjection', () => {
         [insufficientFunds],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       // With insufficient funds and high desired income, should deplete
@@ -226,20 +226,20 @@ describe('calculateProjection', () => {
     })
   })
 
-  describe('Multiple accounts', () => {
-    it('should aggregate multiple accounts correctly', () => {
+  describe("Multiple accounts", () => {
+    it("should aggregate multiple accounts correctly", () => {
       const account1: Account = {
         ...baseAccount,
-        id: '1',
-        name: 'RA',
+        id: "1",
+        name: "RA",
         currentBalance: 100000,
         monthlyContribution: 1000,
       }
 
       const account2: Account = {
         ...baseAccount,
-        id: '2',
-        name: 'TFSA',
+        id: "2",
+        name: "TFSA",
         currentBalance: 50000,
         monthlyContribution: 500,
       }
@@ -248,7 +248,7 @@ describe('calculateProjection', () => {
         [account1, account2],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       // Portfolio should be larger than single account
@@ -256,25 +256,25 @@ describe('calculateProjection', () => {
         [account1],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       expect(result.portfolioAtRetirement).toBeGreaterThan(singleResult.portfolioAtRetirement)
     })
 
-    it('should handle accounts with different returns', () => {
+    it("should handle accounts with different returns", () => {
       const conservativeAccount: Account = {
         ...baseAccount,
-        id: '1',
-        name: 'Bond Fund',
+        id: "1",
+        name: "Bond Fund",
         expectedReturn: 8,
         currentBalance: 100000,
       }
 
       const aggressiveAccount: Account = {
         ...baseAccount,
-        id: '2',
-        name: 'Equity Fund',
+        id: "2",
+        name: "Equity Fund",
         expectedReturn: 12,
         currentBalance: 100000,
       }
@@ -283,20 +283,20 @@ describe('calculateProjection', () => {
         [conservativeAccount, aggressiveAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       expect(result.portfolioAtRetirement).toBeGreaterThan(200000)
     })
   })
 
-  describe('Empty accounts handling', () => {
-    it('should handle empty accounts array gracefully', () => {
+  describe("Empty accounts handling", () => {
+    it("should handle empty accounts array gracefully", () => {
       const result = calculateProjection(
         [],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       expect(result.portfolioAtRetirement).toBe(0)
@@ -306,13 +306,13 @@ describe('calculateProjection', () => {
     })
   })
 
-  describe('Negative years guard', () => {
-    it('should return a safe degenerate result when retirementAge is before currentAge', () => {
+  describe("Negative years guard", () => {
+    it("should return a safe degenerate result when retirementAge is before currentAge", () => {
       const result = calculateProjection(
         [baseAccount],
         { ...basePersonalInfo, currentAge: 65, retirementAge: 40 },
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       expect(result.yearlyProjections.length).toBe(0)
@@ -322,12 +322,12 @@ describe('calculateProjection', () => {
       expect(Number.isFinite(result.shortfallAmount)).toBe(true)
     })
 
-    it('should return a safe degenerate result when lifeExpectancy is before retirementAge', () => {
+    it("should return a safe degenerate result when lifeExpectancy is before retirementAge", () => {
       const result = calculateProjection(
         [baseAccount],
         { ...basePersonalInfo, retirementAge: 65, lifeExpectancy: 50 },
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       expect(result.yearlyProjections.length).toBe(0)
@@ -335,12 +335,12 @@ describe('calculateProjection', () => {
       expect(result.shortfallAmount).toBe(0) // yearsInRetirement negative, clamped to 0
     })
 
-    it('should still project normally when yearsToRetirement is exactly zero', () => {
+    it("should still project normally when yearsToRetirement is exactly zero", () => {
       const result = calculateProjection(
         [baseAccount],
         { ...basePersonalInfo, currentAge: 65, retirementAge: 65 },
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       expect(result.portfolioAtRetirement).toBeCloseTo(baseAccount.currentBalance, 0)
@@ -348,13 +348,13 @@ describe('calculateProjection', () => {
     })
   })
 
-  describe('Compounding methods', () => {
-    it('should use nominal compounding by default', () => {
+  describe("Compounding methods", () => {
+    it("should use nominal compounding by default", () => {
       const resultNoAssumptions = calculateProjection(
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       const resultNominal = calculateProjection(
@@ -362,22 +362,38 @@ describe('calculateProjection', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { compoundingMethod: 'nominal', equityReturn: 12, bondReturn: 8, cashReturn: 6, equityVolatility: 16, bondVolatility: 8, inflationRate: 5.5 }
+        {
+          compoundingMethod: "nominal",
+          equityReturn: 12,
+          bondReturn: 8,
+          cashReturn: 6,
+          equityVolatility: 16,
+          bondVolatility: 8,
+          inflationRate: 5.5,
+        },
       )
 
       expect(resultNoAssumptions.portfolioAtRetirement).toBeCloseTo(
         resultNominal.portfolioAtRetirement,
-        -2
+        -2,
       )
     })
 
-    it('should use compound compounding when specified', () => {
+    it("should use compound compounding when specified", () => {
       const resultNominal = calculateProjection(
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { compoundingMethod: 'nominal', equityReturn: 12, bondReturn: 8, cashReturn: 6, equityVolatility: 16, bondVolatility: 8, inflationRate: 5.5 }
+        {
+          compoundingMethod: "nominal",
+          equityReturn: 12,
+          bondReturn: 8,
+          cashReturn: 6,
+          equityVolatility: 16,
+          bondVolatility: 8,
+          inflationRate: 5.5,
+        },
       )
 
       const resultCompound = calculateProjection(
@@ -385,7 +401,15 @@ describe('calculateProjection', () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { compoundingMethod: 'compound', equityReturn: 12, bondReturn: 8, cashReturn: 6, equityVolatility: 16, bondVolatility: 8, inflationRate: 5.5 }
+        {
+          compoundingMethod: "compound",
+          equityReturn: 12,
+          bondReturn: 8,
+          cashReturn: 6,
+          equityVolatility: 16,
+          bondVolatility: 8,
+          inflationRate: 5.5,
+        },
       )
 
       // Compound should be slightly lower than nominal (more accurate)
@@ -393,43 +417,42 @@ describe('calculateProjection', () => {
     })
   })
 
-  describe('Drawdown strategies', () => {
-    it('should handle fixed_percentage withdrawal strategy', () => {
-      const result = calculateProjection(
-        [baseAccount],
-        basePersonalInfo,
-        baseRetirementGoals,
-        { strategy: 'fixed_percentage', initialWithdrawalRate: 4, minimumWithdrawal: 10000, maximumWithdrawal: 50000, lumpSumPercentage: 0 }
-      )
+  describe("Drawdown strategies", () => {
+    it("should handle fixed_percentage withdrawal strategy", () => {
+      const result = calculateProjection([baseAccount], basePersonalInfo, baseRetirementGoals, {
+        strategy: "fixed_percentage",
+        initialWithdrawalRate: 4,
+        minimumWithdrawal: 10000,
+        maximumWithdrawal: 50000,
+        lumpSumPercentage: 0,
+      })
 
       expect(result.monthlyIncomeAtRetirement).toBeGreaterThan(0)
     })
 
-    it('should handle fixed_amount_inflation_adjusted withdrawal strategy', () => {
-      const result = calculateProjection(
-        [baseAccount],
-        basePersonalInfo,
-        baseRetirementGoals,
-        { strategy: 'fixed_amount_inflation_adjusted', initialWithdrawalRate: 4, minimumWithdrawal: 10000, maximumWithdrawal: 50000, lumpSumPercentage: 0 }
-      )
+    it("should handle fixed_amount_inflation_adjusted withdrawal strategy", () => {
+      const result = calculateProjection([baseAccount], basePersonalInfo, baseRetirementGoals, {
+        strategy: "fixed_amount_inflation_adjusted",
+        initialWithdrawalRate: 4,
+        minimumWithdrawal: 10000,
+        maximumWithdrawal: 50000,
+        lumpSumPercentage: 0,
+      })
 
       // Should try to maintain desired monthly income inflated to retirement
       // Desired income of R30k today becomes ~R161k at retirement after 30 years of 5.5% inflation
       const inflationFactor = Math.pow(1 + baseRetirementGoals.inflationRate / 100, 30)
       const expectedInflatedMonthly = baseRetirementGoals.desiredMonthlyIncome * inflationFactor
 
-      expect(result.monthlyIncomeAtRetirement).toBeCloseTo(
-        expectedInflatedMonthly,
-        -2
-      )
+      expect(result.monthlyIncomeAtRetirement).toBeCloseTo(expectedInflatedMonthly, -2)
     })
 
-    it('should apply spending phase multipliers correctly', () => {
+    it("should apply spending phase multipliers correctly", () => {
       const result = calculateProjection(
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       const accumulationYears = 30
@@ -450,20 +473,20 @@ describe('calculateProjection', () => {
     })
   })
 
-  describe('Inflation adjustments', () => {
-    it('should inflate desired income to retirement date', () => {
+  describe("Inflation adjustments", () => {
+    it("should inflate desired income to retirement date", () => {
       const result = calculateProjection(
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       // Over 30 years at 5.5% inflation:
       // R30,000 becomes R30,000 * (1.055)^30 ≈ R161,000
       const inflationFactor = Math.pow(
         1 + baseRetirementGoals.inflationRate / 100,
-        basePersonalInfo.retirementAge - basePersonalInfo.currentAge
+        basePersonalInfo.retirementAge - basePersonalInfo.currentAge,
       )
       const expectedInflatedIncome = baseRetirementGoals.desiredMonthlyIncome * inflationFactor
 
@@ -473,19 +496,23 @@ describe('calculateProjection', () => {
       expect(firstWithdrawal).toBeGreaterThan(baseRetirementGoals.desiredMonthlyIncome * 12)
     })
 
-    it('should show inflation-adjusted withdrawals correctly', () => {
+    it("should show inflation-adjusted withdrawals correctly", () => {
       const result = calculateProjection(
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       const accumulationYears = 30
       const inflationRate = baseRetirementGoals.inflationRate / 100
 
       // Verify inflation-adjusted withdrawals decrease (when converted back to today's Rands)
-      for (let i = accumulationYears + 1; i < Math.min(accumulationYears + 5, result.yearlyProjections.length); i++) {
+      for (
+        let i = accumulationYears + 1;
+        i < Math.min(accumulationYears + 5, result.yearlyProjections.length);
+        i++
+      ) {
         if (result.yearlyProjections[i].withdrawals > 0) {
           expect(result.yearlyProjections[i].inflationAdjustedWithdrawal).toBeGreaterThan(0)
         }
@@ -500,7 +527,7 @@ describe('calculateProjection', () => {
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       const inflationRate = baseRetirementGoals.inflationRate / 100
@@ -509,7 +536,11 @@ describe('calculateProjection', () => {
       // Each yearlyProjections index i is exactly i years from today, so the
       // correct "today's Rands" divisor is (1+inflation)^i for every entry —
       // accumulation and drawdown alike.
-      for (let i = yearsToRetirement; i < Math.min(yearsToRetirement + 5, result.yearlyProjections.length); i++) {
+      for (
+        let i = yearsToRetirement;
+        i < Math.min(yearsToRetirement + 5, result.yearlyProjections.length);
+        i++
+      ) {
         const yp = result.yearlyProjections[i]
         if (yp.withdrawals > 0) {
           const expected = yp.withdrawals / Math.pow(1 + inflationRate, i)
@@ -522,18 +553,18 @@ describe('calculateProjection', () => {
       // nominal withdrawal, not (almost) equal to it.
       const firstDrawdownYear = result.yearlyProjections[yearsToRetirement]
       expect(firstDrawdownYear.inflationAdjustedWithdrawal).toBeLessThan(
-        firstDrawdownYear.withdrawals / 2
+        firstDrawdownYear.withdrawals / 2,
       )
     })
   })
 
-  describe('Growth and fees calculation', () => {
-    it('should calculate positive growth during accumulation', () => {
+  describe("Growth and fees calculation", () => {
+    it("should calculate positive growth during accumulation", () => {
       const result = calculateProjection(
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       const accumulationYears = 30
@@ -547,12 +578,12 @@ describe('calculateProjection', () => {
       expect(totalGrowth).toBeGreaterThan(0)
     })
 
-    it('should deduct fees from portfolio', () => {
+    it("should deduct fees from portfolio", () => {
       const result = calculateProjection(
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       const accumulationYears = 30
@@ -566,7 +597,7 @@ describe('calculateProjection', () => {
       expect(totalFees).toBeGreaterThan(0)
     })
 
-    it('should show that portfolio growth reduces by fee amount', () => {
+    it("should show that portfolio growth reduces by fee amount", () => {
       const lowFeeAccount: Account = {
         ...baseAccount,
         annualFees: 0.5,
@@ -581,23 +612,25 @@ describe('calculateProjection', () => {
         [lowFeeAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       const highFeeResult = calculateProjection(
         [highFeeAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       // Lower fees should result in higher portfolio at retirement
-      expect(lowFeeResult.portfolioAtRetirement).toBeGreaterThan(highFeeResult.portfolioAtRetirement)
+      expect(lowFeeResult.portfolioAtRetirement).toBeGreaterThan(
+        highFeeResult.portfolioAtRetirement,
+      )
     })
   })
 
-  describe('Shortfall/Surplus calculation', () => {
-    it('should calculate shortfall only when portfolio depletes', () => {
+  describe("Shortfall/Surplus calculation", () => {
+    it("should calculate shortfall only when portfolio depletes", () => {
       // With R10k starting + R50/month against R30k/month desired,
       // the portfolio will likely survive (barely) due to spending phase reductions.
       // If it survives with surplus, shortfall = 0 (gaps were strategy, not depletion)
@@ -611,7 +644,7 @@ describe('calculateProjection', () => {
         [lowAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       // Asserted unconditionally with absolute values. This test previously read
@@ -637,7 +670,7 @@ describe('calculateProjection', () => {
       expect(firstYearWithdrawal).toBeLessThan(desiredFirstYear * 0.02)
     })
 
-    it('should calculate surplus when portfolio exceeds needs', () => {
+    it("should calculate surplus when portfolio exceeds needs", () => {
       const abundantAccount: Account = {
         ...baseAccount,
         currentBalance: 5000000, // Very high starting balance
@@ -648,14 +681,14 @@ describe('calculateProjection', () => {
         [abundantAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       expect(result.surplusAmount).toBeGreaterThan(0)
       expect(result.shortfallAmount).toBe(0)
     })
 
-    it('should enforce logical consistency: depletion incompatible with surplus', () => {
+    it("should enforce logical consistency: depletion incompatible with surplus", () => {
       // Critical constraint: if portfolio depletes, surplus must be 0
       // (You can have surplus + shortfall if portfolio survives but withdrew less than desired)
       const insufficientAccount: Account = {
@@ -668,7 +701,7 @@ describe('calculateProjection', () => {
         [insufficientAccount],
         basePersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       // This fixture survives (fixed_percentage cannot deplete — see above), so assert
@@ -677,12 +710,8 @@ describe('calculateProjection', () => {
       expect(result.surplusAmount).toBeGreaterThan(0)
     })
 
-    it.each([
-      'fixed_amount_inflation_adjusted',
-      'variable_percentage',
-      'guardrails',
-    ] as const)(
-      'should calculate shortfall when portfolio insufficient under %s strategy',
+    it.each(["fixed_amount_inflation_adjusted", "variable_percentage", "guardrails"] as const)(
+      "should calculate shortfall when portfolio insufficient under %s strategy",
       (strategy) => {
         // Bug: calculateInitialWithdrawal returns the desired income verbatim
         // (mod min/max clamp) for these three strategies, so comparing it back
@@ -699,7 +728,7 @@ describe('calculateProjection', () => {
           [insufficientAccount],
           basePersonalInfo,
           baseRetirementGoals,
-          { ...baseDrawdownConfig, strategy }
+          { ...baseDrawdownConfig, strategy },
         )
 
         // The portfolio can't possibly sustain R30k/month for 25 years off a
@@ -707,11 +736,11 @@ describe('calculateProjection', () => {
         // reflect that as a real shortfall.
         expect(result.portfolioDepletionAge).not.toBeNull()
         expect(result.shortfallAmount).toBeGreaterThan(0)
-      }
+      },
     )
   })
 
-  describe('Depletion detection', () => {
+  describe("Depletion detection", () => {
     // The depletion check runs at the START of each drawdown year, so a portfolio
     // that empties DURING the final year was never recorded — there is no
     // subsequent iteration to observe the zero balance. The engine then reported
@@ -719,10 +748,10 @@ describe('calculateProjection', () => {
     // (portfolioDepletionAge null) at the same time.
     const depletesInFinalYear = {
       account: {
-        id: '1',
-        name: 'Preservation',
-        type: 'preservation_fund',
-        provider: 'Test Provider',
+        id: "1",
+        name: "Preservation",
+        type: "preservation_fund",
+        provider: "Test Provider",
         currentBalance: 4500000,
         monthlyContribution: 15000,
         expectedReturn: 11,
@@ -741,7 +770,7 @@ describe('calculateProjection', () => {
         legacyAmount: 0,
       } as RetirementGoals,
       config: {
-        strategy: 'fixed_amount_inflation_adjusted',
+        strategy: "fixed_amount_inflation_adjusted",
         initialWithdrawalRate: 4,
         minimumWithdrawal: 10000,
         maximumWithdrawal: 200000,
@@ -749,7 +778,7 @@ describe('calculateProjection', () => {
       } as DrawdownConfig,
     }
 
-    it('should record a depletion age when the portfolio empties in the final year', () => {
+    it("should record a depletion age when the portfolio empties in the final year", () => {
       const { account, personal, goals, config } = depletesInFinalYear
       const result = calculateProjection([account], personal, goals, config)
 
@@ -759,10 +788,10 @@ describe('calculateProjection', () => {
       expect(result.surplusAmount).toBe(0)
 
       expect(result.portfolioDepletionAge).not.toBeNull()
-      expect(typeof result.portfolioDepletionAge).toBe('number')
+      expect(typeof result.portfolioDepletionAge).toBe("number")
     })
 
-    it('should never report a depletion age alongside a surviving balance', () => {
+    it("should never report a depletion age alongside a surviving balance", () => {
       const { account, personal, goals, config } = depletesInFinalYear
       const result = calculateProjection([account], personal, goals, config)
 
@@ -774,7 +803,7 @@ describe('calculateProjection', () => {
     })
   })
 
-  describe('Tax-optimized withdrawal sequencing', () => {
+  describe("Tax-optimized withdrawal sequencing", () => {
     const shortHorizonInfo: PersonalInfo = {
       currentAge: 63,
       retirementAge: 65,
@@ -782,52 +811,65 @@ describe('calculateProjection', () => {
       annualIncome: 600000,
     }
 
-    it('TFSA withdrawal should produce zero taxable income', () => {
+    it("TFSA withdrawal should produce zero taxable income", () => {
       const tfsaAccount: Account = {
-        id: '1',
-        name: 'TFSA',
-        type: 'tfsa',
-        provider: 'Test',
+        id: "1",
+        name: "TFSA",
+        type: "tfsa",
+        provider: "Test",
         currentBalance: 1000000,
         monthlyContribution: 0,
         expectedReturn: 8,
         annualFees: 0.5,
         contributionEscalation: 0,
       }
-      const result = calculateProjection([tfsaAccount], shortHorizonInfo, baseRetirementGoals, baseDrawdownConfig)
-      const firstRetirementYear = result.yearlyProjections.find(p => p.age === 65)!
+      const result = calculateProjection(
+        [tfsaAccount],
+        shortHorizonInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig,
+      )
+      const firstRetirementYear = result.yearlyProjections.find((p) => p.age === 65)!
       expect(firstRetirementYear.tfsaWithdrawal).toBeGreaterThan(0)
       expect(firstRetirementYear.pensionWithdrawal).toBe(0)
       expect(firstRetirementYear.taxableIncome).toBe(0)
       expect(firstRetirementYear.incomeTax).toBe(0)
     })
 
-    it('pension-only withdrawal should be fully taxable', () => {
+    it("pension-only withdrawal should be fully taxable", () => {
       const raAccount: Account = {
-        id: '1',
-        name: 'RA',
-        type: 'retirement_annuity',
-        provider: 'Test',
+        id: "1",
+        name: "RA",
+        type: "retirement_annuity",
+        provider: "Test",
         currentBalance: 1000000,
         monthlyContribution: 0,
         expectedReturn: 8,
         annualFees: 0.5,
         contributionEscalation: 0,
       }
-      const result = calculateProjection([raAccount], shortHorizonInfo, baseRetirementGoals, baseDrawdownConfig)
-      const firstRetirementYear = result.yearlyProjections.find(p => p.age === 65)!
+      const result = calculateProjection(
+        [raAccount],
+        shortHorizonInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig,
+      )
+      const firstRetirementYear = result.yearlyProjections.find((p) => p.age === 65)!
       expect(firstRetirementYear.pensionWithdrawal).toBeGreaterThan(0)
       expect(firstRetirementYear.tfsaWithdrawal).toBe(0)
-      expect(firstRetirementYear.taxableIncome).toBeCloseTo(firstRetirementYear.pensionWithdrawal!, 0)
+      expect(firstRetirementYear.taxableIncome).toBeCloseTo(
+        firstRetirementYear.pensionWithdrawal!,
+        0,
+      )
     })
 
-    it('TFSA-first sequencing reduces lifetime income tax vs pension-only portfolio of same size', () => {
+    it("TFSA-first sequencing reduces lifetime income tax vs pension-only portfolio of same size", () => {
       // Use a large portfolio so pension withdrawals clearly exceed the R153k age-65 tax threshold
       const tfsaAccount: Account = {
-        id: '1',
-        name: 'TFSA',
-        type: 'tfsa',
-        provider: 'Test',
+        id: "1",
+        name: "TFSA",
+        type: "tfsa",
+        provider: "Test",
         currentBalance: 3000000,
         monthlyContribution: 0,
         expectedReturn: 8,
@@ -835,10 +877,10 @@ describe('calculateProjection', () => {
         contributionEscalation: 0,
       }
       const raAccount: Account = {
-        id: '2',
-        name: 'RA',
-        type: 'retirement_annuity',
-        provider: 'Test',
+        id: "2",
+        name: "RA",
+        type: "retirement_annuity",
+        provider: "Test",
         currentBalance: 3000000,
         monthlyContribution: 0,
         expectedReturn: 8,
@@ -847,23 +889,33 @@ describe('calculateProjection', () => {
       }
       const raOnlyAccount: Account = {
         ...raAccount,
-        id: '1',
+        id: "1",
         currentBalance: 6000000,
       }
 
-      const mixedResult = calculateProjection([tfsaAccount, raAccount], shortHorizonInfo, baseRetirementGoals, baseDrawdownConfig)
-      const raOnlyResult = calculateProjection([raOnlyAccount], shortHorizonInfo, baseRetirementGoals, baseDrawdownConfig)
+      const mixedResult = calculateProjection(
+        [tfsaAccount, raAccount],
+        shortHorizonInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig,
+      )
+      const raOnlyResult = calculateProjection(
+        [raOnlyAccount],
+        shortHorizonInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig,
+      )
 
       // Mixed portfolio draws from TFSA first (tax-free), so total income tax must be lower
       expect(mixedResult.totalLifetimeIncomeTax).toBeLessThan(raOnlyResult.totalLifetimeIncomeTax)
     })
 
-    it('TFSA exhausted before switching to pension', () => {
+    it("TFSA exhausted before switching to pension", () => {
       const smallTfsa: Account = {
-        id: '1',
-        name: 'Small TFSA',
-        type: 'tfsa',
-        provider: 'Test',
+        id: "1",
+        name: "Small TFSA",
+        type: "tfsa",
+        provider: "Test",
         currentBalance: 50000, // Will be exhausted quickly
         monthlyContribution: 0,
         expectedReturn: 8,
@@ -871,18 +923,23 @@ describe('calculateProjection', () => {
         contributionEscalation: 0,
       }
       const raAccount: Account = {
-        id: '2',
-        name: 'RA',
-        type: 'retirement_annuity',
-        provider: 'Test',
+        id: "2",
+        name: "RA",
+        type: "retirement_annuity",
+        provider: "Test",
         currentBalance: 2000000,
         monthlyContribution: 0,
         expectedReturn: 8,
         annualFees: 0.5,
         contributionEscalation: 0,
       }
-      const result = calculateProjection([smallTfsa, raAccount], shortHorizonInfo, baseRetirementGoals, baseDrawdownConfig)
-      const retirementYears = result.yearlyProjections.filter(p => p.age >= 65)
+      const result = calculateProjection(
+        [smallTfsa, raAccount],
+        shortHorizonInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig,
+      )
+      const retirementYears = result.yearlyProjections.filter((p) => p.age >= 65)
 
       // First year should have some TFSA withdrawal
       expect(retirementYears[0].tfsaWithdrawal).toBeGreaterThan(0)
@@ -892,20 +949,25 @@ describe('calculateProjection', () => {
       expect(laterYear.pensionWithdrawal).toBeGreaterThan(0)
     })
 
-    it('discretionary withdrawal applies CGT inclusion but not full income tax', () => {
+    it("discretionary withdrawal applies CGT inclusion but not full income tax", () => {
       const discretionaryAccount: Account = {
-        id: '1',
-        name: 'Discretionary',
-        type: 'discretionary',
-        provider: 'Test',
+        id: "1",
+        name: "Discretionary",
+        type: "discretionary",
+        provider: "Test",
         currentBalance: 1000000,
         monthlyContribution: 0,
         expectedReturn: 8,
         annualFees: 0.5,
         contributionEscalation: 0,
       }
-      const result = calculateProjection([discretionaryAccount], shortHorizonInfo, baseRetirementGoals, baseDrawdownConfig)
-      const firstYear = result.yearlyProjections.find(p => p.age === 65)!
+      const result = calculateProjection(
+        [discretionaryAccount],
+        shortHorizonInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig,
+      )
+      const firstYear = result.yearlyProjections.find((p) => p.age === 65)!
 
       expect(firstYear.discretionaryWithdrawal).toBeGreaterThan(0)
       // Taxable income should be less than gross withdrawal (only gain × 40% is included)
@@ -913,7 +975,7 @@ describe('calculateProjection', () => {
     })
   })
 
-  describe('Account-type-aware lump sum commutation', () => {
+  describe("Account-type-aware lump sum commutation", () => {
     const shortHorizonInfo: PersonalInfo = {
       currentAge: 63,
       retirementAge: 65,
@@ -922,10 +984,10 @@ describe('calculateProjection', () => {
     }
 
     const raAccount: Account = {
-      id: 'ra-1',
-      name: 'RA',
-      type: 'retirement_annuity',
-      provider: 'Test',
+      id: "ra-1",
+      name: "RA",
+      type: "retirement_annuity",
+      provider: "Test",
       currentBalance: 1000000,
       monthlyContribution: 0,
       expectedReturn: 8,
@@ -933,10 +995,10 @@ describe('calculateProjection', () => {
       contributionEscalation: 0,
     }
     const tfsaAccount: Account = {
-      id: 'tfsa-1',
-      name: 'TFSA',
-      type: 'tfsa',
-      provider: 'Test',
+      id: "tfsa-1",
+      name: "TFSA",
+      type: "tfsa",
+      provider: "Test",
       currentBalance: 1000000,
       monthlyContribution: 0,
       expectedReturn: 8,
@@ -944,10 +1006,10 @@ describe('calculateProjection', () => {
       contributionEscalation: 0,
     }
     const discretionaryAccount: Account = {
-      id: 'disc-1',
-      name: 'Discretionary',
-      type: 'discretionary',
-      provider: 'Test',
+      id: "disc-1",
+      name: "Discretionary",
+      type: "discretionary",
+      provider: "Test",
       currentBalance: 1000000,
       monthlyContribution: 0,
       expectedReturn: 8,
@@ -955,76 +1017,116 @@ describe('calculateProjection', () => {
       contributionEscalation: 0,
     }
 
-    it('does not apply lump sum commutation to TFSA balances', () => {
-      const noLumpSum = calculateProjection([tfsaAccount], shortHorizonInfo, baseRetirementGoals, { ...baseDrawdownConfig, lumpSumPercentage: 0 })
-      const withLumpSum = calculateProjection([tfsaAccount], shortHorizonInfo, baseRetirementGoals, { ...baseDrawdownConfig, lumpSumPercentage: 30 })
+    it("does not apply lump sum commutation to TFSA balances", () => {
+      const noLumpSum = calculateProjection([tfsaAccount], shortHorizonInfo, baseRetirementGoals, {
+        ...baseDrawdownConfig,
+        lumpSumPercentage: 0,
+      })
+      const withLumpSum = calculateProjection(
+        [tfsaAccount],
+        shortHorizonInfo,
+        baseRetirementGoals,
+        { ...baseDrawdownConfig, lumpSumPercentage: 30 },
+      )
 
-      expect(withLumpSum.accountBalancesAtRetirement['tfsa-1']).toBeCloseTo(
-        noLumpSum.accountBalancesAtRetirement['tfsa-1'], 0
+      expect(withLumpSum.accountBalancesAtRetirement["tfsa-1"]).toBeCloseTo(
+        noLumpSum.accountBalancesAtRetirement["tfsa-1"],
+        0,
       )
       expect(withLumpSum.lumpSumCommutation.lumpSumAmount).toBe(0)
     })
 
-    it('does not apply lump sum commutation to discretionary balances', () => {
-      const noLumpSum = calculateProjection([discretionaryAccount], shortHorizonInfo, baseRetirementGoals, { ...baseDrawdownConfig, lumpSumPercentage: 0 })
-      const withLumpSum = calculateProjection([discretionaryAccount], shortHorizonInfo, baseRetirementGoals, { ...baseDrawdownConfig, lumpSumPercentage: 30 })
+    it("does not apply lump sum commutation to discretionary balances", () => {
+      const noLumpSum = calculateProjection(
+        [discretionaryAccount],
+        shortHorizonInfo,
+        baseRetirementGoals,
+        { ...baseDrawdownConfig, lumpSumPercentage: 0 },
+      )
+      const withLumpSum = calculateProjection(
+        [discretionaryAccount],
+        shortHorizonInfo,
+        baseRetirementGoals,
+        { ...baseDrawdownConfig, lumpSumPercentage: 30 },
+      )
 
-      expect(withLumpSum.accountBalancesAtRetirement['disc-1']).toBeCloseTo(
-        noLumpSum.accountBalancesAtRetirement['disc-1'], 0
+      expect(withLumpSum.accountBalancesAtRetirement["disc-1"]).toBeCloseTo(
+        noLumpSum.accountBalancesAtRetirement["disc-1"],
+        0,
       )
       expect(withLumpSum.lumpSumCommutation.lumpSumAmount).toBe(0)
     })
 
-    it('applies lump sum commutation only to the pension-type portion of a mixed portfolio', () => {
+    it("applies lump sum commutation only to the pension-type portion of a mixed portfolio", () => {
       const result = calculateProjection(
         [raAccount, tfsaAccount, discretionaryAccount],
         shortHorizonInfo,
         baseRetirementGoals,
-        { ...baseDrawdownConfig, lumpSumPercentage: 30 }
+        { ...baseDrawdownConfig, lumpSumPercentage: 30 },
       )
-      const soloRa = calculateProjection([raAccount], shortHorizonInfo, baseRetirementGoals, { ...baseDrawdownConfig, lumpSumPercentage: 0 })
-      const soloTfsa = calculateProjection([tfsaAccount], shortHorizonInfo, baseRetirementGoals, { ...baseDrawdownConfig, lumpSumPercentage: 0 })
-      const soloDisc = calculateProjection([discretionaryAccount], shortHorizonInfo, baseRetirementGoals, { ...baseDrawdownConfig, lumpSumPercentage: 0 })
+      const soloRa = calculateProjection([raAccount], shortHorizonInfo, baseRetirementGoals, {
+        ...baseDrawdownConfig,
+        lumpSumPercentage: 0,
+      })
+      const soloTfsa = calculateProjection([tfsaAccount], shortHorizonInfo, baseRetirementGoals, {
+        ...baseDrawdownConfig,
+        lumpSumPercentage: 0,
+      })
+      const soloDisc = calculateProjection(
+        [discretionaryAccount],
+        shortHorizonInfo,
+        baseRetirementGoals,
+        { ...baseDrawdownConfig, lumpSumPercentage: 0 },
+      )
 
       // RA balance reduced by ~30% (the commutation), TFSA/discretionary untouched
-      expect(result.accountBalancesAtRetirement['ra-1']).toBeCloseTo(soloRa.accountBalancesAtRetirement['ra-1'] * 0.7, 0)
-      expect(result.accountBalancesAtRetirement['tfsa-1']).toBeCloseTo(soloTfsa.accountBalancesAtRetirement['tfsa-1'], 0)
-      expect(result.accountBalancesAtRetirement['disc-1']).toBeCloseTo(soloDisc.accountBalancesAtRetirement['disc-1'], 0)
+      expect(result.accountBalancesAtRetirement["ra-1"]).toBeCloseTo(
+        soloRa.accountBalancesAtRetirement["ra-1"] * 0.7,
+        0,
+      )
+      expect(result.accountBalancesAtRetirement["tfsa-1"]).toBeCloseTo(
+        soloTfsa.accountBalancesAtRetirement["tfsa-1"],
+        0,
+      )
+      expect(result.accountBalancesAtRetirement["disc-1"]).toBeCloseTo(
+        soloDisc.accountBalancesAtRetirement["disc-1"],
+        0,
+      )
 
       // The taxable lump sum should be based only on the RA balance, not the full mixed portfolio
-      expect(result.lumpSumCommutation.lumpSumAmount).toBeCloseTo(soloRa.accountBalancesAtRetirement['ra-1'] * 0.3, 0)
+      expect(result.lumpSumCommutation.lumpSumAmount).toBeCloseTo(
+        soloRa.accountBalancesAtRetirement["ra-1"] * 0.3,
+        0,
+      )
     })
 
-    it('clamps lump sum commutation to one-third even when a larger percentage is requested', () => {
-      const result = calculateProjection(
-        [raAccount],
-        shortHorizonInfo,
-        baseRetirementGoals,
-        { ...baseDrawdownConfig, lumpSumPercentage: 90 }
-      )
-      const cappedAt33 = calculateProjection(
-        [raAccount],
-        shortHorizonInfo,
-        baseRetirementGoals,
-        { ...baseDrawdownConfig, lumpSumPercentage: 100 / 3 }
-      )
+    it("clamps lump sum commutation to one-third even when a larger percentage is requested", () => {
+      const result = calculateProjection([raAccount], shortHorizonInfo, baseRetirementGoals, {
+        ...baseDrawdownConfig,
+        lumpSumPercentage: 90,
+      })
+      const cappedAt33 = calculateProjection([raAccount], shortHorizonInfo, baseRetirementGoals, {
+        ...baseDrawdownConfig,
+        lumpSumPercentage: 100 / 3,
+      })
 
       expect(result.lumpSumCommutation.lumpSumPercentage).toBeCloseTo(100 / 3, 2)
-      expect(result.lumpSumCommutation.lumpSumAmount).toBeCloseTo(cappedAt33.lumpSumCommutation.lumpSumAmount, 0)
+      expect(result.lumpSumCommutation.lumpSumAmount).toBeCloseTo(
+        cappedAt33.lumpSumCommutation.lumpSumAmount,
+        0,
+      )
     })
 
-    it('does not clamp a request already within the one-third limit', () => {
-      const result = calculateProjection(
-        [raAccount],
-        shortHorizonInfo,
-        baseRetirementGoals,
-        { ...baseDrawdownConfig, lumpSumPercentage: 25 }
-      )
+    it("does not clamp a request already within the one-third limit", () => {
+      const result = calculateProjection([raAccount], shortHorizonInfo, baseRetirementGoals, {
+        ...baseDrawdownConfig,
+        lumpSumPercentage: 25,
+      })
       expect(result.lumpSumCommutation.lumpSumPercentage).toBe(25)
     })
   })
 
-  describe('CGT annual exclusion on discretionary withdrawals', () => {
+  describe("CGT annual exclusion on discretionary withdrawals", () => {
     const shortHorizonInfo: PersonalInfo = {
       currentAge: 63,
       retirementAge: 65,
@@ -1032,12 +1134,12 @@ describe('calculateProjection', () => {
       annualIncome: 600000,
     }
 
-    it('produces zero CGT when the realized gain is below the annual exclusion', () => {
+    it("produces zero CGT when the realized gain is below the annual exclusion", () => {
       const smallDiscretionary: Account = {
-        id: 'disc-small',
-        name: 'Discretionary',
-        type: 'discretionary',
-        provider: 'Test',
+        id: "disc-small",
+        name: "Discretionary",
+        type: "discretionary",
+        provider: "Test",
         currentBalance: 100000,
         monthlyContribution: 0,
         expectedReturn: 8,
@@ -1048,20 +1150,20 @@ describe('calculateProjection', () => {
         [smallDiscretionary],
         shortHorizonInfo,
         baseRetirementGoals,
-        baseDrawdownConfig // 4% fixed_percentage withdrawal -> small realized gain
+        baseDrawdownConfig, // 4% fixed_percentage withdrawal -> small realized gain
       )
-      const firstYear = result.yearlyProjections.find(p => p.age === 65)!
+      const firstYear = result.yearlyProjections.find((p) => p.age === 65)!
 
       expect(firstYear.discretionaryWithdrawal).toBeGreaterThan(0)
       expect(firstYear.cgtTaxableAmount).toBe(0)
     })
 
-    it('taxes only the gain in excess of the annual exclusion', () => {
+    it("taxes only the gain in excess of the annual exclusion", () => {
       const largeDiscretionary: Account = {
-        id: 'disc-large',
-        name: 'Discretionary',
-        type: 'discretionary',
-        provider: 'Test',
+        id: "disc-large",
+        name: "Discretionary",
+        type: "discretionary",
+        provider: "Test",
         currentBalance: 50000000,
         monthlyContribution: 0,
         expectedReturn: 8,
@@ -1072,9 +1174,14 @@ describe('calculateProjection', () => {
         [largeDiscretionary],
         shortHorizonInfo,
         baseRetirementGoals,
-        { ...baseDrawdownConfig, strategy: 'fixed_percentage', initialWithdrawalRate: 80, lumpSumPercentage: 0 }
+        {
+          ...baseDrawdownConfig,
+          strategy: "fixed_percentage",
+          initialWithdrawalRate: 80,
+          lumpSumPercentage: 0,
+        },
       )
-      const firstYear = result.yearlyProjections.find(p => p.age === 65)!
+      const firstYear = result.yearlyProjections.find((p) => p.age === 65)!
 
       // Replicate the engine's exact math: 2 years monthly-compounded accumulation
       // (nominal method, no contributions), then one year of simple-annual drawdown growth.
@@ -1086,7 +1193,9 @@ describe('calculateProjection', () => {
       const take = Math.min(annualWithdrawal, currentTotal)
       const gainFraction = (currentTotal - 50000000) / currentTotal
       const gainTaken = take * gainFraction
-      const expectedCgt = Math.max(0, gainTaken - SA_TAX_LIMITS.cgtAnnualExclusion) * SA_TAX_LIMITS.cgtInclusionRateIndividual
+      const expectedCgt =
+        Math.max(0, gainTaken - SA_TAX_LIMITS.cgtAnnualExclusion) *
+        SA_TAX_LIMITS.cgtInclusionRateIndividual
 
       expect(firstYear.cgtTaxableAmount).toBeCloseTo(expectedCgt, -1)
       expect(firstYear.cgtTaxableAmount).toBeGreaterThan(0)
@@ -1095,13 +1204,13 @@ describe('calculateProjection', () => {
     })
   })
 
-  describe('SA retirement scenario testing', () => {
-    it('should handle typical professional retirement scenario', () => {
+  describe("SA retirement scenario testing", () => {
+    it("should handle typical professional retirement scenario", () => {
       const professionalAccount: Account = {
-        id: '1',
-        name: 'Professional RA',
-        type: 'retirement_annuity',
-    provider: 'Test Provider',
+        id: "1",
+        name: "Professional RA",
+        type: "retirement_annuity",
+        provider: "Test Provider",
         currentBalance: 500000,
         monthlyContribution: 2500,
         expectedReturn: 11,
@@ -1122,19 +1231,19 @@ describe('calculateProjection', () => {
           inflationRate: 5.5,
           legacyAmount: 0,
         },
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       expect(result.portfolioAtRetirement).toBeGreaterThan(500000)
       expect(result.monthlyIncomeAtRetirement).toBeGreaterThan(0)
     })
 
-    it('should handle young saver with long horizon', () => {
+    it("should handle young saver with long horizon", () => {
       const youngSaverAccount: Account = {
-        id: '1',
-        name: 'Young Saver TFSA',
-        type: 'tfsa',
-    provider: 'Test Provider',
+        id: "1",
+        name: "Young Saver TFSA",
+        type: "tfsa",
+        provider: "Test Provider",
         currentBalance: 50000,
         monthlyContribution: 1000,
         expectedReturn: 10,
@@ -1155,7 +1264,7 @@ describe('calculateProjection', () => {
           inflationRate: 5.5,
           legacyAmount: 0,
         },
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       // 40 years of compounding should result in substantial portfolio
@@ -1163,12 +1272,12 @@ describe('calculateProjection', () => {
     })
   })
 
-  describe('TFSA contribution limits', () => {
+  describe("TFSA contribution limits", () => {
     const tfsaAccount: Account = {
-      id: 'tfsa-1',
-      name: 'My TFSA',
-      type: 'tfsa',
-      provider: 'Allan Gray',
+      id: "tfsa-1",
+      name: "My TFSA",
+      type: "tfsa",
+      provider: "Allan Gray",
       currentBalance: 200000,
       monthlyContribution: 3000, // R36k/year — at annual limit
       expectedReturn: 10,
@@ -1184,14 +1293,14 @@ describe('calculateProjection', () => {
       annualIncome: 400000,
     }
 
-    it('should stop contributions once lifetime limit (R500k) is reached', () => {
+    it("should stop contributions once lifetime limit (R500k) is reached", () => {
       // R200k to date + R36k/year × 10 years = R560k > R500k
       // So contributions should stop after ~8.3 years (R300k remaining / R36k p.a.)
       const result = calculateProjection(
         [tfsaAccount],
         shortPersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       // Total contributions across accumulation years must not exceed R300k remaining room
@@ -1202,11 +1311,11 @@ describe('calculateProjection', () => {
       expect(totalContributions).toBeLessThanOrEqual(300000 + 1) // R500k - R200k, tiny rounding buffer
     })
 
-    it('should allow zero further contributions when lifetime limit already reached', () => {
+    it("should allow zero further contributions when lifetime limit already reached", () => {
       const fullAccount: Account = {
         ...tfsaAccount,
         tfsaContributionsToDate: 500000, // lifetime maxed out
-        currentBalance: 650000,          // balance can exceed limit (it's growth)
+        currentBalance: 650000, // balance can exceed limit (it's growth)
         monthlyContribution: 3000,
       }
 
@@ -1214,7 +1323,7 @@ describe('calculateProjection', () => {
         [fullAccount],
         shortPersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       const totalContributions = result.yearlyProjections
@@ -1224,7 +1333,7 @@ describe('calculateProjection', () => {
       expect(totalContributions).toBe(0)
     })
 
-    it('should cap annual contributions at R46k even with higher monthly amounts', () => {
+    it("should cap annual contributions at R46k even with higher monthly amounts", () => {
       const overContributingAccount: Account = {
         ...tfsaAccount,
         monthlyContribution: 5000, // R60k/year — over annual limit
@@ -1236,14 +1345,14 @@ describe('calculateProjection', () => {
         [overContributingAccount],
         shortPersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       // Year 1 contributions must not exceed R46k annual limit
       expect(result.yearlyProjections[0].contributions).toBeLessThanOrEqual(46000 + 1)
     })
 
-    it('should calculate 40% penalty on TFSA contributions exceeding annual limit', () => {
+    it("should calculate 40% penalty on TFSA contributions exceeding annual limit", () => {
       // User tries to contribute R60k/year to TFSA (R46k limit)
       // Excess = R60k - R46k = R14k
       // Penalty = R14k × 40% = R5.6k per year
@@ -1258,14 +1367,14 @@ describe('calculateProjection', () => {
         [overContributingAccount],
         shortPersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       // Year 1: R60k attempted - R46k allowed = R14k excess × 40% = R5,600 penalty
       expect(result.yearlyProjections[0].tfsaExcessContributionPenalty).toBeCloseTo(5600, 0)
     })
 
-    it('should not charge penalty when contributions are within annual limit', () => {
+    it("should not charge penalty when contributions are within annual limit", () => {
       // User contributes R36k/year (under R46k limit)
       const withinLimitAccount: Account = {
         ...tfsaAccount,
@@ -1278,14 +1387,14 @@ describe('calculateProjection', () => {
         [withinLimitAccount],
         shortPersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       // No excess contribution, penalty should be 0
       expect(result.yearlyProjections[0].tfsaExcessContributionPenalty ?? 0).toBe(0)
     })
 
-    it('should accumulate penalty across years when over-contributing consistently', () => {
+    it("should accumulate penalty across years when over-contributing consistently", () => {
       // User contributes R50k/year consistently (R4k excess per year)
       const overContributingAccount: Account = {
         ...tfsaAccount,
@@ -1298,7 +1407,7 @@ describe('calculateProjection', () => {
         [overContributingAccount],
         shortPersonalInfo, // 10 years to retirement
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       // Each year: R50k - R46k = R4k excess × 40% = R1,600 penalty
@@ -1309,11 +1418,11 @@ describe('calculateProjection', () => {
       expect(year1Penalty).toBeCloseTo(1600, 0)
     })
 
-    it('should not apply TFSA limits to non-TFSA accounts', () => {
+    it("should not apply TFSA limits to non-TFSA accounts", () => {
       const raAccount: Account = {
         ...tfsaAccount,
-        id: 'ra-1',
-        type: 'retirement_annuity',
+        id: "ra-1",
+        type: "retirement_annuity",
         monthlyContribution: 5000, // R60k/year — fine for RA
         tfsaContributionsToDate: undefined,
       }
@@ -1322,7 +1431,7 @@ describe('calculateProjection', () => {
         [raAccount],
         shortPersonalInfo,
         baseRetirementGoals,
-        baseDrawdownConfig
+        baseDrawdownConfig,
       )
 
       // Year 1 contributions should reflect full R60k (no cap for RA)
@@ -1330,7 +1439,7 @@ describe('calculateProjection', () => {
     })
   })
 
-  describe('Account depletion tracking', () => {
+  describe("Account depletion tracking", () => {
     const shortInfo: PersonalInfo = {
       currentAge: 60,
       retirementAge: 65,
@@ -1338,44 +1447,80 @@ describe('calculateProjection', () => {
       annualIncome: 600000,
     }
 
-    it('accountBalancesAtRetirement is populated for each account', () => {
-      const ra: Account = { ...baseAccount, id: 'ra-1', type: 'retirement_annuity', currentBalance: 500000 }
-      const tfsa: Account = { ...baseAccount, id: 'tfsa-1', type: 'tfsa', currentBalance: 200000, monthlyContribution: 0 }
+    it("accountBalancesAtRetirement is populated for each account", () => {
+      const ra: Account = {
+        ...baseAccount,
+        id: "ra-1",
+        type: "retirement_annuity",
+        currentBalance: 500000,
+      }
+      const tfsa: Account = {
+        ...baseAccount,
+        id: "tfsa-1",
+        type: "tfsa",
+        currentBalance: 200000,
+        monthlyContribution: 0,
+      }
 
-      const result = calculateProjection([ra, tfsa], shortInfo, baseRetirementGoals, baseDrawdownConfig)
+      const result = calculateProjection(
+        [ra, tfsa],
+        shortInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig,
+      )
 
-      expect(result.accountBalancesAtRetirement).toHaveProperty('ra-1')
-      expect(result.accountBalancesAtRetirement).toHaveProperty('tfsa-1')
-      expect(result.accountBalancesAtRetirement['ra-1']).toBeGreaterThan(0)
-      expect(result.accountBalancesAtRetirement['tfsa-1']).toBeGreaterThan(0)
+      expect(result.accountBalancesAtRetirement).toHaveProperty("ra-1")
+      expect(result.accountBalancesAtRetirement).toHaveProperty("tfsa-1")
+      expect(result.accountBalancesAtRetirement["ra-1"]).toBeGreaterThan(0)
+      expect(result.accountBalancesAtRetirement["tfsa-1"]).toBeGreaterThan(0)
     })
 
-    it('accountBalances snapshot is populated in each drawdown year projection', () => {
-      const ra: Account = { ...baseAccount, id: 'ra-1', type: 'retirement_annuity', currentBalance: 500000 }
+    it("accountBalances snapshot is populated in each drawdown year projection", () => {
+      const ra: Account = {
+        ...baseAccount,
+        id: "ra-1",
+        type: "retirement_annuity",
+        currentBalance: 500000,
+      }
 
       const result = calculateProjection([ra], shortInfo, baseRetirementGoals, baseDrawdownConfig)
 
-      const drawdownRows = result.yearlyProjections.filter(p => p.age >= shortInfo.retirementAge)
+      const drawdownRows = result.yearlyProjections.filter((p) => p.age >= shortInfo.retirementAge)
       expect(drawdownRows.length).toBeGreaterThan(0)
-      drawdownRows.forEach(row => {
+      drawdownRows.forEach((row) => {
         expect(row.accountBalances).toBeDefined()
-        expect(row.accountBalances).toHaveProperty('ra-1')
+        expect(row.accountBalances).toHaveProperty("ra-1")
       })
     })
 
-    it('accountBalances decreases monotonically for a depleting account', () => {
+    it("accountBalances decreases monotonically for a depleting account", () => {
       // Small balance forces depletion
-      const ra: Account = { ...baseAccount, id: 'ra-1', type: 'retirement_annuity', currentBalance: 50000, monthlyContribution: 0 }
-      const highWithdrawal: RetirementGoals = { ...baseRetirementGoals, desiredMonthlyIncome: 30000 }
-      const fixedPct: DrawdownConfig = { ...baseDrawdownConfig, strategy: 'fixed_percentage', initialWithdrawalRate: 10 }
+      const ra: Account = {
+        ...baseAccount,
+        id: "ra-1",
+        type: "retirement_annuity",
+        currentBalance: 50000,
+        monthlyContribution: 0,
+      }
+      const highWithdrawal: RetirementGoals = {
+        ...baseRetirementGoals,
+        desiredMonthlyIncome: 30000,
+      }
+      const fixedPct: DrawdownConfig = {
+        ...baseDrawdownConfig,
+        strategy: "fixed_percentage",
+        initialWithdrawalRate: 10,
+      }
 
       const result = calculateProjection([ra], shortInfo, highWithdrawal, fixedPct)
 
-      const drawdownRows = result.yearlyProjections.filter(p => p.age >= shortInfo.retirementAge && p.accountBalances)
+      const drawdownRows = result.yearlyProjections.filter(
+        (p) => p.age >= shortInfo.retirementAge && p.accountBalances,
+      )
       // Find the transition to zero
       let hitZero = false
       for (const row of drawdownRows) {
-        const bal = row.accountBalances!['ra-1']
+        const bal = row.accountBalances!["ra-1"]
         if (hitZero) {
           expect(bal).toBe(0)
         } else if (bal === 0) {
@@ -1384,18 +1529,37 @@ describe('calculateProjection', () => {
       }
     })
 
-    it('TFSA accountBalances depletes before pension in sequential withdrawal', () => {
+    it("TFSA accountBalances depletes before pension in sequential withdrawal", () => {
       // Small TFSA balance, large RA — TFSA should deplete first
-      const tfsa: Account = { ...baseAccount, id: 'tfsa-1', type: 'tfsa', currentBalance: 100000, monthlyContribution: 0 }
-      const ra: Account = { ...baseAccount, id: 'ra-1', type: 'retirement_annuity', currentBalance: 2000000, monthlyContribution: 0 }
+      const tfsa: Account = {
+        ...baseAccount,
+        id: "tfsa-1",
+        type: "tfsa",
+        currentBalance: 100000,
+        monthlyContribution: 0,
+      }
+      const ra: Account = {
+        ...baseAccount,
+        id: "ra-1",
+        type: "retirement_annuity",
+        currentBalance: 2000000,
+        monthlyContribution: 0,
+      }
 
-      const result = calculateProjection([tfsa, ra], shortInfo, baseRetirementGoals, baseDrawdownConfig)
+      const result = calculateProjection(
+        [tfsa, ra],
+        shortInfo,
+        baseRetirementGoals,
+        baseDrawdownConfig,
+      )
 
-      const drawdownRows = result.yearlyProjections.filter(p => p.age >= shortInfo.retirementAge && p.accountBalances)
+      const drawdownRows = result.yearlyProjections.filter(
+        (p) => p.age >= shortInfo.retirementAge && p.accountBalances,
+      )
 
       // TFSA should hit zero before RA hits zero (or TFSA hits zero while RA still has balance)
-      const tfsaDepletionYear = drawdownRows.find(r => (r.accountBalances!['tfsa-1'] ?? 0) <= 0)
-      const raDepletionYear = drawdownRows.find(r => (r.accountBalances!['ra-1'] ?? 0) <= 0)
+      const tfsaDepletionYear = drawdownRows.find((r) => (r.accountBalances!["tfsa-1"] ?? 0) <= 0)
+      const raDepletionYear = drawdownRows.find((r) => (r.accountBalances!["ra-1"] ?? 0) <= 0)
 
       expect(tfsaDepletionYear).toBeDefined() // Small TFSA should deplete
       if (raDepletionYear) {
@@ -1406,13 +1570,19 @@ describe('calculateProjection', () => {
       }
     })
 
-    it('accountBalancesAtRetirement returns empty object for no accounts', () => {
+    it("accountBalancesAtRetirement returns empty object for no accounts", () => {
       const result = calculateProjection([], shortInfo, baseRetirementGoals, baseDrawdownConfig)
       expect(result.accountBalancesAtRetirement).toEqual({})
     })
 
-    it('lump sum deduction is reflected in accountBalancesAtRetirement', () => {
-      const ra: Account = { ...baseAccount, id: 'ra-1', type: 'retirement_annuity', currentBalance: 500000, monthlyContribution: 0 }
+    it("lump sum deduction is reflected in accountBalancesAtRetirement", () => {
+      const ra: Account = {
+        ...baseAccount,
+        id: "ra-1",
+        type: "retirement_annuity",
+        currentBalance: 500000,
+        monthlyContribution: 0,
+      }
       const noLumpSum: DrawdownConfig = { ...baseDrawdownConfig, lumpSumPercentage: 0 }
       const withLumpSum: DrawdownConfig = { ...baseDrawdownConfig, lumpSumPercentage: 30 }
 
@@ -1420,64 +1590,70 @@ describe('calculateProjection', () => {
       const r2 = calculateProjection([ra], shortInfo, baseRetirementGoals, withLumpSum)
 
       // With 30% lump sum, retirement balance should be ~70% of no-lump-sum
-      const bal1 = r1.accountBalancesAtRetirement['ra-1']
-      const bal2 = r2.accountBalancesAtRetirement['ra-1']
+      const bal1 = r1.accountBalancesAtRetirement["ra-1"]
+      const bal2 = r2.accountBalancesAtRetirement["ra-1"]
       expect(bal2).toBeCloseTo(bal1 * 0.7, 0)
     })
   })
 
-  describe('Medical aid escalation', () => {
-    const shortInfo: PersonalInfo = { currentAge: 60, retirementAge: 65, lifeExpectancy: 70, annualIncome: 600000 }
+  describe("Medical aid escalation", () => {
+    const shortInfo: PersonalInfo = {
+      currentAge: 60,
+      retirementAge: 65,
+      lifeExpectancy: 70,
+      annualIncome: 600000,
+    }
     const inflationRate = 5.5 // stored as percentage
     const goals: RetirementGoals = { ...baseRetirementGoals, inflationRate }
     const monthlyMedicalAid = 3000 // today's Rands
 
-    it('medical aid contribution increases each retirement year with inflation', () => {
-      const result = calculateProjection(
-        [baseAccount],
-        shortInfo,
-        goals,
-        { ...baseDrawdownConfig, monthlyMedicalAid }
-      )
+    it("medical aid contribution increases each retirement year with inflation", () => {
+      const result = calculateProjection([baseAccount], shortInfo, goals, {
+        ...baseDrawdownConfig,
+        monthlyMedicalAid,
+      })
 
-      const retirementRows = result.yearlyProjections.filter(r => r.age >= shortInfo.retirementAge)
+      const retirementRows = result.yearlyProjections.filter(
+        (r) => r.age >= shortInfo.retirementAge,
+      )
       // Each year's medical aid should be strictly greater than the previous year's
       for (let i = 1; i < retirementRows.length; i++) {
         expect(retirementRows[i].medicalAidContribution).toBeGreaterThan(
-          retirementRows[i - 1].medicalAidContribution
+          retirementRows[i - 1].medicalAidContribution,
         )
       }
     })
 
-    it('first retirement year medical aid equals today value escalated to retirement using medical inflation', () => {
-      const result = calculateProjection(
-        [baseAccount],
-        shortInfo,
-        goals,
-        { ...baseDrawdownConfig, monthlyMedicalAid }
-      )
+    it("first retirement year medical aid equals today value escalated to retirement using medical inflation", () => {
+      const result = calculateProjection([baseAccount], shortInfo, goals, {
+        ...baseDrawdownConfig,
+        monthlyMedicalAid,
+      })
 
       const yearsToRetirement = shortInfo.retirementAge - shortInfo.currentAge // 5
       // Medical costs escalate at medical inflation (9%), not general inflation (5.5%)
       const medicalInflation = SA_DEFAULTS.medicalInflation
-      const expectedAnnual = monthlyMedicalAid * Math.pow(1 + medicalInflation, yearsToRetirement) * 12
+      const expectedAnnual =
+        monthlyMedicalAid * Math.pow(1 + medicalInflation, yearsToRetirement) * 12
 
-      const firstRetirementRow = result.yearlyProjections.find(r => r.age === shortInfo.retirementAge)!
+      const firstRetirementRow = result.yearlyProjections.find(
+        (r) => r.age === shortInfo.retirementAge,
+      )!
       expect(firstRetirementRow.medicalAidContribution).toBeCloseTo(expectedAnnual, 0)
     })
 
-    it('medical aid drawdown escalates at medical inflation rate (9%), not general inflation (5.5%)', () => {
+    it("medical aid drawdown escalates at medical inflation rate (9%), not general inflation (5.5%)", () => {
       // The bug: drawdown-phase medical aid was escalated per year using
       // general inflation (5.5%), not medical inflation (9%), understating
       // the fastest-growing retirement cost ~2.2x over 25 years.
-      const result = calculateProjection(
-        [baseAccount],
-        shortInfo,
-        goals,
-        { ...baseDrawdownConfig, monthlyMedicalAid }
-      )
+      const result = calculateProjection([baseAccount], shortInfo, goals, {
+        ...baseDrawdownConfig,
+        monthlyMedicalAid,
+      })
 
-      const retirementRows = result.yearlyProjections.filter(r => r.age >= shortInfo.retirementAge)
+      const retirementRows = result.yearlyProjections.filter(
+        (r) => r.age >= shortInfo.retirementAge,
+      )
       if (retirementRows.length >= 2) {
         const year0 = retirementRows[0].medicalAidContribution
         const year1 = retirementRows[1].medicalAidContribution
@@ -1487,33 +1663,39 @@ describe('calculateProjection', () => {
       }
     })
 
-    it('without medical aid, medicalAidContribution is zero in all retirement rows', () => {
-      const result = calculateProjection(
-        [baseAccount],
-        shortInfo,
-        goals,
-        { ...baseDrawdownConfig, monthlyMedicalAid: undefined }
-      )
+    it("without medical aid, medicalAidContribution is zero in all retirement rows", () => {
+      const result = calculateProjection([baseAccount], shortInfo, goals, {
+        ...baseDrawdownConfig,
+        monthlyMedicalAid: undefined,
+      })
 
-      const retirementRows = result.yearlyProjections.filter(r => r.age >= shortInfo.retirementAge)
-      retirementRows.forEach(r => expect(r.medicalAidContribution).toBe(0))
+      const retirementRows = result.yearlyProjections.filter(
+        (r) => r.age >= shortInfo.retirementAge,
+      )
+      retirementRows.forEach((r) => expect(r.medicalAidContribution).toBe(0))
     })
 
-    it('medical aid reduces net income relative to no medical aid', () => {
-      const withMedical = calculateProjection(
-        [baseAccount], shortInfo, goals, { ...baseDrawdownConfig, monthlyMedicalAid }
-      )
-      const withoutMedical = calculateProjection(
-        [baseAccount], shortInfo, goals, { ...baseDrawdownConfig, monthlyMedicalAid: undefined }
-      )
+    it("medical aid reduces net income relative to no medical aid", () => {
+      const withMedical = calculateProjection([baseAccount], shortInfo, goals, {
+        ...baseDrawdownConfig,
+        monthlyMedicalAid,
+      })
+      const withoutMedical = calculateProjection([baseAccount], shortInfo, goals, {
+        ...baseDrawdownConfig,
+        monthlyMedicalAid: undefined,
+      })
 
-      const firstWith = withMedical.yearlyProjections.find(r => r.age === shortInfo.retirementAge)!
-      const firstWithout = withoutMedical.yearlyProjections.find(r => r.age === shortInfo.retirementAge)!
+      const firstWith = withMedical.yearlyProjections.find(
+        (r) => r.age === shortInfo.retirementAge,
+      )!
+      const firstWithout = withoutMedical.yearlyProjections.find(
+        (r) => r.age === shortInfo.retirementAge,
+      )!
       expect(firstWith.netIncome).toBeLessThan(firstWithout.netIncome)
     })
   })
 
-  describe('Section 11F excess contribution credit', () => {
+  describe("Section 11F excess contribution credit", () => {
     // High earner: R1.8M income → limit capped at R430k. RA contributions R600k/year.
     // Excess = R170k/year. Static income escalated with inflation; for cap-dominated users
     // it remains R430k regardless, so excess per year stays R170k (before escalation of contributions).
@@ -1526,10 +1708,10 @@ describe('calculateProjection', () => {
 
     // Monthly RA contribution R50,000 = R600,000/year
     const highContribAccount: Account = {
-      id: 'ra1',
-      name: 'RA',
-      type: 'retirement_annuity',
-      provider: 'Test',
+      id: "ra1",
+      name: "RA",
+      type: "retirement_annuity",
+      provider: "Test",
       currentBalance: 5000000,
       monthlyContribution: 50000,
       expectedReturn: 10,
@@ -1543,26 +1725,22 @@ describe('calculateProjection', () => {
       legacyAmount: 0,
     }
 
-    it('should accumulate excess credit for high earner over accumulation phase', () => {
-      const result = calculateProjection(
-        [highContribAccount],
-        highEarnerInfo,
-        highEarnerGoals,
-        { ...baseDrawdownConfig, lumpSumPercentage: 0 },
-      )
+    it("should accumulate excess credit for high earner over accumulation phase", () => {
+      const result = calculateProjection([highContribAccount], highEarnerInfo, highEarnerGoals, {
+        ...baseDrawdownConfig,
+        lumpSumPercentage: 0,
+      })
 
       // R600k contributions/year, limit R430k → R170k excess/year × 10 years = R1,700,000
       // (contributions don't escalate so limit stays R430k each year)
       expect(result.accumulatedExcessCredit).toBeCloseTo(1700000, -3)
     })
 
-    it('should reduce taxable lump sum by the credit applied', () => {
-      const result = calculateProjection(
-        [highContribAccount],
-        highEarnerInfo,
-        highEarnerGoals,
-        { ...baseDrawdownConfig, lumpSumPercentage: 33 },
-      )
+    it("should reduce taxable lump sum by the credit applied", () => {
+      const result = calculateProjection([highContribAccount], highEarnerInfo, highEarnerGoals, {
+        ...baseDrawdownConfig,
+        lumpSumPercentage: 33,
+      })
 
       const { lumpSumAmount, taxableLumpSum, creditAppliedToLumpSum } = result.lumpSumCommutation
       expect(creditAppliedToLumpSum).toBeGreaterThan(0)
@@ -1570,7 +1748,7 @@ describe('calculateProjection', () => {
       expect(taxableLumpSum).toBeCloseTo(lumpSumAmount - creditAppliedToLumpSum, 0)
     })
 
-    it('should carry credit into drawdown when credit exceeds lump sum', () => {
+    it("should carry credit into drawdown when credit exceeds lump sum", () => {
       const result = calculateProjection(
         [highContribAccount],
         highEarnerInfo,
@@ -1582,21 +1760,23 @@ describe('calculateProjection', () => {
       expect(result.lumpSumCommutation.creditCarriedIntoDrawdown).toBeGreaterThan(0)
 
       // First drawdown year should apply credit
-      const firstDrawdownYear = result.yearlyProjections.find(r => r.age === highEarnerInfo.retirementAge)!
+      const firstDrawdownYear = result.yearlyProjections.find(
+        (r) => r.age === highEarnerInfo.retirementAge,
+      )!
       expect(firstDrawdownYear.excessCreditApplied).toBeGreaterThan(0)
     })
 
-    it('should exhaust credit over drawdown years', () => {
-      const result = calculateProjection(
-        [highContribAccount],
-        highEarnerInfo,
-        highEarnerGoals,
-        { ...baseDrawdownConfig, lumpSumPercentage: 0 },
-      )
+    it("should exhaust credit over drawdown years", () => {
+      const result = calculateProjection([highContribAccount], highEarnerInfo, highEarnerGoals, {
+        ...baseDrawdownConfig,
+        lumpSumPercentage: 0,
+      })
 
-      const drawdownRows = result.yearlyProjections.filter(r => r.age >= highEarnerInfo.retirementAge)
-      const lastRowWithCredit = drawdownRows.filter(r => (r.excessCreditRemaining ?? 0) > 0)
-      const firstRowWithoutCredit = drawdownRows.find(r => (r.excessCreditRemaining ?? 1) === 0)
+      const drawdownRows = result.yearlyProjections.filter(
+        (r) => r.age >= highEarnerInfo.retirementAge,
+      )
+      const lastRowWithCredit = drawdownRows.filter((r) => (r.excessCreditRemaining ?? 0) > 0)
+      const firstRowWithoutCredit = drawdownRows.find((r) => (r.excessCreditRemaining ?? 1) === 0)
 
       // Credit should be non-zero initially and reach zero at some point
       expect(lastRowWithCredit.length).toBeGreaterThan(0)
@@ -1604,54 +1784,50 @@ describe('calculateProjection', () => {
       // After credit is exhausted, remaining rows should stay at zero
       if (firstRowWithoutCredit) {
         const indexAfter = drawdownRows.indexOf(firstRowWithoutCredit)
-        drawdownRows.slice(indexAfter).forEach(r => {
+        drawdownRows.slice(indexAfter).forEach((r) => {
           expect(r.excessCreditRemaining).toBe(0)
         })
       }
     })
 
-    it('should produce zero excess credit when contributions are within limit', () => {
+    it("should produce zero excess credit when contributions are within limit", () => {
       const withinLimitAccount: Account = {
         ...highContribAccount,
         monthlyContribution: 5000, // R60k/year, well within R430k
       }
-      const result = calculateProjection(
-        [withinLimitAccount],
-        highEarnerInfo,
-        highEarnerGoals,
-        { ...baseDrawdownConfig, lumpSumPercentage: 33 },
-      )
+      const result = calculateProjection([withinLimitAccount], highEarnerInfo, highEarnerGoals, {
+        ...baseDrawdownConfig,
+        lumpSumPercentage: 33,
+      })
 
       expect(result.accumulatedExcessCredit).toBe(0)
       expect(result.lumpSumCommutation.creditAppliedToLumpSum).toBe(0)
       expect(result.lumpSumCommutation.creditCarriedIntoDrawdown).toBe(0)
     })
 
-    it('should not apply credit to TFSA or discretionary withdrawals', () => {
+    it("should not apply credit to TFSA or discretionary withdrawals", () => {
       const tfsaAccount: Account = {
-        id: 'tfsa1',
-        name: 'TFSA',
-        type: 'tfsa',
-        provider: 'Test',
+        id: "tfsa1",
+        name: "TFSA",
+        type: "tfsa",
+        provider: "Test",
         currentBalance: 200000,
         monthlyContribution: 3000,
         expectedReturn: 10,
         annualFees: 0.5,
         contributionEscalation: 0,
       }
-      const result = calculateProjection(
-        [tfsaAccount],
-        highEarnerInfo,
-        highEarnerGoals,
-        { ...baseDrawdownConfig, lumpSumPercentage: 0 },
-      )
+      const result = calculateProjection([tfsaAccount], highEarnerInfo, highEarnerGoals, {
+        ...baseDrawdownConfig,
+        lumpSumPercentage: 0,
+      })
 
       // TFSA contributions don't count toward Section 11F → no excess credit
       expect(result.accumulatedExcessCredit).toBe(0)
     })
   })
 
-  describe('Drawdown strategy divergence after year 1', () => {
+  describe("Drawdown strategy divergence after year 1", () => {
     // No accumulation phase (currentAge === retirementAge) and a harsh -50% net
     // return isolates the drawdown-year recompute so each strategy's year-1
     // withdrawal can be hand-verified exactly. desiredMonthlyIncome is chosen so
@@ -1659,10 +1835,10 @@ describe('calculateProjection', () => {
     // any difference that emerges in year 1 is attributable purely to the
     // per-year recompute logic, not to a different starting point.
     const divergenceAccount: Account = {
-      id: '1',
-      name: 'Single RA',
-      type: 'retirement_annuity',
-      provider: 'Test Provider',
+      id: "1",
+      name: "Single RA",
+      type: "retirement_annuity",
+      provider: "Test Provider",
       currentBalance: 1000000,
       monthlyContribution: 0,
       expectedReturn: -50,
@@ -1681,7 +1857,7 @@ describe('calculateProjection', () => {
       legacyAmount: 0,
     }
     const divergenceBaseConfig: DrawdownConfig = {
-      strategy: 'fixed_percentage',
+      strategy: "fixed_percentage",
       initialWithdrawalRate: 4,
       minimumWithdrawal: 1,
       maximumWithdrawal: 1_000_000_000,
@@ -1689,82 +1865,97 @@ describe('calculateProjection', () => {
     }
 
     function withdrawalAtAge(result: ReturnType<typeof calculateProjection>, age: number): number {
-      const row = result.yearlyProjections.find(p => p.age === age)
+      const row = result.yearlyProjections.find((p) => p.age === age)
       if (!row) throw new Error(`No row at age ${age}`)
       return row.withdrawals
     }
 
-    it('year 0 is identical across all four strategies (shared anchor)', () => {
-      const strategies: DrawdownConfig['strategy'][] = [
-        'fixed_percentage',
-        'fixed_amount_inflation_adjusted',
-        'variable_percentage',
-        'guardrails',
+    it("year 0 is identical across all four strategies (shared anchor)", () => {
+      const strategies: DrawdownConfig["strategy"][] = [
+        "fixed_percentage",
+        "fixed_amount_inflation_adjusted",
+        "variable_percentage",
+        "guardrails",
       ]
-      const year0Withdrawals = strategies.map(strategy =>
+      const year0Withdrawals = strategies.map((strategy) =>
         withdrawalAtAge(
           calculateProjection([divergenceAccount], divergencePersonalInfo, divergenceGoals, {
             ...divergenceBaseConfig,
             strategy,
           }),
-          65
-        )
+          65,
+        ),
       )
-      year0Withdrawals.forEach(w => expect(w).toBeCloseTo(40000, 2))
+      year0Withdrawals.forEach((w) => expect(w).toBeCloseTo(40000, 2))
     })
 
-    it('fixed_percentage recomputes from the live balance in year 1, not CPI', () => {
-      const result = calculateProjection([divergenceAccount], divergencePersonalInfo, divergenceGoals, {
-        ...divergenceBaseConfig,
-        strategy: 'fixed_percentage',
-      })
+    it("fixed_percentage recomputes from the live balance in year 1, not CPI", () => {
+      const result = calculateProjection(
+        [divergenceAccount],
+        divergencePersonalInfo,
+        divergenceGoals,
+        {
+          ...divergenceBaseConfig,
+          strategy: "fixed_percentage",
+        },
+      )
       // Balance after year 0: (1,000,000 * 0.5) - 40,000 = 460,000
       // Balance after year 1 growth: 460,000 * 0.5 = 230,000
       // Year-1 withdrawal = 230,000 * 4% = 9,200 (NOT 40,000 * 1.055 = 42,200)
       expect(withdrawalAtAge(result, 66)).toBeCloseTo(9200, 2)
     })
 
-    it('fixed_amount_inflation_adjusted still inflates by CPI in year 1 (unchanged behavior)', () => {
-      const result = calculateProjection([divergenceAccount], divergencePersonalInfo, divergenceGoals, {
-        ...divergenceBaseConfig,
-        strategy: 'fixed_amount_inflation_adjusted',
-      })
+    it("fixed_amount_inflation_adjusted still inflates by CPI in year 1 (unchanged behavior)", () => {
+      const result = calculateProjection(
+        [divergenceAccount],
+        divergencePersonalInfo,
+        divergenceGoals,
+        {
+          ...divergenceBaseConfig,
+          strategy: "fixed_amount_inflation_adjusted",
+        },
+      )
       expect(withdrawalAtAge(result, 66)).toBeCloseTo(40000 * 1.055, 2)
     })
 
-    it('guardrails applies the 10% capital-preservation cut when the rate breaches the upper band', () => {
-      const result = calculateProjection([divergenceAccount], divergencePersonalInfo, divergenceGoals, {
-        ...divergenceBaseConfig,
-        strategy: 'guardrails',
-        upperGuardrail: 20,
-        lowerGuardrail: 20,
-      })
+    it("guardrails applies the 10% capital-preservation cut when the rate breaches the upper band", () => {
+      const result = calculateProjection(
+        [divergenceAccount],
+        divergencePersonalInfo,
+        divergenceGoals,
+        {
+          ...divergenceBaseConfig,
+          strategy: "guardrails",
+          upperGuardrail: 20,
+          lowerGuardrail: 20,
+        },
+      )
       // Actual rate = 40,000 / 230,000 ≈ 17.4%, far above the 4.8% upper band
       // (target 4% × 1.2) → 10% cut: 40,000 × 0.9 = 36,000 (NOT 42,200)
       expect(withdrawalAtAge(result, 66)).toBeCloseTo(36000, 2)
     })
 
-    it('variable_percentage and fixed_percentage diverge from fixed_amount_inflation_adjusted by year 1', () => {
+    it("variable_percentage and fixed_percentage diverge from fixed_amount_inflation_adjusted by year 1", () => {
       const fixedAmount = withdrawalAtAge(
         calculateProjection([divergenceAccount], divergencePersonalInfo, divergenceGoals, {
           ...divergenceBaseConfig,
-          strategy: 'fixed_amount_inflation_adjusted',
+          strategy: "fixed_amount_inflation_adjusted",
         }),
-        66
+        66,
       )
       const variablePct = withdrawalAtAge(
         calculateProjection([divergenceAccount], divergencePersonalInfo, divergenceGoals, {
           ...divergenceBaseConfig,
-          strategy: 'variable_percentage',
+          strategy: "variable_percentage",
         }),
-        66
+        66,
       )
       const guardrails = withdrawalAtAge(
         calculateProjection([divergenceAccount], divergencePersonalInfo, divergenceGoals, {
           ...divergenceBaseConfig,
-          strategy: 'guardrails',
+          strategy: "guardrails",
         }),
-        66
+        66,
       )
 
       expect(variablePct).not.toBeCloseTo(fixedAmount, 2)

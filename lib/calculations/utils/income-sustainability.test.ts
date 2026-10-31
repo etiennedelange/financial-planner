@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it } from "vite-plus/test"
 import { buildIncomeSustainabilitySeries } from "./income-sustainability"
 import { calculateProjection } from "../projection-engine"
 import type { Account, DrawdownConfig, PersonalInfo, RetirementGoals } from "@/types"
@@ -41,7 +41,7 @@ describe("buildIncomeSustainabilitySeries", () => {
     [baseAccount],
     basePersonalInfo,
     baseRetirementGoals,
-    baseDrawdownConfig
+    baseDrawdownConfig,
   )
 
   describe("Nominal mode", () => {

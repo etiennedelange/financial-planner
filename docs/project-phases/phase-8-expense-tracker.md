@@ -1,3 +1,9 @@
+---
+type: Phase
+title: "Phase 8: Expense Tracker"
+description: "Phase 8: built-in monthly expense tracker replacing the Uitgawes.xlsx spreadsheet."
+---
+
 # Phase 8: Expense Tracker ✅ Complete
 
 _Implemented 2026-06-07 on `feature/redesign` branch. Replaces the Uitgawes.xlsx spreadsheet._

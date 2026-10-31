@@ -41,26 +41,28 @@ export default function ResetPasswordPage() {
   // The recovery link must have established a session before we get here.
   // Landing without one means the link was stale, reused, or tampered with.
   useEffect(() => {
-    createClient().auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) {
-        // `/calculator` itself server-redirects to `/calculator/overview` and drops
-        // the query string in the process — target the final route directly so the
-        // error marker survives.
-        router.replace("/calculator/overview?error=reset-expired")
-        return
-      }
-      // A recovery link yields an aal1 session, and GoTrue refuses a password
-      // change from aal1 once the account has a verified factor
-      // (401 insufficient_aal). This route is exempt from the middleware AAL
-      // gate — it has to be reachable by someone who has lost their password —
-      // so the second-factor challenge has to happen here instead.
-      try {
-        setFactorId((await listFactors())[0]?.id ?? null)
-      } catch {
-        setError("Could not check your two-factor settings. Try the reset link again.")
-      }
-      setChecking(false)
-    })
+    createClient()
+      .auth.getUser()
+      .then(async ({ data: { user } }) => {
+        if (!user) {
+          // `/calculator` itself server-redirects to `/calculator/overview` and drops
+          // the query string in the process — target the final route directly so the
+          // error marker survives.
+          router.replace("/calculator/overview?error=reset-expired")
+          return
+        }
+        // A recovery link yields an aal1 session, and GoTrue refuses a password
+        // change from aal1 once the account has a verified factor
+        // (401 insufficient_aal). This route is exempt from the middleware AAL
+        // gate — it has to be reachable by someone who has lost their password —
+        // so the second-factor challenge has to happen here instead.
+        try {
+          setFactorId((await listFactors())[0]?.id ?? null)
+        } catch {
+          setError("Could not check your two-factor settings. Try the reset link again.")
+        }
+        setChecking(false)
+      })
   }, [router])
 
   async function applyNewPassword(password: string) {
@@ -92,25 +94,40 @@ export default function ResetPasswordPage() {
       <PageCard label="Set a New Password" contentClassName="space-y-4" className="w-full">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
           <div className="space-y-1">
-            <Label htmlFor="new-pw" className="text-xs font-medium">New password</Label>
-            <Input id="new-pw" type="password" autoComplete="new-password" autoFocus
+            <Label htmlFor="new-pw" className="text-xs font-medium">
+              New password
+            </Label>
+            <Input
+              id="new-pw"
+              type="password"
+              autoComplete="new-password"
+              autoFocus
               className={`h-8 text-sm ${form.formState.errors.password ? "border-destructive" : ""}`}
-              {...form.register("password")} />
+              {...form.register("password")}
+            />
             {form.formState.errors.password && (
               <p className="text-xs text-destructive">{form.formState.errors.password.message}</p>
             )}
           </div>
           <div className="space-y-1">
-            <Label htmlFor="confirm-pw" className="text-xs font-medium">Confirm password</Label>
-            <Input id="confirm-pw" type="password" autoComplete="new-password"
+            <Label htmlFor="confirm-pw" className="text-xs font-medium">
+              Confirm password
+            </Label>
+            <Input
+              id="confirm-pw"
+              type="password"
+              autoComplete="new-password"
               className={`h-8 text-sm ${form.formState.errors.confirm ? "border-destructive" : ""}`}
-              {...form.register("confirm")} />
+              {...form.register("confirm")}
+            />
             {form.formState.errors.confirm && (
               <p className="text-xs text-destructive">{form.formState.errors.confirm.message}</p>
             )}
           </div>
           {error && (
-            <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
+            <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </p>
           )}
           <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting ? "Updating…" : "Update Password"}

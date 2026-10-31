@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest"
+import { describe, it, expect, beforeEach, vi, afterEach } from "vite-plus/test"
 import { useCalculatorStore, type CalculatorState } from "./calculator-store"
 // Bare side-effect import: the expenses store registers its base name with the
 // scope registry at module load, which evictUserScopedKeys iterates on sign-out.
@@ -71,10 +71,29 @@ describe("useCalculatorStore", () => {
   beforeEach(() => {
     useCalculatorStore.setState({
       accounts: [],
-      personalInfo: { currentAge: SA_DEFAULTS.defaultCurrentAge, retirementAge: SA_DEFAULTS.defaultRetirementAge, lifeExpectancy: SA_DEFAULTS.lifeExpectancy, annualIncome: 600000 },
+      personalInfo: {
+        currentAge: SA_DEFAULTS.defaultCurrentAge,
+        retirementAge: SA_DEFAULTS.defaultRetirementAge,
+        lifeExpectancy: SA_DEFAULTS.lifeExpectancy,
+        annualIncome: 600000,
+      },
       retirementGoals: { desiredMonthlyIncome: 30000, inflationRate: 5.5, legacyAmount: 0 },
-      assumptions: { equityReturn: 10.5, bondReturn: 8, cashReturn: 3, equityVolatility: 16, bondVolatility: 8, inflationRate: 5.5, compoundingMethod: "nominal" },
-      drawdownConfig: { strategy: "fixed_percentage", initialWithdrawalRate: 4, minimumWithdrawal: 15000, maximumWithdrawal: 60000, lumpSumPercentage: 0 },
+      assumptions: {
+        equityReturn: 10.5,
+        bondReturn: 8,
+        cashReturn: 3,
+        equityVolatility: 16,
+        bondVolatility: 8,
+        inflationRate: 5.5,
+        compoundingMethod: "nominal",
+      },
+      drawdownConfig: {
+        strategy: "fixed_percentage",
+        initialWithdrawalRate: 4,
+        minimumWithdrawal: 15000,
+        maximumWithdrawal: 60000,
+        lumpSumPercentage: 0,
+      },
       identity: { kind: "guest" },
       activeScenarioId: null,
       scenarioList: [],
@@ -159,9 +178,7 @@ describe("useCalculatorStore", () => {
       useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
       useCalculatorStore.setState({ activeScenarioId: "scenario-1", accounts: [] })
 
-      const seedData = [
-        { ...mockAccount, id: undefined as any },
-      ]
+      const seedData = [{ ...mockAccount, id: undefined as any }]
       useCalculatorStore.getState().seedAccounts(seedData)
 
       const state = useCalculatorStore.getState()
@@ -317,13 +334,19 @@ describe("useCalculatorStore", () => {
       })
 
       vi.spyOn(scenariosApi, "createScenario").mockResolvedValue("new-scenario-id")
-      vi.spyOn(accountsApi, "cloneAccounts").mockResolvedValue([{ ...mockAccount, id: "cloned-acc-1" }])
+      vi.spyOn(accountsApi, "cloneAccounts").mockResolvedValue([
+        { ...mockAccount, id: "cloned-acc-1" },
+      ])
 
       await useCalculatorStore.getState().createNewScenario("My Copy")
 
       const state = useCalculatorStore.getState()
       expect(state.activeScenarioId).toBe("new-scenario-id")
-      expect(scenariosApi.createScenario).toHaveBeenCalledWith("session-1", "My Copy", expect.any(Object))
+      expect(scenariosApi.createScenario).toHaveBeenCalledWith(
+        "session-1",
+        "My Copy",
+        expect.any(Object),
+      )
     })
 
     it("should rename scenario", async () => {
@@ -340,7 +363,12 @@ describe("useCalculatorStore", () => {
     })
 
     it("should delete scenario and switch to next", async () => {
-      const scenario2 = { id: "scenario-2", name: "Second Plan", updatedAt: new Date().toISOString(), claimComplete: true }
+      const scenario2 = {
+        id: "scenario-2",
+        name: "Second Plan",
+        updatedAt: new Date().toISOString(),
+        claimComplete: true,
+      }
       useCalculatorStore.setState({
         scenarioList: [mockScenarioMeta, scenario2],
         activeScenarioId: "scenario-1",
@@ -404,7 +432,12 @@ describe("useCalculatorStore", () => {
     })
 
     it("should restore previously active scenario if available", async () => {
-      const scenario2 = { id: "scenario-2", name: "Second", updatedAt: new Date().toISOString(), claimComplete: true }
+      const scenario2 = {
+        id: "scenario-2",
+        name: "Second",
+        updatedAt: new Date().toISOString(),
+        claimComplete: true,
+      }
       useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
 
       vi.spyOn(scenariosApi, "listScenarios").mockResolvedValue([scenario2, mockScenarioMeta])
@@ -472,20 +505,20 @@ describe("useCalculatorStore", () => {
   })
 })
 
-describe('local-only mode (no session)', () => {
-  it('does not attempt a DB read when identity is guest', async () => {
+describe("local-only mode (no session)", () => {
+  it("does not attempt a DB read when identity is guest", async () => {
     useCalculatorStore.setState({ identity: { kind: "guest" }, activeScenarioId: null })
     await useCalculatorStore.getState().syncFromDb("session-1")
     expect(useCalculatorStore.getState().activeScenarioId).toBeNull()
   })
 
-  it('keeps account edits in memory when signed out', () => {
+  it("keeps account edits in memory when signed out", () => {
     useCalculatorStore.setState({ identity: { kind: "guest" }, accounts: [] })
     useCalculatorStore.getState().addAccount({
-      id: 'acc-local-1',
-      name: 'Local RA',
-      provider: 'Test Provider',
-      type: 'retirement_annuity',
+      id: "acc-local-1",
+      name: "Local RA",
+      provider: "Test Provider",
+      type: "retirement_annuity",
       currentBalance: 100000,
       monthlyContribution: 5000,
       contributionEscalation: 6,
@@ -496,20 +529,31 @@ describe('local-only mode (no session)', () => {
   })
 })
 
-describe('persist migration v1 → v2 (monetary cap)', () => {
+describe("persist migration v1 → v2 (monetary cap)", () => {
   const absurd = 8.798456465498799e39
 
   const migrate = useCalculatorStore.persist.getOptions().migrate
 
-  it('clamps stale absurd monetary values on rehydrate', () => {
+  it("clamps stale absurd monetary values on rehydrate", () => {
     const migrated = migrate!(
       {
-        personalInfo: { currentAge: 35, retirementAge: 65, lifeExpectancy: 90, annualIncome: absurd },
+        personalInfo: {
+          currentAge: 35,
+          retirementAge: 65,
+          lifeExpectancy: 90,
+          annualIncome: absurd,
+        },
         retirementGoals: { desiredMonthlyIncome: absurd, inflationRate: 5.5, legacyAmount: absurd },
-        drawdownConfig: { strategy: 'fixed_percentage', initialWithdrawalRate: 4, minimumWithdrawal: absurd, maximumWithdrawal: absurd, lumpSumPercentage: 0 },
+        drawdownConfig: {
+          strategy: "fixed_percentage",
+          initialWithdrawalRate: 4,
+          minimumWithdrawal: absurd,
+          maximumWithdrawal: absurd,
+          lumpSumPercentage: 0,
+        },
         accounts: [{ ...mockAccount, currentBalance: absurd, monthlyContribution: absurd }],
       } as unknown,
-      1
+      1,
     ) as CalculatorState
 
     expect(migrated.personalInfo.annualIncome).toBe(1_000_000_000_000)
@@ -521,15 +565,26 @@ describe('persist migration v1 → v2 (monetary cap)', () => {
     expect(migrated.accounts[0].monthlyContribution).toBe(1_000_000_000_000)
   })
 
-  it('preserves finite values and optional undefined fields untouched', () => {
+  it("preserves finite values and optional undefined fields untouched", () => {
     const migrated = migrate!(
       {
-        personalInfo: { currentAge: 35, retirementAge: 65, lifeExpectancy: 90, annualIncome: 600000 },
+        personalInfo: {
+          currentAge: 35,
+          retirementAge: 65,
+          lifeExpectancy: 90,
+          annualIncome: 600000,
+        },
         retirementGoals: { desiredMonthlyIncome: 30000, inflationRate: 5.5, legacyAmount: 0 },
-        drawdownConfig: { strategy: 'fixed_percentage', initialWithdrawalRate: 4, minimumWithdrawal: 15000, maximumWithdrawal: 60000, lumpSumPercentage: 0 },
+        drawdownConfig: {
+          strategy: "fixed_percentage",
+          initialWithdrawalRate: 4,
+          minimumWithdrawal: 15000,
+          maximumWithdrawal: 60000,
+          lumpSumPercentage: 0,
+        },
         accounts: [{ ...mockAccount, tfsaContributionsToDate: undefined }],
       } as unknown,
-      1
+      1,
     ) as CalculatorState
 
     expect(migrated.personalInfo.annualIncome).toBe(600000)
@@ -538,14 +593,14 @@ describe('persist migration v1 → v2 (monetary cap)', () => {
     expect(migrated.accounts[0].tfsaContributionsToDate).toBeUndefined()
   })
 
-  it('handles incomplete persisted state with safe fallbacks', () => {
+  it("handles incomplete persisted state with safe fallbacks", () => {
     const migrated = migrate!(
       {
         personalInfo: {},
         retirementGoals: {},
         drawdownConfig: {},
       } as unknown,
-      1
+      1,
     ) as CalculatorState
 
     expect(migrated.personalInfo.annualIncome).toBe(0)
@@ -557,13 +612,13 @@ describe('persist migration v1 → v2 (monetary cap)', () => {
     expect(migrated.accounts).toEqual([])
   })
 
-  it('clamps present optional monetary fields', () => {
+  it("clamps present optional monetary fields", () => {
     const migrated = migrate!(
       {
         drawdownConfig: { monthlyMedicalAid: absurd },
         accounts: [{ ...mockAccount, tfsaContributionsToDate: absurd }],
       } as unknown,
-      1
+      1,
     ) as CalculatorState
 
     expect(migrated.drawdownConfig.monthlyMedicalAid).toBe(1_000_000_000_000)
@@ -571,7 +626,7 @@ describe('persist migration v1 → v2 (monetary cap)', () => {
   })
 })
 
-describe('persist write-gate (auth-before-rehydrate clobber regression)', () => {
+describe("persist write-gate (auth-before-rehydrate clobber regression)", () => {
   // A fresh module gives a fresh store whose gate is still closed — mirroring
   // the first page load where SupabaseProvider's setSessionId races the
   // layout's manual rehydrate().
@@ -592,10 +647,10 @@ describe('persist write-gate (auth-before-rehydrate clobber regression)', () => 
       equityVolatility: 16,
       bondVolatility: 8,
       inflationRate: 5.5,
-      compoundingMethod: 'nominal',
+      compoundingMethod: "nominal",
     },
     drawdownConfig: {
-      strategy: 'fixed_percentage',
+      strategy: "fixed_percentage",
       initialWithdrawalRate: 4,
       minimumWithdrawal: 15000,
       maximumWithdrawal: 60000,
@@ -603,13 +658,13 @@ describe('persist write-gate (auth-before-rehydrate clobber regression)', () => 
       upperGuardrail: 20,
       lowerGuardrail: 20,
     },
-    displayMode: 'nominal',
+    displayMode: "nominal",
     accounts: [
       {
-        id: 'persisted-1',
-        name: 'Persisted RA',
-        provider: 'Allan Gray',
-        type: 'retirement_annuity' as const,
+        id: "persisted-1",
+        name: "Persisted RA",
+        provider: "Allan Gray",
+        type: "retirement_annuity" as const,
         currentBalance: 250000,
         monthlyContribution: 4000,
         contributionEscalation: 6,
@@ -619,13 +674,13 @@ describe('persist write-gate (auth-before-rehydrate clobber regression)', () => 
     ],
   }
 
-  it('survives a setSessionId fired before the layout rehydrate reads storage', async () => {
+  it("survives a setSessionId fired before the layout rehydrate reads storage", async () => {
     localStorage.setItem(
-      'financial-planner-storage:guest',
-      JSON.stringify({ state: persistedSnapshot, version: 2 })
+      "financial-planner-storage:guest",
+      JSON.stringify({ state: persistedSnapshot, version: 2 }),
     )
 
-    const { useCalculatorStore: freshStore } = await import('./calculator-store')
+    const { useCalculatorStore: freshStore } = await import("./calculator-store")
 
     // SupabaseProvider races the layout: auth-driven setSessionId fires first
     // while the store is still holding its pre-hydration defaults.
@@ -636,26 +691,26 @@ describe('persist write-gate (auth-before-rehydrate clobber regression)', () => 
     // The persisted plan must have survived the setSessionId write.
     expect(freshStore.getState().personalInfo.currentAge).toBe(45)
     expect(freshStore.getState().accounts).toHaveLength(1)
-    expect(freshStore.getState().accounts[0].name).toBe('Persisted RA')
+    expect(freshStore.getState().accounts[0].name).toBe("Persisted RA")
 
     // And localStorage must still hold the plan, not the pre-hydration defaults.
-    const stored = JSON.parse(localStorage.getItem('financial-planner-storage:guest')!)
+    const stored = JSON.parse(localStorage.getItem("financial-planner-storage:guest")!)
     expect(stored.state.personalInfo.currentAge).toBe(45)
     expect(stored.state.accounts).toHaveLength(1)
   })
 
-  it('persists subsequent writes once rehydrate has settled', async () => {
+  it("persists subsequent writes once rehydrate has settled", async () => {
     localStorage.setItem(
-      'financial-planner-storage:guest',
-      JSON.stringify({ state: { ...persistedSnapshot, accounts: [] }, version: 2 })
+      "financial-planner-storage:guest",
+      JSON.stringify({ state: { ...persistedSnapshot, accounts: [] }, version: 2 }),
     )
 
-    const { useCalculatorStore: freshStore } = await import('./calculator-store')
+    const { useCalculatorStore: freshStore } = await import("./calculator-store")
 
     await freshStore.persist.rehydrate()
     freshStore.getState().setPersonalInfo({ currentAge: 52 })
 
-    const stored = JSON.parse(localStorage.getItem('financial-planner-storage:guest')!)
+    const stored = JSON.parse(localStorage.getItem("financial-planner-storage:guest")!)
     expect(stored.state.personalInfo.currentAge).toBe(52)
   })
 })
@@ -674,12 +729,19 @@ describe("identity transitions and stale-write guards", () => {
 
   it("clears active scenario metadata on sign-out", () => {
     useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-a" })
-    useCalculatorStore.setState({ activeScenarioId: "scenario-1", scenarioList: [mockScenarioMeta] })
+    useCalculatorStore.setState({
+      activeScenarioId: "scenario-1",
+      scenarioList: [mockScenarioMeta],
+    })
 
     useCalculatorStore.getState().setIdentity({ kind: "guest" })
 
     expect(useCalculatorStore.getState()).toEqual(
-      expect.objectContaining({ identity: { kind: "guest" }, activeScenarioId: null, scenarioList: [] })
+      expect.objectContaining({
+        identity: { kind: "guest" },
+        activeScenarioId: null,
+        scenarioList: [],
+      }),
     )
   })
 
@@ -717,7 +779,7 @@ describe("identity transitions and stale-write guards", () => {
     vi.spyOn(scenariosApi, "fetchScenario").mockReturnValue(
       new Promise<typeof mockScenarioData | null>((resolve) => {
         resolveFetch = resolve
-      })
+      }),
     )
     vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([])
 
@@ -738,7 +800,10 @@ describe("sync null-data path", () => {
   it("uses the first scenario when fetchScenario returns null", async () => {
     vi.clearAllMocks()
     vi.useRealTimers()
-    useCalculatorStore.setState({ identity: { kind: "user", userId: "session-1" }, activeScenarioId: null })
+    useCalculatorStore.setState({
+      identity: { kind: "user", userId: "session-1" },
+      activeScenarioId: null,
+    })
     vi.spyOn(scenariosApi, "listScenarios").mockResolvedValue([mockScenarioMeta])
     vi.spyOn(scenariosApi, "fetchScenario").mockResolvedValue(null)
     vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([])
@@ -776,13 +841,13 @@ describe("write-guard abort paths", () => {
 
   it("rejects a stale generation's late sync response", async () => {
     const gen1Deferred = {
-      resolve: null as null | ((v: typeof mockScenarioMeta[]) => void),
+      resolve: null as null | ((v: (typeof mockScenarioMeta)[]) => void),
     }
     vi.spyOn(scenariosApi, "listScenarios")
       .mockReturnValueOnce(
-        new Promise<typeof mockScenarioMeta[]>((resolve) => {
+        new Promise<(typeof mockScenarioMeta)[]>((resolve) => {
           gen1Deferred.resolve = resolve
-        })
+        }),
       )
       .mockResolvedValueOnce([mockScenarioMeta])
     vi.spyOn(scenariosApi, "fetchScenario").mockResolvedValue(mockScenarioData)

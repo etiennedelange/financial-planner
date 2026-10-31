@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "PWA: installable + offline-capable via manifest, icons, and service worker"
+description: "PWA: installable and offline-capable via manifest, icons and service worker."
+date: 2026-08-29
+tags: [pwa]
+---
+
 # PWA: installable + offline-capable via manifest, icons, and service worker
 
 Date: 2026-08-29

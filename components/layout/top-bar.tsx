@@ -45,35 +45,36 @@ export function TopBar({ user }: TopBarProps) {
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-card/80 backdrop-blur-md">
       <div className="mx-auto flex h-12 w-full max-w-6xl items-center gap-3 px-4 md:px-8">
-
-      {/* Brand mark — mobile only (sidebar hidden on mobile) */}
-      <div className="flex items-center gap-2 md:hidden shrink-0">
-        <div className="h-6 w-6 rounded-sm bg-primary flex items-center justify-center">
-          <span className="font-mono text-[8px] font-bold tracking-tight text-primary-foreground leading-none">SA</span>
+        {/* Brand mark — mobile only (sidebar hidden on mobile) */}
+        <div className="flex items-center gap-2 md:hidden shrink-0">
+          <div className="h-6 w-6 rounded-sm bg-primary flex items-center justify-center">
+            <span className="font-mono text-[8px] font-bold tracking-tight text-primary-foreground leading-none">
+              SA
+            </span>
+          </div>
         </div>
-      </div>
 
-      {/* Page title — the single H1 for the current section (content pages must not duplicate it) */}
-      <h1 className="font-mono text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-        {title}
-      </h1>
+        {/* Page title — the single H1 for the current section (content pages must not duplicate it) */}
+        <h1 className="font-mono text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          {title}
+        </h1>
 
-      {/* Scenario switcher — desktop only */}
-      <div className="flex-1 hidden md:flex justify-center">
-        {isSignedIn && <ScenarioSwitcher />}
-      </div>
+        {/* Scenario switcher — desktop only */}
+        <div className="flex-1 hidden md:flex justify-center">
+          {isSignedIn && <ScenarioSwitcher />}
+        </div>
 
-      {/* Spacer on mobile */}
-      <div className="flex-1 md:hidden" />
+        {/* Spacer on mobile */}
+        <div className="flex-1 md:hidden" />
 
-      {/* Right controls */}
-      <div className="flex items-center gap-1">
-        <CommandPaletteTrigger />
-        <DisplayModeDropdown />
-        <ThemeToggle />
-        <div aria-hidden className="mx-1 h-5 w-px bg-border" />
-        <AccountMenu user={user} />
-      </div>
+        {/* Right controls */}
+        <div className="flex items-center gap-1">
+          <CommandPaletteTrigger />
+          <DisplayModeDropdown />
+          <ThemeToggle />
+          <div aria-hidden className="mx-1 h-5 w-px bg-border" />
+          <AccountMenu user={user} />
+        </div>
       </div>
     </header>
   )
@@ -106,42 +107,54 @@ function DisplayModeDropdown() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button {...controlProps} variant="ghost" size="sm" className="h-8 px-2 text-xs gap-1.5">
-          <TrendingDownIcon {...iconProps} size={14} className="shrink-0" data-icon="inline-start" />
-          <span className="hidden md:inline">{displayMode === "real" ? "Today's Value" : "Future Value"}</span>
+          <TrendingDownIcon
+            {...iconProps}
+            size={14}
+            className="shrink-0"
+            data-icon="inline-start"
+          />
+          <span className="hidden md:inline">
+            {displayMode === "real" ? "Today's Value" : "Future Value"}
+          </span>
         </Button>
       </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel>Display Values As</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => setDisplayMode("nominal")}
-              className="flex flex-col items-start gap-1 cursor-pointer"
-            >
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${displayMode === "nominal" ? "bg-primary" : "bg-muted"}`} />
-                <span className="font-medium">Future Value (Nominal)</span>
-              </div>
-              <span className="text-xs text-muted-foreground pl-4">
-                Show values in future Rands. R1M at retirement will actually be R1M then.
-              </span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => setDisplayMode("real")}
-              className="flex flex-col items-start gap-1 cursor-pointer"
-            >
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${displayMode === "real" ? "bg-primary" : "bg-muted"}`} />
-                <span className="font-medium">Today&apos;s Value (Real)</span>
-              </div>
-              <span className="text-xs text-muted-foreground pl-4">
-                Adjust all values to today&apos;s purchasing power. Easier to understand long-term values.
-              </span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <div className="px-2 py-1.5 text-xs text-muted-foreground">
-              This affects how monetary values are displayed across all tabs.
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
-    )
+      <DropdownMenuContent align="end" className="w-80">
+        <DropdownMenuLabel>Display Values As</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => setDisplayMode("nominal")}
+          className="flex flex-col items-start gap-1 cursor-pointer"
+        >
+          <div className="flex items-center gap-2">
+            <div
+              className={`w-2 h-2 rounded-full ${displayMode === "nominal" ? "bg-primary" : "bg-muted"}`}
+            />
+            <span className="font-medium">Future Value (Nominal)</span>
+          </div>
+          <span className="text-xs text-muted-foreground pl-4">
+            Show values in future Rands. R1M at retirement will actually be R1M then.
+          </span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => setDisplayMode("real")}
+          className="flex flex-col items-start gap-1 cursor-pointer"
+        >
+          <div className="flex items-center gap-2">
+            <div
+              className={`w-2 h-2 rounded-full ${displayMode === "real" ? "bg-primary" : "bg-muted"}`}
+            />
+            <span className="font-medium">Today&apos;s Value (Real)</span>
+          </div>
+          <span className="text-xs text-muted-foreground pl-4">
+            Adjust all values to today&apos;s purchasing power. Easier to understand long-term
+            values.
+          </span>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <div className="px-2 py-1.5 text-xs text-muted-foreground">
+          This affects how monetary values are displayed across all tabs.
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
 }

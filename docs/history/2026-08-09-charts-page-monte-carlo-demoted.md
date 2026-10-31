@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "2026-08-09 — Charts Page: Monte Carlo De-emphasised, All Visualisations Centralised"
+description: "Charts page: Monte Carlo de-emphasised and all visualisations centralised."
+date: 2026-08-09
+tags: [monte-carlo, ui]
+---
+
 # 2026-08-09 — Charts Page: Monte Carlo De-emphasised, All Visualisations Centralised
 
 ## Motivation

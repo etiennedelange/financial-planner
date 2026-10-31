@@ -1,3 +1,10 @@
+---
+type: History Entry
+title: "Monetary input bounds — absurd numbers rejected"
+description: "Monetary inputs now reject absurd values."
+date: 2026-08-14
+---
+
 # Monetary input bounds — absurd numbers rejected
 
 ## The bug

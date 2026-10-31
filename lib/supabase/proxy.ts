@@ -44,20 +44,20 @@ export async function updateSession(request: NextRequest) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
         supabaseResponse = NextResponse.next({ request: { headers: requestHeaders } })
         cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options)
+          supabaseResponse.cookies.set(name, value, options),
         )
         // Forward cache-control headers (Cache-Control, Expires, Pragma) so
         // CDNs don't cache auth responses and leak sessions to other users.
-        Object.entries(headers).forEach(([key, value]) =>
-          supabaseResponse.headers.set(key, value)
-        )
+        Object.entries(headers).forEach(([key, value]) => supabaseResponse.headers.set(key, value))
       },
     },
   })
 
   // getUser() verifies the token server-side on every request.
   // Do NOT replace with getSession() — it trusts the cookie unverified.
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   // UX only. The real enforcement is public.mfa_satisfied() in RLS — a client that
   // ignores this redirect and calls PostgREST directly still gets zero rows.
@@ -70,8 +70,12 @@ export async function updateSession(request: NextRequest) {
     // factor via the Admin API, and this form of the call kept reporting aal2 as
     // available afterward). Passing the access token forces its other code path,
     // which calls getUser(jwt) — a live request — instead.
-    const { data: { session } } = await supabase.auth.getSession()
-    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(session?.access_token)
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(
+      session?.access_token,
+    )
     const needsSecondFactor = aal?.currentLevel === "aal1" && aal?.nextLevel === "aal2"
     const path = request.nextUrl.pathname
     // /api/auth/recover is the aal1 recovery-code redemption route — it must stay

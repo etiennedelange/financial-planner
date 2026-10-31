@@ -1,3 +1,10 @@
+---
+type: Design Spec
+title: "Expense Tracker — Design Spec"
+description: "Design for the built-in monthly expense tracker."
+date: 2026-06-07
+---
+
 # Expense Tracker — Design Spec
 Date: 2026-06-07
 

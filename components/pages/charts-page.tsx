@@ -27,23 +27,17 @@ const verdictToneStyles: Record<PlanVerdictTone, { text: string; icon: string }>
 export function ChartsPage() {
   const { projection, simulationResult, isSimulating, simulationError } = useCalculator()
 
-  const {
-    displayMode,
-    accounts,
-    personalInfo,
-    retirementGoals,
-    drawdownConfig,
-    assumptions,
-  } = useCalculatorStore(
-    useShallow((s) => ({
-      displayMode: s.displayMode,
-      accounts: s.accounts,
-      personalInfo: s.personalInfo,
-      retirementGoals: s.retirementGoals,
-      drawdownConfig: s.drawdownConfig,
-      assumptions: s.assumptions,
-    }))
-  )
+  const { displayMode, accounts, personalInfo, retirementGoals, drawdownConfig, assumptions } =
+    useCalculatorStore(
+      useShallow((s) => ({
+        displayMode: s.displayMode,
+        accounts: s.accounts,
+        personalInfo: s.personalInfo,
+        retirementGoals: s.retirementGoals,
+        drawdownConfig: s.drawdownConfig,
+        assumptions: s.assumptions,
+      })),
+    )
 
   const totals = useMemo(() => {
     const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
@@ -52,20 +46,19 @@ export function ChartsPage() {
       totalBalance > 0
         ? accounts.reduce(
             (sum, acc) => sum + (acc.expectedReturn / 100) * (acc.currentBalance / totalBalance),
-            0
+            0,
           )
         : 0.1
     const weightedFees =
       totalBalance > 0
         ? accounts.reduce(
             (sum, acc) => sum + (acc.annualFees / 100) * (acc.currentBalance / totalBalance),
-            0
+            0,
           )
         : 0.01
     const avgEscalation =
       accounts.length > 0
-        ? accounts.reduce((sum, acc) => sum + acc.contributionEscalation / 100, 0) /
-          accounts.length
+        ? accounts.reduce((sum, acc) => sum + acc.contributionEscalation / 100, 0) / accounts.length
         : 0.06
     return { totalBalance, totalContribution, weightedReturn, weightedFees, avgEscalation }
   }, [accounts])
@@ -76,7 +69,7 @@ export function ChartsPage() {
         successRate: simulationResult?.successRate ?? null,
         depletionAge: projection?.portfolioDepletionAge ?? null,
       }),
-    [simulationResult, projection]
+    [simulationResult, projection],
   )
 
   if (accounts.length === 0) {
@@ -85,8 +78,8 @@ export function ChartsPage() {
         <div className="flex min-h-[240px] flex-col items-center justify-center gap-3 text-center">
           <Wallet className="h-8 w-8 text-muted-foreground/40" aria-hidden="true" />
           <p className="text-sm text-muted-foreground max-w-sm">
-            Add your retirement accounts first — every chart here is built from your actual portfolio,
-            goals, and assumptions.
+            Add your retirement accounts first — every chart here is built from your actual
+            portfolio, goals, and assumptions.
           </p>
           <Button asChild size="sm" variant="outline">
             <Link href="/calculator/accounts">Add accounts →</Link>
@@ -99,12 +92,14 @@ export function ChartsPage() {
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground max-w-prose">
-        Every visualization your plan can produce. Review each one, then jump
-        back to Overview or Projections to act on what you see.
+        Every visualization your plan can produce. Review each one, then jump back to Overview or
+        Projections to act on what you see.
       </p>
 
       <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3">
-        <span className={`font-mono text-lg font-semibold tabular-nums ${verdictToneStyles[verdict.tone].text}`}>
+        <span
+          className={`font-mono text-lg font-semibold tabular-nums ${verdictToneStyles[verdict.tone].text}`}
+        >
           {verdict.tone === "neutral" ? "—" : "◆"}
         </span>
         <p className={`text-sm font-medium ${verdictToneStyles[verdict.tone].text}`}>

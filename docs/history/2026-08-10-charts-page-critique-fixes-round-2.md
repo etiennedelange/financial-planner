@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "Charts page: second critique pass — truthful tooltips, keyboard focus, gallery hierarchy, red deltas"
+description: "Second charts-page critique pass: truthful tooltips, keyboard focus, gallery hierarchy, red deltas."
+date: 2026-08-10
+tags: [ui]
+---
+
 # Charts page: second critique pass — truthful tooltips, keyboard focus, gallery hierarchy, red deltas
 
 **Date:** 2026-08-10 (evening)

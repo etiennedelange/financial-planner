@@ -1,7 +1,14 @@
 "use client"
 
 import { useCallback, useRef, useState } from "react"
-import type { Account, PersonalInfo, RetirementGoals, DrawdownConfig, ProjectionResult, SimulationResult } from "@/types"
+import type {
+  Account,
+  PersonalInfo,
+  RetirementGoals,
+  DrawdownConfig,
+  ProjectionResult,
+  SimulationResult,
+} from "@/types"
 import { buildPlanNarrativePayload } from "@/lib/ai/plan-narrative-prompt"
 import { usePlanNarrativeStore } from "@/lib/store/plan-narrative-store"
 import type { ModelTier } from "@/lib/ai/model-tiers"

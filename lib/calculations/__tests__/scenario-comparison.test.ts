@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect } from "vite-plus/test"
 import { compareScenarios, INVESTMENT_SCENARIOS } from "../scenario-comparison"
 import type { PersonalInfo, RetirementGoals, DrawdownConfig, CompoundingMethod } from "@/types"
 
@@ -11,19 +11,19 @@ describe("INVESTMENT_SCENARIOS", () => {
 
   it("should have increasing returns from conservative to aggressive", () => {
     expect(INVESTMENT_SCENARIOS.conservative.nominalReturn).toBeLessThan(
-      INVESTMENT_SCENARIOS.balanced.nominalReturn
+      INVESTMENT_SCENARIOS.balanced.nominalReturn,
     )
     expect(INVESTMENT_SCENARIOS.balanced.nominalReturn).toBeLessThan(
-      INVESTMENT_SCENARIOS.aggressive.nominalReturn
+      INVESTMENT_SCENARIOS.aggressive.nominalReturn,
     )
   })
 
   it("should have increasing volatility from conservative to aggressive", () => {
     expect(INVESTMENT_SCENARIOS.conservative.volatility).toBeLessThan(
-      INVESTMENT_SCENARIOS.balanced.volatility
+      INVESTMENT_SCENARIOS.balanced.volatility,
     )
     expect(INVESTMENT_SCENARIOS.balanced.volatility).toBeLessThan(
-      INVESTMENT_SCENARIOS.aggressive.volatility
+      INVESTMENT_SCENARIOS.aggressive.volatility,
     )
   })
 
@@ -40,7 +40,7 @@ describe("INVESTMENT_SCENARIOS", () => {
 
   it("should have SA-appropriate volatility assumptions", () => {
     // Conservative: ~10%
-    expect(INVESTMENT_SCENARIOS.conservative.volatility).toBeCloseTo(0.10, 2)
+    expect(INVESTMENT_SCENARIOS.conservative.volatility).toBeCloseTo(0.1, 2)
 
     // Balanced: ~14%
     expect(INVESTMENT_SCENARIOS.balanced.volatility).toBeCloseTo(0.14, 2)
@@ -160,7 +160,7 @@ describe("compareScenarios", () => {
 
       // Results should differ based on compounding method
       expect(nominalResult.balanced.projectedNestEgg).not.toBe(
-        compoundResult.balanced.projectedNestEgg
+        compoundResult.balanced.projectedNestEgg,
       )
     })
   })
@@ -259,7 +259,7 @@ describe("compareScenarios", () => {
 
       expect(result.conservative.monthlyIncomeAtRetirement).toBeCloseTo(
         expectedConservativeIncome,
-        0
+        0,
       )
       expect(result.balanced.monthlyIncomeAtRetirement).toBeCloseTo(expectedBalancedIncome, 0)
       expect(result.aggressive.monthlyIncomeAtRetirement).toBeCloseTo(expectedAggressiveIncome, 0)

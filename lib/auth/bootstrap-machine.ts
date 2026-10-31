@@ -139,12 +139,12 @@ export const bootstrapMachine = setup({
     checkAal: fromPromise<{ current: string | null; next: string | null }, { userId: string }>(
       async () => {
         throw new Error("checkAal not provided")
-      }
+      },
     ),
     claimAndSync: fromPromise<void, { userId: string; event: AuthEvent; generation: number }>(
       async () => {
         throw new Error("claimAndSync not provided")
-      }
+      },
     ),
   },
 }).createMachine({

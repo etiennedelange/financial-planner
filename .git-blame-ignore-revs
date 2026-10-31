@@ -1,0 +1,5 @@
+# Formatting-only commits, skipped by `git blame` once configured:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# style: format the repo with Oxfmt (Vite+ migration, 2026-10-31)
+316c99be3909bf81389fe97c1282c6d5f1a7e79e

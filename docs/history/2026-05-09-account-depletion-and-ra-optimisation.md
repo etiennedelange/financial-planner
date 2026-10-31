@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "2026-05-09 — Account Depletion Tracking & RA Optimisation"
+description: "Account depletion tracking in drawdown, and RA contribution optimisation."
+date: 2026-05-09
+tags: [calculations]
+---
+
 # 2026-05-09 — Account Depletion Tracking & RA Optimisation
 
 ## What changed

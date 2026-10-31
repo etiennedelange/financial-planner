@@ -15,12 +15,22 @@ import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import { getSpendingPhaseMultiplier } from "@/lib/calculations/utils/spending-phase"
 import { calculateMonthlyReturn } from "@/lib/calculations/utils/projection"
-import { finiteOrZero, safePositiveDivide, sanitizeAccounts } from "@/lib/calculations/utils/invariant-guards"
-import { calculateIncomeTaxWithRebates, calculateLumpSumCommutation } from "@/lib/calculations/retirement-tax"
-import { calculateInitialWithdrawal, calculateNextWithdrawal } from "@/lib/calculations/utils/drawdown-withdrawal"
+import {
+  finiteOrZero,
+  safePositiveDivide,
+  sanitizeAccounts,
+} from "@/lib/calculations/utils/invariant-guards"
+import {
+  calculateIncomeTaxWithRebates,
+  calculateLumpSumCommutation,
+} from "@/lib/calculations/retirement-tax"
+import {
+  calculateInitialWithdrawal,
+  calculateNextWithdrawal,
+} from "@/lib/calculations/utils/drawdown-withdrawal"
 
 // Account types subject to full income tax on withdrawal — mirrors projection-engine.ts
-const PENSION_TYPES: AccountType[] = ['pension_fund', 'retirement_annuity', 'preservation_fund']
+const PENSION_TYPES: AccountType[] = ["pension_fund", "retirement_annuity", "preservation_fund"]
 
 interface DrawdownAccount {
   type: AccountType
@@ -43,9 +53,9 @@ function simulateSingleRun(
   desiredMonthlyIncome: number,
   drawdownConfig: DrawdownConfig,
   currentAge: number,
-  compoundingMethod: 'nominal' | 'compound',
+  compoundingMethod: "nominal" | "compound",
   lumpSumPercentage: number = 0,
-  rng: RandomSource = Math.random
+  rng: RandomSource = Math.random,
 ): SimulationRun {
   const totalYears = yearsToRetirement + yearsInRetirement
 
@@ -53,14 +63,14 @@ function simulateSingleRun(
   const safeAccounts = sanitizeAccounts(accounts)
 
   // Track each account's balance and cost basis separately during accumulation
-  const accountBalances = safeAccounts.map(acc => acc.currentBalance)
-  const accountCostBases = safeAccounts.map(acc => acc.currentBalance)
-  const accountMonthlyContributions = safeAccounts.map(acc => acc.monthlyContribution)
+  const accountBalances = safeAccounts.map((acc) => acc.currentBalance)
+  const accountCostBases = safeAccounts.map((acc) => acc.currentBalance)
+  const accountMonthlyContributions = safeAccounts.map((acc) => acc.monthlyContribution)
 
   // Generate return sequences for each account based on their expected return.
   // Full totalYears length so the same per-account sequence can be reused for the
   // drawdown phase (indices [yearsToRetirement, totalYears)) below.
-  const accountReturns = safeAccounts.map(acc => {
+  const accountReturns = safeAccounts.map((acc) => {
     const netReturn = (acc.expectedReturn - acc.annualFees) / 100
     // Use per-account volatility (0 for cash/fixed accounts, or proportional to return)
     const accVolatility = acc.expectedReturn === 0 ? 0 : volatility
@@ -106,11 +116,11 @@ function simulateSingleRun(
   // law caps it at one-third of the retirement-fund interest — mirrors projection-engine.ts.
   const pensionBalanceAtRetirement = safeAccounts.reduce(
     (sum, acc, idx) => (PENSION_TYPES.includes(acc.type) ? sum + accountBalances[idx] : sum),
-    0
+    0,
   )
   const cappedLumpSumPercentage = Math.min(
     Math.max(0, lumpSumPercentage),
-    SA_TAX_LIMITS.maxLumpSumCommutationPercentage
+    SA_TAX_LIMITS.maxLumpSumCommutationPercentage,
   )
   const lumpSumFraction = pensionBalanceAtRetirement > 0 ? cappedLumpSumPercentage / 100 : 0
   const lumpSumTax =
@@ -141,7 +151,7 @@ function simulateSingleRun(
     inflationRate,
     // Success rate must measure whether the user reaches their income goal, so the
     // desired income acts as a floor here. See WithdrawalBaseline.
-    "desiredIncomeFloor"
+    "desiredIncomeFloor",
   )
 
   let lifetimeIncomeTax = 0
@@ -171,7 +181,7 @@ function simulateSingleRun(
         drawdownConfig,
         yearsToRetirement + year,
         inflationRate,
-        desiredMonthlyIncome
+        desiredMonthlyIncome,
       )
     }
 
@@ -185,7 +195,7 @@ function simulateSingleRun(
     // for reporting only (it does not force additional portfolio liquidation, matching
     // how the deterministic engine treats tax as a reduction of net spendable income).
     for (const acc of drawdownAccounts) {
-      if (acc.type !== 'tfsa' || remaining <= 0 || acc.balance <= 0) continue
+      if (acc.type !== "tfsa" || remaining <= 0 || acc.balance <= 0) continue
       const take = Math.min(remaining, acc.balance)
       acc.balance -= take
       remaining -= take
@@ -193,9 +203,12 @@ function simulateSingleRun(
 
     let capitalGainRealized = 0
     for (const acc of drawdownAccounts) {
-      if (acc.type !== 'discretionary' || remaining <= 0 || acc.balance <= 0) continue
+      if (acc.type !== "discretionary" || remaining <= 0 || acc.balance <= 0) continue
       const take = Math.min(remaining, acc.balance)
-      const gainFraction = Math.max(0, Math.min(1, safePositiveDivide(acc.balance - acc.costBasis, acc.balance)))
+      const gainFraction = Math.max(
+        0,
+        Math.min(1, safePositiveDivide(acc.balance - acc.costBasis, acc.balance)),
+      )
       capitalGainRealized += take * gainFraction
       acc.costBasis = Math.max(0, acc.costBasis - take * (1 - gainFraction))
       acc.balance -= take
@@ -217,7 +230,10 @@ function simulateSingleRun(
     const taxableIncome = pensionWithdrawal + cgtTaxableAmount
     lifetimeIncomeTax += calculateIncomeTaxWithRebates(taxableIncome, age)
 
-    balance = Math.max(0, drawdownAccounts.reduce((sum, a) => sum + a.balance, 0))
+    balance = Math.max(
+      0,
+      drawdownAccounts.reduce((sum, a) => sum + a.balance, 0),
+    )
     yearlyBalances.push(balance)
   }
 
@@ -235,10 +251,7 @@ function simulateSingleRun(
 /**
  * Aggregate results from all simulation runs
  */
-function aggregateResults(
-  runs: SimulationRun[],
-  totalYears: number
-): SimulationResult {
+function aggregateResults(runs: SimulationRun[], totalYears: number): SimulationResult {
   if (runs.length === 0) {
     return {
       runs: [],
@@ -264,9 +277,7 @@ function aggregateResults(
   }
 
   for (let year = 0; year < totalYears; year++) {
-    const balancesAtYear = runs
-      .map((r) => r.yearlyBalances[year] || 0)
-      .sort((a, b) => a - b)
+    const balancesAtYear = runs.map((r) => r.yearlyBalances[year] || 0).sort((a, b) => a - b)
 
     percentiles.p10.push(getPercentile(balancesAtYear, 10))
     percentiles.p25.push(getPercentile(balancesAtYear, 25))
@@ -284,14 +295,11 @@ function aggregateResults(
     runs,
     successRate,
     percentiles,
-    medianDepletionAge:
-      depletionAges.length > 0 ? getPercentile(depletionAges, 50) : null,
-    averageFinalBalance:
-      runs.reduce((sum, r) => sum + r.finalBalance, 0) / runs.length,
+    medianDepletionAge: depletionAges.length > 0 ? getPercentile(depletionAges, 50) : null,
+    averageFinalBalance: runs.reduce((sum, r) => sum + r.finalBalance, 0) / runs.length,
     averageLifetimeIncomeTax:
       runs.reduce((sum, r) => sum + (r.lifetimeIncomeTax ?? 0), 0) / runs.length,
-    averageLumpSumTax:
-      runs.reduce((sum, r) => sum + (r.lumpSumTax ?? 0), 0) / runs.length,
+    averageLumpSumTax: runs.reduce((sum, r) => sum + (r.lumpSumTax ?? 0), 0) / runs.length,
   }
 }
 
@@ -304,7 +312,7 @@ export function runMonteCarloSimulation(
   retirementGoals: RetirementGoals,
   drawdownConfig: DrawdownConfig,
   config: SimulationConfig,
-  marketAssumptions?: MarketAssumptions
+  marketAssumptions?: MarketAssumptions,
 ): SimulationResult {
   // NaN ages fail `x < 0` comparisons, so a NaN age would poison yearsToRetirement
   // and every downstream division. Route non-finite ages through the empty result
@@ -352,7 +360,7 @@ export function runMonteCarloSimulation(
     : SA_DEFAULTS.equityVolatility
 
   // Use compounding method from market assumptions, default to nominal for backward compatibility
-  const compoundingMethod = marketAssumptions?.compoundingMethod || 'nominal'
+  const compoundingMethod = marketAssumptions?.compoundingMethod || "nominal"
 
   // A seeded source makes the whole simulation reproducible: same seed and inputs =>
   // identical output. Callers that omit randomSeed keep the previous non-deterministic
@@ -376,7 +384,7 @@ export function runMonteCarloSimulation(
       personalInfo.currentAge,
       compoundingMethod,
       drawdownConfig.lumpSumPercentage ?? 0,
-      rng
+      rng,
     )
     runs.push(run)
   }

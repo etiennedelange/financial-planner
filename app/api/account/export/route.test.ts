@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test"
 
 const getUser = vi.fn()
 const selectEq = vi.fn()
@@ -10,11 +10,11 @@ const from = vi.fn((table: string) => ({
   }),
 }))
 
-vi.mock('@/lib/supabase/server', () => ({
+vi.mock("@/lib/supabase/server", () => ({
   createClient: () => Promise.resolve({ auth: { getUser }, from }),
 }))
 
-import { GET } from './route'
+import { GET } from "./route"
 
 interface TableResult {
   data: unknown[] | null
@@ -28,20 +28,22 @@ function mockTables(tables: {
   accounts: TableResult
 }) {
   selectEq.mockImplementation((table: string) => {
-    if (table === 'scenarios') return Promise.resolve(tables.scenarios)
-    if (table === 'expense_groups') return Promise.resolve(tables.expenseGroups)
-    if (table === 'expenses') return Promise.resolve(tables.expenses)
+    if (table === "scenarios") return Promise.resolve(tables.scenarios)
+    if (table === "expense_groups") return Promise.resolve(tables.expenseGroups)
+    if (table === "expenses") return Promise.resolve(tables.expenses)
     throw new Error(`unexpected eq() table: ${table}`)
   })
   selectIn.mockImplementation((table: string) => {
-    if (table === 'accounts') return Promise.resolve(tables.accounts)
+    if (table === "accounts") return Promise.resolve(tables.accounts)
     throw new Error(`unexpected in() table: ${table}`)
   })
 }
 
 beforeEach(() => {
   vi.clearAllMocks()
-  getUser.mockResolvedValue({ data: { user: { id: 'user-1', email: 'user@example.com', created_at: '2026-01-01T00:00:00Z' } } })
+  getUser.mockResolvedValue({
+    data: { user: { id: "user-1", email: "user@example.com", created_at: "2026-01-01T00:00:00Z" } },
+  })
   mockTables({
     scenarios: { data: [], error: null },
     expenseGroups: { data: [], error: null },
@@ -50,8 +52,8 @@ beforeEach(() => {
   })
 })
 
-describe('GET /api/account/export', () => {
-  it('rejects an unauthenticated request without querying any table', async () => {
+describe("GET /api/account/export", () => {
+  it("rejects an unauthenticated request without querying any table", async () => {
     getUser.mockResolvedValue({ data: { user: null } })
 
     const response = await GET()
@@ -60,9 +62,9 @@ describe('GET /api/account/export', () => {
     expect(from).not.toHaveBeenCalled()
   })
 
-  it('surfaces a real error when a table query fails, instead of a silently-empty export', async () => {
+  it("surfaces a real error when a table query fails, instead of a silently-empty export", async () => {
     mockTables({
-      scenarios: { data: null, error: { message: 'connection reset' } },
+      scenarios: { data: null, error: { message: "connection reset" } },
       expenseGroups: { data: [], error: null },
       expenses: { data: [], error: null },
       accounts: { data: [], error: null },
@@ -75,12 +77,12 @@ describe('GET /api/account/export', () => {
     expect(body.error).toBeTruthy()
   })
 
-  it('surfaces a real error when the accounts query fails after scenarios resolve', async () => {
+  it("surfaces a real error when the accounts query fails after scenarios resolve", async () => {
     mockTables({
-      scenarios: { data: [{ id: 'scenario-1' }], error: null },
+      scenarios: { data: [{ id: "scenario-1" }], error: null },
       expenseGroups: { data: [], error: null },
       expenses: { data: [], error: null },
-      accounts: { data: null, error: { message: 'connection reset' } },
+      accounts: { data: null, error: { message: "connection reset" } },
     })
 
     const response = await GET()
@@ -90,29 +92,35 @@ describe('GET /api/account/export', () => {
     expect(body.error).toBeTruthy()
   })
 
-  it('returns the caller-scoped data as a downloadable JSON payload', async () => {
+  it("returns the caller-scoped data as a downloadable JSON payload", async () => {
     mockTables({
-      scenarios: { data: [{ id: 'scenario-1', session_id: 'user-1' }], error: null },
-      expenseGroups: { data: [{ id: 'group-1', session_id: 'user-1' }], error: null },
-      expenses: { data: [{ id: 'expense-1', session_id: 'user-1' }], error: null },
-      accounts: { data: [{ id: 'account-1', scenario_id: 'scenario-1' }], error: null },
+      scenarios: { data: [{ id: "scenario-1", session_id: "user-1" }], error: null },
+      expenseGroups: { data: [{ id: "group-1", session_id: "user-1" }], error: null },
+      expenses: { data: [{ id: "expense-1", session_id: "user-1" }], error: null },
+      accounts: { data: [{ id: "account-1", scenario_id: "scenario-1" }], error: null },
     })
 
     const response = await GET()
     const body = await response.json()
 
     expect(response.status).toBe(200)
-    expect(response.headers.get('content-type')).toBe('application/json')
-    expect(response.headers.get('content-disposition')).toMatch(/^attachment; filename="financial-planner-export-\d+\.json"$/)
-    expect(body.account).toEqual({ id: 'user-1', email: 'user@example.com', createdAt: '2026-01-01T00:00:00Z' })
-    expect(body.scenarios).toEqual([{ id: 'scenario-1', session_id: 'user-1' }])
-    expect(body.accounts).toEqual([{ id: 'account-1', scenario_id: 'scenario-1' }])
-    expect(body.expenseGroups).toEqual([{ id: 'group-1', session_id: 'user-1' }])
-    expect(body.expenses).toEqual([{ id: 'expense-1', session_id: 'user-1' }])
-    expect(typeof body.exportedAt).toBe('string')
+    expect(response.headers.get("content-type")).toBe("application/json")
+    expect(response.headers.get("content-disposition")).toMatch(
+      /^attachment; filename="financial-planner-export-\d+\.json"$/,
+    )
+    expect(body.account).toEqual({
+      id: "user-1",
+      email: "user@example.com",
+      createdAt: "2026-01-01T00:00:00Z",
+    })
+    expect(body.scenarios).toEqual([{ id: "scenario-1", session_id: "user-1" }])
+    expect(body.accounts).toEqual([{ id: "account-1", scenario_id: "scenario-1" }])
+    expect(body.expenseGroups).toEqual([{ id: "group-1", session_id: "user-1" }])
+    expect(body.expenses).toEqual([{ id: "expense-1", session_id: "user-1" }])
+    expect(typeof body.exportedAt).toBe("string")
   })
 
-  it('skips the accounts query entirely when the caller has no scenarios', async () => {
+  it("skips the accounts query entirely when the caller has no scenarios", async () => {
     mockTables({
       scenarios: { data: [], error: null },
       expenseGroups: { data: [], error: null },

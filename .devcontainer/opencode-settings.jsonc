@@ -2,63 +2,46 @@
   "$schema": "https://opencode.ai/config.json",
   "autoupdate": true,
   "lsp": true,
-  "plugin": [
-    "superpowers@git+https://github.com/obra/superpowers.git"
-  ],
+  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git"],
   "mcp": {
     "context7": {
       "type": "remote",
       "url": "https://mcp.context7.com/mcp",
       "enabled": true,
       "headers": {
-        "Authorization": "Bearer {env:CONTEXT7_API_KEY}"
-      }
+        "Authorization": "Bearer {env:CONTEXT7_API_KEY}",
+      },
     },
     "playwright": {
       "type": "local",
-      "command": [
-        "npx",
-        "@playwright/mcp@latest",
-        "--browser",
-        "chromium",
-        "--headless"
-      ]
+      "command": ["npx", "@playwright/mcp@latest", "--browser", "chromium", "--headless"],
     },
     "shadcn": {
       "type": "local",
-      "command": [
-        "npx",
-        "shadcn@latest",
-        "mcp"
-      ]
+      "command": ["npx", "shadcn@latest", "mcp"],
     },
     "supabase": {
       "type": "remote",
       "url": "https://mcp.supabase.com/mcp",
-      "enabled": true
+      "enabled": true,
     },
     "supabase-local": {
       "type": "remote",
       "url": "http://127.0.0.1:54321/mcp",
-      "enabled": true
+      "enabled": true,
     },
     "filesystem": {
       "type": "local",
       "command": [
         "sh",
         "-c",
-        "npx -y @modelcontextprotocol/server-filesystem \"$CLAUDE_PROJECT_DIR\""
-      ]
+        "npx -y @modelcontextprotocol/server-filesystem \"$CLAUDE_PROJECT_DIR\"",
+      ],
     },
     "fetch": {
       "type": "local",
-      "command": [
-        "uvx", 
-        "--with", 
-        "mcp<2.0.0", 
-        "mcp-server-fetch"
-      ],
-      "enabled": true
+      "command": ["uvx", "--with", "mcp<2.0.0", "mcp-server-fetch"],
+      "enabled": true,
     },
     "chrome-devtools": {
       "type": "local",
@@ -70,9 +53,9 @@
         "--logFile",
         "/tmp/chrome-devtools-mcp.log",
         "--no-usage-statistics",
-        "--no-performance-crux"
+        "--no-performance-crux",
       ],
-      "enabled": true
-    }
-  }
+      "enabled": true,
+    },
+  },
 }

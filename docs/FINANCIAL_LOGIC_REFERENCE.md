@@ -1,3 +1,9 @@
+---
+type: Reference
+title: "SA Retirement Calculator — Complete Financial Logic Reference"
+description: "Portable, exact reference for every financial planning formula and SA tax rule the calculator implements."
+---
+
 # SA Retirement Calculator — Complete Financial Logic Reference
 
 > **Purpose:** Portable, exact reference for reimplementing all financial planning rules, formulas,

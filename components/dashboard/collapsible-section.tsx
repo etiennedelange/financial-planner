@@ -31,22 +31,18 @@ export function CollapsibleSection({
   onOpenChange,
 }: CollapsibleSectionProps) {
   // Use controlled mode if open/onOpenChange provided, otherwise uncontrolled
-  const accordionProps = open !== undefined && onOpenChange
-    ? {
-        value: open ? id : undefined,
-        onValueChange: (value: string) => onOpenChange(value === id),
-      }
-    : {
-        defaultValue: defaultOpen ? id : undefined,
-      }
+  const accordionProps =
+    open !== undefined && onOpenChange
+      ? {
+          value: open ? id : undefined,
+          onValueChange: (value: string) => onOpenChange(value === id),
+        }
+      : {
+          defaultValue: defaultOpen ? id : undefined,
+        }
 
   return (
-    <Accordion
-      type="single"
-      collapsible
-      {...accordionProps}
-      className="border-b border-border"
-    >
+    <Accordion type="single" collapsible {...accordionProps} className="border-b border-border">
       <AccordionItem value={id} className="border-0">
         <AccordionTrigger className="hover:bg-muted/50 px-4 py-4 rounded-lg transition-colors">
           <div className="flex items-center gap-3">
@@ -61,9 +57,7 @@ export function CollapsibleSection({
             )}
           </div>
         </AccordionTrigger>
-        <AccordionContent className="px-4 py-6">
-          {children}
-        </AccordionContent>
+        <AccordionContent className="px-4 py-6">{children}</AccordionContent>
       </AccordionItem>
     </Accordion>
   )

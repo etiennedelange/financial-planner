@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test"
 import {
   listScenarios,
   fetchScenario,
@@ -7,12 +7,22 @@ import {
   renameScenario,
   deleteScenario,
   markScenarioClaimComplete,
-} from './scenarios'
+} from "./scenarios"
 
 // Chainable Supabase query builder mock
 function makeChain(resolveWith: { data?: unknown; error?: unknown }) {
   const chain: Record<string, unknown> = {}
-  const methods = ['from', 'select', 'insert', 'update', 'delete', 'upsert', 'eq', 'order', 'single']
+  const methods = [
+    "from",
+    "select",
+    "insert",
+    "update",
+    "delete",
+    "upsert",
+    "eq",
+    "order",
+    "single",
+  ]
   methods.forEach((m) => {
     chain[m] = vi.fn(() => chain)
   })
@@ -25,27 +35,35 @@ function makeChain(resolveWith: { data?: unknown; error?: unknown }) {
   return chain
 }
 
-vi.mock('./client', () => ({
+vi.mock("./client", () => ({
   createClient: vi.fn(),
 }))
 
-import { createClient } from './client'
+import { createClient } from "./client"
 
 const mockScenarioRow = {
-  id: 'scenario-1',
-  name: 'My Plan',
-  updated_at: '2026-05-09T00:00:00Z',
+  id: "scenario-1",
+  name: "My Plan",
+  updated_at: "2026-05-09T00:00:00Z",
   personal_info: { currentAge: 35, retirementAge: 65, lifeExpectancy: 90, annualIncome: 600000 },
   retirement_goals: { desiredMonthlyIncome: 30000, inflationRate: 5.5, legacyAmount: 0 },
   assumptions: {
-    equityReturn: 11, bondReturn: 8, cashReturn: 6.5,
-    equityVolatility: 16.5, bondVolatility: 6, inflationRate: 5.5, compoundingMethod: 'compound',
+    equityReturn: 11,
+    bondReturn: 8,
+    cashReturn: 6.5,
+    equityVolatility: 16.5,
+    bondVolatility: 6,
+    inflationRate: 5.5,
+    compoundingMethod: "compound",
   },
   drawdown_config: {
-    strategy: 'fixed_percentage', initialWithdrawalRate: 4,
-    minimumWithdrawal: 15000, maximumWithdrawal: 60000, lumpSumPercentage: 0,
+    strategy: "fixed_percentage",
+    initialWithdrawalRate: 4,
+    minimumWithdrawal: 15000,
+    maximumWithdrawal: 60000,
+    lumpSumPercentage: 0,
   },
-  display_mode: 'nominal',
+  display_mode: "nominal",
 }
 
 function mockSupabase(data: unknown, error: unknown = null) {
@@ -56,180 +74,188 @@ function mockSupabase(data: unknown, error: unknown = null) {
 
 beforeEach(() => vi.clearAllMocks())
 
-describe('listScenarios', () => {
-  it('returns mapped scenario metas', async () => {
+describe("listScenarios", () => {
+  it("returns mapped scenario metas", async () => {
     mockSupabase([
-      { id: 'scenario-1', name: 'My Plan', updated_at: '2026-05-09T00:00:00Z', claim_complete: true },
+      {
+        id: "scenario-1",
+        name: "My Plan",
+        updated_at: "2026-05-09T00:00:00Z",
+        claim_complete: true,
+      },
     ])
-    const result = await listScenarios('user-1')
+    const result = await listScenarios("user-1")
     expect(result).toEqual([
-      { id: 'scenario-1', name: 'My Plan', updatedAt: '2026-05-09T00:00:00Z', claimComplete: true },
+      { id: "scenario-1", name: "My Plan", updatedAt: "2026-05-09T00:00:00Z", claimComplete: true },
     ])
   })
 
-  it('returns empty array when no scenarios exist', async () => {
+  it("returns empty array when no scenarios exist", async () => {
     mockSupabase(null)
-    const result = await listScenarios('user-1')
+    const result = await listScenarios("user-1")
     expect(result).toEqual([])
   })
 
-  it('throws on supabase error', async () => {
-    mockSupabase(null, { message: 'DB error', code: '500' })
-    await expect(listScenarios('user-1')).rejects.toMatchObject({ message: 'DB error' })
+  it("throws on supabase error", async () => {
+    mockSupabase(null, { message: "DB error", code: "500" })
+    await expect(listScenarios("user-1")).rejects.toMatchObject({ message: "DB error" })
   })
 })
 
-describe('fetchScenario', () => {
-  it('maps row fields to ScenarioData', async () => {
+describe("fetchScenario", () => {
+  it("maps row fields to ScenarioData", async () => {
     mockSupabase(mockScenarioRow)
-    const result = await fetchScenario('scenario-1')
+    const result = await fetchScenario("scenario-1")
     expect(result?.personalInfo.currentAge).toBe(35)
-    expect(result?.displayMode).toBe('nominal')
-    expect(result?.assumptions.compoundingMethod).toBe('compound')
+    expect(result?.displayMode).toBe("nominal")
+    expect(result?.assumptions.compoundingMethod).toBe("compound")
   })
 
-  it('returns null on PGRST116 (no rows)', async () => {
-    mockSupabase(null, { code: 'PGRST116', message: 'no rows' })
-    expect(await fetchScenario('scenario-1')).toBeNull()
+  it("returns null on PGRST116 (no rows)", async () => {
+    mockSupabase(null, { code: "PGRST116", message: "no rows" })
+    expect(await fetchScenario("scenario-1")).toBeNull()
   })
 
-  it('throws on other errors', async () => {
-    mockSupabase(null, { code: '500', message: 'DB error' })
-    await expect(fetchScenario('scenario-1')).rejects.toMatchObject({ message: 'DB error' })
+  it("throws on other errors", async () => {
+    mockSupabase(null, { code: "500", message: "DB error" })
+    await expect(fetchScenario("scenario-1")).rejects.toMatchObject({ message: "DB error" })
   })
 })
 
-describe('createScenario', () => {
-  it('returns the new scenario id', async () => {
-    mockSupabase({ id: 'new-id' })
-    const id = await createScenario('user-1', 'Optimistic', {
+describe("createScenario", () => {
+  it("returns the new scenario id", async () => {
+    mockSupabase({ id: "new-id" })
+    const id = await createScenario("user-1", "Optimistic", {
       personalInfo: mockScenarioRow.personal_info as never,
       retirementGoals: mockScenarioRow.retirement_goals as never,
       assumptions: mockScenarioRow.assumptions as never,
       drawdownConfig: mockScenarioRow.drawdown_config as never,
-      displayMode: 'nominal',
+      displayMode: "nominal",
     })
-    expect(id).toBe('new-id')
+    expect(id).toBe("new-id")
   })
 
-  it('defaults claim_complete to true when not passed', async () => {
-    const chain = mockSupabase({ id: 'new-id' })
-    await createScenario('user-1', 'Optimistic', {
+  it("defaults claim_complete to true when not passed", async () => {
+    const chain = mockSupabase({ id: "new-id" })
+    await createScenario("user-1", "Optimistic", {
       personalInfo: mockScenarioRow.personal_info as never,
       retirementGoals: mockScenarioRow.retirement_goals as never,
       assumptions: mockScenarioRow.assumptions as never,
       drawdownConfig: mockScenarioRow.drawdown_config as never,
-      displayMode: 'nominal',
+      displayMode: "nominal",
     })
     expect(chain.insert).toHaveBeenCalledWith(expect.objectContaining({ claim_complete: true }))
   })
 
-  it('passes claim_complete: false through when a claim starts the scenario', async () => {
-    const chain = mockSupabase({ id: 'new-id' })
+  it("passes claim_complete: false through when a claim starts the scenario", async () => {
+    const chain = mockSupabase({ id: "new-id" })
     await createScenario(
-      'user-1',
-      'My Plan',
+      "user-1",
+      "My Plan",
       {
         personalInfo: mockScenarioRow.personal_info as never,
         retirementGoals: mockScenarioRow.retirement_goals as never,
         assumptions: mockScenarioRow.assumptions as never,
         drawdownConfig: mockScenarioRow.drawdown_config as never,
-        displayMode: 'nominal',
+        displayMode: "nominal",
       },
-      false
+      false,
     )
     expect(chain.insert).toHaveBeenCalledWith(expect.objectContaining({ claim_complete: false }))
   })
 
-  it('inserts with a client-supplied id when one is given', async () => {
-    const chain = mockSupabase({ id: 'client-chosen-id' })
+  it("inserts with a client-supplied id when one is given", async () => {
+    const chain = mockSupabase({ id: "client-chosen-id" })
     await createScenario(
-      'user-1',
-      'My Plan',
+      "user-1",
+      "My Plan",
       {
         personalInfo: mockScenarioRow.personal_info as never,
         retirementGoals: mockScenarioRow.retirement_goals as never,
         assumptions: mockScenarioRow.assumptions as never,
         drawdownConfig: mockScenarioRow.drawdown_config as never,
-        displayMode: 'nominal',
+        displayMode: "nominal",
       },
       false,
-      'client-chosen-id'
+      "client-chosen-id",
     )
-    expect(chain.insert).toHaveBeenCalledWith(expect.objectContaining({ id: 'client-chosen-id' }))
+    expect(chain.insert).toHaveBeenCalledWith(expect.objectContaining({ id: "client-chosen-id" }))
   })
 
-  it('omits id from the insert payload when none is given, letting the DB assign one', async () => {
-    const chain = mockSupabase({ id: 'db-assigned-id' })
-    await createScenario('user-1', 'Optimistic', {
+  it("omits id from the insert payload when none is given, letting the DB assign one", async () => {
+    const chain = mockSupabase({ id: "db-assigned-id" })
+    await createScenario("user-1", "Optimistic", {
       personalInfo: mockScenarioRow.personal_info as never,
       retirementGoals: mockScenarioRow.retirement_goals as never,
       assumptions: mockScenarioRow.assumptions as never,
       drawdownConfig: mockScenarioRow.drawdown_config as never,
-      displayMode: 'nominal',
+      displayMode: "nominal",
     })
-    const insertedPayload = vi.mocked(chain.insert as (...args: unknown[]) => unknown).mock.calls[0][0]
-    expect(insertedPayload).not.toHaveProperty('id')
+    const insertedPayload = vi.mocked(chain.insert as (...args: unknown[]) => unknown).mock
+      .calls[0][0]
+    expect(insertedPayload).not.toHaveProperty("id")
   })
 
-  it('throws on insert error', async () => {
-    mockSupabase(null, { message: 'insert failed', code: '500' })
+  it("throws on insert error", async () => {
+    mockSupabase(null, { message: "insert failed", code: "500" })
     await expect(
-      createScenario('user-1', 'Test', {
+      createScenario("user-1", "Test", {
         personalInfo: mockScenarioRow.personal_info as never,
         retirementGoals: mockScenarioRow.retirement_goals as never,
         assumptions: mockScenarioRow.assumptions as never,
         drawdownConfig: mockScenarioRow.drawdown_config as never,
-        displayMode: 'nominal',
-      })
-    ).rejects.toMatchObject({ message: 'insert failed' })
+        displayMode: "nominal",
+      }),
+    ).rejects.toMatchObject({ message: "insert failed" })
   })
 })
 
-describe('updateScenario', () => {
-  it('resolves without error on success', async () => {
+describe("updateScenario", () => {
+  it("resolves without error on success", async () => {
     mockSupabase(null, null)
     await expect(
-      updateScenario('scenario-1', {
+      updateScenario("scenario-1", {
         personalInfo: mockScenarioRow.personal_info as never,
         retirementGoals: mockScenarioRow.retirement_goals as never,
         assumptions: mockScenarioRow.assumptions as never,
         drawdownConfig: mockScenarioRow.drawdown_config as never,
-        displayMode: 'real',
-      })
+        displayMode: "real",
+      }),
     ).resolves.toBeUndefined()
   })
-
 })
 
-describe('renameScenario', () => {
-  it('resolves without error on success', async () => {
+describe("renameScenario", () => {
+  it("resolves without error on success", async () => {
     mockSupabase(null, null)
-    await expect(renameScenario('scenario-1', 'Conservative')).resolves.toBeUndefined()
+    await expect(renameScenario("scenario-1", "Conservative")).resolves.toBeUndefined()
   })
 
-  it('throws on error', async () => {
-    mockSupabase(null, { message: 'update failed', code: '500' })
-    await expect(renameScenario('scenario-1', 'Conservative')).rejects.toMatchObject({ message: 'update failed' })
-  })
-})
-
-describe('markScenarioClaimComplete', () => {
-  it('resolves without error on success', async () => {
-    mockSupabase(null, null)
-    await expect(markScenarioClaimComplete('scenario-1')).resolves.toBeUndefined()
-  })
-
-  it('throws on error', async () => {
-    mockSupabase(null, { message: 'update failed', code: '500' })
-    await expect(markScenarioClaimComplete('scenario-1')).rejects.toMatchObject({ message: 'update failed' })
+  it("throws on error", async () => {
+    mockSupabase(null, { message: "update failed", code: "500" })
+    await expect(renameScenario("scenario-1", "Conservative")).rejects.toMatchObject({
+      message: "update failed",
+    })
   })
 })
 
-describe('deleteScenario', () => {
-  it('resolves without error on success', async () => {
+describe("markScenarioClaimComplete", () => {
+  it("resolves without error on success", async () => {
     mockSupabase(null, null)
-    await expect(deleteScenario('scenario-1')).resolves.toBeUndefined()
+    await expect(markScenarioClaimComplete("scenario-1")).resolves.toBeUndefined()
   })
 
+  it("throws on error", async () => {
+    mockSupabase(null, { message: "update failed", code: "500" })
+    await expect(markScenarioClaimComplete("scenario-1")).rejects.toMatchObject({
+      message: "update failed",
+    })
+  })
+})
+
+describe("deleteScenario", () => {
+  it("resolves without error on success", async () => {
+    mockSupabase(null, null)
+    await expect(deleteScenario("scenario-1")).resolves.toBeUndefined()
+  })
 })

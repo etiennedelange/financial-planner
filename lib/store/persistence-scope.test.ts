@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest"
+import { describe, it, expect, beforeEach, vi, afterEach } from "vite-plus/test"
 import { useCalculatorStore } from "./calculator-store"
 import { useExpensesStore } from "./expenses-store"
 import { setScope, type PersistenceScope } from "./persistence-scope"
@@ -103,11 +103,11 @@ describe("persistence scopes", () => {
     it("moves a legacy payload with a sessionId into that user's scoped key", () => {
       localStorage.setItem(
         "financial-planner-storage",
-        JSON.stringify({ state: { sessionId: "user-legacy", accounts: [] }, version: 2 })
+        JSON.stringify({ state: { sessionId: "user-legacy", accounts: [] }, version: 2 }),
       )
       localStorage.setItem(
         "expenses-store-v2",
-        JSON.stringify({ state: { sessionId: "user-legacy" }, version: 2 })
+        JSON.stringify({ state: { sessionId: "user-legacy" }, version: 2 }),
       )
 
       const ambiguous = migrateLegacyKeys()
@@ -122,11 +122,11 @@ describe("persistence scopes", () => {
     it("routes a sessionId:null legacy payload to the ambiguous holding area, never auto-claimed", () => {
       localStorage.setItem(
         "financial-planner-storage",
-        JSON.stringify({ state: { sessionId: null, accounts: [] }, version: 2 })
+        JSON.stringify({ state: { sessionId: null, accounts: [] }, version: 2 }),
       )
       localStorage.setItem(
         "expenses-store-v2",
-        JSON.stringify({ state: { sessionId: null }, version: 2 })
+        JSON.stringify({ state: { sessionId: null }, version: 2 }),
       )
 
       const ambiguous = migrateLegacyKeys()
@@ -137,14 +137,14 @@ describe("persistence scopes", () => {
       expect(ambiguous).toHaveLength(2)
       expect(ambiguous[0].scope).toEqual({ kind: "guest" })
       expect(ambiguous[0].payload).toEqual(
-        expect.objectContaining({ state: expect.objectContaining({ sessionId: null }) })
+        expect.objectContaining({ state: expect.objectContaining({ sessionId: null }) }),
       )
     })
 
     it("leaves the legacy key intact for retry when a copy fails", () => {
       localStorage.setItem(
         "financial-planner-storage",
-        JSON.stringify({ state: { sessionId: "user-a", accounts: [] }, version: 2 })
+        JSON.stringify({ state: { sessionId: "user-a", accounts: [] }, version: 2 }),
       )
       // Make the scoped-key write throw by freezing storage mid-migration — the
       // delete must happen only after a successful copy.
@@ -152,7 +152,7 @@ describe("persistence scopes", () => {
       let failWrites = true
       const spy = vi.spyOn(window.localStorage, "setItem").mockImplementation(function (
         key: string,
-        value: string
+        value: string,
       ) {
         if (failWrites) throw new Error("quota exceeded")
         return originalSetItem.call(window.localStorage, key, value)
@@ -187,7 +187,7 @@ describe("persistence scopes", () => {
         JSON.stringify({
           state: { sessionId: "user-a", personalInfo: { annualIncome: 1e15 } },
           version: 1,
-        })
+        }),
       )
 
       migrateLegacyKeys()
@@ -195,7 +195,7 @@ describe("persistence scopes", () => {
       await useCalculatorStore.persist.rehydrate()
 
       expect(useCalculatorStore.getState().personalInfo.annualIncome).toBeLessThanOrEqual(
-        Number.MAX_SAFE_INTEGER
+        Number.MAX_SAFE_INTEGER,
       )
     })
   })

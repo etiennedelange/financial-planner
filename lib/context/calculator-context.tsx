@@ -35,7 +35,7 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
         retirementGoals: state.retirementGoals,
         assumptions: state.assumptions,
         drawdownConfig: state.drawdownConfig,
-      }))
+      })),
     )
 
   const deferredAccounts = useDeferredValue(accounts)
@@ -46,18 +46,23 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
 
   // Run the simulation on every route that renders it, so a direct load or
   // reload of those pages shows live data instead of a dead placeholder.
-  const simEnabled = pathname === "/calculator/overview" ||
+  const simEnabled =
+    pathname === "/calculator/overview" ||
     pathname === "/calculator/charts" ||
     pathname === "/calculator/projections"
 
-  const { simulationResult, isRunning: isWorkerRunning, hasError } = useMonteCarloWorker(
+  const {
+    simulationResult,
+    isRunning: isWorkerRunning,
+    hasError,
+  } = useMonteCarloWorker(
     deferredAccounts,
     deferredPersonalInfo,
     deferredRetirementGoals,
     deferredDrawdownConfig,
     1000,
     deferredAssumptions,
-    simEnabled
+    simEnabled,
   )
 
   const isDeferred =
@@ -78,13 +83,21 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
             deferredPersonalInfo,
             deferredRetirementGoals,
             deferredDrawdownConfig,
-            deferredAssumptions
+            deferredAssumptions,
           ),
-    [deferredAccounts, deferredPersonalInfo, deferredRetirementGoals, deferredDrawdownConfig, deferredAssumptions]
+    [
+      deferredAccounts,
+      deferredPersonalInfo,
+      deferredRetirementGoals,
+      deferredDrawdownConfig,
+      deferredAssumptions,
+    ],
   )
 
   return (
-    <CalculatorContext.Provider value={{ projection, simulationResult, isSimulating, isDeferred, simulationError: hasError }}>
+    <CalculatorContext.Provider
+      value={{ projection, simulationResult, isSimulating, isDeferred, simulationError: hasError }}
+    >
       {children}
     </CalculatorContext.Provider>
   )

@@ -31,7 +31,7 @@ export function FinanceAnimation() {
     >
       {/* Background bars — staggered grow-up animation */}
       {[
-        { x: 4,  h: 20, delay: 0 },
+        { x: 4, h: 20, delay: 0 },
         { x: 16, h: 30, delay: 0.15 },
         { x: 28, h: 22, delay: 0.3 },
         { x: 40, h: 38, delay: 0.45 },

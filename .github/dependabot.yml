@@ -22,7 +22,7 @@ updates:
       default-days: 7
     groups:
       github-actions:
-        patterns: ['*']
+        patterns: ["*"]
 
   - package-ecosystem: devcontainers
     directory: /

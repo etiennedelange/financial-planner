@@ -7,11 +7,7 @@ import { forwardRef, useRef, useState } from "react"
 import { useForm, useFormState } from "react-hook-form"
 import { z } from "zod/v4"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { FinanceAnimation } from "@/components/auth/finance-animation"
@@ -52,9 +48,9 @@ interface AuthModalProps {
 }
 
 const modeConfig = {
-  signin:  { title: "Welcome back",         subtitle: "Sign in to your account to continue" },
-  signup:  { title: "Create an account",    subtitle: "Your existing data will be carried over" },
-  reset:   { title: "Reset your password",  subtitle: "We'll send a reset link to your email" },
+  signin: { title: "Welcome back", subtitle: "Sign in to your account to continue" },
+  signup: { title: "Create an account", subtitle: "Your existing data will be carried over" },
+  reset: { title: "Reset your password", subtitle: "We'll send a reset link to your email" },
 }
 
 export function AuthModal({ open, onClose }: AuthModalProps) {
@@ -76,9 +72,9 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
     turnstile.current?.reset()
   }
 
-  const signinForm  = useForm<SignInForm>({ resolver: zodResolver(signInSchema) })
-  const signupForm  = useForm<EmailPasswordForm>({ resolver: zodResolver(emailPasswordSchema) })
-  const resetForm   = useForm<EmailForm>({ resolver: zodResolver(emailSchema) })
+  const signinForm = useForm<SignInForm>({ resolver: zodResolver(signInSchema) })
+  const signupForm = useForm<EmailPasswordForm>({ resolver: zodResolver(emailPasswordSchema) })
+  const resetForm = useForm<EmailForm>({ resolver: zodResolver(emailSchema) })
 
   // Errors come from useFormState (per-form subscription) rather than reading
   // formState directly during render — the React-Compiler-compatible pattern
@@ -95,9 +91,12 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
   async function handleSignIn(values: SignInForm) {
     if (!authEnabled) return
-    setLoading(true); setMessage(null)
+    setLoading(true)
+    setMessage(null)
     const { error } = await createClient().auth.signInWithPassword({
-      email: values.email, password: values.password, options: { captchaToken },
+      email: values.email,
+      password: values.password,
+      options: { captchaToken },
     })
     setLoading(false)
     if (error) {
@@ -116,7 +115,8 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
   async function handleSignUp(values: EmailPasswordForm) {
     if (!authEnabled) return
-    setLoading(true); setMessage(null)
+    setLoading(true)
+    setMessage(null)
     const { error } = await createClient().auth.signUp({
       email: values.email,
       password: values.password,
@@ -133,7 +133,8 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
   async function handleReset(values: EmailForm) {
     if (!authEnabled) return
-    setLoading(true); setMessage(null)
+    setLoading(true)
+    setMessage(null)
     const { error } = await createClient().auth.resetPasswordForEmail(values.email, {
       captchaToken,
       redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
@@ -155,11 +156,11 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   // rule flags calling handleSubmit() during render as a potential ref read; this
   // is a known false positive on react-hook-form v7, which has no React Compiler
   // support (added first-class in v8). Disabling the rule here is deliberate.
-  // eslint-disable-next-line react-hooks/refs
+  // oxlint-disable-next-line react-hooks/refs
   const submitSignIn = signinForm.handleSubmit(handleSignIn)
-  // eslint-disable-next-line react-hooks/refs
+  // oxlint-disable-next-line react-hooks/refs
   const submitSignUp = signupForm.handleSubmit(handleSignUp)
-  // eslint-disable-next-line react-hooks/refs
+  // oxlint-disable-next-line react-hooks/refs
   const submitReset = resetForm.handleSubmit(handleReset)
 
   return (
@@ -176,105 +177,178 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
           </div>
         </div>
 
-        <fieldset disabled={!authEnabled} aria-label={title} className="min-w-0 disabled:opacity-60">
-        {/* Form body */}
-        <div className="px-6 py-5 space-y-4">
-          {!authEnabled && (
-            <p role="note" className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
-              Sign-in isn&apos;t available yet. Your plan is saved in this browser in the meantime.
-            </p>
-          )}
-          {mode === "signin" && (
-            <form onSubmit={submitSignIn} className="space-y-3">
-              <Field label="Email" id="si-email" type="email" autoComplete="email"
-                error={signinErrors.email?.message}
-                {...signinForm.register("email")} />
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="si-pw" className="text-xs font-medium">Password</Label>
-                  <button type="button" onClick={() => switchMode("reset")}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    Forgot password?
-                  </button>
+        <fieldset
+          disabled={!authEnabled}
+          aria-label={title}
+          className="min-w-0 disabled:opacity-60"
+        >
+          {/* Form body */}
+          <div className="px-6 py-5 space-y-4">
+            {!authEnabled && (
+              <p
+                role="note"
+                className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground"
+              >
+                Sign-in isn&apos;t available yet. Your plan is saved in this browser in the
+                meantime.
+              </p>
+            )}
+            {mode === "signin" && (
+              <form onSubmit={submitSignIn} className="space-y-3">
+                <Field
+                  label="Email"
+                  id="si-email"
+                  type="email"
+                  autoComplete="email"
+                  error={signinErrors.email?.message}
+                  {...signinForm.register("email")}
+                />
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="si-pw" className="text-xs font-medium">
+                      Password
+                    </Label>
+                    <button
+                      type="button"
+                      onClick={() => switchMode("reset")}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                  <Input
+                    id="si-pw"
+                    type="password"
+                    autoComplete="current-password"
+                    className={`h-8 text-sm ${signinErrors.password ? "border-destructive" : ""}`}
+                    {...signinForm.register("password")}
+                  />
+                  {signinErrors.password && (
+                    <p className="text-xs text-destructive">{signinErrors.password.message}</p>
+                  )}
                 </div>
-                <Input id="si-pw" type="password" autoComplete="current-password"
-                  className={`h-8 text-sm ${signinErrors.password ? "border-destructive" : ""}`}
-                  {...signinForm.register("password")} />
-                {signinErrors.password && (
-                  <p className="text-xs text-destructive">{signinErrors.password.message}</p>
+                {(signinErrors.email || signinErrors.password) && (
+                  <p role="alert" className="text-xs text-destructive">
+                    Please fix the highlighted fields to continue.
+                  </p>
                 )}
-              </div>
-              {(signinErrors.email || signinErrors.password) && (
-                <p role="alert" className="text-xs text-destructive">
-                  Please fix the highlighted fields to continue.
-                </p>
-              )}
-              <StatusMessage message={message} role="status" />
-              {authEnabled && <Turnstile ref={turnstile} onToken={setCaptchaToken} />}
-              <Button type="submit" className="w-full" disabled={loading || !captchaToken}>
-                {loading ? "Signing in…" : !authEnabled ? "Coming soon" : captchaToken ? "Sign In" : "Verifying…"}
-              </Button>
-            </form>
-          )}
+                <StatusMessage message={message} role="status" />
+                {authEnabled && <Turnstile ref={turnstile} onToken={setCaptchaToken} />}
+                <Button type="submit" className="w-full" disabled={loading || !captchaToken}>
+                  {loading
+                    ? "Signing in…"
+                    : !authEnabled
+                      ? "Coming soon"
+                      : captchaToken
+                        ? "Sign In"
+                        : "Verifying…"}
+                </Button>
+              </form>
+            )}
 
-          {mode === "signup" && (
-            <form onSubmit={submitSignUp} className="space-y-3">
-              <Field label="Email" id="su-email" type="email" autoComplete="email"
-                error={signupErrors.email?.message}
-                {...signupForm.register("email")} />
-              <Field label="Password" id="su-pw" type="password" autoComplete="new-password"
-                error={signupErrors.password?.message}
-                {...signupForm.register("password")} />
-              {(signupErrors.email || signupErrors.password) && (
-                <p role="alert" className="text-xs text-destructive">
-                  Please fix the highlighted fields to continue.
-                </p>
-              )}
-              <StatusMessage message={message} role="status" />
-              {authEnabled && <Turnstile ref={turnstile} onToken={setCaptchaToken} />}
-              <Button type="submit" className="w-full" disabled={loading || !captchaToken}>
-                {loading ? "Creating account…" : !authEnabled ? "Coming soon" : captchaToken ? "Create Account" : "Verifying…"}
-              </Button>
-            </form>
-          )}
+            {mode === "signup" && (
+              <form onSubmit={submitSignUp} className="space-y-3">
+                <Field
+                  label="Email"
+                  id="su-email"
+                  type="email"
+                  autoComplete="email"
+                  error={signupErrors.email?.message}
+                  {...signupForm.register("email")}
+                />
+                <Field
+                  label="Password"
+                  id="su-pw"
+                  type="password"
+                  autoComplete="new-password"
+                  error={signupErrors.password?.message}
+                  {...signupForm.register("password")}
+                />
+                {(signupErrors.email || signupErrors.password) && (
+                  <p role="alert" className="text-xs text-destructive">
+                    Please fix the highlighted fields to continue.
+                  </p>
+                )}
+                <StatusMessage message={message} role="status" />
+                {authEnabled && <Turnstile ref={turnstile} onToken={setCaptchaToken} />}
+                <Button type="submit" className="w-full" disabled={loading || !captchaToken}>
+                  {loading
+                    ? "Creating account…"
+                    : !authEnabled
+                      ? "Coming soon"
+                      : captchaToken
+                        ? "Create Account"
+                        : "Verifying…"}
+                </Button>
+              </form>
+            )}
 
-          {mode === "reset" && (
-            <form onSubmit={submitReset} className="space-y-3">
-              <Field label="Email" id="re-email" type="email" autoComplete="email"
-                error={resetErrors.email?.message}
-                {...resetForm.register("email")} />
-              {resetErrors.email && (
-                <p role="alert" className="text-xs text-destructive">
-                  Please fix the highlighted fields to continue.
-                </p>
-              )}
-              <StatusMessage message={message} role="status" />
-              {authEnabled && <Turnstile ref={turnstile} onToken={setCaptchaToken} />}
-              <Button type="submit" className="w-full" disabled={loading || !captchaToken}>
-                {loading ? "Sending…" : !authEnabled ? "Coming soon" : captchaToken ? "Send Reset Link" : "Verifying…"}
-              </Button>
-            </form>
-          )}
-        </div>
+            {mode === "reset" && (
+              <form onSubmit={submitReset} className="space-y-3">
+                <Field
+                  label="Email"
+                  id="re-email"
+                  type="email"
+                  autoComplete="email"
+                  error={resetErrors.email?.message}
+                  {...resetForm.register("email")}
+                />
+                {resetErrors.email && (
+                  <p role="alert" className="text-xs text-destructive">
+                    Please fix the highlighted fields to continue.
+                  </p>
+                )}
+                <StatusMessage message={message} role="status" />
+                {authEnabled && <Turnstile ref={turnstile} onToken={setCaptchaToken} />}
+                <Button type="submit" className="w-full" disabled={loading || !captchaToken}>
+                  {loading
+                    ? "Sending…"
+                    : !authEnabled
+                      ? "Coming soon"
+                      : captchaToken
+                        ? "Send Reset Link"
+                        : "Verifying…"}
+                </Button>
+              </form>
+            )}
+          </div>
 
-        {/* Footer links */}
-        <div className="border-t bg-muted/30 px-6 py-3 text-center text-xs text-muted-foreground">
-          {mode === "signin" && (
-            <>Don&apos;t have an account?{" "}
-              <button onClick={() => switchMode("signup")} className="font-medium text-foreground hover:underline">Sign up</button>
-            </>
-          )}
-          {mode === "signup" && (
-            <>Already have an account?{" "}
-              <button onClick={() => switchMode("signin")} className="font-medium text-foreground hover:underline">Sign in</button>
-            </>
-          )}
-          {mode === "reset" && (
-            <>Remembered it?{" "}
-              <button onClick={() => switchMode("signin")} className="font-medium text-foreground hover:underline">Back to sign in</button>
-            </>
-          )}
-        </div>
+          {/* Footer links */}
+          <div className="border-t bg-muted/30 px-6 py-3 text-center text-xs text-muted-foreground">
+            {mode === "signin" && (
+              <>
+                Don&apos;t have an account?{" "}
+                <button
+                  onClick={() => switchMode("signup")}
+                  className="font-medium text-foreground hover:underline"
+                >
+                  Sign up
+                </button>
+              </>
+            )}
+            {mode === "signup" && (
+              <>
+                Already have an account?{" "}
+                <button
+                  onClick={() => switchMode("signin")}
+                  className="font-medium text-foreground hover:underline"
+                >
+                  Sign in
+                </button>
+              </>
+            )}
+            {mode === "reset" && (
+              <>
+                Remembered it?{" "}
+                <button
+                  onClick={() => switchMode("signin")}
+                  className="font-medium text-foreground hover:underline"
+                >
+                  Back to sign in
+                </button>
+              </>
+            )}
+          </div>
         </fieldset>
       </DialogContent>
     </Dialog>
@@ -293,25 +367,41 @@ interface FieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
 // register() spreads in account-form-dialog).
 const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
   { label, id, error, ...props },
-  ref
+  ref,
 ) {
   return (
     <div className="space-y-1">
-      <Label htmlFor={id} className="text-xs font-medium">{label}</Label>
-      <Input id={id} ref={ref} className={`h-8 text-sm ${error ? "border-destructive" : ""}`} {...props} />
+      <Label htmlFor={id} className="text-xs font-medium">
+        {label}
+      </Label>
+      <Input
+        id={id}
+        ref={ref}
+        className={`h-8 text-sm ${error ? "border-destructive" : ""}`}
+        {...props}
+      />
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   )
 })
 
-function StatusMessage({ message, role = "status" }: { message: { type: "success" | "error"; text: string } | null; role?: string }) {
+function StatusMessage({
+  message,
+  role = "status",
+}: {
+  message: { type: "success" | "error"; text: string } | null
+  role?: string
+}) {
   if (!message) return null
   return (
-    <p role={role} className={`text-sm rounded-md px-3 py-2 ${
-      message.type === "error"
-        ? "bg-destructive/10 text-destructive"
-        : "bg-success/10 text-success"
-    }`}>
+    <p
+      role={role}
+      className={`text-sm rounded-md px-3 py-2 ${
+        message.type === "error"
+          ? "bg-destructive/10 text-destructive"
+          : "bg-success/10 text-success"
+      }`}
+    >
       {message.text}
     </p>
   )

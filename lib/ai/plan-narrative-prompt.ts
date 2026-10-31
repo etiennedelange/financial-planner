@@ -86,13 +86,16 @@ Rules you must always follow:
 
 /** Pure prompt construction — no network/model call. Kept separate from the
  * Route Handler so it's independently unit-testable. */
-export function buildPlanNarrativePrompt(payload: PlanNarrativePayload): { system: string; prompt: string } {
+export function buildPlanNarrativePrompt(payload: PlanNarrativePayload): {
+  system: string
+  prompt: string
+} {
   const accountLines = payload.accounts
     .map(
       (account, index) =>
         `${index + 1}. ${ACCOUNT_TYPE_LABELS[account.type]}: ${formatCurrency(account.currentBalance)} balance, ` +
         `${formatCurrency(account.monthlyContribution)}/month contribution, ${account.expectedReturn}% expected return, ` +
-        `${account.annualFees}% annual fees`
+        `${account.annualFees}% annual fees`,
     )
     .join("\n")
 

@@ -1,3 +1,10 @@
+---
+type: Design Spec
+title: "Plain-English AI Plan Narrative — Design Spec"
+description: "On-demand \"Explain my plan\" plain-English narrative."
+date: 2026-08-01
+---
+
 # Plain-English AI Plan Narrative — Design Spec
 
 Date: 2026-08-01

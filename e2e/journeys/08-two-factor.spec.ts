@@ -8,7 +8,9 @@ import {
   signUpAndConfirm,
 } from "../helpers/auth-helper"
 
-test("enrolling in 2FA gates the next sign-in, and a recovery code unblocks + auto-unenrols", async ({ page }) => {
+test("enrolling in 2FA gates the next sign-in, and a recovery code unblocks + auto-unenrols", async ({
+  page,
+}) => {
   const email = `mfa-${Date.now()}@test.local`
   const password = "StrongPassword123"
 
@@ -28,10 +30,7 @@ test("enrolling in 2FA gates the next sign-in, and a recovery code unblocks + au
   const PLAN_TABLES = ["/scenarios", "/accounts", "/expense_groups", "/expenses"]
   const trackRest = (url: string) => restRequests.push(url)
   page.on("request", (req) => {
-    if (
-      req.url().includes("/rest/v1/") &&
-      PLAN_TABLES.some((t) => req.url().includes(t))
-    ) {
+    if (req.url().includes("/rest/v1/") && PLAN_TABLES.some((t) => req.url().includes(t))) {
       trackRest(req.url())
     }
   })
@@ -55,9 +54,7 @@ test("enrolling in 2FA gates the next sign-in, and a recovery code unblocks + au
   // After elevation the store must have synced — at aal2, unlike the gated
   // sign-in above. The elevation is a full navigation (window.location.href),
   // so wait for the post-navigation sync request rather than racing the URL.
-  await expect
-    .poll(() => restRequests.length, { timeout: 15000 })
-    .toBeGreaterThan(0)
+  await expect.poll(() => restRequests.length, { timeout: 15000 }).toBeGreaterThan(0)
 
   // Proof the auto-unenrol actually happened: signing out and back in with just
   // the password reaches /calculator directly, with no MFA challenge at all.
@@ -76,9 +73,9 @@ test("clearing the TOTP challenge re-syncs the store, not just the URL", async (
   // The switcher only renders at all when scenarioList is non-empty, so its
   // presence is exactly the signal this test needs.
   await dismissDevOverlay(page)
-  const switcher = page.getByRole("button", { name: /scenario/i }).or(
-    page.locator('button:has(span.truncate)').first()
-  )
+  const switcher = page
+    .getByRole("button", { name: /scenario/i })
+    .or(page.locator("button:has(span.truncate)").first())
   await expect(switcher.first()).toBeVisible()
   const scenarioName = await switcher.first().innerText()
 
@@ -103,7 +100,7 @@ test("clearing the TOTP challenge re-syncs the store, not just the URL", async (
   // to actually be back, which is only possible because the coordinator's
   // mfa-required phase held back sync until the full-navigation remount.
   await dismissDevOverlay(page)
-  await expect(page.locator('button:has(span.truncate)').first()).toContainText(
-    scenarioName.trim().split("\n")[0]
+  await expect(page.locator("button:has(span.truncate)").first()).toContainText(
+    scenarioName.trim().split("\n")[0],
   )
 })

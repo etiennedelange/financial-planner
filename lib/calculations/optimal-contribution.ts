@@ -27,7 +27,7 @@ interface OptimalContributionResult {
  * Finds the minimum contribution needed to achieve desired retirement income
  */
 export function calculateOptimalContribution(
-  params: OptimalContributionParams
+  params: OptimalContributionParams,
 ): OptimalContributionResult {
   const {
     currentSavings,
@@ -47,17 +47,18 @@ export function calculateOptimalContribution(
   const safeEscalation = finiteOrZero(contributionEscalation)
 
   // Calculate target nest egg based on desired income
-  const desiredMonthlyAtRetirement =
-    escalate(retirementGoals.desiredMonthlyIncome, yearsToRetirement, inflationRate)
+  const desiredMonthlyAtRetirement = escalate(
+    retirementGoals.desiredMonthlyIncome,
+    yearsToRetirement,
+    inflationRate,
+  )
   const desiredAnnualAtRetirement = desiredMonthlyAtRetirement * 12
 
   // Use withdrawal rate to determine required nest egg.
   // A 0% (or non-finite) withdrawal rate would otherwise divide to Infinity — a
   // non-finite target nest egg that leaks into the result (Phase 9.1). Guard it.
   const withdrawalRate = finiteOrZero(drawdownConfig.initialWithdrawalRate) / 100
-  const targetNestEgg = withdrawalRate > 0
-    ? desiredAnnualAtRetirement / withdrawalRate
-    : 0
+  const targetNestEgg = withdrawalRate > 0 ? desiredAnnualAtRetirement / withdrawalRate : 0
 
   // Binary search to find optimal contribution
   let minContribution = 0
@@ -71,7 +72,7 @@ export function calculateOptimalContribution(
     yearsToRetirement,
     safeEscalation,
     netReturn,
-    compoundingMethod
+    compoundingMethod,
   )
   if (currentProjection >= targetNestEgg) {
     return {
@@ -92,7 +93,7 @@ export function calculateOptimalContribution(
       yearsToRetirement,
       safeEscalation,
       netReturn,
-      compoundingMethod
+      compoundingMethod,
     )
 
     if (finalSavings >= targetNestEgg) {
@@ -110,7 +111,7 @@ export function calculateOptimalContribution(
     yearsToRetirement,
     safeEscalation,
     netReturn,
-    compoundingMethod
+    compoundingMethod,
   )
 
   return {

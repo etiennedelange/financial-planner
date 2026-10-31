@@ -1,3 +1,10 @@
+---
+type: Implementation Plan
+title: "Bootstrap and Data Ownership Hardening Implementation Plan"
+description: "Implementation plan for bootstrap and data ownership hardening."
+date: 2026-08-15
+---
+
 # Bootstrap and Data Ownership Hardening Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

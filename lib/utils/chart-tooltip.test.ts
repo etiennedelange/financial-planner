@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect } from "vite-plus/test"
 import { formatCurrency } from "@/lib/utils/currency"
 import {
   resolveTooltipLabelValue,
@@ -104,7 +104,7 @@ describe("getPayloadConfigFromPayload", () => {
     const entry = getPayloadConfigFromPayload(
       config,
       { dataKey: "x", payload: { name: "p75" } },
-      "name"
+      "name",
     )
     expect(entry?.label).toBe("Likely range")
   })

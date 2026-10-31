@@ -1,13 +1,6 @@
 "use client"
 
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  XAxis,
-  YAxis,
-} from "recharts"
+import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts"
 import { Card, CardContent } from "@/components/ui/card"
 import { SectionLabel } from "@/components/ui/section-label"
 import { ChartDataTable } from "@/components/ui/chart-data-table"
@@ -60,7 +53,16 @@ export const CostOfDelayChart = memo(function CostOfDelayChart({
         contributionEscalation,
         compoundingMethod,
       }),
-    [currentSavings, monthlyContribution, personalInfo, retirementGoals, expectedReturn, fees, contributionEscalation, compoundingMethod]
+    [
+      currentSavings,
+      monthlyContribution,
+      personalInfo,
+      retirementGoals,
+      expectedReturn,
+      fees,
+      contributionEscalation,
+      compoundingMethod,
+    ],
   )
 
   const data = useMemo(
@@ -69,7 +71,7 @@ export const CostOfDelayChart = memo(function CostOfDelayChart({
       { name: "2 years", cost: result.costOfTwoYearDelay, pct: result.percentageLostTwoYear },
       { name: "5 years", cost: result.costOfFiveYearDelay, pct: result.percentageLostFiveYear },
     ],
-    [result]
+    [result],
   )
 
   const hasAnyCost = data.some((d) => d.cost > 0)
@@ -95,7 +97,11 @@ export const CostOfDelayChart = memo(function CostOfDelayChart({
   }
 
   return (
-    <Card className="dashboard-card shadow-none" role="figure" aria-label="Cost of delaying retirement savings by one, two, and five years">
+    <Card
+      className="dashboard-card shadow-none"
+      role="figure"
+      aria-label="Cost of delaying retirement savings by one, two, and five years"
+    >
       <div className="px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-3 space-y-1">
         <SectionLabel>Cost of Delay</SectionLabel>
         <p className="text-sm text-muted-foreground pl-3">
@@ -103,19 +109,13 @@ export const CostOfDelayChart = memo(function CostOfDelayChart({
         </p>
       </div>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
-        <ChartContainer config={chartConfig} className="h-(--chart-height-compact) md:h-(--chart-height-full) w-full">
-          <BarChart
-            data={data}
-            margin={{ top: 16, right: 16, left: 0, bottom: 0 }}
-            barGap={16}
-          >
+        <ChartContainer
+          config={chartConfig}
+          className="h-(--chart-height-compact) md:h-(--chart-height-full) w-full"
+        >
+          <BarChart data={data} margin={{ top: 16, right: 16, left: 0, bottom: 0 }} barGap={16}>
             <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
-            <XAxis
-              dataKey="name"
-              tickLine={false}
-              axisLine={false}
-              tick={{ fontSize: 11 }}
-            />
+            <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
             <YAxis
               tickLine={false}
               axisLine={false}
@@ -133,9 +133,19 @@ export const CostOfDelayChart = memo(function CostOfDelayChart({
                 />
               }
             />
-            <Bar dataKey="cost" name="Cost of delay" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} maxBarSize={56} isAnimationActive={false}>
+            <Bar
+              dataKey="cost"
+              name="Cost of delay"
+              fill="hsl(var(--destructive))"
+              radius={[3, 3, 0, 0]}
+              maxBarSize={56}
+              isAnimationActive={false}
+            >
               {data.map((row) => (
-                <Cell key={row.name} fill={row.cost > 0 ? "hsl(var(--destructive))" : "hsl(var(--muted))"} />
+                <Cell
+                  key={row.name}
+                  fill={row.cost > 0 ? "hsl(var(--destructive))" : "hsl(var(--muted))"}
+                />
               ))}
             </Bar>
           </BarChart>
@@ -144,8 +154,18 @@ export const CostOfDelayChart = memo(function CostOfDelayChart({
       <ChartDataTable
         columns={[
           { key: "name", label: "Delay", align: "left" },
-          { key: "cost", label: "Nest egg lost", align: "right", format: (v) => formatCurrency(Number(v)) },
-          { key: "pct", label: "Lost (%)", align: "right", format: (v) => `${Number(v).toFixed(1)}%` },
+          {
+            key: "cost",
+            label: "Nest egg lost",
+            align: "right",
+            format: (v) => formatCurrency(Number(v)),
+          },
+          {
+            key: "pct",
+            label: "Lost (%)",
+            align: "right",
+            format: (v) => `${Number(v).toFixed(1)}%`,
+          },
         ]}
         rows={data}
         caption="Nest egg lost by delaying the start of saving"

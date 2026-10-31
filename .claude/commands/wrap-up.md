@@ -14,10 +14,9 @@ End the session by updating all project documentation and memory to reflect work
 2. **Update phase docs** — for each phase touched this session:
    - Mark completed tasks as done in `docs/project-phases/phase-*.md`
    - Move items from "In Progress" / "Pending" to "Completed"
-   - Add a dated entry to the "Current Status Summary" in `docs/project-phases.md`
-   - Update the status emoji in the phase table
+   - Update the status emoji in the `docs/project-phases.md` table only if a phase's status actually changed
 
-3. **Update history** — if significant calculation or architecture changes were made, create a new `docs/history/YYYY-MM-DD-<short-description>.md` file summarising what changed and why.
+3. **Update history and log** — if significant calculation or architecture changes were made, create a new `docs/history/YYYY-MM-DD-<short-description>.md` file (with `title`, `description`, `date` frontmatter — see `docs/README.md`) summarising what changed and why, and add a one-line entry at the top of `docs/log.md`. Then run `pnpm docs:check`.
 
 4. **Update memory** — review each memory file and update stale entries:
    - `memory/project-phase-status.md` — current phase completion state

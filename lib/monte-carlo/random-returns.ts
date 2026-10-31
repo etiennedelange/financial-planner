@@ -36,7 +36,7 @@ export function createSeededRandom(seed: number): RandomSource {
 export function randomNormal(
   mean: number,
   stdDev: number,
-  rng: RandomSource = Math.random
+  rng: RandomSource = Math.random,
 ): number {
   // The source can return exactly 0; Math.log(0) = -Infinity would poison
   // the whole draw. Number.MIN_VALUE is indistinguishable from 0 for this purpose.
@@ -57,7 +57,7 @@ export function generateReturnSequence(
   expectedReturn: number,
   volatility: number,
   years: number,
-  rng: RandomSource = Math.random
+  rng: RandomSource = Math.random,
 ): number[] {
   const returns: number[] = []
 

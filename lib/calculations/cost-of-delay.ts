@@ -45,7 +45,7 @@ function nestEggAfterDelay(
   delayYears: number,
   contributionEscalation: number,
   netReturn: number,
-  compoundingMethod: CompoundingMethod
+  compoundingMethod: CompoundingMethod,
 ): number {
   // Can't delay longer than the time actually available before retirement —
   // otherwise the delay scenario simulates growth past a retirement date
@@ -57,7 +57,7 @@ function nestEggAfterDelay(
     effectiveDelay,
     0,
     netReturn,
-    compoundingMethod
+    compoundingMethod,
   )
   const remainingYears = Math.max(0, yearsToRetirement - delayYears)
   return projectFinalSavings(
@@ -66,7 +66,7 @@ function nestEggAfterDelay(
     remainingYears,
     contributionEscalation,
     netReturn,
-    compoundingMethod
+    compoundingMethod,
   )
 }
 
@@ -92,17 +92,35 @@ export function calculateCostOfDelay(params: CostOfDelayParams): CostOfDelayResu
     yearsToRetirement,
     contributionEscalation,
     netReturn,
-    compoundingMethod
+    compoundingMethod,
   )
 
   const oneYearDelayNestEgg = nestEggAfterDelay(
-    currentSavings, monthlyContribution, yearsToRetirement, 1, contributionEscalation, netReturn, compoundingMethod
+    currentSavings,
+    monthlyContribution,
+    yearsToRetirement,
+    1,
+    contributionEscalation,
+    netReturn,
+    compoundingMethod,
   )
   const twoYearDelayNestEgg = nestEggAfterDelay(
-    currentSavings, monthlyContribution, yearsToRetirement, 2, contributionEscalation, netReturn, compoundingMethod
+    currentSavings,
+    monthlyContribution,
+    yearsToRetirement,
+    2,
+    contributionEscalation,
+    netReturn,
+    compoundingMethod,
   )
   const fiveYearDelayNestEgg = nestEggAfterDelay(
-    currentSavings, monthlyContribution, yearsToRetirement, 5, contributionEscalation, netReturn, compoundingMethod
+    currentSavings,
+    monthlyContribution,
+    yearsToRetirement,
+    5,
+    contributionEscalation,
+    netReturn,
+    compoundingMethod,
   )
 
   const costOfOneYearDelay = baselineNestEgg - oneYearDelayNestEgg

@@ -39,7 +39,7 @@ export function predictInsertedValue(
   currentValue: string,
   insertedData: string,
   selectionStart: number | null,
-  selectionEnd: number | null
+  selectionEnd: number | null,
 ): string {
   const start = selectionStart ?? currentValue.length
   const end = selectionEnd ?? currentValue.length

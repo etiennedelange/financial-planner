@@ -9,8 +9,12 @@
  * becomes "unused" and the type check fails — which is the point.
  */
 
-import { calculateReplacementRatio } from '@/lib/calculations/retirement-tax'
-import { retirementRands, todayRands, escalateToRetirement } from '@/lib/calculations/utils/money-time'
+import { calculateReplacementRatio } from "@/lib/calculations/retirement-tax"
+import {
+  retirementRands,
+  todayRands,
+  escalateToRetirement,
+} from "@/lib/calculations/utils/money-time"
 
 const withdrawalAtRetirement = retirementRands(902259)
 const salaryToday = todayRands(600000)
@@ -19,7 +23,4 @@ const salaryToday = todayRands(600000)
 calculateReplacementRatio(withdrawalAtRetirement, salaryToday)
 
 // The correct form must compile.
-calculateReplacementRatio(
-  withdrawalAtRetirement,
-  escalateToRetirement(salaryToday, 30, 0.055)
-)
+calculateReplacementRatio(withdrawalAtRetirement, escalateToRetirement(salaryToday, 30, 0.055))

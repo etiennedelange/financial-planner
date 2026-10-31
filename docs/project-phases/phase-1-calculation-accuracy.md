@@ -1,3 +1,10 @@
+---
+type: Phase
+title: "Phase 1: Calculation Accuracy"
+description: "Phase 1: make projections match the Excel FV formula and SA financial standards."
+tags: [calculations]
+---
+
 # Phase 1: Calculation Accuracy ✅ COMPLETED
 
 **Goal:** Ensure all projections match Excel FV formula and SA financial standards.

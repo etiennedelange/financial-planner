@@ -1,3 +1,11 @@
+---
+type: Design Spec
+title: "UI Redesign — Left Sidebar Shell"
+description: "Design for the left sidebar app shell."
+date: 2026-06-07
+tags: [ui]
+---
+
 # UI Redesign — Left Sidebar Shell
 
 **Date:** 2026-06-07  

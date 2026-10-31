@@ -17,13 +17,15 @@ SA retirement planning calculator — Monte Carlo simulations, multi-account por
 npm run dev              # port 3000
 npm run build            # production build
 npm run typecheck        # tsc --noEmit — REQUIRED: next build does NOT typecheck test files
-npm run lint
-npm run test             # Vitest
+npm run check            # vp check: Oxfmt + Oxlint (type-aware, incl. money-time guard) + types
+npm run lint             # vp lint: Oxlint only — does NOT check formatting; use `check` before pushing
+npm run test             # vp test (Vitest 5, bundled with Vite+)
 npm run test:coverage    # must stay >90% on calculation files
 npm run test:watch
 npm run shadscan         # shadcn UI-fundamentals audit (human output)
 npm run shadscan:json    # same audit, machine-readable JSON
 npm run shadscan:gate    # audit with --fail-under 90 (exits non-zero on regression)
+npm run docs:check       # validate docs/ (frontmatter title+description, doc links, log dates)
 ```
 
 ## shadscan audit (run regularly)
@@ -32,10 +34,14 @@ npm run shadscan:gate    # audit with --fail-under 90 (exits non-zero on regress
 container reload, so the audit works offline and can never drift versions.
 
 **Run `npm run shadscan` before committing** (or `shadscan:gate` for a
-hard-fail at <90/100). Baseline: 98/100 (A). Known non-passing finding, all
-deliberate and documented in
-[docs/history/2026-08-16-shadscan-accessibility-audit.md](docs/history/2026-08-16-shadscan-accessibility-audit.md):
-- `mobile-nav-present` — waived (mobile bottom tab bar is the pattern).
+hard-fail at <90/100). Baseline: 93/100 (A). Known non-passing findings
+(the only two that reduce the score; the "Worth checking" items do not):
+- `mobile-nav-present` — waived (mobile bottom tab bar is the pattern); see
+  [docs/history/2026-08-16-shadscan-accessibility-audit.md](docs/history/2026-08-16-shadscan-accessibility-audit.md).
+- `icon-buttons-have-labels` at `components/ui/animated-icon-button.tsx` — static
+  false positive: the wrapper spreads `...props` onto `Button`, so the scanner can't
+  see the label. All 11 call sites (`accounts-page.tsx`, `expenses-page.tsx`) pass
+  `aria-label` (verified 2026-10-25). New call sites must keep doing so.
 
 When a new finding appears, fix it or record an explicit implement/waive
 decision; never churn code just to move score-neutral advisories.
@@ -60,6 +66,8 @@ Pension Funds, Retirement Annuities (RAs), Preservation Funds, TFSA, Discretiona
 5. Verify against Excel FV or manual calculations
 
 **Before committing:**
+- `npm run check` — format, lint and types (`vp check --fix` formats). Lint, format and tests
+  are configured in `vite.config.ts`; test files import from `vite-plus/test`, not `vitest`
 - `npm run test` — all pass
 - `npm run test:coverage` — >90% on modified files
 - `npm run build` — no TS errors
@@ -67,6 +75,7 @@ Pension Funds, Retirement Annuities (RAs), Preservation Funds, TFSA, Discretiona
   accumulated there unnoticed; test fixtures had drifted from the real types and were
   exercising shapes that could not occur in production
 - `npm run shadscan` — audit stays ≥90/100 (or `shadscan:gate` for the hard fail)
+- `npm run docs:check` — if you touched anything under `docs/`
 - Check Debug Window (`components/debug/debug-window.tsx`) — correct compounding method + consistent values across tabs
 
 **Test structure** (see `projection.test.ts` as reference):
@@ -169,7 +178,9 @@ After a meaningful change, update all three tiers — detail lives in exactly ON
 
 1. `docs/history/YYYY-MM-DD-<slug>.md` — the ONLY full write-up: what changed, why, verification
 2. `docs/project-phases/<phase>.md` — flip checkboxes, update pending list, link to the history file; don't repeat its content
-3. `docs/project-phases.md` — one-line Recent Activity entry (date + title + history link); keep the latest 10, drop the oldest. Status emoji only when a phase's status actually changes
+3. `docs/log.md` — one-line entry under a `## YYYY-MM-DD` heading, newest first (title + history link + one sentence). `docs/project-phases.md` changes only when a phase's status emoji actually changes
+
+Every doc under `docs/` needs `title` and `description` frontmatter (OKF-style; the description is how an agent decides whether to open it). Run `pnpm docs:check` after adding or renaming one.
 
 Full conventions: `docs/README.md`
 

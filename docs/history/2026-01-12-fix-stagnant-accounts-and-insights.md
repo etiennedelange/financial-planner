@@ -1,3 +1,11 @@
+---
+type: History Entry
+title: "2026-01-12: Fix Stagnant Account Bug and Key Insights Logic"
+description: "Fix for the stagnant-account (0% return) bug that reduced total projections, and the key insights logic."
+date: 2026-01-12
+tags: [calculations]
+---
+
 # 2026-01-12: Fix Stagnant Account Bug and Key Insights Logic
 
 ## Summary

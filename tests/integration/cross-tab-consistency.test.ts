@@ -1,16 +1,16 @@
-import { describe, it, expect } from 'vitest'
-import { calculateProjection } from '@/lib/calculations/projection-engine'
-import { calculateOptimalContribution } from '@/lib/calculations/optimal-contribution'
-import { runMonteCarloSimulation } from '@/lib/monte-carlo/simulation-engine'
-import type { Account, PersonalInfo, RetirementGoals, DrawdownConfig } from '@/types'
+import { describe, it, expect } from "vite-plus/test"
+import { calculateProjection } from "@/lib/calculations/projection-engine"
+import { calculateOptimalContribution } from "@/lib/calculations/optimal-contribution"
+import { runMonteCarloSimulation } from "@/lib/monte-carlo/simulation-engine"
+import type { Account, PersonalInfo, RetirementGoals, DrawdownConfig } from "@/types"
 
-describe('Cross-tab consistency', () => {
+describe("Cross-tab consistency", () => {
   const testAccounts: Account[] = [
     {
-      id: '1',
-      name: 'Test RA',
-      type: 'retirement_annuity',
-    provider: 'Test Provider',
+      id: "1",
+      name: "Test RA",
+      type: "retirement_annuity",
+      provider: "Test Provider",
       currentBalance: 100000,
       monthlyContribution: 2000,
       expectedReturn: 12,
@@ -33,7 +33,7 @@ describe('Cross-tab consistency', () => {
   }
 
   const testDrawdownConfig: DrawdownConfig = {
-    strategy: 'fixed_percentage',
+    strategy: "fixed_percentage",
     initialWithdrawalRate: 4,
     minimumWithdrawal: 15000,
     maximumWithdrawal: 60000,
@@ -47,17 +47,17 @@ describe('Cross-tab consistency', () => {
     equityVolatility: 16,
     bondVolatility: 8,
     inflationRate: 5.5,
-    compoundingMethod: 'nominal' as const,
+    compoundingMethod: "nominal" as const,
   }
 
-  describe('Projection and Optimal Contribution consistency', () => {
-    it('should agree on nest egg requirements at retirement', () => {
+  describe("Projection and Optimal Contribution consistency", () => {
+    it("should agree on nest egg requirements at retirement", () => {
       const projection = calculateProjection(
         testAccounts,
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        testAssumptions
+        testAssumptions,
       )
 
       const optimal = calculateOptimalContribution({
@@ -68,7 +68,7 @@ describe('Cross-tab consistency', () => {
         expectedReturn: testAccounts[0].expectedReturn / 100,
         fees: testAccounts[0].annualFees / 100,
         contributionEscalation: testAccounts[0].contributionEscalation / 100,
-        compoundingMethod: 'nominal',
+        compoundingMethod: "nominal",
       })
 
       // Both should calculate similar target nest eggs
@@ -80,12 +80,12 @@ describe('Cross-tab consistency', () => {
       expect(optimal.projectedNestEgg).toBeGreaterThanOrEqual(optimal.targetNestEgg * 0.95) // Within 5%
     })
 
-    it('should have consistent retirement age', () => {
+    it("should have consistent retirement age", () => {
       const projection = calculateProjection(
         testAccounts,
         testPersonalInfo,
         testRetirementGoals,
-        testDrawdownConfig
+        testDrawdownConfig,
       )
 
       const optimal = calculateOptimalContribution({
@@ -96,7 +96,7 @@ describe('Cross-tab consistency', () => {
         expectedReturn: 0.12,
         fees: 0.01,
         contributionEscalation: 0.05,
-        compoundingMethod: 'nominal',
+        compoundingMethod: "nominal",
       })
 
       // Both use same retirement age
@@ -104,13 +104,13 @@ describe('Cross-tab consistency', () => {
       expect(projection.yearlyProjections.length).toBeGreaterThanOrEqual(30)
     })
 
-    it('should respect compounding method consistently', () => {
+    it("should respect compounding method consistently", () => {
       const projectionNominal = calculateProjection(
         testAccounts,
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        { ...testAssumptions, compoundingMethod: 'nominal' }
+        { ...testAssumptions, compoundingMethod: "nominal" },
       )
 
       const projectionCompound = calculateProjection(
@@ -118,7 +118,7 @@ describe('Cross-tab consistency', () => {
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        { ...testAssumptions, compoundingMethod: 'compound' }
+        { ...testAssumptions, compoundingMethod: "compound" },
       )
 
       const optimalNominal = calculateOptimalContribution({
@@ -129,7 +129,7 @@ describe('Cross-tab consistency', () => {
         expectedReturn: 0.12,
         fees: 0.01,
         contributionEscalation: 0.05,
-        compoundingMethod: 'nominal',
+        compoundingMethod: "nominal",
       })
 
       const optimalCompound = calculateOptimalContribution({
@@ -140,27 +140,27 @@ describe('Cross-tab consistency', () => {
         expectedReturn: 0.12,
         fees: 0.01,
         contributionEscalation: 0.05,
-        compoundingMethod: 'compound',
+        compoundingMethod: "compound",
       })
 
       // Both should show nominal > compound (nominal method overstates returns)
       expect(projectionNominal.portfolioAtRetirement).toBeGreaterThan(
-        projectionCompound.portfolioAtRetirement
+        projectionCompound.portfolioAtRetirement,
       )
       expect(optimalNominal.optimalMonthlyContribution).toBeLessThanOrEqual(
-        optimalCompound.optimalMonthlyContribution
+        optimalCompound.optimalMonthlyContribution,
       )
     })
   })
 
-  describe('Monte Carlo and Deterministic projection consistency', () => {
-    it('should have similar median outcome between deterministic and stochastic', () => {
+  describe("Monte Carlo and Deterministic projection consistency", () => {
+    it("should have similar median outcome between deterministic and stochastic", () => {
       const projection = calculateProjection(
         testAccounts,
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        testAssumptions
+        testAssumptions,
       )
 
       const simulation = runMonteCarloSimulation(
@@ -169,7 +169,7 @@ describe('Cross-tab consistency', () => {
         testRetirementGoals,
         testDrawdownConfig,
         { numberOfRuns: 200, randomSeed: 20260726 },
-        testAssumptions
+        testAssumptions,
       )
 
       // Monte Carlo median (p50) at retirement should be reasonably close to deterministic
@@ -178,21 +178,21 @@ describe('Cross-tab consistency', () => {
       const deterministicAtRetirement = projection.portfolioAtRetirement
 
       // Should be within 20% (Monte Carlo has variance)
-      const percentDiff = Math.abs(
-        (mcMedianAtRetirement - deterministicAtRetirement) / deterministicAtRetirement
-      ) * 100
+      const percentDiff =
+        Math.abs((mcMedianAtRetirement - deterministicAtRetirement) / deterministicAtRetirement) *
+        100
 
       expect(percentDiff).toBeLessThan(20)
     })
 
-    it('should have Monte Carlo percentiles ordered correctly', () => {
+    it("should have Monte Carlo percentiles ordered correctly", () => {
       const simulation = runMonteCarloSimulation(
         testAccounts,
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
         { numberOfRuns: 100, randomSeed: 20260726 },
-        testAssumptions
+        testAssumptions,
       )
 
       // At any given year, p10 < p25 < p50 < p75 < p90
@@ -211,14 +211,14 @@ describe('Cross-tab consistency', () => {
       }
     })
 
-    it('should use same compounding method in both projections', () => {
+    it("should use same compounding method in both projections", () => {
       // Nominal
       const projectionNominal = calculateProjection(
         testAccounts,
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        { ...testAssumptions, compoundingMethod: 'nominal' }
+        { ...testAssumptions, compoundingMethod: "nominal" },
       )
 
       const simulationNominal = runMonteCarloSimulation(
@@ -227,7 +227,7 @@ describe('Cross-tab consistency', () => {
         testRetirementGoals,
         testDrawdownConfig,
         { numberOfRuns: 50, randomSeed: 20260726 },
-        { ...testAssumptions, compoundingMethod: 'nominal' }
+        { ...testAssumptions, compoundingMethod: "nominal" },
       )
 
       // Compound
@@ -236,7 +236,7 @@ describe('Cross-tab consistency', () => {
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        { ...testAssumptions, compoundingMethod: 'compound' }
+        { ...testAssumptions, compoundingMethod: "compound" },
       )
 
       const simulationCompound = runMonteCarloSimulation(
@@ -245,12 +245,12 @@ describe('Cross-tab consistency', () => {
         testRetirementGoals,
         testDrawdownConfig,
         { numberOfRuns: 50, randomSeed: 20260726 },
-        { ...testAssumptions, compoundingMethod: 'compound' }
+        { ...testAssumptions, compoundingMethod: "compound" },
       )
 
       // Nominal should be higher than compound in both cases
       expect(projectionNominal.portfolioAtRetirement).toBeGreaterThan(
-        projectionCompound.portfolioAtRetirement
+        projectionCompound.portfolioAtRetirement,
       )
 
       const mcMedianNominal = simulationNominal.percentiles.p50[30] || 0
@@ -260,14 +260,14 @@ describe('Cross-tab consistency', () => {
     })
   })
 
-  describe('Inflation consistency', () => {
-    it('should apply same inflation rate across all calculations', () => {
+  describe("Inflation consistency", () => {
+    it("should apply same inflation rate across all calculations", () => {
       const projection = calculateProjection(
         testAccounts,
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        testAssumptions
+        testAssumptions,
       )
 
       const optimal = calculateOptimalContribution({
@@ -278,7 +278,7 @@ describe('Cross-tab consistency', () => {
         expectedReturn: 0.12,
         fees: 0.01,
         contributionEscalation: 0.05,
-        compoundingMethod: 'nominal',
+        compoundingMethod: "nominal",
       })
 
       // Over 30 years at 5.5% inflation, R30k becomes significantly more
@@ -286,42 +286,36 @@ describe('Cross-tab consistency', () => {
       expect(optimal.targetNestEgg).toBeGreaterThan(0)
 
       // Both should account for this inflation
-      const firstYearRetirementWithdrawal =
-        projection.yearlyProjections[30]?.withdrawals || 0
+      const firstYearRetirementWithdrawal = projection.yearlyProjections[30]?.withdrawals || 0
       expect(firstYearRetirementWithdrawal).toBeGreaterThan(
-        testRetirementGoals.desiredMonthlyIncome * 12
+        testRetirementGoals.desiredMonthlyIncome * 12,
       )
     })
   })
 
-  describe('Drawdown strategy consistency', () => {
-    it('should apply same withdrawal strategy across calculations', () => {
-      const projection = calculateProjection(
-        testAccounts,
-        testPersonalInfo,
-        testRetirementGoals,
-        {
-          strategy: 'fixed_percentage',
-          initialWithdrawalRate: 4,
-          minimumWithdrawal: 10000,
-          maximumWithdrawal: 60000,
-          lumpSumPercentage: 0,
-        }
-      )
+  describe("Drawdown strategy consistency", () => {
+    it("should apply same withdrawal strategy across calculations", () => {
+      const projection = calculateProjection(testAccounts, testPersonalInfo, testRetirementGoals, {
+        strategy: "fixed_percentage",
+        initialWithdrawalRate: 4,
+        minimumWithdrawal: 10000,
+        maximumWithdrawal: 60000,
+        lumpSumPercentage: 0,
+      })
 
       const simulation = runMonteCarloSimulation(
         testAccounts,
         testPersonalInfo,
         testRetirementGoals,
         {
-          strategy: 'fixed_percentage',
+          strategy: "fixed_percentage",
           initialWithdrawalRate: 4,
           minimumWithdrawal: 10000,
           maximumWithdrawal: 60000,
           lumpSumPercentage: 0,
         },
         { numberOfRuns: 50, randomSeed: 20260726 },
-        testAssumptions
+        testAssumptions,
       )
 
       // Both should show withdrawals starting at retirement
@@ -333,14 +327,14 @@ describe('Cross-tab consistency', () => {
     })
   })
 
-  describe('Multiple account aggregation consistency', () => {
-    it('should aggregate accounts consistently across methods', () => {
+  describe("Multiple account aggregation consistency", () => {
+    it("should aggregate accounts consistently across methods", () => {
       const accounts: Account[] = [
         {
-          id: '1',
-          name: 'RA',
-          type: 'retirement_annuity',
-    provider: 'Test Provider',
+          id: "1",
+          name: "RA",
+          type: "retirement_annuity",
+          provider: "Test Provider",
           currentBalance: 100000,
           monthlyContribution: 1000,
           expectedReturn: 12,
@@ -348,10 +342,10 @@ describe('Cross-tab consistency', () => {
           contributionEscalation: 5,
         },
         {
-          id: '2',
-          name: 'TFSA',
-          type: 'tfsa',
-    provider: 'Test Provider',
+          id: "2",
+          name: "TFSA",
+          type: "tfsa",
+          provider: "Test Provider",
           currentBalance: 50000,
           monthlyContribution: 500,
           expectedReturn: 10,
@@ -364,7 +358,7 @@ describe('Cross-tab consistency', () => {
         accounts,
         testPersonalInfo,
         testRetirementGoals,
-        testDrawdownConfig
+        testDrawdownConfig,
       )
 
       const simulation = runMonteCarloSimulation(
@@ -373,7 +367,7 @@ describe('Cross-tab consistency', () => {
         testRetirementGoals,
         testDrawdownConfig,
         { numberOfRuns: 50, randomSeed: 20260726 },
-        testAssumptions
+        testAssumptions,
       )
 
       // Both should show growth from combined portfolio
@@ -382,13 +376,13 @@ describe('Cross-tab consistency', () => {
     })
   })
 
-  describe('Edge case consistency', () => {
-    it('should handle zero contribution consistently', () => {
+  describe("Edge case consistency", () => {
+    it("should handle zero contribution consistently", () => {
       const accountNoContribution: Account = {
-        id: '1',
-        name: 'Test',
-        type: 'retirement_annuity',
-    provider: 'Test Provider',
+        id: "1",
+        name: "Test",
+        type: "retirement_annuity",
+        provider: "Test Provider",
         currentBalance: 100000,
         monthlyContribution: 0, // No contribution
         expectedReturn: 12,
@@ -400,7 +394,7 @@ describe('Cross-tab consistency', () => {
         [accountNoContribution],
         testPersonalInfo,
         testRetirementGoals,
-        testDrawdownConfig
+        testDrawdownConfig,
       )
 
       const simulation = runMonteCarloSimulation(
@@ -409,7 +403,7 @@ describe('Cross-tab consistency', () => {
         testRetirementGoals,
         testDrawdownConfig,
         { numberOfRuns: 50, randomSeed: 20260726 },
-        testAssumptions
+        testAssumptions,
       )
 
       // Both should show growth from investment returns only
@@ -417,7 +411,7 @@ describe('Cross-tab consistency', () => {
       expect(simulation.percentiles.p50[30] || 0).toBeGreaterThan(100000)
     })
 
-    it('should handle very high desired income consistently', () => {
+    it("should handle very high desired income consistently", () => {
       const highIncomeGoals: RetirementGoals = {
         desiredMonthlyIncome: 100000, // Very high
         inflationRate: 5.5,
@@ -428,7 +422,7 @@ describe('Cross-tab consistency', () => {
         testAccounts,
         testPersonalInfo,
         highIncomeGoals,
-        testDrawdownConfig
+        testDrawdownConfig,
       )
 
       const simulation = runMonteCarloSimulation(
@@ -437,7 +431,7 @@ describe('Cross-tab consistency', () => {
         highIncomeGoals,
         testDrawdownConfig,
         { numberOfRuns: 50, randomSeed: 20260726 },
-        testAssumptions
+        testAssumptions,
       )
 
       // Documents the interplay between the two metrics for a percentage-of-portfolio
@@ -468,13 +462,13 @@ describe('Cross-tab consistency', () => {
     })
   })
 
-  describe('SA-specific consistency', () => {
-    it('should handle TFSA limit scenario consistently', () => {
+  describe("SA-specific consistency", () => {
+    it("should handle TFSA limit scenario consistently", () => {
       const tfsaAtLimit: Account = {
-        id: '1',
-        name: 'TFSA',
-        type: 'tfsa',
-    provider: 'Test Provider',
+        id: "1",
+        name: "TFSA",
+        type: "tfsa",
+        provider: "Test Provider",
         currentBalance: 500000, // At R500k lifetime limit
         monthlyContribution: 0, // Can't contribute more
         expectedReturn: 10,
@@ -486,7 +480,7 @@ describe('Cross-tab consistency', () => {
         [tfsaAtLimit],
         testPersonalInfo,
         testRetirementGoals,
-        testDrawdownConfig
+        testDrawdownConfig,
       )
 
       const simulation = runMonteCarloSimulation(
@@ -495,7 +489,7 @@ describe('Cross-tab consistency', () => {
         testRetirementGoals,
         testDrawdownConfig,
         { numberOfRuns: 50, randomSeed: 20260726 },
-        testAssumptions
+        testAssumptions,
       )
 
       // Both should show growth from investment returns only
@@ -503,12 +497,12 @@ describe('Cross-tab consistency', () => {
       expect(simulation.percentiles.p50[30] || 0).toBeGreaterThan(500000)
     })
 
-    it('should handle old pension fund scenario consistently', () => {
+    it("should handle old pension fund scenario consistently", () => {
       const oldPensionFund: Account = {
-        id: '1',
-        name: 'Old Pension Fund',
-        type: 'pension_fund',
-    provider: 'Test Provider',
+        id: "1",
+        name: "Old Pension Fund",
+        type: "pension_fund",
+        provider: "Test Provider",
         currentBalance: 750000,
         monthlyContribution: 0, // No longer contributing
         expectedReturn: 9,
@@ -520,7 +514,7 @@ describe('Cross-tab consistency', () => {
         [oldPensionFund],
         testPersonalInfo,
         testRetirementGoals,
-        testDrawdownConfig
+        testDrawdownConfig,
       )
 
       const simulation = runMonteCarloSimulation(
@@ -529,7 +523,7 @@ describe('Cross-tab consistency', () => {
         testRetirementGoals,
         testDrawdownConfig,
         { numberOfRuns: 50, randomSeed: 20260726 },
-        testAssumptions
+        testAssumptions,
       )
 
       // Both should show growth from investment returns only

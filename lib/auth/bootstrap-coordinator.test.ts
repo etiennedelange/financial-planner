@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect, vi } from "vite-plus/test"
 import type { User } from "@supabase/supabase-js"
 import { createBootstrapCoordinator } from "./bootstrap-coordinator"
 import type { BootstrapDependencies, AuthEvent } from "./bootstrap-machine"
@@ -72,7 +72,7 @@ describe("createBootstrapCoordinator", () => {
 
   it("does not call protected sync while MFA is required", async () => {
     const dependencies = makeDependencies({
-      getUser: async () => ({ id: "user-a" } as User),
+      getUser: async () => ({ id: "user-a" }) as User,
       currentAal: async () => ({ current: "aal1", next: "aal2" }),
     })
     const coordinator = createBootstrapCoordinator(dependencies)
@@ -99,7 +99,7 @@ describe("createBootstrapCoordinator", () => {
 
     expect(dependencies.applyAuthTransition).toHaveBeenCalledWith(
       expect.objectContaining({ hasSession: true }),
-      expect.any(Number)
+      expect.any(Number),
     )
     expect(callbackReturned).toBe(true)
   })
@@ -172,7 +172,7 @@ describe("createBootstrapCoordinator", () => {
 
   it("does not re-claim or re-sync on a token refresh", async () => {
     const dependencies = makeDependencies({
-      getUser: async () => ({ id: "user-a" } as User),
+      getUser: async () => ({ id: "user-a" }) as User,
     })
     const coordinator = createBootstrapCoordinator(dependencies)
 
@@ -204,7 +204,7 @@ describe("createBootstrapCoordinator", () => {
 
   it("applies a SIGNED_OUT that arrived during user-scoped hydration", async () => {
     const dependencies = makeDependencies({
-      getUser: async () => ({ id: "user-a" } as User),
+      getUser: async () => ({ id: "user-a" }) as User,
     })
     const coordinator = createBootstrapCoordinator(dependencies)
     const startPromise = coordinator.start()
@@ -216,7 +216,7 @@ describe("createBootstrapCoordinator", () => {
     // after the hydration settles, never dropped — and nothing claimed or synced.
     expect(dependencies.applyAuthTransition).toHaveBeenCalledWith(
       expect.objectContaining({ type: "SIGNED_OUT" }),
-      expect.any(Number)
+      expect.any(Number),
     )
     expect(dependencies.syncFromDb).not.toHaveBeenCalled()
     expect(coordinator.getState().phase).toBe("ready")
@@ -262,7 +262,7 @@ describe("createBootstrapCoordinator", () => {
     })
 
     it("hydrates guest then user scope, never concurrently, for a signed-in startup", async () => {
-      const { counts, dependencies } = harness(async () => ({ id: "user-a" } as User))
+      const { counts, dependencies } = harness(async () => ({ id: "user-a" }) as User)
       const coordinator = createBootstrapCoordinator(dependencies)
       await coordinator.start()
 
@@ -272,7 +272,7 @@ describe("createBootstrapCoordinator", () => {
     })
 
     it("does not add a third hydration for React StrictMode's double start()", async () => {
-      const { counts, dependencies } = harness(async () => ({ id: "user-a" } as User))
+      const { counts, dependencies } = harness(async () => ({ id: "user-a" }) as User)
       const coordinator = createBootstrapCoordinator(dependencies)
 
       // React 19 StrictMode double-invokes effects in dev; both calls must share

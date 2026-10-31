@@ -68,7 +68,10 @@ export function ChartDataTable<K extends string>({
                 {columns.map((col) => (
                   <TableHead
                     key={col.key}
-                    className={cn("h-8 px-3 text-xs font-medium", col.align === "right" && "text-right")}
+                    className={cn(
+                      "h-8 px-3 text-xs font-medium",
+                      col.align === "right" && "text-right",
+                    )}
                   >
                     {col.label}
                   </TableHead>
@@ -83,7 +86,7 @@ export function ChartDataTable<K extends string>({
                       key={col.key}
                       className={cn(
                         "px-3 py-1.5 text-xs tabular-nums",
-                        col.align === "right" ? "text-right font-mono" : "text-muted-foreground"
+                        col.align === "right" ? "text-right font-mono" : "text-muted-foreground",
                       )}
                     >
                       {col.format ? col.format(row[col.key]) : String(row[col.key])}

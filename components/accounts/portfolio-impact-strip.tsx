@@ -43,7 +43,7 @@ export function PortfolioImpactStrip({
   const othersMonthly = others.reduce((s, a) => s + a.monthlyContribution, 0)
   const othersReturnWeighted = others.reduce(
     (s, a) => s + a.currentBalance * (a.expectedReturn - a.annualFees),
-    0
+    0,
   )
 
   const formBalance = safe(currentBalance)
@@ -68,9 +68,24 @@ export function PortfolioImpactStrip({
     value: number
     format: (v: number) => string
   }> = [
-    { label: "Total balance", baseline: baselineBalance, value: newBalance, format: formatCurrency },
-    { label: "Net return", baseline: baselineNetReturn, value: newNetReturn, format: formatPercent },
-    { label: "Monthly total", baseline: baselineMonthly, value: newMonthly, format: formatCurrency },
+    {
+      label: "Total balance",
+      baseline: baselineBalance,
+      value: newBalance,
+      format: formatCurrency,
+    },
+    {
+      label: "Net return",
+      baseline: baselineNetReturn,
+      value: newNetReturn,
+      format: formatPercent,
+    },
+    {
+      label: "Monthly total",
+      baseline: baselineMonthly,
+      value: newMonthly,
+      format: formatCurrency,
+    },
   ]
 
   // Compare formatted strings, not raw deltas — a raw diff can be
@@ -80,9 +95,7 @@ export function PortfolioImpactStrip({
 
   return (
     <div className="rounded-md border border-border/60 bg-muted/30 px-3 py-2.5 space-y-1.5">
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-        Portfolio impact
-      </p>
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Portfolio impact</p>
       {changedRows.length > 0 ? (
         <div className="space-y-1">
           {changedRows.map((row) => {

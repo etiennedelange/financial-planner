@@ -1,3 +1,9 @@
+---
+type: Phase
+title: "Phase 4: Data Persistence"
+description: "Phase 4: saving and loading user data, with named scenarios."
+---
+
 # Phase 4: Data Persistence ✅ Complete
 
 **Goal:** Save and load user data from database, support named scenarios.

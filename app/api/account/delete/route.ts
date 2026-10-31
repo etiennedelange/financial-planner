@@ -11,7 +11,9 @@ import { NextResponse } from "next/server"
  */
 export async function DELETE() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
@@ -25,8 +27,12 @@ export async function DELETE() {
   // lib/supabase/proxy.ts). Passing the access token forces the live getUser(jwt)
   // path instead — required here since a stale snapshot could wrongly let a
   // caller who just removed their factor skip the AAL2 gate.
-  const { data: { session } } = await supabase.auth.getSession()
-  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(session?.access_token)
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(
+    session?.access_token,
+  )
   if (aal?.nextLevel === "aal2" && aal?.currentLevel !== "aal2") {
     return NextResponse.json({ error: "Two-factor verification required" }, { status: 403 })
   }

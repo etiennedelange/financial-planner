@@ -5,10 +5,16 @@ import dynamic from "next/dynamic"
 
 const ProjectionsPage = dynamic(
   () => import("@/components/pages/projections-page").then((m) => ({ default: m.ProjectionsPage })),
-  { ssr: false }
+  { ssr: false },
 )
 
 export default function ProjectionsRoute() {
   const { projection, simulationResult, isSimulating } = useCalculator()
-  return <ProjectionsPage projection={projection} simulationResult={simulationResult} isSimulating={isSimulating} />
+  return (
+    <ProjectionsPage
+      projection={projection}
+      simulationResult={simulationResult}
+      isSimulating={isSimulating}
+    />
+  )
 }
