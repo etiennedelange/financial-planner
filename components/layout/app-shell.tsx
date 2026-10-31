@@ -16,7 +16,10 @@ export function AppShell({ accountCount, user, isLoaded, children }: AppShellPro
   return (
     // data-bootstrap-phase exposes the coordinator's readiness to e2e tests
     // (state-manager's waitForHydration polls it instead of a blind sleep).
-    <div className="flex h-screen overflow-hidden" data-bootstrap-phase={isLoaded ? "ready" : "loading"}>
+    <div
+      className="flex h-screen overflow-hidden"
+      data-bootstrap-phase={isLoaded ? "ready" : "loading"}
+    >
       {/* Sidebar — desktop only */}
       <Sidebar accountCount={accountCount} isLoaded={isLoaded} />
 
@@ -24,9 +27,7 @@ export function AppShell({ accountCount, user, isLoaded, children }: AppShellPro
       <div className="flex flex-1 flex-col md:pl-(--sidebar-width) overflow-hidden">
         <TopBar user={user} />
         <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-6xl px-4 pt-4 pb-24 md:px-8 md:py-6">
-            {children}
-          </div>
+          <div className="mx-auto w-full max-w-6xl px-4 pt-4 pb-24 md:px-8 md:py-6">{children}</div>
         </main>
       </div>
 

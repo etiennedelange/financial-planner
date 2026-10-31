@@ -1,13 +1,6 @@
 "use client"
 
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ReferenceLine,
-  XAxis,
-  YAxis,
-} from "recharts"
+import { Area, AreaChart, CartesianGrid, ReferenceLine, XAxis, YAxis } from "recharts"
 import { Card, CardContent } from "@/components/ui/card"
 import { SectionLabel } from "@/components/ui/section-label"
 import { ChartDataTable } from "@/components/ui/chart-data-table"
@@ -38,19 +31,25 @@ export const PortfolioGrowthChart = memo(function PortfolioGrowthChart({
   projections,
   retirementAge,
 }: PortfolioGrowthChartProps) {
-  const data = useMemo(() => projections.map((p) => ({
-    age: p.age,
-    balance: p.endingBalance,
-    contributions: p.contributions,
-    withdrawals: p.withdrawals,
-  })), [projections])
+  const data = useMemo(
+    () =>
+      projections.map((p) => ({
+        age: p.age,
+        balance: p.endingBalance,
+        contributions: p.contributions,
+        withdrawals: p.withdrawals,
+      })),
+    [projections],
+  )
 
   if (projections.length === 0) {
     return (
       <Card className="dashboard-card shadow-none">
         <div className="px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-3 space-y-1">
           <SectionLabel>Portfolio Growth Over Time</SectionLabel>
-          <p className="text-sm text-muted-foreground pl-3">Deterministic projection of portfolio value</p>
+          <p className="text-sm text-muted-foreground pl-3">
+            Deterministic projection of portfolio value
+          </p>
         </div>
         <CardContent className="relative flex h-(--chart-height-compact) md:h-(--chart-height-full) items-center justify-center overflow-hidden">
           {/* Ghost growth curve: accumulates to retirement, gentle withdrawal after */}
@@ -81,7 +80,10 @@ export const PortfolioGrowthChart = memo(function PortfolioGrowthChart({
             />
             {/* Retirement reference */}
             <line
-              x1="210" y1="12" x2="210" y2="252"
+              x1="210"
+              y1="12"
+              x2="210"
+              y2="252"
               stroke="hsl(var(--muted-foreground))"
               strokeWidth="1"
               strokeOpacity={0.12}
@@ -98,19 +100,24 @@ export const PortfolioGrowthChart = memo(function PortfolioGrowthChart({
   }
 
   return (
-    <Card className="dashboard-card shadow-none" role="figure" aria-label={`Portfolio balance projection from age ${projections[0].age} to ${projections[projections.length - 1].age}`}>
+    <Card
+      className="dashboard-card shadow-none"
+      role="figure"
+      aria-label={`Portfolio balance projection from age ${projections[0].age} to ${projections[projections.length - 1].age}`}
+    >
       <div className="px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-3 space-y-1">
         <SectionLabel>Portfolio Growth Over Time</SectionLabel>
         <p className="text-sm text-muted-foreground pl-3">
-          Projected balance from age {projections[0].age} to {projections[projections.length - 1].age}
+          Projected balance from age {projections[0].age} to{" "}
+          {projections[projections.length - 1].age}
         </p>
       </div>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
-        <ChartContainer config={chartConfig} className="h-(--chart-height-compact) md:h-(--chart-height-full) w-full">
-          <AreaChart
-            data={data}
-            margin={{ top: 16, right: 16, left: 0, bottom: 0 }}
-          >
+        <ChartContainer
+          config={chartConfig}
+          className="h-(--chart-height-compact) md:h-(--chart-height-full) w-full"
+        >
+          <AreaChart data={data} margin={{ top: 16, right: 16, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.18} />
@@ -169,9 +176,24 @@ export const PortfolioGrowthChart = memo(function PortfolioGrowthChart({
       <ChartDataTable
         columns={[
           { key: "age", label: "Age", align: "right" },
-          { key: "balance", label: "Ending balance", align: "right", format: (v) => formatCurrency(Number(v)) },
-          { key: "contributions", label: "Contributions", align: "right", format: (v) => formatCurrency(Number(v)) },
-          { key: "withdrawals", label: "Withdrawals", align: "right", format: (v) => formatCurrency(Number(v)) },
+          {
+            key: "balance",
+            label: "Ending balance",
+            align: "right",
+            format: (v) => formatCurrency(Number(v)),
+          },
+          {
+            key: "contributions",
+            label: "Contributions",
+            align: "right",
+            format: (v) => formatCurrency(Number(v)),
+          },
+          {
+            key: "withdrawals",
+            label: "Withdrawals",
+            align: "right",
+            format: (v) => formatCurrency(Number(v)),
+          },
         ]}
         rows={data}
         caption={`Portfolio balance from age ${projections[0].age} to ${projections[projections.length - 1].age}`}

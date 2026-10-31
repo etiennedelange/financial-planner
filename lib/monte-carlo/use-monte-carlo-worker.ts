@@ -12,10 +12,7 @@ import type {
 import type { WorkerRequest, WorkerResponse } from "./simulation.worker"
 
 type SimState = { result: SimulationResult | null; isRunning: boolean; hasError: boolean }
-type SimAction =
-  | { type: "START" }
-  | { type: "DONE"; result: SimulationResult }
-  | { type: "ERROR" }
+type SimAction = { type: "START" } | { type: "DONE"; result: SimulationResult } | { type: "ERROR" }
 
 export const initialSimState: SimState = { result: null, isRunning: false, hasError: false }
 
@@ -46,7 +43,7 @@ export function useMonteCarloWorker(
   drawdownConfig: DrawdownConfig,
   numberOfRuns: number,
   marketAssumptions?: MarketAssumptions,
-  enabled = true
+  enabled = true,
 ): { simulationResult: SimulationResult | null; isRunning: boolean; hasError: boolean } {
   const [{ result, isRunning, hasError }, dispatch] = useReducer(simReducer, initialSimState)
 
@@ -67,9 +64,7 @@ export function useMonteCarloWorker(
 
     // Lazily create the worker once
     if (!workerRef.current) {
-      const worker = new Worker(
-        new URL("./simulation.worker.ts", import.meta.url)
-      )
+      const worker = new Worker(new URL("./simulation.worker.ts", import.meta.url))
       worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
         const { id, result: workerResult } = e.data
         // Ignore responses for superseded runs

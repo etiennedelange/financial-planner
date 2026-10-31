@@ -73,7 +73,7 @@ export function SettingsPage({ projection }: SettingsPageProps) {
       setDisplayMode: state.setDisplayMode,
       resetToDefaults: state.resetToDefaults,
       loadPlan: state.loadPlan,
-    }))
+    })),
   )
 
   const { theme, setTheme } = useTheme()
@@ -121,159 +121,170 @@ export function SettingsPage({ projection }: SettingsPageProps) {
 
   return (
     <div className="space-y-6">
-      <input ref={importInputRef} type="file" accept=".json" className="sr-only" aria-label="Import plan file" onChange={handleImportPlan} />
+      <input
+        ref={importInputRef}
+        type="file"
+        accept=".json"
+        className="sr-only"
+        aria-label="Import plan file"
+        onChange={handleImportPlan}
+      />
       {/* Display */}
       <PageCard label="Display" contentClassName="space-y-4">
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Display Mode</p>
-            <div className="flex gap-2">
-              <Button
-                variant={displayMode === "real" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setDisplayMode("real")}
-              >
-                Today&apos;s Value (Real)
-              </Button>
-              <Button
-                variant={displayMode === "nominal" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setDisplayMode("nominal")}
-              >
-                Future Value (Nominal)
-              </Button>
-            </div>
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Display Mode</p>
+          <div className="flex gap-2">
+            <Button
+              variant={displayMode === "real" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setDisplayMode("real")}
+            >
+              Today&apos;s Value (Real)
+            </Button>
+            <Button
+              variant={displayMode === "nominal" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setDisplayMode("nominal")}
+            >
+              Future Value (Nominal)
+            </Button>
           </div>
+        </div>
 
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Compounding Method</p>
-            <div className="flex gap-2">
-              <Button
-                variant={assumptions.compoundingMethod === "nominal" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setAssumptions({ compoundingMethod: "nominal" })}
-              >
-                Nominal (Excel-compatible)
-              </Button>
-              <Button
-                variant={assumptions.compoundingMethod === "compound" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setAssumptions({ compoundingMethod: "compound" })}
-              >
-                Compound (Actuarially correct)
-              </Button>
-            </div>
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Compounding Method</p>
+          <div className="flex gap-2">
+            <Button
+              variant={assumptions.compoundingMethod === "nominal" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setAssumptions({ compoundingMethod: "nominal" })}
+            >
+              Nominal (Excel-compatible)
+            </Button>
+            <Button
+              variant={assumptions.compoundingMethod === "compound" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setAssumptions({ compoundingMethod: "compound" })}
+            >
+              Compound (Actuarially correct)
+            </Button>
           </div>
+        </div>
       </PageCard>
 
       {/* Appearance */}
       <PageCard label="Appearance" contentClassName="space-y-4">
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Dark Mode</p>
-            <div className="flex gap-2">
-              <IconLabelButton
-                icon={SunIcon}
-                iconSize={14}
-                iconClassName="mr-1.5"
-                variant={theme === "light" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTheme("light")}
-              >
-                Light
-              </IconLabelButton>
-              <IconLabelButton
-                icon={MoonIcon}
-                iconSize={14}
-                iconClassName="mr-1.5"
-                variant={theme === "dark" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTheme("dark")}
-              >
-                Dark
-              </IconLabelButton>
-              <IconLabelButton
-                icon={MonitorIcon}
-                iconSize={14}
-                iconClassName="mr-1.5"
-                variant={theme === "system" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTheme("system")}
-              >
-                System
-              </IconLabelButton>
-            </div>
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Dark Mode</p>
+          <div className="flex gap-2">
+            <IconLabelButton
+              icon={SunIcon}
+              iconSize={14}
+              iconClassName="mr-1.5"
+              variant={theme === "light" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setTheme("light")}
+            >
+              Light
+            </IconLabelButton>
+            <IconLabelButton
+              icon={MoonIcon}
+              iconSize={14}
+              iconClassName="mr-1.5"
+              variant={theme === "dark" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setTheme("dark")}
+            >
+              Dark
+            </IconLabelButton>
+            <IconLabelButton
+              icon={MonitorIcon}
+              iconSize={14}
+              iconClassName="mr-1.5"
+              variant={theme === "system" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setTheme("system")}
+            >
+              System
+            </IconLabelButton>
           </div>
+        </div>
       </PageCard>
 
       {/* Plan */}
       <PageCard label="Plan" contentClassName="space-y-2">
-          <div className="flex flex-wrap gap-2">
-            <IconLabelButton
-              icon={PrinterIcon}
-              variant="outline"
-              size="sm"
-              onClick={() => window.open("/print", "_blank")}
-            >
-              Print / Save PDF
-            </IconLabelButton>
-            <IconLabelButton
-              icon={FileSpreadsheetIcon}
-              variant="outline"
-              size="sm"
-              onClick={handleExportCsv}
-              disabled={!projection}
-            >
-              Export CSV
-            </IconLabelButton>
-            <IconLabelButton
-              icon={DownloadIcon}
-              variant="outline"
-              size="sm"
-              onClick={handleExportPlan}
-            >
-              Export Plan
-            </IconLabelButton>
-            <IconLabelButton
-              icon={UploadIcon}
-              variant="outline"
-              size="sm"
-              onClick={() => importInputRef.current?.click()}
-              disabled={importing}
-            >
-              {importing ? "Importing…" : "Import Plan"}
-            </IconLabelButton>
-          </div>
-          {importError && (
-            <p className="text-sm text-destructive">{importError}</p>
-          )}
+        <div className="flex flex-wrap gap-2">
+          <IconLabelButton
+            icon={PrinterIcon}
+            variant="outline"
+            size="sm"
+            onClick={() => window.open("/print", "_blank")}
+          >
+            Print / Save PDF
+          </IconLabelButton>
+          <IconLabelButton
+            icon={FileSpreadsheetIcon}
+            variant="outline"
+            size="sm"
+            onClick={handleExportCsv}
+            disabled={!projection}
+          >
+            Export CSV
+          </IconLabelButton>
+          <IconLabelButton
+            icon={DownloadIcon}
+            variant="outline"
+            size="sm"
+            onClick={handleExportPlan}
+          >
+            Export Plan
+          </IconLabelButton>
+          <IconLabelButton
+            icon={UploadIcon}
+            variant="outline"
+            size="sm"
+            onClick={() => importInputRef.current?.click()}
+            disabled={importing}
+          >
+            {importing ? "Importing…" : "Import Plan"}
+          </IconLabelButton>
+        </div>
+        {importError && <p className="text-sm text-destructive">{importError}</p>}
       </PageCard>
 
       {/* Reset Plan Data: local plan state (distinct from account deletion below) */}
-      <PageCard label="Reset Plan Data" labelVariant="destructive" className="border-destructive/40" contentClassName="space-y-3">
-          {resetPending ? (
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                This will reset all accounts, personal info, goals, and assumptions to defaults. This cannot be undone.
-              </p>
-              <div className="flex gap-2">
-                <Button variant="destructive" size="sm" onClick={handleReset}>
-                  Yes, reset everything
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setResetPending(false)}>
-                  Cancel
-                </Button>
-              </div>
+      <PageCard
+        label="Reset Plan Data"
+        labelVariant="destructive"
+        className="border-destructive/40"
+        contentClassName="space-y-3"
+      >
+        {resetPending ? (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              This will reset all accounts, personal info, goals, and assumptions to defaults. This
+              cannot be undone.
+            </p>
+            <div className="flex gap-2">
+              <Button variant="destructive" size="sm" onClick={handleReset}>
+                Yes, reset everything
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setResetPending(false)}>
+                Cancel
+              </Button>
             </div>
-          ) : (
-            <IconLabelButton
-              icon={RefreshCwIcon}
-              variant="outline"
-              size="sm"
-              onClick={handleReset}
-              className="border-destructive/40 text-destructive hover:bg-destructive/10"
-            >
-              Reset to Defaults
-            </IconLabelButton>
-          )}
+          </div>
+        ) : (
+          <IconLabelButton
+            icon={RefreshCwIcon}
+            variant="outline"
+            size="sm"
+            onClick={handleReset}
+            className="border-destructive/40 text-destructive hover:bg-destructive/10"
+          >
+            Reset to Defaults
+          </IconLabelButton>
+        )}
       </PageCard>
 
       {/* Account (signed-in users only) */}

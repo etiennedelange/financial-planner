@@ -17,8 +17,9 @@ SA retirement planning calculator — Monte Carlo simulations, multi-account por
 npm run dev              # port 3000
 npm run build            # production build
 npm run typecheck        # tsc --noEmit — REQUIRED: next build does NOT typecheck test files
-npm run lint
-npm run test             # Vitest
+npm run check            # vp check: Oxfmt + Oxlint (type-aware, incl. money-time guard) + types
+npm run lint             # vp lint: Oxlint only — does NOT check formatting; use `check` before pushing
+npm run test             # vp test (Vitest 5, bundled with Vite+)
 npm run test:coverage    # must stay >90% on calculation files
 npm run test:watch
 npm run shadscan         # shadcn UI-fundamentals audit (human output)
@@ -65,6 +66,8 @@ Pension Funds, Retirement Annuities (RAs), Preservation Funds, TFSA, Discretiona
 5. Verify against Excel FV or manual calculations
 
 **Before committing:**
+- `npm run check` — format, lint and types (`vp check --fix` formats). Lint, format and tests
+  are configured in `vite.config.ts`; test files import from `vite-plus/test`, not `vitest`
 - `npm run test` — all pass
 - `npm run test:coverage` — >90% on modified files
 - `npm run build` — no TS errors

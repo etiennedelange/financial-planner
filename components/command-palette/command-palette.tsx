@@ -35,21 +35,21 @@ interface CommandItemDef {
 }
 
 const NAV_ITEMS: CommandItemDef[] = [
-  { id: "nav-overview",     label: "Overview",     href: "/calculator/overview",     icon: LayoutDashboard },
-  { id: "nav-accounts",     label: "Accounts",     href: "/calculator/accounts",     icon: Wallet },
-  { id: "nav-plan",         label: "Plan",         href: "/calculator/plan",         icon: ListChecks },
-  { id: "nav-expenses",     label: "Expenses",     href: "/calculator/expenses",     icon: DollarSign },
-  { id: "nav-projections",  label: "Projections",  href: "/calculator/projections",  icon: BarChart2 },
-  { id: "nav-charts",       label: "Charts",       href: "/calculator/charts",       icon: BarChart3 },
-  { id: "nav-settings",     label: "Settings",     href: "/calculator/settings",     icon: Settings },
+  { id: "nav-overview", label: "Overview", href: "/calculator/overview", icon: LayoutDashboard },
+  { id: "nav-accounts", label: "Accounts", href: "/calculator/accounts", icon: Wallet },
+  { id: "nav-plan", label: "Plan", href: "/calculator/plan", icon: ListChecks },
+  { id: "nav-expenses", label: "Expenses", href: "/calculator/expenses", icon: DollarSign },
+  { id: "nav-projections", label: "Projections", href: "/calculator/projections", icon: BarChart2 },
+  { id: "nav-charts", label: "Charts", href: "/calculator/charts", icon: BarChart3 },
+  { id: "nav-settings", label: "Settings", href: "/calculator/settings", icon: Settings },
 ]
 
 const ACCOUNT_ICON: Record<AccountType, React.ElementType> = {
-  pension_fund:          Wallet,
-  retirement_annuity:    Wallet,
-  preservation_fund:     Wallet,
-  tfsa:                  PiggyBank,
-  discretionary:         BarChart2,
+  pension_fund: Wallet,
+  retirement_annuity: Wallet,
+  preservation_fund: Wallet,
+  tfsa: PiggyBank,
+  discretionary: BarChart2,
 }
 
 export function CommandPalette() {
@@ -121,18 +121,13 @@ export function CommandPalette() {
       />
       <CommandList>
         <CommandEmpty>
-          No results for{" "}
-          <span className="font-medium text-foreground">&quot;{query}&quot;</span>
+          No results for <span className="font-medium text-foreground">&quot;{query}&quot;</span>
         </CommandEmpty>
         <CommandGroup heading="Navigate">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon
             return (
-              <CommandItem
-                key={item.id}
-                value={item.id}
-                onSelect={() => navigate(item.href)}
-              >
+              <CommandItem key={item.id} value={item.id} onSelect={() => navigate(item.href)}>
                 <Icon className="h-4 w-4 shrink-0" />
                 <span className="truncate font-medium">{item.label}</span>
                 <span

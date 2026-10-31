@@ -110,8 +110,8 @@ function SocialCard() {
           Will your savings last 30 years?
         </span>
         <span style={{ fontSize: FONT_SIZE_SUB, color: "#cbd5e1", lineHeight: 1.4 }}>
-          1,000 market scenarios. South African tax rules. Pension funds, RAs,
-          TFSAs and discretionary portfolios — modelled together.
+          1,000 market scenarios. South African tax rules. Pension funds, RAs, TFSAs and
+          discretionary portfolios — modelled together.
         </span>
       </div>
 

@@ -74,36 +74,50 @@ export function DashboardMetricsGrid({
         label: "Total Portfolio",
         value: totalCurrentBalance > 0 ? formatCurrency(totalCurrentBalance) : "--",
         description: "Current balance",
-        tooltip: "Your total retirement savings across all accounts (RAs, Pension Funds, TFSAs, etc.). This is your starting point.",
+        tooltip:
+          "Your total retirement savings across all accounts (RAs, Pension Funds, TFSAs, etc.). This is your starting point.",
       },
       {
         icon: Target,
         label: "Portfolio at Retirement",
         value: projection
-          ? formatCurrency(projection.portfolioAtRetirement, displayMode, yearsToRetirement, inflationRate / 100)
+          ? formatCurrency(
+              projection.portfolioAtRetirement,
+              displayMode,
+              yearsToRetirement,
+              inflationRate / 100,
+            )
           : "--",
         description: projection
           ? `At age ${retirementAge}${displayMode === "real" ? " (today's value)" : ""}`
           : `Target: age ${retirementAge}`,
-        tooltip: "Projected portfolio value when you retire. This is your 'nest egg' - the amount you'll have saved by retirement age.",
+        tooltip:
+          "Projected portfolio value when you retire. This is your 'nest egg' - the amount you'll have saved by retirement age.",
       },
       {
         icon: TrendingUp,
         label: "Monthly Contributions",
         value: totalMonthlyContributions > 0 ? formatCurrency(totalMonthlyContributions) : "--",
         description: "Total across all accounts",
-        tooltip: "Total monthly contributions across all retirement accounts. Increasing contributions significantly improves outcomes due to compound growth.",
+        tooltip:
+          "Total monthly contributions across all retirement accounts. Increasing contributions significantly improves outcomes due to compound growth.",
       },
       {
         icon: DollarSign,
         label: "Monthly Income",
         value: projection
-          ? formatCurrency(projection.monthlyIncomeAtRetirement, displayMode, yearsToRetirement, inflationRate / 100)
+          ? formatCurrency(
+              projection.monthlyIncomeAtRetirement,
+              displayMode,
+              yearsToRetirement,
+              inflationRate / 100,
+            )
           : "--",
         description: projection
           ? `At retirement${displayMode === "real" ? " (today's value)" : ""}`
           : "Requires projection",
-        tooltip: "Monthly income your portfolio can support in retirement based on your withdrawal rate.",
+        tooltip:
+          "Monthly income your portfolio can support in retirement based on your withdrawal rate.",
       },
       {
         icon: Calendar,
@@ -115,23 +129,45 @@ export function DashboardMetricsGrid({
         icon: Gauge,
         label: "Plan Success Rate",
         value: successRate !== null ? `${successRate.toFixed(0)}%` : isSimulating ? "…" : "--",
-        description: successRate !== null
-          ? successRate >= 90 ? "Excellent" : successRate >= 75 ? "Good" : successRate >= 60 ? "Fair" : "At Risk"
-          : isSimulating ? "Simulating…" : "Run simulation",
+        description:
+          successRate !== null
+            ? successRate >= 90
+              ? "Excellent"
+              : successRate >= 75
+                ? "Good"
+                : successRate >= 60
+                  ? "Fair"
+                  : "At Risk"
+            : isSimulating
+              ? "Simulating…"
+              : "Run simulation",
         successRate: successRate ?? undefined,
-        tooltip: "Probability of successfully meeting your income goal throughout retirement. Based on 1,000 Monte Carlo simulations.",
+        tooltip:
+          "Probability of successfully meeting your income goal throughout retirement. Based on 1,000 Monte Carlo simulations.",
       },
       {
         icon: Hourglass,
         label: "Portfolio Depletion",
         value: depletionValue,
         description: depletionDescription,
-        tooltip: successRate !== null && successRate >= 60
-          ? "Reflects how confidently your plan avoids running out of money: 'Never' at 90%+ success, 'Likely Never' at 75%+, 'Uncertain' below that. The description shows the risk among scenarios that fail."
-          : "Below a 60% success rate, this shows the median age at which your portfolio runs out across failing scenarios. Increase contributions or adjust retirement age to improve this.",
+        tooltip:
+          successRate !== null && successRate >= 60
+            ? "Reflects how confidently your plan avoids running out of money: 'Never' at 90%+ success, 'Likely Never' at 75%+, 'Uncertain' below that. The description shows the risk among scenarios that fail."
+            : "Below a 60% success rate, this shows the median age at which your portfolio runs out across failing scenarios. Increase contributions or adjust retirement age to improve this.",
       },
     ] as const
-  }, [projection, simulationResult, isSimulating, displayMode, yearsToRetirement, retirementAge, inflationRate, totalCurrentBalance, totalMonthlyContributions, currentAge])
+  }, [
+    projection,
+    simulationResult,
+    isSimulating,
+    displayMode,
+    yearsToRetirement,
+    retirementAge,
+    inflationRate,
+    totalCurrentBalance,
+    totalMonthlyContributions,
+    currentAge,
+  ])
 
   return (
     <div className="space-y-3">

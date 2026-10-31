@@ -1,4 +1,11 @@
-import type { Account, PersonalInfo, RetirementGoals, DrawdownConfig, CompoundingMethod, MarketAssumptions } from "@/types"
+import type {
+  Account,
+  PersonalInfo,
+  RetirementGoals,
+  DrawdownConfig,
+  CompoundingMethod,
+  MarketAssumptions,
+} from "@/types"
 import { runMonteCarloSimulation } from "@/lib/monte-carlo/simulation-engine"
 import { projectFinalSavings } from "./utils/projection"
 import { escalate } from "./utils/money-time"
@@ -10,7 +17,7 @@ export const INVESTMENT_SCENARIOS = {
     name: "Conservative",
     description: "Lower risk, more stable returns",
     nominalReturn: 0.105, // 10.5%
-    volatility: 0.10, // 10%
+    volatility: 0.1, // 10%
     allocation: "60% bonds, 30% equity, 10% cash",
   },
   balanced: {
@@ -70,7 +77,7 @@ function projectRetirementDuration(
   savings: number,
   firstYearExpenses: number,
   realReturn: number,
-  inflation: number
+  inflation: number,
 ): number {
   let yearsCovered = 0
   let remainingSavings = savings
@@ -111,7 +118,7 @@ function runFullMonteCarloSimulation(
   expectedReturn: number,
   volatility: number,
   compoundingMethod: CompoundingMethod,
-  iterations: number = 1000
+  iterations: number = 1000,
 ): number {
   const syntheticAccount: Account = {
     id: "scenario-comparison-synthetic",
@@ -149,7 +156,7 @@ function runFullMonteCarloSimulation(
     retirementGoals,
     syntheticDrawdownConfig,
     { numberOfRuns: iterations },
-    marketAssumptions
+    marketAssumptions,
   )
 
   return result.successRate
@@ -158,9 +165,7 @@ function runFullMonteCarloSimulation(
 /**
  * Compare retirement outcomes across Conservative, Balanced, and Aggressive scenarios
  */
-export function compareScenarios(
-  params: ScenarioComparisonParams
-): ScenarioComparisonResult {
+export function compareScenarios(params: ScenarioComparisonParams): ScenarioComparisonResult {
   const {
     currentSavings,
     monthlyContribution,
@@ -175,10 +180,7 @@ export function compareScenarios(
   const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
   const inflationRate = retirementGoals.inflationRate / 100
 
-  const results: Record<ScenarioType, ScenarioResult> = {} as Record<
-    ScenarioType,
-    ScenarioResult
-  >
+  const results: Record<ScenarioType, ScenarioResult> = {} as Record<ScenarioType, ScenarioResult>
 
   for (const [key, scenario] of Object.entries(INVESTMENT_SCENARIOS)) {
     const scenarioKey = key as ScenarioType
@@ -195,12 +197,15 @@ export function compareScenarios(
       yearsToRetirement,
       contributionEscalation,
       nominalReturn,
-      compoundingMethod
+      compoundingMethod,
     )
 
     // Calculate annual withdrawal at retirement
-    const desiredMonthlyAtRetirement =
-      escalate(retirementGoals.desiredMonthlyIncome, yearsToRetirement, inflationRate)
+    const desiredMonthlyAtRetirement = escalate(
+      retirementGoals.desiredMonthlyIncome,
+      yearsToRetirement,
+      inflationRate,
+    )
     const annualWithdrawal = desiredMonthlyAtRetirement * 12
 
     // How many years the savings will last (using nominal return, withdrawals inflate)
@@ -208,7 +213,7 @@ export function compareScenarios(
       projectedNestEgg,
       annualWithdrawal,
       nominalReturn,
-      inflationRate
+      inflationRate,
     )
 
     // Monte Carlo success probability including both accumulation and drawdown phases
@@ -221,7 +226,7 @@ export function compareScenarios(
       retirementGoals,
       nominalReturn,
       scenario.volatility,
-      compoundingMethod
+      compoundingMethod,
     )
 
     // Monthly income supported by portfolio
@@ -254,8 +259,7 @@ export function compareScenarios(
         "With 20+ years to retirement, you can afford higher risk for potentially better returns."
     } else {
       recommendedScenario = "balanced"
-      recommendation =
-        "A balanced approach provides good growth potential with manageable risk."
+      recommendation = "A balanced approach provides good growth potential with manageable risk."
     }
   } else if (yearsToRetirement > 10) {
     // Medium time horizon
@@ -265,8 +269,7 @@ export function compareScenarios(
         "With 10-20 years to retirement, a balanced approach balances growth and security."
     } else {
       recommendedScenario = "conservative"
-      recommendation =
-        "Consider a more conservative approach to protect your accumulated savings."
+      recommendation = "Consider a more conservative approach to protect your accumulated savings."
     }
   } else {
     // Short time horizon - prioritize capital preservation

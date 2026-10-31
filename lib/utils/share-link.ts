@@ -1,4 +1,10 @@
-import type { Account, DrawdownConfig, MarketAssumptions, PersonalInfo, RetirementGoals } from "@/types"
+import type {
+  Account,
+  DrawdownConfig,
+  MarketAssumptions,
+  PersonalInfo,
+  RetirementGoals,
+} from "@/types"
 
 export interface ShareablePlan {
   personalInfo: PersonalInfo

@@ -1,4 +1,10 @@
-import type { Account, DrawdownConfig, MarketAssumptions, PersonalInfo, RetirementGoals } from "@/types"
+import type {
+  Account,
+  DrawdownConfig,
+  MarketAssumptions,
+  PersonalInfo,
+  RetirementGoals,
+} from "@/types"
 
 const PLAN_VERSION = 1
 
@@ -21,7 +27,7 @@ export function exportPlan(
   assumptions: MarketAssumptions,
   drawdownConfig: DrawdownConfig,
   displayMode: "nominal" | "real",
-  accounts: Account[]
+  accounts: Account[],
 ): void {
   const payload: PlanExport = {
     version: PLAN_VERSION,

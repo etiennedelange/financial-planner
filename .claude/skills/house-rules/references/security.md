@@ -125,7 +125,8 @@ together to 16.3.0.
 
 **Check:** if `package.json` or `pnpm-lock.yaml` changed, run `pnpm audit`.
 
-**Check:** `next`, `@next/bundle-analyzer`, and `eslint-config-next` moved **together**.
+**Check:** `next` and `@next/bundle-analyzer` moved **together** (`eslint-config-next` was
+the third until lint moved to Oxlint on 2026-10-31).
 Splitting them is what produced the mismatched tree.
 
 The project also has a dedicated `security-audit` skill for devcontainer, pnpm, and semgrep

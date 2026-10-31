@@ -1,11 +1,11 @@
-import type { Page } from '@playwright/test'
+import type { Page } from "@playwright/test"
 import type {
   Account,
   PersonalInfo,
   RetirementGoals,
   MarketAssumptions,
   DrawdownConfig,
-} from '@/types'
+} from "@/types"
 
 /**
  * Calculator state structure matching Zustand store
@@ -16,7 +16,7 @@ export interface CalculatorState {
   retirementGoals: RetirementGoals
   assumptions?: MarketAssumptions
   drawdownConfig: DrawdownConfig
-  displayMode: 'nominal' | 'real'
+  displayMode: "nominal" | "real"
 }
 
 /**
@@ -39,7 +39,7 @@ export class StateManager {
    */
   async clearState() {
     await this.page.evaluate(() => {
-      const prefix = ['financial-planner-storage', 'expenses-store-v2']
+      const prefix = ["financial-planner-storage", "expenses-store-v2"]
       const keysToRemove: string[] = []
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i)
@@ -60,7 +60,7 @@ export class StateManager {
    */
   async seedState(state: Partial<CalculatorState>) {
     await this.page.evaluate((stateData) => {
-      const storageKey = 'financial-planner-storage:guest'
+      const storageKey = "financial-planner-storage:guest"
       const existing = localStorage.getItem(storageKey)
       const parsed = existing ? JSON.parse(existing) : { state: {} }
 
@@ -70,7 +70,7 @@ export class StateManager {
         JSON.stringify({
           state: { ...parsed.state, ...stateData },
           version: 2,
-        })
+        }),
       )
     }, state)
   }
@@ -80,7 +80,7 @@ export class StateManager {
    */
   async getState(): Promise<CalculatorState | null> {
     return await this.page.evaluate(() => {
-      const storage = localStorage.getItem('financial-planner-storage:guest')
+      const storage = localStorage.getItem("financial-planner-storage:guest")
       return storage ? JSON.parse(storage).state : null
     })
   }

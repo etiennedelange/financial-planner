@@ -45,7 +45,7 @@ export function WhatIfPanel() {
       setPersonalInfo: state.setPersonalInfo,
       setRetirementGoals: state.setRetirementGoals,
       updateAccount: state.updateAccount,
-    }))
+    })),
   )
 
   const [deltas, setDeltas] = useState<SensitivityDeltas>(DEFAULT_SENSITIVITY_DELTAS)
@@ -57,7 +57,7 @@ export function WhatIfPanel() {
     retirementGoals: scaledRetirementGoals,
   } = useMemo(
     () => applySensitivityDeltas(accounts, personalInfo, retirementGoals, deltas),
-    [accounts, personalInfo, retirementGoals, deltas]
+    [accounts, personalInfo, retirementGoals, deltas],
   )
 
   const baselineProjection = useMemo(
@@ -65,15 +65,28 @@ export function WhatIfPanel() {
       accounts.length === 0
         ? null
         : calculateProjection(accounts, personalInfo, retirementGoals, drawdownConfig, assumptions),
-    [accounts, personalInfo, retirementGoals, drawdownConfig, assumptions]
+    [accounts, personalInfo, retirementGoals, drawdownConfig, assumptions],
   )
 
   const sandboxProjection = useMemo(
     () =>
       accounts.length === 0
         ? null
-        : calculateProjection(scaledAccounts, scaledPersonalInfo, scaledRetirementGoals, drawdownConfig, assumptions),
-    [scaledAccounts, scaledPersonalInfo, scaledRetirementGoals, drawdownConfig, assumptions, accounts.length]
+        : calculateProjection(
+            scaledAccounts,
+            scaledPersonalInfo,
+            scaledRetirementGoals,
+            drawdownConfig,
+            assumptions,
+          ),
+    [
+      scaledAccounts,
+      scaledPersonalInfo,
+      scaledRetirementGoals,
+      drawdownConfig,
+      assumptions,
+      accounts.length,
+    ],
   )
 
   // Debounced (Monte Carlo) side: baseline uses the real plan directly; sandbox
@@ -85,7 +98,7 @@ export function WhatIfPanel() {
     drawdownConfig,
     1000,
     assumptions,
-    accounts.length > 0
+    accounts.length > 0,
   )
 
   const deferredDeltas = useDeferredValue(deltas)
@@ -95,17 +108,18 @@ export function WhatIfPanel() {
     retirementGoals: mcRetirementGoals,
   } = useMemo(
     () => applySensitivityDeltas(accounts, personalInfo, retirementGoals, deferredDeltas),
-    [accounts, personalInfo, retirementGoals, deferredDeltas]
+    [accounts, personalInfo, retirementGoals, deferredDeltas],
   )
-  const { simulationResult: sandboxSimulation, isRunning: isSandboxSimulating } = useMonteCarloWorker(
-    mcAccounts,
-    mcPersonalInfo,
-    mcRetirementGoals,
-    drawdownConfig,
-    1000,
-    assumptions,
-    accounts.length > 0
-  )
+  const { simulationResult: sandboxSimulation, isRunning: isSandboxSimulating } =
+    useMonteCarloWorker(
+      mcAccounts,
+      mcPersonalInfo,
+      mcRetirementGoals,
+      drawdownConfig,
+      1000,
+      assumptions,
+      accounts.length > 0,
+    )
 
   const handleReset = () => setDeltas(DEFAULT_SENSITIVITY_DELTAS)
 
@@ -131,17 +145,24 @@ export function WhatIfPanel() {
 
   const atDefault = isAtDefault(deltas)
 
-  const totalScaledContribution = scaledAccounts.reduce((sum, acc) => sum + acc.monthlyContribution, 0)
+  const totalScaledContribution = scaledAccounts.reduce(
+    (sum, acc) => sum + acc.monthlyContribution,
+    0,
+  )
   const totalBalance = scaledAccounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
   const weightedReturn =
     totalBalance === 0
       ? 0
-      : scaledAccounts.reduce((sum, acc) => sum + acc.expectedReturn * acc.currentBalance, 0) / totalBalance
+      : scaledAccounts.reduce((sum, acc) => sum + acc.expectedReturn * acc.currentBalance, 0) /
+        totalBalance
 
   const nestEggDelta =
-    (sandboxProjection?.portfolioAtRetirement ?? 0) - (baselineProjection?.portfolioAtRetirement ?? 0)
+    (sandboxProjection?.portfolioAtRetirement ?? 0) -
+    (baselineProjection?.portfolioAtRetirement ?? 0)
   const successRateDelta =
-    sandboxSimulation && baselineSimulation ? sandboxSimulation.successRate - baselineSimulation.successRate : null
+    sandboxSimulation && baselineSimulation
+      ? sandboxSimulation.successRate - baselineSimulation.successRate
+      : null
 
   return (
     <PageCard
@@ -152,8 +173,11 @@ export function WhatIfPanel() {
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-5">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Retirement age: {scaledPersonalInfo.retirementAge}</label>
-            <Slider aria-label="Retirement age"
+            <label className="text-sm font-medium">
+              Retirement age: {scaledPersonalInfo.retirementAge}
+            </label>
+            <Slider
+              aria-label="Retirement age"
               value={[deltas.retirementAgeOffset]}
               min={-10}
               max={15}
@@ -166,7 +190,8 @@ export function WhatIfPanel() {
             <label className="text-sm font-medium">
               Monthly contribution: {formatCurrency(totalScaledContribution)}
             </label>
-            <Slider aria-label="Monthly contribution"
+            <Slider
+              aria-label="Monthly contribution"
               value={[deltas.contributionScalePct]}
               min={-100}
               max={200}
@@ -176,8 +201,11 @@ export function WhatIfPanel() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Expected return: {weightedReturn.toFixed(1)}%</label>
-            <Slider aria-label="Expected return"
+            <label className="text-sm font-medium">
+              Expected return: {weightedReturn.toFixed(1)}%
+            </label>
+            <Slider
+              aria-label="Expected return"
               value={[deltas.returnDeltaPts]}
               min={-5}
               max={5}
@@ -190,12 +218,15 @@ export function WhatIfPanel() {
             <label className="text-sm font-medium">
               Target monthly income: {formatCurrency(scaledRetirementGoals.desiredMonthlyIncome)}
             </label>
-            <Slider aria-label="Target monthly income"
+            <Slider
+              aria-label="Target monthly income"
               value={[deltas.targetMonthlyIncomeOverride ?? retirementGoals.desiredMonthlyIncome]}
               min={retirementGoals.desiredMonthlyIncome * 0.5}
               max={retirementGoals.desiredMonthlyIncome * 1.5}
               step={500}
-              onValueChange={([value]) => setDeltas((d) => ({ ...d, targetMonthlyIncomeOverride: value }))}
+              onValueChange={([value]) =>
+                setDeltas((d) => ({ ...d, targetMonthlyIncomeOverride: value }))
+              }
             />
           </div>
 
@@ -233,7 +264,12 @@ export function WhatIfPanel() {
               </p>
             )}
             {!atDefault && successRateDelta !== null && (
-              <p className={cn("text-xs", successRateDelta >= 0 ? "text-chart-2" : "text-destructive")}>
+              <p
+                className={cn(
+                  "text-xs",
+                  successRateDelta >= 0 ? "text-chart-2" : "text-destructive",
+                )}
+              >
                 {successRateDelta >= 0 ? "+" : ""}
                 {successRateDelta.toFixed(0)}pts vs your current plan
               </p>

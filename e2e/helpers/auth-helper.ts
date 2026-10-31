@@ -9,7 +9,7 @@ export const MAILPIT = "http://127.0.0.1:54324"
 /** Pulls the first URL out of the newest mail to `email` whose subject matches. */
 export async function latestMailLink(email: string, subject: string): Promise<string> {
   const res = await fetch(
-    `${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:${email} subject:"${subject}"`)}`
+    `${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:${email} subject:"${subject}"`)}`,
   )
   const { messages } = await res.json()
   const newest = messages[0]

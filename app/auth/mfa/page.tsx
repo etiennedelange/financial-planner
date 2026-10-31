@@ -30,7 +30,7 @@ export default function MfaChallengePage() {
           // next request's AAL check no longer sees a reason to gate — the
           // hard navigation below re-runs middleware against the fresh state.
           await unenrollAbandonedFactors().catch(() => {})
-          // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- hard reload re-runs middleware against the freshly cleaned-up factor state.
+          // Hard reload re-runs middleware against the freshly cleaned-up factor state.
           window.location.href = "/calculator"
         } else {
           factorIdRef.current = factors[0].id
@@ -38,7 +38,9 @@ export default function MfaChallengePage() {
         }
       })
       .catch((err: unknown) =>
-        setError(`Could not load your authentication factors: ${err instanceof Error ? err.message : String(err)}`)
+        setError(
+          `Could not load your authentication factors: ${err instanceof Error ? err.message : String(err)}`,
+        ),
       )
   }, [])
 
@@ -56,7 +58,8 @@ export default function MfaChallengePage() {
         return
       }
     }
-    setLoading(true); setError(null)
+    setLoading(true)
+    setError(null)
 
     try {
       if (mode === "recovery") {
@@ -73,11 +76,19 @@ export default function MfaChallengePage() {
       } else {
         const supabase = createClient()
         const { data: challenge, error: cErr } = await supabase.auth.mfa.challenge({ factorId: id })
-        if (cErr) { setError(cErr.message); return }
+        if (cErr) {
+          setError(cErr.message)
+          return
+        }
         const { error: vErr } = await supabase.auth.mfa.verify({
-          factorId: id, challengeId: challenge.id, code: value,
+          factorId: id,
+          challengeId: challenge.id,
+          code: value,
         })
-        if (vErr) { setError("That code is not correct."); return }
+        if (vErr) {
+          setError("That code is not correct.")
+          return
+        }
       }
       // Full navigation, not router.replace(). SupabaseProvider lives in the
       // root layout, so a client-side navigation never remounts it — and its
@@ -88,7 +99,7 @@ export default function MfaChallengePage() {
       // load remounts the provider and re-syncs at the now-satisfied aal2.
       // session-list.tsx and account-settings.tsx force a reload for the same
       // reason after changing auth state.
-      // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- full reload remounts SupabaseProvider and re-syncs at the now-satisfied aal2.
+      // Full reload remounts SupabaseProvider and re-syncs at the now-satisfied aal2.
       window.location.href = "/calculator"
     } finally {
       setLoading(false)
@@ -103,21 +114,33 @@ export default function MfaChallengePage() {
             <Label htmlFor="mfa-input" className="text-xs font-medium">
               {mode === "totp" ? "Code from your authenticator app" : "Recovery code"}
             </Label>
-            <Input id="mfa-input" autoFocus autoComplete="one-time-code"
+            <Input
+              id="mfa-input"
+              autoFocus
+              autoComplete="one-time-code"
               inputMode={mode === "totp" ? "numeric" : "text"}
               maxLength={mode === "totp" ? 6 : 11}
               value={value}
-              onChange={(e) => setValue(mode === "totp" ? e.target.value.replace(/\D/g, "") : e.target.value)}
-              className={`h-8 text-sm ${error ? "border-destructive" : ""}`} />
+              onChange={(e) =>
+                setValue(mode === "totp" ? e.target.value.replace(/\D/g, "") : e.target.value)
+              }
+              className={`h-8 text-sm ${error ? "border-destructive" : ""}`}
+            />
             {error && <p className="text-xs text-destructive">{error}</p>}
           </div>
           <Button type="submit" className="w-full" disabled={loading || value.length === 0}>
             {loading ? "Verifying…" : "Verify"}
           </Button>
         </form>
-        <button type="button"
-          onClick={() => { setMode(mode === "totp" ? "recovery" : "totp"); setValue(""); setError(null) }}
-          className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors">
+        <button
+          type="button"
+          onClick={() => {
+            setMode(mode === "totp" ? "recovery" : "totp")
+            setValue("")
+            setError(null)
+          }}
+          className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
           {mode === "totp" ? "Use a recovery code instead" : "Use your authenticator app instead"}
         </button>
       </PageCard>

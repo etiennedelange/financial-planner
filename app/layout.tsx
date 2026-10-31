@@ -53,11 +53,7 @@ export const viewport: Viewport = {
 // whole tree out of instant navigation and render on every request instead.
 export const instant = false
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Next.js only injects the request's CSP nonce into its own script tags on
   // dynamically rendered pages — statically prerendered routes have no request
   // at build time, so the nonce silently doesn't get applied and every
@@ -72,7 +68,11 @@ export default async function RootLayout({
   const nonce = (await headers()).get("x-nonce") ?? undefined
 
   return (
-    <html lang="en" suppressHydrationWarning className={`${ibmPlexSans.variable} ${ibmPlexMono.variable} h-full`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${ibmPlexSans.variable} ${ibmPlexMono.variable} h-full`}
+    >
       <body className={`${ibmPlexSans.className} h-full`}>
         <ThemeProvider
           attribute="class"
@@ -82,9 +82,7 @@ export default async function RootLayout({
           nonce={nonce}
         >
           <SupabaseProvider>
-            <main className="bg-background h-full">
-              {children}
-            </main>
+            <main className="bg-background h-full">{children}</main>
           </SupabaseProvider>
           {/* App-wide shell affordances: the `d` theme shortcut, the Cmd+K
               command palette, and the Radix toast channel all live at the root

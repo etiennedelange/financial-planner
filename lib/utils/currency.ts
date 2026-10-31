@@ -10,7 +10,7 @@ import { deflate } from "@/lib/calculations/utils/money-time"
 export function toRealValue(
   nominalValue: number,
   yearsFromNow: number,
-  inflationRate: number
+  inflationRate: number,
 ): number {
   if (yearsFromNow === 0) return nominalValue
   return deflate(nominalValue, yearsFromNow, inflationRate)
@@ -25,7 +25,7 @@ export interface FormatCurrencyOptions {
   /** Fraction digits for the full (non-compact) path. Default 0. */
   decimals?: number
   /** Display basis; 'real' deflates the value to today's Rands. Default 'nominal'. */
-  displayMode?: 'nominal' | 'real'
+  displayMode?: "nominal" | "real"
   /** Years from now, used only when displayMode is 'real'. */
   yearsFromNow?: number
   /** Annual inflation rate (as decimal), used only when displayMode is 'real'. */
@@ -48,31 +48,30 @@ export interface FormatCurrencyOptions {
 export function formatCurrency(value: number, options?: FormatCurrencyOptions): string
 export function formatCurrency(
   value: number,
-  displayMode: 'nominal' | 'real',
+  displayMode: "nominal" | "real",
   yearsFromNow?: number,
-  inflationRate?: number
+  inflationRate?: number,
 ): string
 export function formatCurrency(
   value: number,
-  displayModeOrOptions: 'nominal' | 'real' | FormatCurrencyOptions = 'nominal',
+  displayModeOrOptions: "nominal" | "real" | FormatCurrencyOptions = "nominal",
   yearsFromNow: number = 0,
-  inflationRate: number = 0.055
+  inflationRate: number = 0.055,
 ): string {
   const options: FormatCurrencyOptions =
-    typeof displayModeOrOptions === 'string'
+    typeof displayModeOrOptions === "string"
       ? { displayMode: displayModeOrOptions, yearsFromNow, inflationRate }
       : (displayModeOrOptions ?? {})
 
   const {
     compact = false,
     decimals = 0,
-    displayMode = 'nominal',
+    displayMode = "nominal",
     yearsFromNow: fromNow = 0,
     inflationRate: infl = 0.055,
   } = options
 
-  const displayValue =
-    displayMode === 'real' ? toRealValue(value, fromNow, infl) : value
+  const displayValue = displayMode === "real" ? toRealValue(value, fromNow, infl) : value
 
   if (compact) {
     if (Math.abs(displayValue) >= 1_000_000_000) {
@@ -86,9 +85,9 @@ export function formatCurrency(
     }
   }
 
-  return new Intl.NumberFormat('en-ZA', {
-    style: 'currency',
-    currency: 'ZAR',
+  return new Intl.NumberFormat("en-ZA", {
+    style: "currency",
+    currency: "ZAR",
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   }).format(displayValue)
@@ -99,12 +98,12 @@ export function formatCurrency(
  */
 export function formatCurrencyCompact(
   value: number,
-  displayMode: 'nominal' | 'real' = 'nominal',
+  displayMode: "nominal" | "real" = "nominal",
   yearsFromNow: number = 0,
-  inflationRate: number = 0.055
+  inflationRate: number = 0.055,
 ): string {
   const displayValue =
-    displayMode === 'real' ? toRealValue(value, yearsFromNow, inflationRate) : value
+    displayMode === "real" ? toRealValue(value, yearsFromNow, inflationRate) : value
 
   if (displayValue >= 1_000_000) {
     return `R${(displayValue / 1_000_000).toFixed(1)}M`

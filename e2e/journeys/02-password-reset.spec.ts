@@ -7,7 +7,9 @@ import { openSignIn } from "../helpers/auth-helper"
 const MAILPIT = "http://127.0.0.1:54324"
 
 async function latestResetLink(email: string): Promise<string> {
-  const res = await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:${email} subject:"Reset"`)}`)
+  const res = await fetch(
+    `${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:${email} subject:"Reset"`)}`,
+  )
   const { messages } = await res.json()
   const newest = messages[0]
   if (!newest) throw new Error("No reset email found")
@@ -61,7 +63,9 @@ test("password reset requires setting a new password", async ({ page }) => {
   await expect(page.getByText(/invalid login credentials/i)).toBeVisible()
 })
 
-test("recovery gate cannot be bypassed by stripping type=recovery from the callback URL", async ({ page }) => {
+test("recovery gate cannot be bypassed by stripping type=recovery from the callback URL", async ({
+  page,
+}) => {
   const email = `reset-bypass-${Date.now()}@test.local`
   const oldPassword = "OldPassword123"
 

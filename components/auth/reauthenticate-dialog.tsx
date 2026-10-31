@@ -22,7 +22,11 @@ interface ReauthenticateDialogProps {
  * borrowed unlocked laptop has one. Re-entering the password is.
  */
 export function ReauthenticateDialog({
-  open, email, action, onCancel, onConfirmed,
+  open,
+  email,
+  action,
+  onCancel,
+  onConfirmed,
 }: ReauthenticateDialogProps) {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -36,7 +40,9 @@ export function ReauthenticateDialog({
     setError(null)
 
     const { error: signInError } = await createClient().auth.signInWithPassword({
-      email, password, options: { captchaToken },
+      email,
+      password,
+      options: { captchaToken },
     })
     setLoading(false)
 
@@ -62,7 +68,9 @@ export function ReauthenticateDialog({
         </DialogDescription>
         <form onSubmit={handleConfirm} className="space-y-3">
           <div className="space-y-1">
-            <Label htmlFor="reauth-pw" className="text-xs font-medium">Password</Label>
+            <Label htmlFor="reauth-pw" className="text-xs font-medium">
+              Password
+            </Label>
             <Input
               id="reauth-pw"
               type="password"
@@ -80,7 +88,11 @@ export function ReauthenticateDialog({
             <Button type="button" variant="outline" className="flex-1" onClick={onCancel}>
               Cancel
             </Button>
-            <Button type="submit" className="flex-1" disabled={loading || password.length === 0 || !captchaToken}>
+            <Button
+              type="submit"
+              className="flex-1"
+              disabled={loading || password.length === 0 || !captchaToken}
+            >
               {loading ? "Checking…" : captchaToken ? "Confirm" : "Verifying…"}
             </Button>
           </div>

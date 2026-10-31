@@ -8,8 +8,9 @@ tags: [tooling]
 
 # Vite+ and Oxc Migration — Handoff Plan
 
-Status: **not started**. Etienne asked for it on 2026-10-30; the session stopped at a network
-block before changing anything. Everything below is the plan for the next session.
+Status: **done 2026-10-31** on branch `chore/vite-plus-oxc-migration`; outcome and deviations in
+[../../history/2026-10-31-vite-plus-oxc-migration.md](../../history/2026-10-31-vite-plus-oxc-migration.md).
+The plan below is kept as written.
 
 ## Blocker (resolve first)
 

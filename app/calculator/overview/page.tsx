@@ -12,11 +12,14 @@ export default function OverviewRoute() {
       personalInfo: s.personalInfo,
       retirementGoals: s.retirementGoals,
       accounts: s.accounts,
-    }))
+    })),
   )
 
   const totalCurrentBalance = accounts.reduce((sum, acc) => sum + (acc.currentBalance || 0), 0)
-  const totalMonthlyContributions = accounts.reduce((sum, acc) => sum + (acc.monthlyContribution || 0), 0)
+  const totalMonthlyContributions = accounts.reduce(
+    (sum, acc) => sum + (acc.monthlyContribution || 0),
+    0,
+  )
 
   return (
     <OverviewPage

@@ -1,5 +1,8 @@
 # Documentation Update Log
 
+## 2026-10-31
+* **Update**: [Lint, format and tests moved to Vite+ (Oxlint, Oxfmt, Vitest 5)](history/2026-10-31-vite-plus-oxc-migration.md) - ESLint and Prettier-style tooling replaced by `vp check`; the money-time guard ported to an Oxlint plugin; repo reformatted in one blame-ignored commit.
+
 ## 2026-10-30
 * **Update**: [docs/ frontmatter, log.md and docs:check (OKF-style)](history/2026-10-30-docs-okf-bundle.md) - Frontmatter on every doc, log.md replacing the Recent Activity feed, and docs:check; generated OKF indexes were added then removed after an A/B test showed no benefit.
 

@@ -6,9 +6,9 @@ name: Workflow security
 on:
   push:
     branches: [main]
-    paths: ['.github/**']
+    paths: [".github/**"]
   pull_request:
-    paths: ['.github/**']
+    paths: [".github/**"]
   workflow_dispatch:
 
 permissions: {}

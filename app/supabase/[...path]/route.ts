@@ -7,10 +7,7 @@ import { notFound } from "next/navigation"
 // To use: set NEXT_PUBLIC_SUPABASE_URL=http://localhost:3000/supabase
 const SUPABASE_INTERNAL_URL = "http://127.0.0.1:54321"
 
-async function proxy(
-  request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
+async function proxy(request: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   if (process.env.NODE_ENV !== "development") notFound()
   const { path } = await params
   const search = request.nextUrl.search
@@ -19,10 +16,7 @@ async function proxy(
   const headers = new Headers(request.headers)
   headers.delete("host")
 
-  const body =
-    request.method !== "GET" && request.method !== "HEAD"
-      ? request.body
-      : undefined
+  const body = request.method !== "GET" && request.method !== "HEAD" ? request.body : undefined
 
   const upstream = await fetch(targetUrl, {
     method: request.method,

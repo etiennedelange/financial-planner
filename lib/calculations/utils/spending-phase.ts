@@ -41,7 +41,7 @@ export function getSpendingPhaseMultiplier(yearsInRetirement: number): number {
     // No-Go phase: lower base but add medical premium
     // SA medical inflation is typically 9% vs 5.5% general inflation
     const baseRate = 0.7
-    const medicalPremium = 0.15 * (yearsInRetirement - 25) / 10
+    const medicalPremium = (0.15 * (yearsInRetirement - 25)) / 10
     return Math.min(baseRate + medicalPremium, 1.2) // Cap at 120%
   }
 }

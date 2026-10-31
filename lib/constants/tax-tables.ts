@@ -1,7 +1,4 @@
-import {
-  INCOME_TAX_BRACKETS_CONFIG,
-  RETIREMENT_LUMP_SUM_CONFIG,
-} from './tax-year.config'
+import { INCOME_TAX_BRACKETS_CONFIG, RETIREMENT_LUMP_SUM_CONFIG } from "./tax-year.config"
 
 export const INCOME_TAX_BRACKETS = INCOME_TAX_BRACKETS_CONFIG
 export const RETIREMENT_LUMP_SUM_TAX_TABLE = RETIREMENT_LUMP_SUM_CONFIG
@@ -19,9 +16,7 @@ export function calculateIncomeTax(taxableIncome: number): number {
   }
 
   const lastBracket = INCOME_TAX_BRACKETS[INCOME_TAX_BRACKETS.length - 1]
-  return (
-    lastBracket.baseTax + (taxableIncome - lastBracket.min) * lastBracket.rate
-  )
+  return lastBracket.baseTax + (taxableIncome - lastBracket.min) * lastBracket.rate
 }
 
 /**
@@ -35,19 +30,12 @@ export function calculateLumpSumTax(lumpSum: number): number {
     const prevBracket = RETIREMENT_LUMP_SUM_TAX_TABLE[i - 1]
 
     if (lumpSum <= bracket.threshold) {
-      return (
-        bracket.previousTax + (lumpSum - prevBracket.threshold) * bracket.rate
-      )
+      return bracket.previousTax + (lumpSum - prevBracket.threshold) * bracket.rate
     }
   }
 
-  const lastBracket =
-    RETIREMENT_LUMP_SUM_TAX_TABLE[RETIREMENT_LUMP_SUM_TAX_TABLE.length - 1]
-  const secondLastBracket =
-    RETIREMENT_LUMP_SUM_TAX_TABLE[RETIREMENT_LUMP_SUM_TAX_TABLE.length - 2]
+  const lastBracket = RETIREMENT_LUMP_SUM_TAX_TABLE[RETIREMENT_LUMP_SUM_TAX_TABLE.length - 1]
+  const secondLastBracket = RETIREMENT_LUMP_SUM_TAX_TABLE[RETIREMENT_LUMP_SUM_TAX_TABLE.length - 2]
 
-  return (
-    lastBracket.previousTax +
-    (lumpSum - secondLastBracket.threshold) * lastBracket.rate
-  )
+  return lastBracket.previousTax + (lumpSum - secondLastBracket.threshold) * lastBracket.rate
 }

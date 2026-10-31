@@ -4,7 +4,9 @@ import { NextResponse } from "next/server"
 /** POPIA data portability: everything the account holds, as JSON. */
 export async function GET() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 })

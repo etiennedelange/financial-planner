@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest"
+import { describe, it, expect, beforeEach, vi, afterEach } from "vite-plus/test"
 import { useExpensesStore } from "./expenses-store"
 import * as expensesApi from "@/lib/supabase/expenses"
 
@@ -85,9 +85,14 @@ describe("useExpensesStore", () => {
 
     it("should update group name and color", () => {
       vi.spyOn(expensesApi, "upsertGroup").mockResolvedValue(undefined)
-      useExpensesStore.setState({ groups: [mockGroup], identity: { kind: "user", userId: "session-1" } })
+      useExpensesStore.setState({
+        groups: [mockGroup],
+        identity: { kind: "user", userId: "session-1" },
+      })
 
-      useExpensesStore.getState().updateGroup("group-1", { name: "Accommodation", color: "#60a5fa" })
+      useExpensesStore
+        .getState()
+        .updateGroup("group-1", { name: "Accommodation", color: "#60a5fa" })
 
       const state = useExpensesStore.getState()
       expect(state.groups[0].name).toBe("Accommodation")
@@ -160,9 +165,14 @@ describe("useExpensesStore", () => {
     it("should update expense details", () => {
       vi.spyOn(expensesApi, "upsertGroup").mockResolvedValue(undefined)
       vi.spyOn(expensesApi, "upsertExpense").mockResolvedValue(undefined)
-      useExpensesStore.setState({ expenses: [mockExpense], identity: { kind: "user", userId: "session-1" } })
+      useExpensesStore.setState({
+        expenses: [mockExpense],
+        identity: { kind: "user", userId: "session-1" },
+      })
 
-      useExpensesStore.getState().updateExpense("expense-1", { amount: 16000, name: "Monthly Rent" })
+      useExpensesStore
+        .getState()
+        .updateExpense("expense-1", { amount: 16000, name: "Monthly Rent" })
 
       const state = useExpensesStore.getState()
       expect(state.expenses[0].amount).toBe(16000)
@@ -185,7 +195,10 @@ describe("useExpensesStore", () => {
     it("should toggle inRetirement flag", () => {
       vi.spyOn(expensesApi, "upsertGroup").mockResolvedValue(undefined)
       vi.spyOn(expensesApi, "upsertExpense").mockResolvedValue(undefined)
-      useExpensesStore.setState({ expenses: [mockExpense], identity: { kind: "user", userId: "session-1" } })
+      useExpensesStore.setState({
+        expenses: [mockExpense],
+        identity: { kind: "user", userId: "session-1" },
+      })
 
       useExpensesStore.getState().toggleRetirement("expense-1")
 
@@ -198,7 +211,10 @@ describe("useExpensesStore", () => {
 
     it("should assign sort order based on group position", () => {
       vi.spyOn(expensesApi, "upsertExpense").mockResolvedValue(undefined)
-      useExpensesStore.setState({ expenses: [mockExpense], identity: { kind: "user", userId: "session-1" } })
+      useExpensesStore.setState({
+        expenses: [mockExpense],
+        identity: { kind: "user", userId: "session-1" },
+      })
 
       useExpensesStore.getState().addExpense("group-1", "Utilities", 2000)
 
@@ -379,7 +395,7 @@ describe("persist migration v1 → v2 (monetary cap)", () => {
         monthlyIncome: absurd,
         expenses: [{ ...mockExpense, amount: absurd }],
       } as unknown,
-      1
+      1,
     ) as { monthlyIncome: number; expenses: { amount: number }[] }
 
     expect(migrated.monthlyIncome).toBe(1_000_000_000_000)
@@ -392,7 +408,7 @@ describe("persist migration v1 → v2 (monetary cap)", () => {
         monthlyIncome: 56500,
         expenses: [{ ...mockExpense, amount: 15000 }],
       } as unknown,
-      1
+      1,
     ) as { monthlyIncome: number; expenses: { amount: number }[] }
 
     expect(migrated.monthlyIncome).toBe(56500)
@@ -400,7 +416,10 @@ describe("persist migration v1 → v2 (monetary cap)", () => {
   })
 
   it("handles incomplete persisted state with safe fallbacks", () => {
-    const migrated = migrate!({} as unknown, 1) as { monthlyIncome: number; expenses: { amount: number }[] }
+    const migrated = migrate!({} as unknown, 1) as {
+      monthlyIncome: number
+      expenses: { amount: number }[]
+    }
 
     expect(migrated.monthlyIncome).toBe(0)
     expect(migrated.expenses).toEqual([])
@@ -423,7 +442,7 @@ describe("useExpensesStore persist rehydrate", () => {
           monthlyIncome: 80000,
         },
         version: 2,
-      })
+      }),
     )
 
     await useExpensesStore.persist.rehydrate()
@@ -436,7 +455,12 @@ describe("useExpensesStore persist rehydrate", () => {
     const stored = JSON.parse(localStorage.getItem("expenses-store-v2:guest")!)
     expect(stored.state.monthlyIncome).toBe(95000)
 
-    useExpensesStore.setState({ identity: { kind: "guest" }, groups: [], expenses: [], monthlyIncome: 56500 })
+    useExpensesStore.setState({
+      identity: { kind: "guest" },
+      groups: [],
+      expenses: [],
+      monthlyIncome: 56500,
+    })
   })
 })
 
@@ -478,11 +502,14 @@ describe("identity transitions and stale-write guards (expenses)", () => {
   })
 
   it("does not commit user A's expense sync after switching to user B", async () => {
-    let resolveFetch!: (value: { groups: typeof mockGroup[]; expenses: typeof mockExpense[] }) => void
+    let resolveFetch!: (value: {
+      groups: (typeof mockGroup)[]
+      expenses: (typeof mockExpense)[]
+    }) => void
     vi.spyOn(expensesApi, "fetchExpenses").mockReturnValue(
       new Promise((resolve) => {
         resolveFetch = resolve
-      })
+      }),
     )
 
     useExpensesStore.getState().setIdentity({ kind: "user", userId: "user-a" })
@@ -499,7 +526,10 @@ describe("identity transitions and stale-write guards (expenses)", () => {
   it("rejects a stale generation's late response", async () => {
     // Generation 1 and 2 fetch different payloads; the newer generation must
     // win, and generation 1's late resolution must not overwrite it.
-    const gen1Deferred = { resolve: null as null | ((v: unknown) => void), promise: null as null | Promise<unknown> }
+    const gen1Deferred = {
+      resolve: null as null | ((v: unknown) => void),
+      promise: null as null | Promise<unknown>,
+    }
     gen1Deferred.promise = new Promise((resolve) => {
       gen1Deferred.resolve = resolve
     })
@@ -525,7 +555,11 @@ describe("expense sync owner re-check", () => {
   it("drops a debounced expense sync when the owner changed at fire time", async () => {
     vi.useFakeTimers()
     vi.clearAllMocks()
-    useExpensesStore.setState({ identity: { kind: "user", userId: "user-a" }, groups: [mockGroup], expenses: [] })
+    useExpensesStore.setState({
+      identity: { kind: "user", userId: "user-a" },
+      groups: [mockGroup],
+      expenses: [],
+    })
     useExpensesStore.getState().addExpense("group-1", "Rent", 15000)
     // Owner signs out before the 800ms debounce fires.
     useExpensesStore.getState().setIdentity({ kind: "guest" })

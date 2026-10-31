@@ -20,19 +20,16 @@ export function QuickActionsCard({
 }: QuickActionsCardProps) {
   return (
     <PageCard label="Quick Actions" className="dashboard-card" contentClassName="space-y-2">
-        {onAddAccount && (
-          <ActionButton label="Add Account" icon={PlusIcon} onClick={onAddAccount} />
-        )}
-        {onViewInsights && (
-          <ActionButton label="View Insights" icon={EyeIcon} onClick={onViewInsights} />
-        )}
-        {onPrintReport && (
-          <ActionButton label="Print / Save PDF" icon={PrinterIcon} onClick={onPrintReport} />
-        )}
-        {onExportCsv && (
-          <ActionButton label="Export CSV" icon={FileSpreadsheetIcon} onClick={onExportCsv} />
-        )}
-
+      {onAddAccount && <ActionButton label="Add Account" icon={PlusIcon} onClick={onAddAccount} />}
+      {onViewInsights && (
+        <ActionButton label="View Insights" icon={EyeIcon} onClick={onViewInsights} />
+      )}
+      {onPrintReport && (
+        <ActionButton label="Print / Save PDF" icon={PrinterIcon} onClick={onPrintReport} />
+      )}
+      {onExportCsv && (
+        <ActionButton label="Export CSV" icon={FileSpreadsheetIcon} onClick={onExportCsv} />
+      )}
     </PageCard>
   )
 }

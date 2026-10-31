@@ -1,14 +1,6 @@
 "use client"
 
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  XAxis,
-  YAxis,
-} from "recharts"
+import { Bar, BarChart, CartesianGrid, Cell, Legend, XAxis, YAxis } from "recharts"
 import { Card, CardContent } from "@/components/ui/card"
 import { SectionLabel } from "@/components/ui/section-label"
 import { ChartDataTable } from "@/components/ui/chart-data-table"
@@ -66,7 +58,16 @@ export const ScenarioComparisonChart = memo(function ScenarioComparisonChart({
         fees,
         compoundingMethod,
       }),
-    [currentSavings, monthlyContribution, personalInfo, retirementGoals, drawdownConfig, contributionEscalation, fees, compoundingMethod]
+    [
+      currentSavings,
+      monthlyContribution,
+      personalInfo,
+      retirementGoals,
+      drawdownConfig,
+      contributionEscalation,
+      fees,
+      compoundingMethod,
+    ],
   )
 
   const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
@@ -78,13 +79,14 @@ export const ScenarioComparisonChart = memo(function ScenarioComparisonChart({
         const scenario = result[key]
         return {
           name: scenario.scenario,
-          nestEgg: displayMode === "real"
-            ? deflate(scenario.projectedNestEgg, yearsToRetirement, inflationRate)
-            : scenario.projectedNestEgg,
+          nestEgg:
+            displayMode === "real"
+              ? deflate(scenario.projectedNestEgg, yearsToRetirement, inflationRate)
+              : scenario.projectedNestEgg,
           success: scenario.successProbability,
         }
       }),
-    [result, displayMode, yearsToRetirement, inflationRate]
+    [result, displayMode, yearsToRetirement, inflationRate],
   )
 
   const hasAnyInput = currentSavings > 0 || monthlyContribution > 0
@@ -110,30 +112,32 @@ export const ScenarioComparisonChart = memo(function ScenarioComparisonChart({
   }
 
   return (
-    <Card className="dashboard-card shadow-none" role="figure" aria-label="Nest egg and success probability across conservative, balanced, and aggressive investment scenarios">
+    <Card
+      className="dashboard-card shadow-none"
+      role="figure"
+      aria-label="Nest egg and success probability across conservative, balanced, and aggressive investment scenarios"
+    >
       <div className="px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-3 space-y-1">
         <SectionLabel>Investment Scenarios</SectionLabel>
         <p className="text-sm text-muted-foreground pl-3">
-          {displayMode === "real" ? "Today's value" : "Future value"} · nest egg and success rate by strategy
+          {displayMode === "real" ? "Today's value" : "Future value"} · nest egg and success rate by
+          strategy
           {result.recommendedScenario && (
-            <span className="text-primary"> · {result[result.recommendedScenario].scenario} recommended</span>
+            <span className="text-primary">
+              {" "}
+              · {result[result.recommendedScenario].scenario} recommended
+            </span>
           )}
         </p>
       </div>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
-        <ChartContainer config={chartConfig} className="h-(--chart-height-compact) md:h-(--chart-height-full) w-full">
-          <BarChart
-            data={data}
-            margin={{ top: 16, right: 16, left: 0, bottom: 0 }}
-            barGap={8}
-          >
+        <ChartContainer
+          config={chartConfig}
+          className="h-(--chart-height-compact) md:h-(--chart-height-full) w-full"
+        >
+          <BarChart data={data} margin={{ top: 16, right: 16, left: 0, bottom: 0 }} barGap={8}>
             <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
-            <XAxis
-              dataKey="name"
-              tickLine={false}
-              axisLine={false}
-              tick={{ fontSize: 11 }}
-            />
+            <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
             <YAxis
               yAxisId="nestEgg"
               tickLine={false}
@@ -195,8 +199,18 @@ export const ScenarioComparisonChart = memo(function ScenarioComparisonChart({
       <ChartDataTable
         columns={[
           { key: "name", label: "Scenario", align: "left" },
-          { key: "nestEgg", label: "Nest egg", align: "right", format: (v) => formatCurrency(Number(v)) },
-          { key: "success", label: "Success rate", align: "right", format: (v) => `${Number(v).toFixed(1)}%` },
+          {
+            key: "nestEgg",
+            label: "Nest egg",
+            align: "right",
+            format: (v) => formatCurrency(Number(v)),
+          },
+          {
+            key: "success",
+            label: "Success rate",
+            align: "right",
+            format: (v) => `${Number(v).toFixed(1)}%`,
+          },
         ]}
         rows={data}
         caption={`Nest egg and success probability by investment strategy (${displayMode === "real" ? "today's value" : "future value"})`}

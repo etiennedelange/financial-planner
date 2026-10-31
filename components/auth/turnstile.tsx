@@ -33,41 +33,49 @@ export interface TurnstileHandle {
  * `instrumentation.ts` fails startup instead of letting that ship silently.
  */
 export const Turnstile = forwardRef<TurnstileHandle, { onToken: (token: string) => void }>(
-function Turnstile({ onToken }, handleRef) {
-  const ref = useRef<HTMLDivElement>(null)
-  const widgetId = useRef<string | null>(null)
-  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+  function Turnstile({ onToken }, handleRef) {
+    const ref = useRef<HTMLDivElement>(null)
+    const widgetId = useRef<string | null>(null)
+    const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
-  useImperativeHandle(handleRef, () => ({
-    reset: () => {
-      if (widgetId.current && window.turnstile) window.turnstile.reset(widgetId.current)
-    },
-  }), [])
+    useImperativeHandle(
+      handleRef,
+      () => ({
+        reset: () => {
+          if (widgetId.current && window.turnstile) window.turnstile.reset(widgetId.current)
+        },
+      }),
+      [],
+    )
 
-  useEffect(() => {
-    if (!siteKey || !ref.current) return
+    useEffect(() => {
+      if (!siteKey || !ref.current) return
 
-    function render() {
-      if (!window.turnstile || !ref.current || widgetId.current) return
-      widgetId.current = window.turnstile.render(ref.current, { sitekey: siteKey!, callback: onToken })
-    }
+      function render() {
+        if (!window.turnstile || !ref.current || widgetId.current) return
+        widgetId.current = window.turnstile.render(ref.current, {
+          sitekey: siteKey!,
+          callback: onToken,
+        })
+      }
 
-    if (window.turnstile) {
-      render()
-    } else {
-      const script = document.createElement("script")
-      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
-      script.async = true
-      script.onload = render
-      document.head.appendChild(script)
-    }
+      if (window.turnstile) {
+        render()
+      } else {
+        const script = document.createElement("script")
+        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+        script.async = true
+        script.onload = render
+        document.head.appendChild(script)
+      }
 
-    return () => {
-      if (widgetId.current && window.turnstile) window.turnstile.remove(widgetId.current)
-      widgetId.current = null
-    }
-  }, [siteKey, onToken])
+      return () => {
+        if (widgetId.current && window.turnstile) window.turnstile.remove(widgetId.current)
+        widgetId.current = null
+      }
+    }, [siteKey, onToken])
 
-  if (!siteKey) return null
-  return <div ref={ref} className="flex justify-center" />
-})
+    if (!siteKey) return null
+    return <div ref={ref} className="flex justify-center" />
+  },
+)

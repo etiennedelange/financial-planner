@@ -9,9 +9,9 @@ self.addEventListener("activate", (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((key) => key !== ASSET_CACHE).map((key) => caches.delete(key)))
+        Promise.all(keys.filter((key) => key !== ASSET_CACHE).map((key) => caches.delete(key))),
       )
-      .then(() => self.clients.claim())
+      .then(() => self.clients.claim()),
   )
 })
 
@@ -44,7 +44,7 @@ self.addEventListener("fetch", (event) => {
         } catch {
           return fetch(request)
         }
-      })()
+      })(),
     )
   }
 })
@@ -71,6 +71,6 @@ function offlineResponse() {
   </div>
 </body>
 </html>`,
-    { headers: { "Content-Type": "text/html; charset=utf-8" } }
+    { headers: { "Content-Type": "text/html; charset=utf-8" } },
   )
 }

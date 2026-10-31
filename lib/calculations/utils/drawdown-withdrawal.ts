@@ -52,10 +52,13 @@ export function calculateInitialWithdrawal(
   config: DrawdownConfig,
   yearsToRetirement: number,
   inflationRate: number,
-  baseline: WithdrawalBaseline
+  baseline: WithdrawalBaseline,
 ): number {
-  const desiredAnnualAtRetirement =
-    escalate(desiredMonthlyIncomeToday * 12, yearsToRetirement, inflationRate)
+  const desiredAnnualAtRetirement = escalate(
+    desiredMonthlyIncomeToday * 12,
+    yearsToRetirement,
+    inflationRate,
+  )
 
   switch (config.strategy) {
     case "fixed_percentage": {
@@ -78,7 +81,7 @@ export function calculateInitialWithdrawal(
         desiredAnnualAtRetirement,
         config,
         yearsToRetirement,
-        inflationRate
+        inflationRate,
       )
 
     default:
@@ -111,7 +114,7 @@ export function calculateNextWithdrawal(
   config: DrawdownConfig,
   yearsSinceToday: number,
   inflationRate: number,
-  desiredMonthlyIncomeToday?: number
+  desiredMonthlyIncomeToday?: number,
 ): number {
   switch (config.strategy) {
     case "fixed_percentage": {
@@ -119,8 +122,11 @@ export function calculateNextWithdrawal(
       // year, so it falls when the portfolio falls and rises when it grows.
       const target = currentBalance * (config.initialWithdrawalRate / 100)
       if (desiredMonthlyIncomeToday === undefined) return target
-      const desiredAnnualAtYear =
-        escalate(desiredMonthlyIncomeToday * 12, yearsSinceToday, inflationRate)
+      const desiredAnnualAtYear = escalate(
+        desiredMonthlyIncomeToday * 12,
+        yearsSinceToday,
+        inflationRate,
+      )
       return Math.max(target, desiredAnnualAtYear)
     }
 
@@ -161,7 +167,7 @@ function clampToInflatedBounds(
   amount: number,
   config: DrawdownConfig,
   yearsSinceToday: number,
-  inflationRate: number
+  inflationRate: number,
 ): number {
   const minAtYear = escalate(config.minimumWithdrawal * 12, yearsSinceToday, inflationRate)
   const maxAtYear = escalate(config.maximumWithdrawal * 12, yearsSinceToday, inflationRate)

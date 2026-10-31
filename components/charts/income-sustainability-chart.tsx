@@ -1,13 +1,6 @@
 "use client"
 
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ReferenceLine,
-  XAxis,
-  YAxis,
-} from "recharts"
+import { Area, AreaChart, CartesianGrid, ReferenceLine, XAxis, YAxis } from "recharts"
 import { Card, CardContent } from "@/components/ui/card"
 import { SectionLabel } from "@/components/ui/section-label"
 import { ChartDataTable } from "@/components/ui/chart-data-table"
@@ -55,7 +48,7 @@ export const IncomeSustainabilityChart = memo(function IncomeSustainabilityChart
         inflationRate,
         displayMode,
       }),
-    [projection, desiredMonthlyIncome, currentAge, retirementAge, inflationRate, displayMode]
+    [projection, desiredMonthlyIncome, currentAge, retirementAge, inflationRate, displayMode],
   )
 
   const data = useMemo(
@@ -65,7 +58,7 @@ export const IncomeSustainabilityChart = memo(function IncomeSustainabilityChart
         income: p.income,
         target: p.target,
       })),
-    [series]
+    [series],
   )
 
   if (data.length === 0) {
@@ -86,22 +79,27 @@ export const IncomeSustainabilityChart = memo(function IncomeSustainabilityChart
   }
 
   return (
-    <Card className="dashboard-card shadow-none" role="figure" aria-label={`Projected monthly income from age ${retirementAge} compared to your income target`}>
+    <Card
+      className="dashboard-card shadow-none"
+      role="figure"
+      aria-label={`Projected monthly income from age ${retirementAge} compared to your income target`}
+    >
       <div className="px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-3 space-y-1">
         <SectionLabel>Income Through Retirement</SectionLabel>
         <p className="text-sm text-muted-foreground pl-3">
-          {displayMode === "real" ? "Today's value" : "Future value"} · projected monthly income vs. target
+          {displayMode === "real" ? "Today's value" : "Future value"} · projected monthly income vs.
+          target
           {series.depletionAge !== null && (
             <span className="text-destructive"> · runs out at age {series.depletionAge}</span>
           )}
         </p>
       </div>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
-        <ChartContainer config={chartConfig} className="h-(--chart-height-compact) md:h-(--chart-height-full) w-full">
-          <AreaChart
-            data={data}
-            margin={{ top: 16, right: 16, left: 0, bottom: 0 }}
-          >
+        <ChartContainer
+          config={chartConfig}
+          className="h-(--chart-height-compact) md:h-(--chart-height-full) w-full"
+        >
+          <AreaChart data={data} margin={{ top: 16, right: 16, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="incomeFill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.18} />
@@ -169,8 +167,18 @@ export const IncomeSustainabilityChart = memo(function IncomeSustainabilityChart
       <ChartDataTable
         columns={[
           { key: "age", label: "Age", align: "right" },
-          { key: "income", label: "Projected income /mo", align: "right", format: (v) => formatCurrency(Number(v)) },
-          { key: "target", label: "Income target /mo", align: "right", format: (v) => formatCurrency(Number(v)) },
+          {
+            key: "income",
+            label: "Projected income /mo",
+            align: "right",
+            format: (v) => formatCurrency(Number(v)),
+          },
+          {
+            key: "target",
+            label: "Income target /mo",
+            align: "right",
+            format: (v) => formatCurrency(Number(v)),
+          },
         ]}
         rows={data}
         caption={`Monthly income from age ${retirementAge} vs. your inflation-adjusted target`}

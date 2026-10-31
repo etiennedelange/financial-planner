@@ -18,9 +18,15 @@ import { Input } from "@/components/ui/input"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 import { FloatingActionBar } from "@/components/ui/floating-action-bar"
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
-  AlertDialogTitle, AlertDialogTrigger,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useExpensesStore } from "@/lib/store/expenses-store"
 import { formatCurrency } from "@/lib/utils/currency"
@@ -51,7 +57,10 @@ function EditRow({
 
   const commit = () => {
     const parsed = parseFloat(amount.replace(/\s/g, ""))
-    onSave(name.trim() || expense.name, isNaN(parsed) ? expense.amount : clampMonetaryAmount(parsed))
+    onSave(
+      name.trim() || expense.name,
+      isNaN(parsed) ? expense.amount : clampMonetaryAmount(parsed),
+    )
   }
 
   const onKey = (e: React.KeyboardEvent) => {
@@ -61,11 +70,23 @@ function EditRow({
 
   return (
     <div className="flex items-center gap-1.5 px-3 py-1.5 bg-accent/60 rounded-sm border border-border">
-      <Input value={name} onChange={(e) => setName(e.target.value)} onKeyDown={onKey}
-        className="h-7 text-sm flex-1 min-w-0" autoFocus aria-label="Expense name" />
-      <Input value={amount} onChange={(e) => guardAmount.onChange(e, (ev) => setAmount(ev.target.value))} onKeyDown={onKey}
+      <Input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onKeyDown={onKey}
+        className="h-7 text-sm flex-1 min-w-0"
+        autoFocus
+        aria-label="Expense name"
+      />
+      <Input
+        value={amount}
+        onChange={(e) => guardAmount.onChange(e, (ev) => setAmount(ev.target.value))}
+        onKeyDown={onKey}
         onBeforeInput={guardAmount.onBeforeInput}
-        className="h-7 text-sm w-28 text-right font-mono" placeholder="0" aria-label="Expense amount" />
+        className="h-7 text-sm w-28 text-right font-mono"
+        placeholder="0"
+        aria-label="Expense amount"
+      />
       <AnimatedIconButton
         size="icon-sm"
         variant="ghost"
@@ -103,7 +124,10 @@ function EditRow({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={onDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={onDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -128,7 +152,10 @@ function AddExpenseRow({
   const guardAmount = useBoundedMonetary(amount)
 
   const commit = () => {
-    if (!name.trim()) { onCancel(); return }
+    if (!name.trim()) {
+      onCancel()
+      return
+    }
     const parsed = parseFloat(amount.replace(/\s/g, ""))
     onSave(name.trim(), isNaN(parsed) ? 0 : clampMonetaryAmount(parsed))
   }
@@ -140,11 +167,24 @@ function AddExpenseRow({
 
   return (
     <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 rounded-sm border border-primary/25">
-      <Input value={name} onChange={(e) => setName(e.target.value)} onKeyDown={onKey}
-        className="h-7 text-sm flex-1 min-w-0" placeholder="Expense name" autoFocus aria-label="New expense name" />
-      <Input value={amount} onChange={(e) => guardAmount.onChange(e, (ev) => setAmount(ev.target.value))} onKeyDown={onKey}
+      <Input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onKeyDown={onKey}
+        className="h-7 text-sm flex-1 min-w-0"
+        placeholder="Expense name"
+        autoFocus
+        aria-label="New expense name"
+      />
+      <Input
+        value={amount}
+        onChange={(e) => guardAmount.onChange(e, (ev) => setAmount(ev.target.value))}
+        onKeyDown={onKey}
         onBeforeInput={guardAmount.onBeforeInput}
-        className="h-7 text-sm w-28 text-right font-mono" placeholder="0" aria-label="New expense amount" />
+        className="h-7 text-sm w-28 text-right font-mono"
+        placeholder="0"
+        aria-label="New expense amount"
+      />
       <AnimatedIconButton
         size="icon-sm"
         variant="ghost"
@@ -168,20 +208,38 @@ function AddExpenseRow({
 
 // ─── add group row ────────────────────────────────────────────────────────────
 
-function AddGroupRow({ onSave, onCancel }: { onSave: (name: string, color: string) => void; onCancel: () => void }) {
+function AddGroupRow({
+  onSave,
+  onCancel,
+}: {
+  onSave: (name: string, color: string) => void
+  onCancel: () => void
+}) {
   const [name, setName] = useState("")
   const [color, setColor] = useState<string>("#818cf8") // indigo-400
 
   const commit = () => {
-    if (!name.trim()) { onCancel(); return }
+    if (!name.trim()) {
+      onCancel()
+      return
+    }
     onSave(name.trim(), color)
   }
 
   return (
     <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 rounded-sm border border-primary/25">
-      <Input value={name} onChange={(e) => setName(e.target.value)}
-        onKeyDown={(e) => { if (e.key === "Enter") commit(); if (e.key === "Escape") onCancel() }}
-        className="h-7 text-sm flex-1" placeholder="Group name" autoFocus aria-label="New group name" />
+      <Input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commit()
+          if (e.key === "Escape") onCancel()
+        }}
+        className="h-7 text-sm flex-1"
+        placeholder="Group name"
+        autoFocus
+        aria-label="New group name"
+      />
       <div className="flex gap-1 flex-wrap">
         {GROUP_COLOR_OPTIONS.map((c) => (
           <button
@@ -189,9 +247,20 @@ function AddGroupRow({ onSave, onCancel }: { onSave: (name: string, color: strin
             onClick={() => setColor(c)}
             aria-label={`Select color ${c}`}
             aria-pressed={color === c}
-            className={cn("w-8 h-8 rounded-full flex items-center justify-center transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1", color === c ? "ring-2 ring-foreground ring-offset-1" : "hover:ring-1 hover:ring-muted-foreground/30")}
+            className={cn(
+              "w-8 h-8 rounded-full flex items-center justify-center transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+              color === c
+                ? "ring-2 ring-foreground ring-offset-1"
+                : "hover:ring-1 hover:ring-muted-foreground/30",
+            )}
           >
-            <span className={cn("w-4 h-4 rounded-full transition-transform", color === c ? "scale-110" : "")} style={{ background: c }} />
+            <span
+              className={cn(
+                "w-4 h-4 rounded-full transition-transform",
+                color === c ? "scale-110" : "",
+              )}
+              style={{ background: c }}
+            />
           </button>
         ))}
       </div>
@@ -226,7 +295,9 @@ function EmptyGroups({ onAdd, onLoadSample }: { onAdd: () => void; onLoadSample:
       <FolderPlus className="h-10 w-10 text-muted-foreground/40" />
       <div className="space-y-1">
         <p className="text-sm font-medium text-muted-foreground">No expense groups yet</p>
-        <p className="text-xs text-muted-foreground/70">Group your expenses to track what you spend in retirement vs. today.</p>
+        <p className="text-xs text-muted-foreground/70">
+          Group your expenses to track what you spend in retirement vs. today.
+        </p>
       </div>
       <div className="flex gap-2">
         <Button {...controlProps} variant="outline" size="sm" onClick={onAdd}>
@@ -267,7 +338,9 @@ function GroupToggleButton({
     >
       <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: groupColor }} />
       <span className="flex-1 text-sm font-semibold truncate">{groupName}</span>
-      <span className="text-xs text-muted-foreground tabular-nums font-mono shrink-0">{formatCurrency(groupTotal)}</span>
+      <span className="text-xs text-muted-foreground tabular-nums font-mono shrink-0">
+        {formatCurrency(groupTotal)}
+      </span>
       {collapsed ? (
         <ChevronRightIcon {...iconProps} size={14} className="text-muted-foreground shrink-0" />
       ) : (
@@ -353,12 +426,16 @@ function GroupSection({
             <AlertDialogHeader>
               <AlertDialogTitle>Delete &ldquo;{group.name}&rdquo;?</AlertDialogTitle>
               <AlertDialogDescription>
-                This will permanently delete the group and all {expenses.length} expense{expenses.length !== 1 ? "s" : ""} inside it. This cannot be undone.
+                This will permanently delete the group and all {expenses.length} expense
+                {expenses.length !== 1 ? "s" : ""} inside it. This cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => onRemoveGroup(group.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              <AlertDialogAction
+                onClick={() => onRemoveGroup(group.id)}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
                 Delete group
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -375,7 +452,10 @@ function GroupSection({
               <span className="flex-1 text-xs text-muted-foreground">Item</span>
               <div className="shrink-0 flex items-center gap-0.5">
                 <span className="text-xs text-muted-foreground">Retirement</span>
-                <InfoTooltip content="Mark expenses you'll have in retirement. These count toward your 4% Rule target." side="top" />
+                <InfoTooltip
+                  content="Mark expenses you'll have in retirement. These count toward your 4% Rule target."
+                  side="top"
+                />
               </div>
               <span className="min-w-[5rem] text-right text-xs text-muted-foreground">Monthly</span>
               <span className="w-3 shrink-0" />
@@ -393,7 +473,10 @@ function GroupSection({
                     setFlashId(expense.id)
                   }}
                   onCancel={() => onEdit(null)}
-                  onDelete={() => { onRemoveExpense(expense.id); onEdit(null) }}
+                  onDelete={() => {
+                    onRemoveExpense(expense.id)
+                    onEdit(null)
+                  }}
                 />
               </div>
             ) : (
@@ -401,35 +484,51 @@ function GroupSection({
                 key={expense.id}
                 className={cn(
                   "group/row flex items-center gap-2 px-3 py-2 hover:bg-muted/20 transition-colors motion-safe:duration-500 motion-reduce:duration-0",
-                  flashId === expense.id && "bg-primary/10"
+                  flashId === expense.id && "bg-primary/10",
                 )}
               >
                 <span className="flex-1 text-sm truncate">{expense.name}</span>
                 <button
                   onClick={() => onToggleRetirement(expense.id)}
-                  aria-label={expense.inRetirement ? "In retirement — click to exclude" : "Not in retirement — click to include"}
-                  title={expense.inRetirement ? "Included in retirement budget" : "Not included in retirement budget"}
+                  aria-label={
+                    expense.inRetirement
+                      ? "In retirement — click to exclude"
+                      : "Not in retirement — click to include"
+                  }
+                  title={
+                    expense.inRetirement
+                      ? "Included in retirement budget"
+                      : "Not included in retirement budget"
+                  }
                   className={cn(
                     "shrink-0 transition-colors",
-                    expense.inRetirement ? "text-primary" : "text-muted-foreground/30 hover:text-muted-foreground/60"
+                    expense.inRetirement
+                      ? "text-primary"
+                      : "text-muted-foreground/30 hover:text-muted-foreground/60",
                   )}
                 >
-                  {expense.inRetirement
-                    ? <CircleCheck className="h-4 w-4" />
-                    : <Circle className="h-4 w-4" />
-                  }
+                  {expense.inRetirement ? (
+                    <CircleCheck className="h-4 w-4" />
+                  ) : (
+                    <Circle className="h-4 w-4" />
+                  )}
                 </button>
-                <span className="text-sm font-mono tabular-nums min-w-[5rem] text-right">{formatCurrency(expense.amount)}</span>
+                <span className="text-sm font-mono tabular-nums min-w-[5rem] text-right">
+                  {formatCurrency(expense.amount)}
+                </span>
                 <EditExpenseButton expenseName={expense.name} onEdit={() => onEdit(expense.id)} />
               </div>
-            )
+            ),
           )}
 
           {/* Add expense row */}
           {addingToGroupId === group.id ? (
             <div className="px-2 py-1">
               <AddExpenseRow
-                onSave={(name, amount) => { onAddExpense(group.id, name, amount); onSetAdding(null) }}
+                onSave={(name, amount) => {
+                  onAddExpense(group.id, name, amount)
+                  onSetAdding(null)
+                }}
                 onCancel={() => onSetAdding(null)}
               />
             </div>
@@ -442,13 +541,7 @@ function GroupSection({
   )
 }
 
-function EditExpenseButton({
-  expenseName,
-  onEdit,
-}: {
-  expenseName: string
-  onEdit: () => void
-}) {
+function EditExpenseButton({ expenseName, onEdit }: { expenseName: string; onEdit: () => void }) {
   const { iconProps, controlProps } = useAnimatedIcon()
 
   return (
@@ -491,12 +584,21 @@ function IncomeEditButton({ income, onEdit }: { income: number; onEdit: () => vo
       aria-label="Edit monthly income"
     >
       {formatCurrency(income)}
-      <PencilIcon {...iconProps} size={10} className="opacity-40 group-hover/income:opacity-80 transition-opacity" />
+      <PencilIcon
+        {...iconProps}
+        size={10}
+        className="opacity-40 group-hover/income:opacity-80 transition-opacity"
+      />
     </button>
   )
 }
 
-function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
+function SummaryPanel({
+  monthlyIncome,
+  groups,
+  expenses,
+  onSetIncome,
+}: {
   monthlyIncome: number
   groups: ExpenseGroup[]
   expenses: Expense[]
@@ -514,7 +616,10 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
   const fourPctTarget = retirementTotal * FOUR_PCT_MULTIPLIER
 
   const groupTotals = groups
-    .map((g) => ({ group: g, total: expenses.filter((e) => e.groupId === g.id).reduce((s, e) => s + e.amount, 0) }))
+    .map((g) => ({
+      group: g,
+      total: expenses.filter((e) => e.groupId === g.id).reduce((s, e) => s + e.amount, 0),
+    }))
     .filter((x) => x.total > 0)
     .sort((a, b) => b.total - a.total)
 
@@ -530,89 +635,128 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
   return (
     <div className="space-y-4">
       <PageCard label="Monthly Summary" contentClassName="space-y-3">
-          <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-1">
+            <span className="text-sm text-muted-foreground">Income</span>
+            <InfoTooltip
+              content="After-tax monthly take-home. Click the amount to edit."
+              side="right"
+            />
+          </div>
+          {editIncome ? (
             <div className="flex items-center gap-1">
-              <span className="text-sm text-muted-foreground">Income</span>
-              <InfoTooltip content="After-tax monthly take-home. Click the amount to edit." side="right" />
+              <Input
+                value={incomeInput}
+                onChange={(e) => guardIncome.onChange(e, (ev) => setIncomeInput(ev.target.value))}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") saveIncome()
+                  if (e.key === "Escape") setEditIncome(false)
+                }}
+                onBeforeInput={guardIncome.onBeforeInput}
+                className="h-6 w-28 text-right text-sm font-mono"
+                autoFocus
+                aria-label="Monthly income"
+              />
+              <AnimatedIconButton
+                size="icon-sm"
+                variant="ghost"
+                className="text-primary"
+                onClick={saveIncome}
+                aria-label="Save income"
+                icon={CheckIcon}
+                iconSize={12}
+              />
             </div>
-            {editIncome ? (
-              <div className="flex items-center gap-1">
-                <Input value={incomeInput} onChange={(e) => guardIncome.onChange(e, (ev) => setIncomeInput(ev.target.value))}
-                  onKeyDown={(e) => { if (e.key === "Enter") saveIncome(); if (e.key === "Escape") setEditIncome(false) }}
-                  onBeforeInput={guardIncome.onBeforeInput}
-                  className="h-6 w-28 text-right text-sm font-mono" autoFocus aria-label="Monthly income" />
-                <AnimatedIconButton
-                  size="icon-sm"
-                  variant="ghost"
-                  className="text-primary"
-                  onClick={saveIncome}
-                  aria-label="Save income"
-                  icon={CheckIcon}
-                  iconSize={12}
-                />
-              </div>
-            ) : (
-              <IncomeEditButton income={monthlyIncome} onEdit={() => { setIncomeInput(String(monthlyIncome)); setEditIncome(true) }} />
+          ) : (
+            <IncomeEditButton
+              income={monthlyIncome}
+              onEdit={() => {
+                setIncomeInput(String(monthlyIncome))
+                setEditIncome(true)
+              }}
+            />
+          )}
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-muted-foreground">Total expenses</span>
+          <span className="text-sm font-mono font-semibold text-foreground">
+            {formatCurrency(total)}
+          </span>
+        </div>
+        <div className="h-px bg-border" />
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-semibold">Surplus</span>
+          <span
+            className={cn(
+              "text-sm font-mono font-bold",
+              surplus >= 0 ? "text-primary" : "text-destructive",
             )}
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Total expenses</span>
-            <span className="text-sm font-mono font-semibold text-foreground">{formatCurrency(total)}</span>
-          </div>
-          <div className="h-px bg-border" />
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-semibold">Surplus</span>
-            <span className={cn("text-sm font-mono font-bold", surplus >= 0 ? "text-primary" : "text-destructive")}>
-              {formatCurrency(surplus)}
-            </span>
-          </div>
-          <div>
+          >
+            {formatCurrency(surplus)}
+          </span>
+        </div>
+        <div>
+          <div
+            role="progressbar"
+            aria-label="Expense ratio"
+            aria-valuenow={Math.min(
+              100,
+              monthlyIncome > 0 ? Math.round((total / monthlyIncome) * 100) : 0,
+            )}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            className="h-1 w-full rounded-full bg-muted overflow-hidden"
+          >
             <div
-              role="progressbar"
-              aria-label="Expense ratio"
-              aria-valuenow={Math.min(100, monthlyIncome > 0 ? Math.round((total / monthlyIncome) * 100) : 0)}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              className="h-1 w-full rounded-full bg-muted overflow-hidden"
-            >
-              <div className={cn("h-full rounded-full transition-all duration-300", surplus >= 0 ? "bg-primary" : "bg-destructive")}
-                style={{ width: `${Math.min(100, monthlyIncome > 0 ? (total / monthlyIncome) * 100 : 0)}%` }} />
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {monthlyIncome > 0 ? `${((total / monthlyIncome) * 100).toFixed(1)}% of income` : "—"}
-            </p>
+              className={cn(
+                "h-full rounded-full transition-all duration-300",
+                surplus >= 0 ? "bg-primary" : "bg-destructive",
+              )}
+              style={{
+                width: `${Math.min(100, monthlyIncome > 0 ? (total / monthlyIncome) * 100 : 0)}%`,
+              }}
+            />
           </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {monthlyIncome > 0 ? `${((total / monthlyIncome) * 100).toFixed(1)}% of income` : "—"}
+          </p>
+        </div>
       </PageCard>
 
       {groupTotals.length > 0 && (
         <PageCard label="By Group" contentClassName="space-y-2.5">
-            {groupTotals.map(({ group, total: gt }) => (
-              <div key={group.id}>
-                <div className="flex justify-between mb-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full shrink-0" style={{ background: group.color }} />
-                    <span className="text-xs text-muted-foreground">{group.name}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs text-muted-foreground/60 tabular-nums">
-                      {total > 0 ? `${Math.round((gt / total) * 100)}%` : ""}
-                    </span>
-                    <span className="text-xs font-mono tabular-nums">{formatCurrency(gt)}</span>
-                  </div>
+          {groupTotals.map(({ group, total: gt }) => (
+            <div key={group.id}>
+              <div className="flex justify-between mb-0.5">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="h-2 w-2 rounded-full shrink-0"
+                    style={{ background: group.color }}
+                  />
+                  <span className="text-xs text-muted-foreground">{group.name}</span>
                 </div>
-                <div
-                  role="progressbar"
-                  aria-label={`${group.name} spend`}
-                  aria-valuenow={Math.round((gt / maxGroupTotal) * 100)}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  className="h-1 w-full rounded-full bg-muted overflow-hidden"
-                >
-                  <div className="h-full rounded-full transition-all duration-300"
-                    style={{ width: `${(gt / maxGroupTotal) * 100}%`, background: group.color }} />
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-muted-foreground/60 tabular-nums">
+                    {total > 0 ? `${Math.round((gt / total) * 100)}%` : ""}
+                  </span>
+                  <span className="text-xs font-mono tabular-nums">{formatCurrency(gt)}</span>
                 </div>
               </div>
-            ))}
+              <div
+                role="progressbar"
+                aria-label={`${group.name} spend`}
+                aria-valuenow={Math.round((gt / maxGroupTotal) * 100)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                className="h-1 w-full rounded-full bg-muted overflow-hidden"
+              >
+                <div
+                  className="h-full rounded-full transition-all duration-300"
+                  style={{ width: `${(gt / maxGroupTotal) * 100}%`, background: group.color }}
+                />
+              </div>
+            </div>
+          ))}
         </PageCard>
       )}
 
@@ -627,18 +771,24 @@ function SummaryPanel({ monthlyIncome, groups, expenses, onSetIncome }: {
           />
         }
       >
-          <p className="text-xs text-muted-foreground">Monthly retirement expenses × 300</p>
-          <p className="text-2xl font-bold font-mono">{formatCurrency(fourPctTarget)}</p>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div>
-              <p className="text-xs text-muted-foreground mb-0.5">In retirement</p>
-              <p className="font-mono font-semibold">{formatCurrency(retirementTotal)}<span className="text-xs text-muted-foreground font-normal">/mo</span></p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-0.5">Not in retirement</p>
-              <p className="font-mono font-semibold">{formatCurrency(total - retirementTotal)}<span className="text-xs text-muted-foreground font-normal">/mo</span></p>
-            </div>
+        <p className="text-xs text-muted-foreground">Monthly retirement expenses × 300</p>
+        <p className="text-2xl font-bold font-mono">{formatCurrency(fourPctTarget)}</p>
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <p className="text-xs text-muted-foreground mb-0.5">In retirement</p>
+            <p className="font-mono font-semibold">
+              {formatCurrency(retirementTotal)}
+              <span className="text-xs text-muted-foreground font-normal">/mo</span>
+            </p>
           </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-0.5">Not in retirement</p>
+            <p className="font-mono font-semibold">
+              {formatCurrency(total - retirementTotal)}
+              <span className="text-xs text-muted-foreground font-normal">/mo</span>
+            </p>
+          </div>
+        </div>
       </PageCard>
     </div>
   )
@@ -652,7 +802,12 @@ function ClearAllTrigger() {
   const { iconProps, controlProps } = useAnimatedIcon()
 
   return (
-    <Button {...controlProps} size="sm" variant="ghost" className="text-muted-foreground hover:text-destructive">
+    <Button
+      {...controlProps}
+      size="sm"
+      variant="ghost"
+      className="text-muted-foreground hover:text-destructive"
+    >
       <Trash2Icon {...iconProps} size={14} className="mr-1.5" data-icon="inline-start" />
       Clear all
     </Button>
@@ -672,10 +827,18 @@ function NewGroupButton({ onClick, disabled }: { onClick: () => void; disabled: 
 
 export function ExpensesPage() {
   const {
-    groups, expenses, monthlyIncome,
-    addGroup, removeGroup,
-    addExpense, updateExpense, removeExpense, toggleRetirement,
-    setMonthlyIncome, loadSampleData, clearAll,
+    groups,
+    expenses,
+    monthlyIncome,
+    addGroup,
+    removeGroup,
+    addExpense,
+    updateExpense,
+    removeExpense,
+    toggleRetirement,
+    setMonthlyIncome,
+    loadSampleData,
+    clearAll,
   } = useExpensesStore(
     useShallow((s) => ({
       groups: s.groups,
@@ -690,7 +853,7 @@ export function ExpensesPage() {
       setMonthlyIncome: s.setMonthlyIncome,
       loadSampleData: s.loadSampleData,
       clearAll: s.clearAll,
-    }))
+    })),
   )
 
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -701,75 +864,91 @@ export function ExpensesPage() {
 
   return (
     <>
-    <div className="space-y-6 pb-4 md:pb-16">
-      <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-muted-foreground">Track your monthly spending to determine how much you need in retirement.</p>
-        <div className="flex items-center gap-2 shrink-0">
-          {groups.length > 0 && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <ClearAllTrigger />
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Clear all expenses?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently delete all {groups.length} group{groups.length !== 1 ? "s" : ""} and {expenses.length} expense{expenses.length !== 1 ? "s" : ""}. This cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={clearAll} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Clear all
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-          <NewGroupButton onClick={handleAddGroup} disabled={addingGroup} />
+      <div className="space-y-6 pb-4 md:pb-16">
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-sm text-muted-foreground">
+            Track your monthly spending to determine how much you need in retirement.
+          </p>
+          <div className="flex items-center gap-2 shrink-0">
+            {groups.length > 0 && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <ClearAllTrigger />
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Clear all expenses?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete all {groups.length} group
+                      {groups.length !== 1 ? "s" : ""} and {expenses.length} expense
+                      {expenses.length !== 1 ? "s" : ""}. This cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={clearAll}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Clear all
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            <NewGroupButton onClick={handleAddGroup} disabled={addingGroup} />
+          </div>
         </div>
-      </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-        <div className="space-y-3">
-          {addingGroup && (
-            <AddGroupRow
-              onSave={(name, color) => { addGroup(name, color); setAddingGroup(false) }}
-              onCancel={() => setAddingGroup(false)}
-            />
-          )}
-          {groups.length === 0 && !addingGroup ? (
-            <EmptyGroups onAdd={handleAddGroup} onLoadSample={loadSampleData} />
-          ) : (
-            groups.map((group) => (
-              <GroupSection
-                key={group.id}
-                group={group}
-                expenses={expenses.filter((e) => e.groupId === group.id)}
-                editingId={editingId}
-                addingToGroupId={addingToGroupId}
-                onEdit={(id) => { setEditingId(id); if (id) setAddingToGroupId(null) }}
-                onUpdate={(id, name, amount) => updateExpense(id, { name, amount })}
-                onRemoveExpense={removeExpense}
-                onToggleRetirement={toggleRetirement}
-                onAddExpense={(groupId, name, amount) => addExpense(groupId, name, amount)}
-                onSetAdding={(id) => { setAddingToGroupId(id); if (id) setEditingId(null) }}
-                onRemoveGroup={removeGroup}
+        <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+          <div className="space-y-3">
+            {addingGroup && (
+              <AddGroupRow
+                onSave={(name, color) => {
+                  addGroup(name, color)
+                  setAddingGroup(false)
+                }}
+                onCancel={() => setAddingGroup(false)}
               />
-            ))
-          )}
-        </div>
+            )}
+            {groups.length === 0 && !addingGroup ? (
+              <EmptyGroups onAdd={handleAddGroup} onLoadSample={loadSampleData} />
+            ) : (
+              groups.map((group) => (
+                <GroupSection
+                  key={group.id}
+                  group={group}
+                  expenses={expenses.filter((e) => e.groupId === group.id)}
+                  editingId={editingId}
+                  addingToGroupId={addingToGroupId}
+                  onEdit={(id) => {
+                    setEditingId(id)
+                    if (id) setAddingToGroupId(null)
+                  }}
+                  onUpdate={(id, name, amount) => updateExpense(id, { name, amount })}
+                  onRemoveExpense={removeExpense}
+                  onToggleRetirement={toggleRetirement}
+                  onAddExpense={(groupId, name, amount) => addExpense(groupId, name, amount)}
+                  onSetAdding={(id) => {
+                    setAddingToGroupId(id)
+                    if (id) setEditingId(null)
+                  }}
+                  onRemoveGroup={removeGroup}
+                />
+              ))
+            )}
+          </div>
 
-        <div className="order-first lg:order-last">
-          <SummaryPanel
-            monthlyIncome={monthlyIncome}
-            groups={groups}
-            expenses={expenses}
-            onSetIncome={setMonthlyIncome}
-          />
+          <div className="order-first lg:order-last">
+            <SummaryPanel
+              monthlyIncome={monthlyIncome}
+              groups={groups}
+              expenses={expenses}
+              onSetIncome={setMonthlyIncome}
+            />
+          </div>
         </div>
       </div>
-    </div>
 
       <FloatingActionBar
         primary={{

@@ -76,7 +76,8 @@ function scheduleScenarioSync() {
   }, 800)
 }
 
-export interface CalculatorState {  accounts: Account[]
+export interface CalculatorState {
+  accounts: Account[]
   personalInfo: PersonalInfo
   retirementGoals: RetirementGoals
   assumptions: MarketAssumptions
@@ -225,7 +226,8 @@ export const useCalculatorStore = create<CalculatorState>()(
               fetchScenario(targetId),
               fetchAccounts(targetId),
             ])
-            if (data) set({ ...data, accounts, activeScenarioId: targetId, scenarioList: scenarios })
+            if (data)
+              set({ ...data, accounts, activeScenarioId: targetId, scenarioList: scenarios })
             else set({ accounts: [], activeScenarioId: scenarios[0].id, scenarioList: scenarios })
           } finally {
             dbSyncInFlight.delete(key)
@@ -242,14 +244,22 @@ export const useCalculatorStore = create<CalculatorState>()(
         // Re-check owner + scenario immediately before the request.
         const current = useCalculatorStore.getState()
         const currentUserId = current.identity.kind === "user" ? current.identity.userId : null
-        if (activeScenarioId && currentUserId === userId && current.activeScenarioId === activeScenarioId) {
+        if (
+          activeScenarioId &&
+          currentUserId === userId &&
+          current.activeScenarioId === activeScenarioId
+        ) {
           upsertAccount(account, activeScenarioId).catch(console.error)
         }
       },
 
       seedAccounts: (accounts) => {
         const seeded = accounts.map((account) => ({ ...account, id: crypto.randomUUID() }))
-        const { identity, activeScenarioId, accounts: existingAccounts } = useCalculatorStore.getState()
+        const {
+          identity,
+          activeScenarioId,
+          accounts: existingAccounts,
+        } = useCalculatorStore.getState()
         const userId = identity.kind === "user" ? identity.userId : null
 
         set({ accounts: seeded })
@@ -261,8 +271,10 @@ export const useCalculatorStore = create<CalculatorState>()(
           Promise.all(existingAccounts.map((account) => deleteAccount(account.id)))
             .then(() => {
               const current = useCalculatorStore.getState()
-              const currentUserId = current.identity.kind === "user" ? current.identity.userId : null
-              if (currentUserId !== userId || current.activeScenarioId !== activeScenarioId) return []
+              const currentUserId =
+                current.identity.kind === "user" ? current.identity.userId : null
+              if (currentUserId !== userId || current.activeScenarioId !== activeScenarioId)
+                return []
               return Promise.all(seeded.map((account) => upsertAccount(account, activeScenarioId)))
             })
             .catch(console.error)
@@ -277,7 +289,11 @@ export const useCalculatorStore = create<CalculatorState>()(
         }))
         const current = useCalculatorStore.getState()
         const currentUserId = current.identity.kind === "user" ? current.identity.userId : null
-        if (activeScenarioId && currentUserId === userId && current.activeScenarioId === activeScenarioId) {
+        if (
+          activeScenarioId &&
+          currentUserId === userId &&
+          current.activeScenarioId === activeScenarioId
+        ) {
           const updated = current.accounts.find((a) => a.id === id)
           if (updated) upsertAccount(updated, activeScenarioId).catch(console.error)
         }
@@ -337,23 +353,31 @@ export const useCalculatorStore = create<CalculatorState>()(
         // Re-check owner + scenario before any remote write.
         const current = useCalculatorStore.getState()
         const currentUserId = current.identity.kind === "user" ? current.identity.userId : null
-        if (activeScenarioId && currentUserId === userId && current.activeScenarioId === activeScenarioId) {
+        if (
+          activeScenarioId &&
+          currentUserId === userId &&
+          current.activeScenarioId === activeScenarioId
+        ) {
           plan.accounts.forEach((acc) => upsertAccount(acc, activeScenarioId).catch(console.error))
           updateScenario(activeScenarioId, plan).catch(console.error)
         }
       },
 
       switchScenario: async (id) => {
-        const [data, accounts] = await Promise.all([
-          fetchScenario(id),
-          fetchAccounts(id),
-        ])
+        const [data, accounts] = await Promise.all([fetchScenario(id), fetchAccounts(id)])
         if (data) set({ ...data, accounts, activeScenarioId: id })
       },
 
       createNewScenario: async (name) => {
-        const { identity, personalInfo, retirementGoals, assumptions, drawdownConfig, displayMode, accounts } =
-          useCalculatorStore.getState()
+        const {
+          identity,
+          personalInfo,
+          retirementGoals,
+          assumptions,
+          drawdownConfig,
+          displayMode,
+          accounts,
+        } = useCalculatorStore.getState()
         const sessionId = identity.kind === "user" ? identity.userId : null
         if (!sessionId) return
         // Re-check the owner before the request (sign-out between the capture
@@ -370,7 +394,12 @@ export const useCalculatorStore = create<CalculatorState>()(
         })
         // Clone current accounts into the new scenario so it starts as an independent copy
         const cloned = await cloneAccounts(accounts, scenarioId)
-        const meta: ScenarioMeta = { id: scenarioId, name, updatedAt: new Date().toISOString(), claimComplete: true }
+        const meta: ScenarioMeta = {
+          id: scenarioId,
+          name,
+          updatedAt: new Date().toISOString(),
+          claimComplete: true,
+        }
         set((state) => ({
           activeScenarioId: scenarioId,
           scenarioList: [meta, ...state.scenarioList],
@@ -470,6 +499,6 @@ export const useCalculatorStore = create<CalculatorState>()(
         displayMode: state.displayMode,
         accounts: state.accounts,
       }),
-    }
-  )
+    },
+  ),
 )

@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from "vitest"
+import { describe, it, expect, afterEach } from "vite-plus/test"
 import { resolveSiteUrl } from "./site-url"
 
 const ORIGINAL_ENV = { ...process.env }

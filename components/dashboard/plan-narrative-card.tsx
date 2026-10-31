@@ -4,7 +4,14 @@ import { useEffect, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
 import { PageCard } from "@/components/ui/page-card"
 import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useCalculator } from "@/lib/context/calculator-context"
 import { usePlanNarrative } from "@/lib/hooks/use-plan-narrative"
@@ -30,7 +37,7 @@ export function PlanNarrativeCard() {
       personalInfo: state.personalInfo,
       retirementGoals: state.retirementGoals,
       drawdownConfig: state.drawdownConfig,
-    }))
+    })),
   )
   const { projection, simulationResult } = useCalculator()
 
@@ -116,9 +123,9 @@ export function PlanNarrativeCard() {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Generating uses AI and sends your plan&apos;s numbers to our AI provider. This is an automated
-        educational summary, not financial advice — consult a licensed financial advisor before making
-        decisions.
+        Generating uses AI and sends your plan&apos;s numbers to our AI provider. This is an
+        automated educational summary, not financial advice — consult a licensed financial advisor
+        before making decisions.
       </p>
     </PageCard>
   )

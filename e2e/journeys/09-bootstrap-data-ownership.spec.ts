@@ -21,7 +21,9 @@ test.describe("Journey 9: Bootstrap Data Ownership", () => {
     await stateManager.clearState()
   })
 
-  test("a signed-out reload restores the guest plan and leaves no user key behind", async ({ page }) => {
+  test("a signed-out reload restores the guest plan and leaves no user key behind", async ({
+    page,
+  }) => {
     await stateManager.seedState(SINGLE_TFSA_STATE)
     await page.reload()
     await stateManager.waitForHydration()

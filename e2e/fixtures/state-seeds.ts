@@ -1,5 +1,5 @@
-import type { CalculatorState } from '../helpers/state-manager'
-import type { Account } from '@/types'
+import type { CalculatorState } from "../helpers/state-manager"
+import type { Account } from "@/types"
 
 /**
  * Preset states for different test scenarios
@@ -22,10 +22,10 @@ export const EMPTY_STATE: Partial<CalculatorState> = {
 export const SINGLE_TFSA_STATE: Partial<CalculatorState> = {
   accounts: [
     {
-      id: 'tfsa-001',
-      name: 'Tax Free Savings',
-      provider: 'Allan Gray',
-      type: 'tfsa',
+      id: "tfsa-001",
+      name: "Tax Free Savings",
+      provider: "Allan Gray",
+      type: "tfsa",
       currentBalance: 150000, // R150k
       monthlyContribution: 3000, // R3k/month (R36k/year = annual limit)
       expectedReturn: 11, // 11% p.a.
@@ -43,10 +43,10 @@ export const MULTI_ACCOUNT_STATE: Partial<CalculatorState> = {
   accounts: [
     // TFSA
     {
-      id: 'tfsa-001',
-      name: 'Tax Free Savings',
-      provider: 'Allan Gray',
-      type: 'tfsa',
+      id: "tfsa-001",
+      name: "Tax Free Savings",
+      provider: "Allan Gray",
+      type: "tfsa",
       currentBalance: 350000,
       monthlyContribution: 3000, // Annual limit
       expectedReturn: 11,
@@ -55,10 +55,10 @@ export const MULTI_ACCOUNT_STATE: Partial<CalculatorState> = {
     },
     // Retirement Annuity
     {
-      id: 'ra-001',
-      name: 'Retirement Annuity',
-      provider: '10X Investments',
-      type: 'retirement_annuity',
+      id: "ra-001",
+      name: "Retirement Annuity",
+      provider: "10X Investments",
+      type: "retirement_annuity",
       currentBalance: 450000,
       monthlyContribution: 5000,
       expectedReturn: 10.5,
@@ -67,10 +67,10 @@ export const MULTI_ACCOUNT_STATE: Partial<CalculatorState> = {
     },
     // Pension Fund
     {
-      id: 'pension-001',
-      name: 'Company Pension Fund',
-      provider: 'Sanlam',
-      type: 'pension_fund',
+      id: "pension-001",
+      name: "Company Pension Fund",
+      provider: "Sanlam",
+      type: "pension_fund",
       currentBalance: 800000,
       monthlyContribution: 4000, // Employer + employee
       expectedReturn: 9.5,
@@ -87,10 +87,10 @@ export const MULTI_ACCOUNT_STATE: Partial<CalculatorState> = {
 export const RETIREMENT_READY_STATE: Partial<CalculatorState> = {
   accounts: [
     {
-      id: 'ra-001',
-      name: 'Retirement Annuity',
-      provider: '10X Investments',
-      type: 'retirement_annuity',
+      id: "ra-001",
+      name: "Retirement Annuity",
+      provider: "10X Investments",
+      type: "retirement_annuity",
       currentBalance: 2500000,
       monthlyContribution: 8000,
       expectedReturn: 10,
@@ -98,10 +98,10 @@ export const RETIREMENT_READY_STATE: Partial<CalculatorState> = {
       contributionEscalation: 5,
     },
     {
-      id: 'pension-001',
-      name: 'Company Pension Fund',
-      provider: 'Old Mutual',
-      type: 'pension_fund',
+      id: "pension-001",
+      name: "Company Pension Fund",
+      provider: "Old Mutual",
+      type: "pension_fund",
       currentBalance: 4200000,
       monthlyContribution: 6000,
       expectedReturn: 9,
@@ -109,10 +109,10 @@ export const RETIREMENT_READY_STATE: Partial<CalculatorState> = {
       contributionEscalation: 5,
     },
     {
-      id: 'preservation-001',
-      name: 'Preservation Fund',
-      provider: 'Allan Gray',
-      type: 'preservation_fund',
+      id: "preservation-001",
+      name: "Preservation Fund",
+      provider: "Allan Gray",
+      type: "preservation_fund",
       currentBalance: 1800000,
       monthlyContribution: 0, // No contributions allowed
       expectedReturn: 10.5,
@@ -141,10 +141,10 @@ export const RETIREMENT_READY_STATE: Partial<CalculatorState> = {
 export const TFSA_AT_LIMIT_STATE: Partial<CalculatorState> = {
   accounts: [
     {
-      id: 'tfsa-001',
-      name: 'Tax Free Savings (At Limit)',
-      provider: 'Allan Gray',
-      type: 'tfsa',
+      id: "tfsa-001",
+      name: "Tax Free Savings (At Limit)",
+      provider: "Allan Gray",
+      type: "tfsa",
       currentBalance: 500000, // Lifetime limit reached
       monthlyContribution: 0, // No new contributions allowed
       expectedReturn: 11,
@@ -162,10 +162,10 @@ export const TFSA_AT_LIMIT_STATE: Partial<CalculatorState> = {
 export const OLD_PENSION_STATE: Partial<CalculatorState> = {
   accounts: [
     {
-      id: 'pension-001',
-      name: 'Old Employer Pension',
-      provider: 'Liberty',
-      type: 'pension_fund',
+      id: "pension-001",
+      name: "Old Employer Pension",
+      provider: "Liberty",
+      type: "pension_fund",
       currentBalance: 750000,
       monthlyContribution: 0, // No longer employed
       expectedReturn: 9,
@@ -181,9 +181,9 @@ export const OLD_PENSION_STATE: Partial<CalculatorState> = {
 export function createAccount(overrides: Partial<Account>): Account {
   return {
     id: `account-${Date.now()}`,
-    name: 'Test Account',
-    provider: 'Test Provider',
-    type: 'discretionary',
+    name: "Test Account",
+    provider: "Test Provider",
+    type: "discretionary",
     currentBalance: 100000,
     monthlyContribution: 1000,
     expectedReturn: 10,

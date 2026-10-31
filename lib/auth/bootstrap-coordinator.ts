@@ -13,7 +13,9 @@ import {
 // (getState, start, enqueueAuthEvent, flush). SupabaseProvider and the tests
 // never need to know XState is involved.
 
-type BootstrapSnapshot = ReturnType<ReturnType<typeof createActor<typeof bootstrapMachine>>["getSnapshot"]>
+type BootstrapSnapshot = ReturnType<
+  ReturnType<typeof createActor<typeof bootstrapMachine>>["getSnapshot"]
+>
 
 const PHASE_OF_VALUE: Record<string, BootstrapPhase> = {
   hydratingGuest: "hydrating",
@@ -33,7 +35,9 @@ const COMMITTED_PHASES = new Set<BootstrapPhase>(["syncing", "ready", "mfa-requi
 // Resting phases: the actor stays here until a new AUTH_EVENT arrives.
 const RESTING_PHASES = new Set<BootstrapPhase>(["ready", "mfa-required"])
 
-export function createBootstrapCoordinator(dependencies: BootstrapDependencies): BootstrapCoordinator {
+export function createBootstrapCoordinator(
+  dependencies: BootstrapDependencies,
+): BootstrapCoordinator {
   const machine = bootstrapMachine.provide({
     actors: {
       hydrateGuestScope: fromPromise<void, void>(() => dependencies.hydrateGuestScope()),
@@ -50,16 +54,16 @@ export function createBootstrapCoordinator(dependencies: BootstrapDependencies):
               : null
           }
           return dependencies.getUser()
-        }
+        },
       ),
       hydrateUserScope: fromPromise<void, { userId: string }>(({ input }) =>
-        dependencies.hydrateUserScope(input.userId)
+        dependencies.hydrateUserScope(input.userId),
       ),
-      applyTransition: fromPromise<void, { event: AuthEvent; generation: number }>(
-        ({ input }) => dependencies.applyAuthTransition(input.event, input.generation)
+      applyTransition: fromPromise<void, { event: AuthEvent; generation: number }>(({ input }) =>
+        dependencies.applyAuthTransition(input.event, input.generation),
       ),
       checkAal: fromPromise<{ current: string | null; next: string | null }, { userId: string }>(
-        async () => dependencies.currentAal()
+        async () => dependencies.currentAal(),
       ),
       claimAndSync: fromPromise<void, { userId: string; event: AuthEvent; generation: number }>(
         async ({ input }) => {
@@ -76,7 +80,7 @@ export function createBootstrapCoordinator(dependencies: BootstrapDependencies):
           }
           await dependencies.syncFromDb(input.userId, input.generation)
           await dependencies.syncExpensesFromDb(input.userId, input.generation)
-        }
+        },
       ),
     },
   })
@@ -141,7 +145,7 @@ export function createBootstrapCoordinator(dependencies: BootstrapDependencies):
             const error = getActor().getSnapshot().context.error ?? new Error("bootstrap failed")
             throw error
           }
-        }
+        },
       )
     }
     return startPromise

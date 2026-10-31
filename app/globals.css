@@ -64,13 +64,21 @@
 
 /* Radix accordion height animations */
 @keyframes accordion-down {
-  from { height: 0; }
-  to   { height: var(--radix-accordion-content-height); }
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
 }
 
 @keyframes accordion-up {
-  from { height: var(--radix-accordion-content-height); }
-  to   { height: 0; }
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
 }
 
 /* ─── Base CSS variables ────────────────────────────────────────────────── */
@@ -146,10 +154,20 @@
 }
 
 /* ─── Dark mode scrollbar ────────────────────────────────────────────────── */
-.dark ::-webkit-scrollbar { width: 5px; height: 5px; }
-.dark ::-webkit-scrollbar-track { background: hsl(var(--background)); }
-.dark ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
-.dark ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
+.dark ::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.dark ::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
 
 /* ─── Dashboard utility classes ─────────────────────────────────────────── */
 @layer components {
