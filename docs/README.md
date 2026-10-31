@@ -75,6 +75,8 @@ pnpm docs:check   # fails on missing frontmatter/title/description, broken links
   phase's status actually changes, not on every entry.
 - Completed-era planning docs are moved into `history/` with a date prefix, not
   deleted.
+- Formatting-only commits are listed in `.git-blame-ignore-revs`; run
+  `git config blame.ignoreRevsFile .git-blame-ignore-revs` once per clone so `git blame` skips them.
 - Links between docs are relative (`../history/...`), so they work on GitHub. Links from
   inside `project-phases/` need `../` prefixes. `pnpm docs:check` catches the stray
   `docs/docs/` kind of mistake that once went unnoticed for weeks.

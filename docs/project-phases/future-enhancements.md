@@ -11,6 +11,7 @@ description: "Post-MVP enhancement ideas, split into completed and still pending
 - ✅ **Tax-optimized withdrawal sequencing** — TFSA → Discretionary → Pension/RA order in drawdown phase (`projection-engine.ts`)
 - ✅ **Lump sum commutation UI** — % slider in assumptions form, one-third cap enforced, tax breakdown shown
 - ✅ **Medical aid tax credits** — credits applied in drawdown tax calc, escalated from today's value each retirement year
+- ✅ **Vite+ toolchain (2026-10-31)** — lint, format and tests on Vite+ (Oxlint, Oxfmt, Vitest 5); ESLint and the separate Vitest config removed. See [history](../history/2026-10-31-vite-plus-oxc-migration.md)
 - ✅ **Account-specific withdrawal tracking** — per-account balances tracked each drawdown year, visible in CSV export and debug window
 
 ## Pending
