@@ -214,8 +214,8 @@ importers:
   .:
     dependencies:
       '@animateicons/react':
-        specifier: ^0.12.1
-        version: 0.12.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: ^0.13.0
+        version: 0.13.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@hookform/resolvers':
         specifier: ^5.9.2
         version: 5.9.2(@standard-schema/spec@1.1.0)(react-hook-form@7.91.0(@types/react@19.2.17)(react@19.3.1))(zod@4.6.7)
@@ -405,8 +405,8 @@ packages:
     resolution: {integrity: sha512-U4+70Pc5ZS9osnCBCE5Jha/ciHM+Yp+CNMNC/7HvYbNRk1Ldd+f7qO65W5qfhu/TCv+/ozljlXXe9Nj8419DMA==}
     engines: {node: '>=10'}
 
-  '@animateicons/react@0.12.1':
-    resolution: {integrity: sha512-2Ygdl3Fp5rPO1JE757KW/+YMbGF+RPkDukaEyzQTL6TDgdCNJRxjxu3S/BlvwtxMlUrKmM3ni0CMf4PYcWhKMw==}
+  '@animateicons/react@0.13.0':
+    resolution: {integrity: sha512-xbSymVZQJqUR1tcRVW4vyEy+USAFMDp0l3uM4nlmEyQazPib7Ay+PFKdBNLeXHXaSUGhKUYJXSvxHYkFki6P2w==}
     engines: {node: '>=18.17.0'}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
@@ -3624,7 +3624,7 @@ snapshots:
 
   '@alloc/quick-lru@5.3.0': {}
 
-  '@animateicons/react@0.12.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+  '@animateicons/react@0.13.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
