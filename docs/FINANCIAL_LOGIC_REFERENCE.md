@@ -171,11 +171,11 @@ Income below these thresholds results in zero net tax after rebates.
 ### 1.5 Pension / RA Contribution Deduction Limits (Section 11F)
 
 ```
-deductionLimit = min(annualIncome × 0.275, 430,000)
+deductionLimit = min(annualIncome × 0.275, 430,000 × thresholdScale)
 ```
 
 - Rate: **27.5%** of the greater of remuneration or taxable income
-- Annual rand cap: **R430,000**
+- Annual rand cap: **R430,000** for 2026/27, indexed forward with `thresholdScale` (§1.8)
 - Income base escalates with inflation each projection year (see §6 accumulation)
 
 ### 1.6 TFSA Limits
@@ -187,6 +187,10 @@ deductionLimit = min(annualIncome × 0.275, 430,000)
 
 **Critical rule:** The lifetime limit tracks *contributions only*, not investment growth. A TFSA
 balance may legally exceed R500,000 if growth pushes it there.
+
+Both limits apply **per taxpayer, in aggregate across all TFSAs** (SARS Budget 2026 FAQ), and
+are held at their nominal values (not indexed). One shared allowance
+(`lib/calculations/utils/tfsa-allowance.ts`) enforces them in both engines.
 
 **Re-contribution room (drawdown) — resolved 2026-08-14 as not-applicable in this model:**
 Under s12T, amounts *withdrawn* from a TFSA are added back to the **lifetime** contribution limit
@@ -232,7 +236,23 @@ function calculateMedicalAidTaxCredit(dependants: number = 0): number {
 | 2 | 1,006 | 12,072 |
 | 3 | 1,260 | 15,120 |
 
----
+### 1.8 Indexation of Rand Thresholds (modelling assumption)
+
+SARS publishes one year's tables. The engines treat 2026/27 as "today" and scale every rand
+threshold for a tax year `t` years ahead by `thresholdScale = (1 + g)^t`
+(`taxThresholdScale` in `retirement-tax.ts`); tax under the scaled table is exactly
+`s × tax(amount / s)` (`calculateIndexedIncomeTax`). The growth `g` is set per threshold group
+by `MarketAssumptions.taxThresholdRelief`, resolved in `utils/tax-relief.ts`:
+
+| Setting | Income tax tables | Lump-sum table | s11F cap | CGT exclusion |
+|---|---|---|---|---|
+| `historical` (default; also used when unset) | 0.57 × inflation | 0.20 × inflation | 0.43 × inflation | 0.46 × inflation |
+| `full` | inflation | inflation | inflation | inflation |
+| `none` (stress test) | 0 | 0 | 0 | 0 |
+
+The historical shares are computed from `lib/constants/tax-relief-history.ts` (SARS values
+2016/17 and 2026/27, CPI 2016–2025). TFSA limits are never indexed. Derivation and sources:
+[history/2026-10-31-sa-retirement-calc-audit.md](history/2026-10-31-sa-retirement-calc-audit.md).
 
 ## 2. Financial Planning Defaults
 
@@ -460,19 +480,19 @@ const PENSION_TYPES = ['pension_fund', 'retirement_annuity', 'preservation_fund'
 
 ### TFSA Contribution Enforcement
 
-Applied every month during the accumulation loop:
+Applied every month during the accumulation loop, in BOTH engines, through one allowance
+shared by every TFSA account (`tfsa-allowance.ts`):
 
 ```typescript
-// Reset tfsaYearlyUsed to 0 at the start of each projection year
-const remainingLifetime = Math.max(0, 500_000 - tfsaLifetimeUsed)
-const remainingAnnual   = Math.max(0, 46_000  - tfsaYearlyUsed)
-const actualContribution = Math.min(rawContribution, remainingLifetime, remainingAnnual)
-tfsaLifetimeUsed += actualContribution
-tfsaYearlyUsed   += actualContribution
+const allowance = createTfsaAllowance(accounts)   // lifetimeUsed = Σ tfsaContributionsToDate
+// each projection year:
+startTfsaYear(allowance)                          // usedThisYear = 0
+// each month, each TFSA account:
+const { admitted, excess } = admitTfsaContribution(allowance, rawContribution)
+// admitted = min(raw, 500_000 − lifetimeUsed, 46_000 − usedThisYear)
 ```
 
-`tfsaContributionsToDate` seeds `tfsaLifetimeUsed` at the start (tracks historical contributions
-the user already made before the projection begins).
+The excess is not invested; it feeds the 40% penalty display only.
 
 ### Section 11F — Which Account Types Qualify
 
@@ -572,7 +592,7 @@ The accumulation loop mirrors `projectFinalSavings` but tracks per-account state
 
 ```
 for year = 0 to yearsToRetirement - 1:
-  reset tfsaYearlyUsed[each account] = 0
+  startTfsaYear(sharedAllowance)    // one allowance for ALL TFSA accounts
 
   for each account:
     accNetReturn    = (expectedReturn - annualFees) / 100
@@ -583,8 +603,7 @@ for year = 0 to yearsToRetirement - 1:
       rawContrib = monthlyContribution × (1 + escalation)^(year + month/12)
 
       if TFSA:
-        actualContrib = min(rawContrib, remainingLifetime, remainingAnnual)
-        update tfsaLifetimeUsed, tfsaYearlyUsed
+        actualContrib = admitTfsaContribution(sharedAllowance, rawContrib).admitted
 
       growth = balance × accMonthlyReturn
       fees   = balance × accMonthlyFeeRate
@@ -592,11 +611,11 @@ for year = 0 to yearsToRetirement - 1:
       balance += actualContrib
       costBasis += actualContrib    // discretionary only
 
-  // Section 11F credit (after all months in this year):
+  // Section 11F carry-forward (s11F(3)), after all months in this year:
   effectiveIncome = annualIncome × (1 + inflationRate)^year
-  deductionLimit  = min(effectiveIncome × 0.275, 430_000)
-  excessCredit    = max(0, yearlyPensionContributions - deductionLimit)
-  accumulatedExcessCredit += excessCredit
+  deductionLimit  = min(effectiveIncome × 0.275, 430_000 × thresholdScale(year))
+  accumulatedExcessCredit = max(0, accumulatedExcessCredit + yearlyPensionContributions - deductionLimit)
+  // carried-in amounts are deemed contributed this year, so later unused room absorbs them
 ```
 
 ### Phase 2 — Lump Sum Commutation at Retirement
@@ -605,7 +624,8 @@ for year = 0 to yearsToRetirement - 1:
 function calculateLumpSumCommutation(
   portfolioValue: number,
   lumpSumPercentage: number,           // 0-100, clamped
-  accumulatedExcessCredit: number = 0
+  accumulatedExcessCredit: number,
+  thresholdScale: number              // §1.8 — the table is indexed to the retirement year
 ) {
   const pct = Math.max(0, Math.min(100, lumpSumPercentage))
   const lumpSumAmount = portfolioValue * (pct / 100)
@@ -613,7 +633,7 @@ function calculateLumpSumCommutation(
   // Excess credit reduces taxable portion of lump sum
   const creditApplied   = Math.min(accumulatedExcessCredit, lumpSumAmount)
   const taxableLumpSum  = lumpSumAmount - creditApplied
-  const lumpSumTax      = calculateLumpSumTax(taxableLumpSum)
+  const lumpSumTax      = thresholdScale * calculateLumpSumTax(taxableLumpSum / thresholdScale)
   const netLumpSum      = lumpSumAmount - lumpSumTax
   const remainingPortfolio = portfolioValue - lumpSumAmount
 
@@ -635,48 +655,42 @@ account.costBasis *= (1 - lumpSumFraction)   // discretionary
 
 ### Phase 3 — Drawdown (retirementAge → lifeExpectancy)
 
-Annual loop (not monthly) for performance. Growth applied at end-of-year before withdrawal.
+Each year is one call to `runDrawdownYear` (`lib/calculations/utils/drawdown-year.ts`),
+shared with Monte Carlo. Monthly income, monthly compounding per `compoundingMethod`, and the
+living annuity band (pension/RA/preservation money after commutation is modelled as a
+living annuity).
 
-#### 3a. Annual Account Growth
-
-```typescript
-for each drawdownAccount:
-  growth = balance × netReturn    // netReturn = (expectedReturn - annualFees) / 100
-  balance += growth
-```
-
-#### 3b. Tax-Optimized Withdrawal Order
+#### 3a. Monthly Income and Growth
 
 ```
-1. TFSA           — fully tax-free
-2. Discretionary  — CGT on gains only (40% inclusion rate)
-3. Pension / RA / Preservation — full income tax
+i = calculateMonthlyReturn(netReturn, compoundingMethod)   // per account
+g = (1 + i)^12
+a = (g − 1) / (12 i)          // year-end value of R1/12 paid each month-end; a = 1 at i = 0
+ending balance = B × g − W × a     // W = the year's withdrawal from this account
+most W can be  = B × g / a         // pays out exactly to R0
+growth        = ending − B + W     // net of fees
 ```
 
-```typescript
-// Target withdrawal (spending-phase adjusted)
-const targetWithdrawal = Math.min(annualWithdrawal * spendingMultiplier, currentTotal)
-let remaining = targetWithdrawal
+#### 3b. Withdrawal Order (with the living annuity band)
 
-// 1. TFSA
-for tfsa accounts (balance > 0, remaining > 0):
-  take = min(remaining, balance)
-  balance -= take; remaining -= take
-
-// 2. Discretionary
-for discretionary accounts (balance > 0, remaining > 0):
-  take = min(remaining, balance)
-  gainFraction = max(0, min(1, (balance - costBasis) / balance))
-  gainTaken = take × gainFraction
-  cgtTaxableAmount += gainTaken × 0.40    // 40% CGT inclusion rate
-  costBasis = max(0, costBasis - take × (1 - gainFraction))
-  balance -= take; remaining -= take
-
-// 3. Pension / RA / Preservation
-for pension accounts (balance > 0, remaining > 0):
-  take = min(remaining, balance)
-  balance -= take; remaining -= take
 ```
+1. 2.5% × start-of-year value from EACH living annuity (compulsory, even if not needed)
+2. More annuity income up to the tax-free room:
+     taxThresholdForAge(age) × thresholdScale + unused s11F credit   (MC: no credit)
+3. Discretionary  — CGT on the gain share, measured on the start-of-year value
+4. More living-annuity income, up to 17.5% × start-of-year value of EACH annuity
+5. TFSA last      — the reserve that pays the gap once an annuity hits its ceiling
+shortfall = target not fully paid (pots empty, or only capped annuity money left)
+```
+
+Order changed 2026-11-01 (previously TFSA second). Trade-off, measured: TFSA-last raises Monte
+Carlo success 3.5–4.7 points and removes the underfunded golden plan's shortfall, but for a
+comfortably funded plan it leaves the TFSA idle while taxed annuity income is drawn, lowering
+lifetime net income 2–10% against an order with the TFSA before step 4. See
+[history/2026-11-01-audit-fixes.md](history/2026-11-01-audit-fixes.md).
+
+If the 2.5% minimum alone exceeds the target, the retiree receives the excess as income.
+CGT: `taxableCapitalGain = max(0, gain − 50,000 × cgtExclusionScale)`, inclusion 40%.
 
 **Dividend withholding tax (DWT) — documented simplification (resolved 2026-08-14):**
 SA imposes a final 20% dividends tax (SARS Budget Tax Guide 2026/2027: "dividends tax, at a rate
@@ -701,24 +715,26 @@ const taxableIncome = (pensionWithdrawal - creditAppliedThisYear) + cgtTaxableAm
 
 ```typescript
 const age = retirementAge + year
-const incomeTax = calculateIncomeTaxWithRebates(
+const thresholdScale = taxThresholdScale(yearsToRetirement + year, taxIndexation.incomeTax)   // §1.8
+const incomeTax = calculateIndexedIncomeTax(
   taxableIncome,
   age,
-  drawdownConfig.monthlyMedicalAid ? drawdownConfig.medicalAidDependants ?? 0 : undefined
+  drawdownConfig.monthlyMedicalAid ? drawdownConfig.medicalAidDependants ?? 0 : undefined,
+  thresholdScale,
 )
 ```
 
 #### 3e. Medical Aid Escalation in Drawdown
 
-Monthly medical aid is entered in **today's Rands** and escalated using **general inflation**
-(not medical inflation — the separate `projectMedicalCosts` module uses medical inflation
-for standalone analysis):
+Monthly medical aid is entered in **today's Rands** and escalated using **medical inflation**
+(`SA_DEFAULTS.medicalInflation`, 9%), since SA medical costs grow faster than CPI:
 
 ```typescript
-const medicalAidContribution =
-  (drawdownConfig.monthlyMedicalAid ?? 0)
-  × Math.pow(1 + inflationRate, yearsToRetirement + year)
-  × 12
+const medicalAidContribution = escalate(
+  (drawdownConfig.monthlyMedicalAid ?? 0) * 12,
+  yearsToRetirement + year,
+  SA_DEFAULTS.medicalInflation,
+)
 ```
 
 #### 3f. Net Income Per Year
@@ -728,10 +744,11 @@ const netIncome = totalWithdrawal - incomeTax - medicalAidContribution
 const inflationAdjustedWithdrawal = totalWithdrawal / Math.pow(1 + inflationRate, yearsToRetirement + year)
 ```
 
-#### 3g. Next Year's Withdrawal (end of each drawdown year)
+#### 3g. Next Year's Withdrawal (start of each drawdown year)
 
 From year 1 onward, the base withdrawal is recomputed per-strategy against the live
-post-growth balance — see §15 for the per-strategy formulas (`calculateNextWithdrawal`
+**start-of-year** balance (the living annuity anniversary value, and the same basis year 0
+uses) — see §15 for the per-strategy formulas (`calculateNextWithdrawal`
 in `lib/calculations/utils/drawdown-withdrawal.ts`, shared by both engines). Only
 `fixed_amount_inflation_adjusted` actually reduces to a flat CPI inflation of the prior
 amount; the other three strategies re-derive the amount from `currentBalance` each year,
@@ -740,7 +757,7 @@ which is what makes them diverge from each other after year 0.
 ```typescript
 if (year > 0) {
   annualWithdrawal = calculateNextWithdrawal(
-    annualWithdrawal, currentTotal, drawdownConfig,
+    annualWithdrawal, startingBalance, drawdownConfig,
     yearsToRetirement + year, inflationRate
   )
 }
@@ -780,8 +797,23 @@ function calculateInitialWithdrawal(
 
 ### Portfolio Depletion
 
-Once balance reaches R0, all subsequent years record zero balance and zero withdrawals.
-No negative balances permitted. `portfolioDepletionAge` is set on the first year balance hits 0.
+`portfolioDepletionAge` is the first drawdown year whose income could not be paid in full
+(`runDrawdownYear` reports `shortfall`): the pots ran out, or the only money left is in a
+living annuity at its 17.5% ceiling. In the second case a residual balance survives, so
+`surplusAmount > 0` alongside a depletion age is valid. `selectShortfallAmount` reports the
+income gap whenever a depletion age exists. No negative balances are permitted.
+
+### Headline Income and "On Track"
+
+- `monthlyIncomeAtRetirement` is the gross income actually paid in the first drawdown year
+  (`selectMonthlyGrossIncomeAtRetirement`, from the projected row), not the strategy target —
+  the living annuity band can pay less (17.5% ceiling) or more (2.5% minimum).
+- `incomeGoalShortfallAge` (`selectIncomeGoalShortfallAge`) is the first age at which the
+  income paid is below the goal: desired income escalated to that year × spending-phase
+  multiplier. `null` = goal met every year. Overview's "On Track", "Goal Income Until", the
+  what-if readout, the printed verdict and the AI narrative use it. `portfolioDepletionAge`
+  alone cannot answer "on track": a fixed-percentage strategy never runs out, however little
+  it pays.
 
 ---
 
@@ -797,6 +829,18 @@ function randomNormal(mean: number, stdDev: number): number {
   const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2)
   return mean + stdDev * z0
 }
+```
+
+**One market shock per year, shared by every account in a run** (perfect correlation —
+consistent with every account carrying the same equity volatility). Before 2026-10-31 each
+account drew an independent sequence, which diversified one portfolio against itself:
+
+```typescript
+const shocks = generateMarketShocks(totalYears, rng)              // z_t ~ N(0, 1)
+accountReturns = accounts.map(acc =>
+  returnsFromShocks(calculateEffectiveAnnualReturn(netReturn, method), vol, shocks))
+// each draw R is then converted to monthly GEOMETRICALLY: (1 + R)^(1/12) − 1
+// r_t = exp(log(1 + netReturn) − vol²/2 + vol × z_t) − 1
 ```
 
 **Log-normal returns** (corrected for Jensen's inequality / volatility drag):
@@ -821,14 +865,19 @@ growth rate matches the stated `expectedReturn`.
 
 ### Simulation Run — Accumulation Phase
 
-Each account gets its own independent return sequence. Monthly compounding matches
-the deterministic engine:
+Each account's return sequence comes from the run's shared shocks, centred on the effective
+annual growth the projection compounds to (`calculateEffectiveAnnualReturn`: (1 + r/12)^12 − 1
+under nominal, r under compound) and converted to monthly geometrically. The simulated mean
+therefore equals the projection under both methods; the median sits below it (log-normal).
+Before 2026-11-01 each draw used the nominal R/12, which inflated mean growth from 10.47% to
+~12.1% a year at a 10% return and 16% volatility. The shared TFSA allowance matches the
+deterministic engine:
 
 ```typescript
 for year = 0 to yearsToRetirement - 1:
   for each account:
     annualReturn = accountReturns[accIdx][year]     // pre-generated sequence
-    monthlyReturn = calculateMonthlyReturn(annualReturn, compoundingMethod)
+    monthlyReturn = calculateMonthlyReturn(annualReturn, "compound")   // geometric, see above
     for month = 0 to 11:
       contrib = monthlyContribution × (1 + escalation)^(year + month/12)
       balance = balance × (1 + monthlyReturn) + contrib
@@ -836,30 +885,22 @@ for year = 0 to yearsToRetirement - 1:
 
 ### Simulation Run — Drawdown Phase
 
-Each account keeps its own stochastic return sequence into the drawdown phase (no
-single pooled return) — growth is applied per-account before each year's withdrawal:
+Each drawdown year calls the same `runDrawdownYear` as the deterministic engine, with each
+account's stochastic return for that year converted by `calculateMonthlyReturn`:
 
 ```typescript
 for year = 0 to yearsInRetirement - 1:
-  for each drawdownAccount:
-    if (acc.balance > 0) acc.balance *= (1 + acc.returns[yearsToRetirement + year])
-
-  const multiplier = getSpendingPhaseMultiplier(year)
-  let remaining = min(withdrawal × multiplier, balance)
-  // Withdraw in tax-efficient order, mirrors the deterministic projection engine:
-  // 1. TFSA (tax-free)        2. Discretionary (CGT only)        3. Pension/RA/preservation (income tax)
-  if (year > 0) {
-    withdrawal = calculateNextWithdrawal(
-      withdrawal, balance, drawdownConfig,
-      yearsToRetirement + year, inflationRate, desiredMonthlyIncome
-    )
-  }
+  if (year > 0) withdrawal = calculateNextWithdrawal(withdrawal, startOfYearBalance, ...,
+                                                     desiredMonthlyIncome)
+  monthlyRates = accountReturns.map(r => calculateMonthlyReturn(r[yearsToRetirement + year], "compound"))
+  outcome = runDrawdownYear(pots, monthlyRates, withdrawal × getSpendingPhaseMultiplier(year))
+  if (outcome.shortfall && !depletionAge) depletionAge = age    // same rule as §6
 ```
 
-Tax on the pension withdrawal plus CGT-taxable discretionary gains is computed each
-year via `calculateIncomeTaxWithRebates` and accumulated into `lifetimeIncomeTax` —
-for reporting only; it does not force additional liquidation (it reduces net
-spendable income, matching the deterministic engine's treatment).
+At zero volatility Monte Carlo reproduces the deterministic yearly balances and depletion age
+exactly (`sa-audit-scenarios.test.ts`). Tax (indexed, §1.8) is computed for reporting only;
+it does not force additional liquidation. Monte Carlo does not track the s11F credit, so its
+reported tax can be higher than the projection's for over-cap contributors.
 
 ### Lump Sum in Monte Carlo
 
@@ -881,7 +922,10 @@ drawdownAccounts = accounts.map(acc => ({
 // Tax on the commuted amount itself, via the same retirement lump sum table as §1.2,
 // reported on SimulationRun.lumpSumTax (added to lifetimeIncomeTax is NOT done —
 // they are tracked as separate fields, see SimulationRun below)
-const lumpSumTax = calculateLumpSumCommutation(pensionBalanceAtRetirement, cappedLumpSumPercentage).lumpSumTax
+const lumpSumTax = calculateLumpSumCommutation(
+  pensionBalanceAtRetirement, cappedLumpSumPercentage, 0,
+  taxThresholdScale(yearsToRetirement, taxIndexation.lumpSum),
+).lumpSumTax
 ```
 
 ### Initial Withdrawal for Monte Carlo
@@ -898,10 +942,10 @@ default:
 
 ### Success Criterion
 
-`balance > 0` at `lifeExpectancy` = success. Lump sum and income/CGT tax are reported
-via `SimulationRun.lumpSumTax` / `lifetimeIncomeTax` (and their `SimulationResult`
-averages) but do not affect the success/failure determination — both leave the
-portfolio balance unchanged either way, only the reported tax differs.
+A run succeeds when it paid the full income every year: `success = depletionAge === null`.
+With a living annuity capped at 17.5% a failing run can keep a residual balance, so
+`balance > 0` no longer identifies success. Lump sum and income/CGT tax are reported via
+`SimulationRun.lumpSumTax` / `lifetimeIncomeTax` but do not affect success.
 
 ### Percentile Calculation (linear interpolation)
 
@@ -973,10 +1017,20 @@ const zeroContribProjection = projectFinalSavings(
 if (zeroContribProjection >= targetNestEgg) return 0
 ```
 
-**Step 3: Binary search**
+**Step 3: Find a ceiling that reaches the target, or report the goal unreachable**
+```typescript
+let high = 100_000
+while (project(high) < targetNestEgg && high < MAX_MONETARY_AMOUNT) high = min(high × 2, MAX_MONETARY_AMOUNT)
+if (project(high) < targetNestEgg) return { optimalMonthlyContribution: 0, isAchievable: false }
+```
+
+Before 2026-10-31 the ceiling was fixed at R100,000/month. A goal needing more, or any goal
+with no years left, returned R0, which the insights panel read as "on track". Consumers must
+check `isAchievable` before using `optimalMonthlyContribution`.
+
+**Step 4: Binary search**
 ```typescript
 let low = 0
-let high = 100_000   // R100,000/month upper bound
 
 while (high - low > 100) {   // R100 precision
   const mid = (low + high) / 2

@@ -1,6 +1,11 @@
 # Documentation Update Log
 
+## 2026-11-01
+* **Update**: [Multi-agent audit fixes: on-track definition, headline income, MC bias, withdrawal order, s11F carry-forward](history/2026-11-01-audit-fixes.md) - Five audit findings fixed with tests; the withdrawal-order trade-off measured; main vs branch compared on the user's exact plan.
+
 ## 2026-10-31
+* **Update**: [Risk page: Monte Carlo and volatility moved into their own section](history/2026-10-31-risk-page.md) - New /calculator/risk page holds every Monte Carlo input and result; all other pages, and the AI narrative, show deterministic results only.
+* **Update**: [SA retirement calculation audit: tax relief setting, living annuity band, monthly drawdown, MC correlation](history/2026-10-31-sa-retirement-calc-audit.md) - Seven confirmed calculation defects fixed with independent tests; future tax relief defaults to the last decade's SARS history with a no-relief stress test; open statutory gaps listed.
 * **Update**: [Lint, format and tests moved to Vite+ (Oxlint, Oxfmt, Vitest 5)](history/2026-10-31-vite-plus-oxc-migration.md) - ESLint and Prettier-style tooling replaced by `vp check`; the money-time guard ported to an Oxlint plugin; repo reformatted in one blame-ignored commit.
 
 ## 2026-10-30

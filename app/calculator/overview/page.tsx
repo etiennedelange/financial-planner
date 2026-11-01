@@ -6,7 +6,7 @@ import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useShallow } from "zustand/react/shallow"
 
 export default function OverviewRoute() {
-  const { projection, simulationResult, isSimulating } = useCalculator()
+  const { projection } = useCalculator()
   const { personalInfo, retirementGoals, accounts } = useCalculatorStore(
     useShallow((s) => ({
       personalInfo: s.personalInfo,
@@ -24,8 +24,6 @@ export default function OverviewRoute() {
   return (
     <OverviewPage
       projection={projection}
-      simulationResult={simulationResult}
-      isSimulating={isSimulating}
       retirementAge={personalInfo.retirementAge}
       currentAge={personalInfo.currentAge}
       lifeExpectancy={personalInfo.lifeExpectancy}

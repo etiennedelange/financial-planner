@@ -5,6 +5,11 @@ import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useAuth } from "@/components/supabase-provider"
 import { formatCurrency } from "@/lib/utils/currency"
 import type { ProjectionResult } from "@/types"
+import { TAX_THRESHOLD_RELIEF_LABELS } from "@/types"
+import {
+  DEFAULT_TAX_THRESHOLD_RELIEF,
+  describeTaxReliefAssumption,
+} from "@/lib/calculations/utils/tax-relief"
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useShallow } from "zustand/react/shallow"
@@ -221,21 +226,14 @@ export function PrintClient() {
             <div style={{ fontSize: 11, color: "#6b7280" }}>
               {yearsToRetirement} years to retirement
             </div>
+            {/* On track = the steady-return projection pays the income goal every year */}
             <div
-              className={`badge ${
-                projection.portfolioDepletionAge
-                  ? projection.portfolioDepletionAge < personalInfo.lifeExpectancy
-                    ? "tag-bad"
-                    : "tag-ok"
-                  : "tag-ok"
-              }`}
+              className={`badge ${projection.incomeGoalShortfallAge !== null ? "tag-bad" : "tag-ok"}`}
               style={{ marginTop: 4 }}
             >
-              {projection.portfolioDepletionAge
-                ? projection.portfolioDepletionAge >= personalInfo.lifeExpectancy
-                  ? "On Track"
-                  : `Shortfall at age ${projection.portfolioDepletionAge}`
-                : "Surplus at life expectancy"}
+              {projection.incomeGoalShortfallAge !== null
+                ? `Below goal income from age ${projection.incomeGoalShortfallAge}`
+                : "Goal income to life expectancy"}
             </div>
           </div>
         </div>
@@ -273,6 +271,12 @@ export function PrintClient() {
             <div className="metric-value">{pct(projection.averageEffectiveTaxRate)}</div>
           </div>
         </div>
+        <p style={{ fontSize: 11, color: "#6b7280", marginTop: 8 }}>
+          {describeTaxReliefAssumption(
+            assumptions.taxThresholdRelief,
+            retirementGoals.inflationRate,
+          )}
+        </p>
 
         {/* Accounts */}
         <div className="section">
@@ -341,6 +345,16 @@ export function PrintClient() {
                 <td>{formatCurrency(retirementGoals.legacyAmount)}</td>
                 <td>Compounding</td>
                 <td style={{ textTransform: "capitalize" }}>{assumptions.compoundingMethod}</td>
+              </tr>
+              <tr>
+                <td>Future Tax Relief</td>
+                <td colSpan={3}>
+                  {
+                    TAX_THRESHOLD_RELIEF_LABELS[
+                      assumptions.taxThresholdRelief ?? DEFAULT_TAX_THRESHOLD_RELIEF
+                    ]
+                  }
+                </td>
               </tr>
             </tbody>
           </table>

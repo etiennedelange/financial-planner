@@ -154,7 +154,7 @@ describe("Cross-tab consistency", () => {
   })
 
   describe("Monte Carlo and Deterministic projection consistency", () => {
-    it("should have similar median outcome between deterministic and stochastic", () => {
+    it("matches the deterministic projection on average, with the median below it", () => {
       const projection = calculateProjection(
         testAccounts,
         testPersonalInfo,
@@ -172,17 +172,21 @@ describe("Cross-tab consistency", () => {
         testAssumptions,
       )
 
-      // Monte Carlo median (p50) at retirement should be reasonably close to deterministic
-      const accumulationYears = 30
-      const mcMedianAtRetirement = simulation.percentiles.p50[accumulationYears] || 0
+      // yearlyBalances[i] is the balance at the end of year i + 1, so after 30 years of
+      // saving the retirement balance sits at index 29
+      const atRetirement = 30 - 1
       const deterministicAtRetirement = projection.portfolioAtRetirement
+      const mcMean =
+        simulation.runs.reduce((sum, run) => sum + run.yearlyBalances[atRetirement], 0) /
+        simulation.runs.length
+      const mcMedian = simulation.percentiles.p50[atRetirement]
 
-      // Should be within 20% (Monte Carlo has variance)
-      const percentDiff =
-        Math.abs((mcMedianAtRetirement - deterministicAtRetirement) / deterministicAtRetirement) *
-        100
-
-      expect(percentDiff).toBeLessThan(20)
+      // Each account's expected return is an AVERAGE, so the projection is the mean path:
+      // the simulated mean lands on it (within sampling noise for 200 runs)...
+      expect(Math.abs(mcMean / deterministicAtRetirement - 1)).toBeLessThan(0.2)
+      // ...while log-normal skew puts the typical (median) outcome below it. Before
+      // 2026-11-01 the nominal R/12 conversion inflated every path and hid this.
+      expect(mcMedian).toBeLessThan(deterministicAtRetirement)
     })
 
     it("should have Monte Carlo percentiles ordered correctly", () => {

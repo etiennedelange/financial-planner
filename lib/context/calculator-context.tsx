@@ -44,12 +44,10 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
   const deferredAssumptions = useDeferredValue(assumptions)
   const deferredDrawdownConfig = useDeferredValue(drawdownConfig)
 
-  // Run the simulation on every route that renders it, so a direct load or
-  // reload of those pages shows live data instead of a dead placeholder.
-  const simEnabled =
-    pathname === "/calculator/overview" ||
-    pathname === "/calculator/charts" ||
-    pathname === "/calculator/projections"
+  // Monte Carlo lives only on the Risk page, so the worker runs only there. Every other
+  // page shows deterministic results; running 1,000 simulations behind them would cost
+  // CPU for numbers nobody sees.
+  const simEnabled = pathname === "/calculator/risk"
 
   const {
     simulationResult,

@@ -7,7 +7,6 @@ import type {
   RetirementGoals,
   DrawdownConfig,
   ProjectionResult,
-  SimulationResult,
 } from "@/types"
 import { buildPlanNarrativePayload } from "@/lib/ai/plan-narrative-prompt"
 import { usePlanNarrativeStore } from "@/lib/store/plan-narrative-store"
@@ -19,7 +18,6 @@ interface UsePlanNarrativeInput {
   retirementGoals: RetirementGoals
   drawdownConfig: DrawdownConfig
   projection: ProjectionResult | null
-  simulationResult: SimulationResult | null
   tier: ModelTier
 }
 

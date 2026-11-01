@@ -20,7 +20,12 @@ import {
 } from "@animateicons/react/lucide"
 import { useRef, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
-import type { ProjectionResult } from "@/types"
+import type { ProjectionResult, TaxThresholdRelief } from "@/types"
+import { TAX_THRESHOLD_RELIEF_LABELS } from "@/types"
+import {
+  DEFAULT_TAX_THRESHOLD_RELIEF,
+  describeTaxReliefAssumption,
+} from "@/lib/calculations/utils/tax-relief"
 import { toast } from "@/lib/hooks/use-toast"
 import { useAnimatedIcon } from "@/components/ui/animated-icon"
 import type { AnimatedIconComponent } from "@/components/ui/animated-icon"
@@ -169,6 +174,32 @@ export function SettingsPage({ projection }: SettingsPageProps) {
               Compound (Actuarially correct)
             </Button>
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Future Tax Relief</p>
+          <div className="flex flex-wrap gap-2">
+            {(["historical", "full", "none"] as TaxThresholdRelief[]).map((relief) => (
+              <Button
+                key={relief}
+                variant={
+                  (assumptions.taxThresholdRelief ?? DEFAULT_TAX_THRESHOLD_RELIEF) === relief
+                    ? "default"
+                    : "outline"
+                }
+                size="sm"
+                onClick={() => setAssumptions({ taxThresholdRelief: relief })}
+              >
+                {TAX_THRESHOLD_RELIEF_LABELS[relief]}
+              </Button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {describeTaxReliefAssumption(
+              assumptions.taxThresholdRelief,
+              retirementGoals.inflationRate,
+            )}
+          </p>
         </div>
       </PageCard>
 

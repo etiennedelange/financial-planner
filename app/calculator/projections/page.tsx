@@ -9,12 +9,6 @@ const ProjectionsPage = dynamic(
 )
 
 export default function ProjectionsRoute() {
-  const { projection, simulationResult, isSimulating } = useCalculator()
-  return (
-    <ProjectionsPage
-      projection={projection}
-      simulationResult={simulationResult}
-      isSimulating={isSimulating}
-    />
-  )
+  const { projection } = useCalculator()
+  return <ProjectionsPage projection={projection} />
 }

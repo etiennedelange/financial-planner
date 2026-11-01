@@ -1,6 +1,6 @@
 import type {
   Account,
-  AccountType,
+  CompoundingMethod,
   PersonalInfo,
   RetirementGoals,
   MarketAssumptions,
@@ -9,39 +9,54 @@ import type {
   SimulationRun,
   SimulationResult,
 } from "@/types"
-import { createSeededRandom, generateReturnSequence, getPercentile } from "./random-returns"
+import {
+  createSeededRandom,
+  generateMarketShocks,
+  getPercentile,
+  returnsFromShocks,
+} from "./random-returns"
 import type { RandomSource } from "./random-returns"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import { getSpendingPhaseMultiplier } from "@/lib/calculations/utils/spending-phase"
-import { calculateMonthlyReturn } from "@/lib/calculations/utils/projection"
 import {
-  finiteOrZero,
-  safePositiveDivide,
-  sanitizeAccounts,
-} from "@/lib/calculations/utils/invariant-guards"
+  calculateEffectiveAnnualReturn,
+  calculateMonthlyReturn,
+} from "@/lib/calculations/utils/projection"
+import { finiteOrZero, sanitizeAccounts } from "@/lib/calculations/utils/invariant-guards"
 import {
-  calculateIncomeTaxWithRebates,
+  calculateIndexedIncomeTax,
   calculateLumpSumCommutation,
+  taxThresholdForAge,
+  taxThresholdScale,
 } from "@/lib/calculations/retirement-tax"
 import {
   calculateInitialWithdrawal,
   calculateNextWithdrawal,
 } from "@/lib/calculations/utils/drawdown-withdrawal"
-
-// Account types subject to full income tax on withdrawal — mirrors projection-engine.ts
-const PENSION_TYPES: AccountType[] = ["pension_fund", "retirement_annuity", "preservation_fund"]
-
-interface DrawdownAccount {
-  type: AccountType
-  balance: number
-  costBasis: number // For discretionary: tracks original value + contributions, for CGT gain calc
-  returns: number[] // Full totalYears stochastic return sequence (accumulation + drawdown years)
-}
+import {
+  isPensionType,
+  runDrawdownYear,
+  type DrawdownPot,
+} from "@/lib/calculations/utils/drawdown-year"
+import {
+  admitTfsaContribution,
+  createTfsaAllowance,
+  startTfsaYear,
+} from "@/lib/calculations/utils/tfsa-allowance"
+import {
+  resolveTaxThresholdIndexation,
+  type TaxThresholdIndexation,
+} from "@/lib/calculations/utils/tax-relief"
 
 /**
- * Simulate a single run with stochastic returns
- * Now accepts per-account data to project each account separately during accumulation
+ * Simulate a single run with stochastic returns.
+ *
+ * Accumulation, TFSA limits, lump-sum commutation and each drawdown year go through the
+ * same shared functions as the deterministic projection, so at zero volatility the two
+ * engines produce the same balances. The remaining, deliberate differences are the
+ * `desiredIncomeFloor` withdrawal baseline (see `WithdrawalBaseline`) and tax, which is
+ * computed for reporting only.
  */
 function simulateSingleRun(
   runId: number,
@@ -53,9 +68,10 @@ function simulateSingleRun(
   desiredMonthlyIncome: number,
   drawdownConfig: DrawdownConfig,
   currentAge: number,
-  compoundingMethod: "nominal" | "compound",
-  lumpSumPercentage: number = 0,
-  rng: RandomSource = Math.random,
+  compoundingMethod: CompoundingMethod,
+  lumpSumPercentage: number,
+  taxIndexation: TaxThresholdIndexation,
+  rng: RandomSource,
 ): SimulationRun {
   const totalYears = yearsToRetirement + yearsInRetirement
 
@@ -67,55 +83,62 @@ function simulateSingleRun(
   const accountCostBases = safeAccounts.map((acc) => acc.currentBalance)
   const accountMonthlyContributions = safeAccounts.map((acc) => acc.monthlyContribution)
 
-  // Generate return sequences for each account based on their expected return.
-  // Full totalYears length so the same per-account sequence can be reused for the
-  // drawdown phase (indices [yearsToRetirement, totalYears)) below.
+  // One market shock per year, shared by every account (perfect correlation — see
+  // generateMarketShocks). Full totalYears length so the same sequence carries on into
+  // the drawdown phase (indices [yearsToRetirement, totalYears)).
+  const shocks = generateMarketShocks(totalYears, rng)
   const accountReturns = safeAccounts.map((acc) => {
     const netReturn = (acc.expectedReturn - acc.annualFees) / 100
-    // Use per-account volatility (0 for cash/fixed accounts, or proportional to return)
+    // A 0% expected return marks a cash/fixed account, which gets no volatility
     const accVolatility = acc.expectedReturn === 0 ? 0 : volatility
-    return generateReturnSequence(netReturn, accVolatility, totalYears, rng)
+    // Centre the random returns on the effective annual growth the deterministic projection
+    // compounds to, then convert each draw to monthly geometrically (below). This keeps
+    // Monte Carlo's mean equal to the projection under BOTH compounding methods; see
+    // calculateEffectiveAnnualReturn for the bias the nominal `R / 12` conversion caused.
+    return returnsFromShocks(
+      calculateEffectiveAnnualReturn(netReturn, compoundingMethod),
+      accVolatility,
+      shocks,
+    )
   })
 
   const yearlyBalances: number[] = []
   let depletionAge: number | null = null
 
+  // TFSA limits are per taxpayer, shared across every TFSA account — mirrors projection-engine.ts
+  const tfsaAllowance = createTfsaAllowance(safeAccounts)
+
   // Accumulation phase - project each account separately
   for (let year = 0; year < yearsToRetirement; year++) {
-    // Project each account individually
+    startTfsaYear(tfsaAllowance)
     for (let accIdx = 0; accIdx < safeAccounts.length; accIdx++) {
       const acc = safeAccounts[accIdx]
-      const annualReturn = accountReturns[accIdx][year]
       const accEscalation = acc.contributionEscalation / 100
-
-      // Calculate monthly return based on compounding method
-      const monthlyReturn = calculateMonthlyReturn(annualReturn, compoundingMethod)
+      // Geometric: (1 + R)^(1/12) − 1, whatever the plan's compounding method
+      const monthlyReturn = calculateMonthlyReturn(accountReturns[accIdx][year], "compound")
 
       // Monthly compounding within each year for this account
       for (let month = 0; month < 12; month++) {
         // Calculate contribution for this month (smooth escalation)
-        const currentMonthlyContribution =
+        let contribution =
           accountMonthlyContributions[accIdx] * Math.pow(1 + accEscalation, year + month / 12)
+        if (acc.type === "tfsa")
+          contribution = admitTfsaContribution(tfsaAllowance, contribution).admitted
 
         // Apply growth first (end-of-period contributions, matches Excel FV type=0)
         accountBalances[accIdx] = accountBalances[accIdx] * (1 + monthlyReturn)
-
-        // Then add contribution
-        accountBalances[accIdx] += currentMonthlyContribution
-        accountCostBases[accIdx] += currentMonthlyContribution
+        accountBalances[accIdx] += contribution
+        accountCostBases[accIdx] += contribution
       }
     }
 
-    const totalBalance = accountBalances.reduce((sum, bal) => sum + bal, 0)
-    yearlyBalances.push(totalBalance)
+    yearlyBalances.push(accountBalances.reduce((sum, bal) => sum + bal, 0))
   }
-
-  const portfolioAtRetirement = accountBalances.reduce((sum, bal) => sum + bal, 0)
 
   // Lump sum commutation is only available on pension/RA/preservation balances, and SA
   // law caps it at one-third of the retirement-fund interest — mirrors projection-engine.ts.
   const pensionBalanceAtRetirement = safeAccounts.reduce(
-    (sum, acc, idx) => (PENSION_TYPES.includes(acc.type) ? sum + accountBalances[idx] : sum),
+    (sum, acc, idx) => (isPensionType(acc.type) ? sum + accountBalances[idx] : sum),
     0,
   )
   const cappedLumpSumPercentage = Math.min(
@@ -123,24 +146,30 @@ function simulateSingleRun(
     SA_TAX_LIMITS.maxLumpSumCommutationPercentage,
   )
   const lumpSumFraction = pensionBalanceAtRetirement > 0 ? cappedLumpSumPercentage / 100 : 0
+  // The s11F excess-contribution credit is not tracked here, so this reported lump-sum tax
+  // can exceed the deterministic figure for plans that contribute over the deduction cap.
   const lumpSumTax =
     pensionBalanceAtRetirement > 0
-      ? calculateLumpSumCommutation(pensionBalanceAtRetirement, cappedLumpSumPercentage).lumpSumTax
+      ? calculateLumpSumCommutation(
+          pensionBalanceAtRetirement,
+          cappedLumpSumPercentage,
+          0,
+          taxThresholdScale(yearsToRetirement, taxIndexation.lumpSum),
+        ).lumpSumTax
       : 0
 
   // Build per-account drawdown state with post-lump-sum balances (only pension-type
   // accounts are reduced by the commutation fraction)
-  const drawdownAccounts: DrawdownAccount[] = safeAccounts.map((acc, idx) => {
-    const fraction = PENSION_TYPES.includes(acc.type) ? lumpSumFraction : 0
+  const drawdownPots: DrawdownPot[] = safeAccounts.map((acc, idx) => {
+    const fraction = isPensionType(acc.type) ? lumpSumFraction : 0
     return {
       type: acc.type,
       balance: accountBalances[idx] * (1 - fraction),
       costBasis: accountCostBases[idx] * (1 - fraction),
-      returns: accountReturns[idx],
     }
   })
 
-  let balance = drawdownAccounts.reduce((sum, a) => sum + a.balance, 0)
+  let balance = drawdownPots.reduce((sum, a) => sum + a.balance, 0)
 
   // Drawdown phase - calculate withdrawal based on strategy
   let withdrawal = calculateInitialWithdrawal(
@@ -157,23 +186,12 @@ function simulateSingleRun(
   let lifetimeIncomeTax = 0
 
   for (let year = 0; year < yearsInRetirement; year++) {
-    if (balance <= 0 && !depletionAge) {
-      depletionAge = currentAge + yearsToRetirement + year
-    }
+    const age = currentAge + yearsToRetirement + year
+    if (balance <= 0 && !depletionAge) depletionAge = age
 
-    // Apply growth per-account FIRST (on full balance before withdrawal), continuing
-    // each account's own stochastic return sequence from the accumulation phase
-    for (const acc of drawdownAccounts) {
-      if (acc.balance <= 0) continue
-      acc.balance *= 1 + acc.returns[yearsToRetirement + year]
-    }
-
-    balance = drawdownAccounts.reduce((sum, a) => sum + a.balance, 0)
-
-    // From year 1 onward, recompute the base withdrawal per-strategy against the
-    // live post-growth balance instead of blindly inflating last year's figure —
-    // mirrors projection-engine.ts so the deterministic and Monte Carlo engines
-    // diverge identically across drawdown strategies.
+    // From year 1 onward, recompute the base withdrawal per-strategy against the live
+    // start-of-year balance — mirrors projection-engine.ts so the deterministic and Monte
+    // Carlo engines diverge identically across drawdown strategies.
     if (year > 0) {
       withdrawal = calculateNextWithdrawal(
         withdrawal,
@@ -185,54 +203,45 @@ function simulateSingleRun(
       )
     }
 
-    // Apply spending phase multiplier (Go-Go/Slow-Go/No-Go)
-    const spendingMultiplier = getSpendingPhaseMultiplier(year)
-    const targetWithdrawal = Math.min(withdrawal * spendingMultiplier, Math.max(0, balance))
-    let remaining = targetWithdrawal
+    // Each account continues its own stochastic return sequence from accumulation
+    const monthlyRates = accountReturns.map((returns) =>
+      calculateMonthlyReturn(returns[yearsToRetirement + year], "compound"),
+    )
+    // Every rand threshold below is indexed to this tax year (see taxThresholdScale)
+    const yearsFromNow = yearsToRetirement + year
+    const thresholdScale = taxThresholdScale(yearsFromNow, taxIndexation.incomeTax)
 
-    // Tax-optimized sequential withdrawal: TFSA -> Discretionary -> Pension/RA, mirrors
-    // the deterministic projection engine's account-type-aware sourcing. Tax is computed
-    // for reporting only (it does not force additional portfolio liquidation, matching
-    // how the deterministic engine treats tax as a reduction of net spendable income).
-    for (const acc of drawdownAccounts) {
-      if (acc.type !== "tfsa" || remaining <= 0 || acc.balance <= 0) continue
-      const take = Math.min(remaining, acc.balance)
-      acc.balance -= take
-      remaining -= take
-    }
+    // Annuity income below the age-based threshold is tax-free, so it is drawn first —
+    // mirrors projection-engine.ts (which also adds the s11F credit MC does not track)
+    const target = withdrawal * getSpendingPhaseMultiplier(year)
+    const outcome = runDrawdownYear(
+      drawdownPots,
+      monthlyRates,
+      target,
+      taxThresholdForAge(age) * thresholdScale,
+    )
 
-    let capitalGainRealized = 0
-    for (const acc of drawdownAccounts) {
-      if (acc.type !== "discretionary" || remaining <= 0 || acc.balance <= 0) continue
-      const take = Math.min(remaining, acc.balance)
-      const gainFraction = Math.max(
-        0,
-        Math.min(1, safePositiveDivide(acc.balance - acc.costBasis, acc.balance)),
-      )
-      capitalGainRealized += take * gainFraction
-      acc.costBasis = Math.max(0, acc.costBasis - take * (1 - gainFraction))
-      acc.balance -= take
-      remaining -= take
-    }
-    const taxableCapitalGain = Math.max(0, capitalGainRealized - SA_TAX_LIMITS.cgtAnnualExclusion)
-    const cgtTaxableAmount = taxableCapitalGain * SA_TAX_LIMITS.cgtInclusionRateIndividual
+    // Same depletion rule as the deterministic engine: the first year the income could
+    // not be paid in full. Previously this was detected only at the START of the next
+    // year, so Monte Carlo reported every depletion one year later than the projection.
+    if (outcome.shortfall && !depletionAge) depletionAge = age
 
-    let pensionWithdrawal = 0
-    for (const acc of drawdownAccounts) {
-      if (!PENSION_TYPES.includes(acc.type) || remaining <= 0 || acc.balance <= 0) continue
-      const take = Math.min(remaining, acc.balance)
-      acc.balance -= take
-      pensionWithdrawal += take
-      remaining -= take
-    }
-
-    const age = currentAge + yearsToRetirement + year
-    const taxableIncome = pensionWithdrawal + cgtTaxableAmount
-    lifetimeIncomeTax += calculateIncomeTaxWithRebates(taxableIncome, age)
+    // Tax is computed for reporting only (it does not force additional portfolio
+    // liquidation, matching how the deterministic engine treats tax as a reduction of
+    // net spendable income).
+    const taxableCapitalGain = Math.max(
+      0,
+      outcome.capitalGainRealized -
+        SA_TAX_LIMITS.cgtAnnualExclusion *
+          taxThresholdScale(yearsFromNow, taxIndexation.cgtExclusion),
+    )
+    const taxableIncome =
+      outcome.pensionWithdrawal + taxableCapitalGain * SA_TAX_LIMITS.cgtInclusionRateIndividual
+    lifetimeIncomeTax += calculateIndexedIncomeTax(taxableIncome, age, undefined, thresholdScale)
 
     balance = Math.max(
       0,
-      drawdownAccounts.reduce((sum, a) => sum + a.balance, 0),
+      drawdownPots.reduce((sum, a) => sum + a.balance, 0),
     )
     yearlyBalances.push(balance)
   }
@@ -242,7 +251,10 @@ function simulateSingleRun(
     yearlyBalances,
     finalBalance: balance,
     depletionAge,
-    success: balance > 0,
+    // A run succeeds when it paid the full income every year. Under the living annuity
+    // 17.5% ceiling a failing run can keep a residual balance, so "balance > 0" no longer
+    // identifies success.
+    success: depletionAge === null,
     lifetimeIncomeTax,
     lumpSumTax,
   }
@@ -384,6 +396,8 @@ export function runMonteCarloSimulation(
       personalInfo.currentAge,
       compoundingMethod,
       drawdownConfig.lumpSumPercentage ?? 0,
+      // Same tax-relief assumption as projection-engine.ts
+      resolveTaxThresholdIndexation(marketAssumptions?.taxThresholdRelief, inflationRate),
       rng,
     )
     runs.push(run)

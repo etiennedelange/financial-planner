@@ -1,4 +1,10 @@
-import type { Account, DrawdownConfig, PersonalInfo, RetirementGoals } from "@/types"
+import type {
+  Account,
+  DrawdownConfig,
+  MarketAssumptions,
+  PersonalInfo,
+  RetirementGoals,
+} from "@/types"
 import { describe, expect, it } from "vite-plus/test"
 import { calculateProjection } from "../projection-engine"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
@@ -140,11 +146,13 @@ describe("calculateProjection", () => {
     })
 
     it("should derive monthlyNetIncomeAtRetirement from the first drawdown year, not a flat re-tax of gross income", () => {
+      // Full relief so the tax threshold can be checked by hand in today's money below
       const result = calculateProjection(
         [baseAccount],
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
+        { compoundingMethod: "nominal", taxThresholdRelief: "full" } as MarketAssumptions,
       )
 
       const yearsToRetirement = 65 - 35
@@ -154,11 +162,15 @@ describe("calculateProjection", () => {
       // shows incomeTax/medicalAid from this same row — they must add up).
       expect(result.monthlyNetIncomeAtRetirement).toBeCloseTo(firstDrawdownYear.netIncome / 12, 6)
 
-      // Naively taxing the full gross withdrawal as ordinary income would produce a
-      // lower net figure than the account-mix-aware calculation (this account is a
-      // retirement annuity, fully taxable, so the two coincide for this fixture —
-      // the TFSA-mix test below is what actually exercises the discrepancy).
-      expect(result.monthlyNetIncomeAtRetirement).toBeLessThan(result.monthlyIncomeAtRetirement)
+      // With the tax tables fully indexed to the retirement year, this fixture's first-year
+      // income is about R99,700 in today's money — below the R153,250 threshold for 65+,
+      // so it is tax-free and net equals gross. Before indexation the same income, in
+      // nominal rands 30 years out, was taxed against the unindexed 2026/27 brackets.
+      expect(firstDrawdownYear.withdrawals / Math.pow(1.055, 30)).toBeLessThan(
+        SA_TAX_LIMITS.taxThreshold65To74,
+      )
+      expect(firstDrawdownYear.incomeTax).toBe(0)
+      expect(result.monthlyNetIncomeAtRetirement).toBeCloseTo(result.monthlyIncomeAtRetirement, 6)
     })
 
     it("should not over-tax monthlyNetIncomeAtRetirement when withdrawals are sourced from a tax-free TFSA", () => {
@@ -746,11 +758,14 @@ describe("calculateProjection", () => {
     // subsequent iteration to observe the zero balance. The engine then reported
     // "you ran out" (surplus R0, ending balance R0) and "you never ran out"
     // (portfolioDepletionAge null) at the same time.
+    //
+    // The fixture is discretionary: a pension/RA/preservation fund is drawn as a living
+    // annuity, whose 17.5% ceiling stops it ever reaching zero (see the next block).
     const depletesInFinalYear = {
       account: {
         id: "1",
-        name: "Preservation",
-        type: "preservation_fund",
+        name: "Discretionary",
+        type: "discretionary",
         provider: "Test Provider",
         currentBalance: 4500000,
         monthlyContribution: 15000,
@@ -800,6 +815,35 @@ describe("calculateProjection", () => {
       // fixture stops depleting.
       expect(result.surplusAmount).toBe(0)
       expect(result.portfolioDepletionAge).toBe(89)
+    })
+
+    it("reports depletion when a living annuity hits its 17.5% ceiling, even with money left", () => {
+      // Same plan held in a preservation fund. The annuity can pay at most 17.5% of its
+      // start-of-year value, so once the inflating income needs more than that the plan
+      // has failed — although a capped annuity never reaches R0.
+      const { account, personal, goals, config } = depletesInFinalYear
+      const result = calculateProjection(
+        [{ ...account, type: "preservation_fund" }],
+        personal,
+        goals,
+        config,
+      )
+      const drawdownRows = result.yearlyProjections.filter((r) => r.age >= personal.retirementAge)
+
+      expect(result.portfolioDepletionAge).not.toBeNull()
+      const depletionRow = drawdownRows.find((r) => r.age === result.portfolioDepletionAge)!
+      expect(depletionRow.withdrawals / depletionRow.startingBalance).toBeCloseTo(
+        SA_TAX_LIMITS.livingAnnuityMaxDrawdownRate,
+        6,
+      )
+      // Money remains, yet the income gap is still reported as a shortfall.
+      expect(result.surplusAmount).toBeGreaterThan(0)
+      expect(result.shortfallAmount).toBeGreaterThan(0)
+      drawdownRows.forEach((r) =>
+        expect(r.withdrawals / r.startingBalance, `age ${r.age}`).toBeLessThanOrEqual(
+          SA_TAX_LIMITS.livingAnnuityMaxDrawdownRate + 1e-9,
+        ),
+      )
     })
   })
 
@@ -863,75 +907,63 @@ describe("calculateProjection", () => {
       )
     })
 
-    it("TFSA-first sequencing reduces lifetime income tax vs pension-only portfolio of same size", () => {
-      // Use a large portfolio so pension withdrawals clearly exceed the R153k age-65 tax threshold
-      const tfsaAccount: Account = {
-        id: "1",
-        name: "TFSA",
-        type: "tfsa",
-        provider: "Test",
-        currentBalance: 3000000,
-        monthlyContribution: 0,
-        expectedReturn: 8,
-        annualFees: 0.5,
-        contributionEscalation: 0,
-      }
-      const raAccount: Account = {
-        id: "2",
+    it("draws annuity income up to the tax-free threshold before discretionary money", () => {
+      // Retiring now (no indexation yet): age 65–74 threshold R153,250. Target R200,000.
+      //   1. 2.5% minimum of R2M = R50,000
+      //   2. more annuity income up to the threshold → R153,250 in total, all tax-free
+      //   3. discretionary pays the remaining R46,750 (no gain: cost base = balance)
+      const ra: Account = {
+        id: "ra",
         name: "RA",
         type: "retirement_annuity",
         provider: "Test",
-        currentBalance: 3000000,
+        currentBalance: 2_000_000,
         monthlyContribution: 0,
         expectedReturn: 8,
         annualFees: 0.5,
         contributionEscalation: 0,
       }
-      const raOnlyAccount: Account = {
-        ...raAccount,
-        id: "1",
-        currentBalance: 6000000,
+      const disc: Account = {
+        ...ra,
+        id: "disc",
+        name: "Disc",
+        type: "discretionary",
+        currentBalance: 1_000_000,
       }
-
-      const mixedResult = calculateProjection(
-        [tfsaAccount, raAccount],
-        shortHorizonInfo,
-        baseRetirementGoals,
-        baseDrawdownConfig,
+      const result = calculateProjection(
+        [ra, disc],
+        { ...shortHorizonInfo, currentAge: 65 },
+        { ...baseRetirementGoals, desiredMonthlyIncome: 200_000 / 12 },
+        { ...baseDrawdownConfig, strategy: "fixed_amount_inflation_adjusted" },
       )
-      const raOnlyResult = calculateProjection(
-        [raOnlyAccount],
-        shortHorizonInfo,
-        baseRetirementGoals,
-        baseDrawdownConfig,
-      )
-
-      // Mixed portfolio draws from TFSA first (tax-free), so total income tax must be lower
-      expect(mixedResult.totalLifetimeIncomeTax).toBeLessThan(raOnlyResult.totalLifetimeIncomeTax)
+      const firstYear = result.yearlyProjections[0]
+      expect(firstYear.pensionWithdrawal).toBeCloseTo(SA_TAX_LIMITS.taxThreshold65To74, 4)
+      expect(firstYear.discretionaryWithdrawal).toBeCloseTo(200_000 - 153_250, 4)
+      expect(firstYear.tfsaWithdrawal).toBe(0)
+      expect(firstYear.incomeTax).toBe(0)
     })
 
-    it("TFSA exhausted before switching to pension", () => {
+    it("keeps the TFSA in reserve while the annuity can still pay the income", () => {
+      // Small TFSA beside a R2M RA drawing 4%: the RA (well under its 17.5% ceiling) pays
+      // everything, and the TFSA keeps growing tax-free. The old TFSA-first order spent it
+      // in the first year.
       const smallTfsa: Account = {
         id: "1",
         name: "Small TFSA",
         type: "tfsa",
         provider: "Test",
-        currentBalance: 50000, // Will be exhausted quickly
+        currentBalance: 50000,
         monthlyContribution: 0,
         expectedReturn: 8,
         annualFees: 0.5,
         contributionEscalation: 0,
       }
       const raAccount: Account = {
+        ...smallTfsa,
         id: "2",
         name: "RA",
         type: "retirement_annuity",
-        provider: "Test",
-        currentBalance: 2000000,
-        monthlyContribution: 0,
-        expectedReturn: 8,
-        annualFees: 0.5,
-        contributionEscalation: 0,
+        currentBalance: 2_000_000,
       }
       const result = calculateProjection(
         [smallTfsa, raAccount],
@@ -940,13 +972,36 @@ describe("calculateProjection", () => {
         baseDrawdownConfig,
       )
       const retirementYears = result.yearlyProjections.filter((p) => p.age >= 65)
+      retirementYears.forEach((row) => expect(row.tfsaWithdrawal, `age ${row.age}`).toBe(0))
+      const last = retirementYears[retirementYears.length - 1]
+      expect(last.accountBalances!["1"]).toBeGreaterThan(50000)
+    })
 
-      // First year should have some TFSA withdrawal
-      expect(retirementYears[0].tfsaWithdrawal).toBeGreaterThan(0)
-      // Later years should be pension-only once TFSA is gone
-      const laterYear = retirementYears[retirementYears.length - 1]
-      expect(laterYear.tfsaWithdrawal).toBe(0)
-      expect(laterYear.pensionWithdrawal).toBeGreaterThan(0)
+    it("uses the TFSA only to pay the gap once the annuity is at its 17.5% ceiling", () => {
+      // R1M RA, R1M TFSA, retiring now, R250k a year: the RA can pay at most 17.5% of R1M =
+      // R175,000, so the TFSA pays the remaining R75,000 — and no shortfall is reported.
+      const ra: Account = {
+        id: "ra",
+        name: "RA",
+        type: "retirement_annuity",
+        provider: "Test",
+        currentBalance: 1_000_000,
+        monthlyContribution: 0,
+        expectedReturn: 8,
+        annualFees: 0.5,
+        contributionEscalation: 0,
+      }
+      const tfsa: Account = { ...ra, id: "tfsa", name: "TFSA", type: "tfsa" }
+      const result = calculateProjection(
+        [ra, tfsa],
+        { ...shortHorizonInfo, currentAge: 65 },
+        { ...baseRetirementGoals, desiredMonthlyIncome: 250_000 / 12 },
+        { ...baseDrawdownConfig, strategy: "fixed_amount_inflation_adjusted" },
+      )
+      const firstYear = result.yearlyProjections[0]
+      expect(firstYear.pensionWithdrawal).toBeCloseTo(175_000, 4)
+      expect(firstYear.tfsaWithdrawal).toBeCloseTo(75_000, 4)
+      expect(result.portfolioDepletionAge === null || result.portfolioDepletionAge > 65).toBe(true)
     })
 
     it("discretionary withdrawal applies CGT inclusion but not full income tax", () => {
@@ -1180,22 +1235,23 @@ describe("calculateProjection", () => {
           initialWithdrawalRate: 80,
           lumpSumPercentage: 0,
         },
+        { compoundingMethod: "nominal", taxThresholdRelief: "full" } as MarketAssumptions,
       )
       const firstYear = result.yearlyProjections.find((p) => p.age === 65)!
 
       // Replicate the engine's exact math: 2 years monthly-compounded accumulation
-      // (nominal method, no contributions), then one year of simple-annual drawdown growth.
+      // (nominal method, no contributions). The year's withdrawal is 80% of the
+      // start-of-year value; its gain share is measured on that same start-of-year value.
+      // With full relief the annual exclusion is indexed 2 years forward at 5.5% inflation.
       const netReturn = (8 - 0.5) / 100
       const monthlyRate = netReturn / 12
       const v0 = 50000000 * Math.pow(1 + monthlyRate, 24)
-      const currentTotal = v0 * (1 + netReturn)
-      const annualWithdrawal = v0 * 0.8
-      const take = Math.min(annualWithdrawal, currentTotal)
-      const gainFraction = (currentTotal - 50000000) / currentTotal
+      const take = v0 * 0.8
+      const gainFraction = (v0 - 50000000) / v0
       const gainTaken = take * gainFraction
+      const indexedExclusion = SA_TAX_LIMITS.cgtAnnualExclusion * Math.pow(1.055, 2)
       const expectedCgt =
-        Math.max(0, gainTaken - SA_TAX_LIMITS.cgtAnnualExclusion) *
-        SA_TAX_LIMITS.cgtInclusionRateIndividual
+        Math.max(0, gainTaken - indexedExclusion) * SA_TAX_LIMITS.cgtInclusionRateIndividual
 
       expect(firstYear.cgtTaxableAmount).toBeCloseTo(expectedCgt, -1)
       expect(firstYear.cgtTaxableAmount).toBeGreaterThan(0)
@@ -1529,7 +1585,7 @@ describe("calculateProjection", () => {
       }
     })
 
-    it("TFSA accountBalances depletes before pension in sequential withdrawal", () => {
+    it("TFSA accountBalances stay untouched while the RA pays the income", () => {
       // Small TFSA balance, large RA — TFSA should deplete first
       const tfsa: Account = {
         ...baseAccount,
@@ -1557,17 +1613,10 @@ describe("calculateProjection", () => {
         (p) => p.age >= shortInfo.retirementAge && p.accountBalances,
       )
 
-      // TFSA should hit zero before RA hits zero (or TFSA hits zero while RA still has balance)
-      const tfsaDepletionYear = drawdownRows.find((r) => (r.accountBalances!["tfsa-1"] ?? 0) <= 0)
-      const raDepletionYear = drawdownRows.find((r) => (r.accountBalances!["ra-1"] ?? 0) <= 0)
-
-      expect(tfsaDepletionYear).toBeDefined() // Small TFSA should deplete
-      if (raDepletionYear) {
-        expect(tfsaDepletionYear!.age).toBeLessThanOrEqual(raDepletionYear.age)
-      } else {
-        // RA survives — that's fine, TFSA still depleted first
-        expect(tfsaDepletionYear).toBeDefined()
-      }
+      // The TFSA is the last resort, so a R2M RA drawing 4% leaves it untouched and growing
+      drawdownRows.forEach((r) => expect(r.tfsaWithdrawal, `age ${r.age}`).toBe(0))
+      const last = drawdownRows[drawdownRows.length - 1]
+      expect(last.accountBalances!["tfsa-1"]).toBeGreaterThan(100000)
     })
 
     it("accountBalancesAtRetirement returns empty object for no accounts", () => {
@@ -1726,14 +1775,56 @@ describe("calculateProjection", () => {
     }
 
     it("should accumulate excess credit for high earner over accumulation phase", () => {
-      const result = calculateProjection([highContribAccount], highEarnerInfo, highEarnerGoals, {
-        ...baseDrawdownConfig,
-        lumpSumPercentage: 0,
-      })
+      const result = calculateProjection(
+        [highContribAccount],
+        highEarnerInfo,
+        highEarnerGoals,
+        { ...baseDrawdownConfig, lumpSumPercentage: 0 },
+        { compoundingMethod: "nominal", taxThresholdRelief: "full" } as MarketAssumptions,
+      )
 
-      // R600k contributions/year, limit R430k → R170k excess/year × 10 years = R1,700,000
-      // (contributions don't escalate so limit stays R430k each year)
-      expect(result.accumulatedExcessCredit).toBeCloseTo(1700000, -3)
+      // R600k contributions/year against a limit of min(27.5% × income, R430k cap), where
+      // income and (under full relief) the cap both grow at 5.5%. The cap binds (27.5% × R1.8M
+      // = R495k > R430k). Disallowed amounts carry forward (s11F(3)), so years 0–6 build up
+      // R645,236 of excess and years 7–9, where the cap has grown past R600k, absorb some:
+      //   room in year y = 430k × 1.055^y − 600k → R25,512 + R59,915 + R96,211 = R181,638
+      //   credit at retirement = R645,236 − R181,638 ≈ R463,598
+      let carried = 0
+      for (let y = 0; y < 10; y++) {
+        carried = Math.max(0, carried + 600000 - 430000 * Math.pow(1.055, y))
+      }
+      const expected = carried
+      expect(expected).toBeCloseTo(463598, -1)
+      expect(result.accumulatedExcessCredit).toBeCloseTo(expected, -2)
+    })
+
+    it("carries an early excess forward until later deduction room absorbs it (s11F(3))", () => {
+      // R300k/yr flat RA contribution; R1M income escalating 5.5%; cap fixed (no relief).
+      // Limit = 27.5% × income: R275,000, R290,125, R306,082, R322,916, R340,676…
+      //   year 0: excess R25,000; year 1: R25,000 + R9,875 = R34,875;
+      //   year 2: R34,875 − R6,082 = R28,793; year 3: R28,793 − R22,916 = R5,877;
+      //   year 4: fully absorbed → R0 thereafter.
+      // Summing yearly excesses independently would have left R34,875 for ever.
+      const result = calculateProjection(
+        [{ ...highContribAccount, currentBalance: 1_000_000, monthlyContribution: 25000 }],
+        { ...highEarnerInfo, currentAge: 55, annualIncome: 1_000_000 },
+        highEarnerGoals,
+        { ...baseDrawdownConfig, lumpSumPercentage: 0 },
+        { compoundingMethod: "nominal", taxThresholdRelief: "none" } as MarketAssumptions,
+      )
+      expect(result.accumulatedExcessCredit).toBe(0)
+    })
+
+    it("keeps the full excess when the cap never rises above contributions (no relief)", () => {
+      // R600k/yr against a cap frozen at R430k: R170k disallowed every year, never absorbed
+      const result = calculateProjection(
+        [highContribAccount],
+        highEarnerInfo,
+        highEarnerGoals,
+        { ...baseDrawdownConfig, lumpSumPercentage: 0 },
+        { compoundingMethod: "nominal", taxThresholdRelief: "none" } as MarketAssumptions,
+      )
+      expect(result.accumulatedExcessCredit).toBeCloseTo(1_700_000, 0)
     })
 
     it("should reduce taxable lump sum by the credit applied", () => {
@@ -1778,8 +1869,14 @@ describe("calculateProjection", () => {
       const lastRowWithCredit = drawdownRows.filter((r) => (r.excessCreditRemaining ?? 0) > 0)
       const firstRowWithoutCredit = drawdownRows.find((r) => (r.excessCreditRemaining ?? 1) === 0)
 
-      // Credit should be non-zero initially and reach zero at some point
-      expect(lastRowWithCredit.length).toBeGreaterThan(0)
+      // The carried credit is applied against annuity income and runs out. With the cap
+      // indexed the credit is small enough to be used up in the first drawdown year, so
+      // no row need carry a remainder — but all of it must have been applied.
+      const carried = result.lumpSumCommutation.creditCarriedIntoDrawdown
+      expect(carried).toBeGreaterThan(0)
+      const applied = drawdownRows.reduce((sum, r) => sum + (r.excessCreditApplied ?? 0), 0)
+      expect(applied).toBeCloseTo(carried, 2)
+      expect(lastRowWithCredit.every((r) => (r.excessCreditRemaining ?? 0) < carried)).toBe(true)
       expect(firstRowWithoutCredit).toBeDefined()
       // After credit is exhausted, remaining rows should stay at zero
       if (firstRowWithoutCredit) {
@@ -1899,10 +1996,16 @@ describe("calculateProjection", () => {
           strategy: "fixed_percentage",
         },
       )
-      // Balance after year 0: (1,000,000 * 0.5) - 40,000 = 460,000
-      // Balance after year 1 growth: 460,000 * 0.5 = 230,000
-      // Year-1 withdrawal = 230,000 * 4% = 9,200 (NOT 40,000 * 1.055 = 42,200)
-      expect(withdrawalAtAge(result, 66)).toBeCloseTo(9200, 2)
+      // Year 0 pays R40,000 in 12 month-end instalments while the balance compounds at
+      // the nominal monthly rate -50%/12 (effective -40% for the year):
+      //   end of year 0 = 1,000,000 × g − 40,000 × a,  g = (1+i)^12,  a = (g−1)/(12i)
+      // Year-1 withdrawal = 4% of that start-of-year-1 balance ≈ R22,723
+      // (NOT 40,000 × 1.055 = 42,200).
+      const i = -0.5 / 12
+      const g = Math.pow(1 + i, 12)
+      const a = (g - 1) / (12 * i)
+      const startOfYear1 = 1000000 * g - 40000 * a
+      expect(withdrawalAtAge(result, 66)).toBeCloseTo(startOfYear1 * 0.04, 2)
     })
 
     it("fixed_amount_inflation_adjusted still inflates by CPI in year 1 (unchanged behavior)", () => {
@@ -1930,7 +2033,7 @@ describe("calculateProjection", () => {
           lowerGuardrail: 20,
         },
       )
-      // Actual rate = 40,000 / 230,000 ≈ 17.4%, far above the 4.8% upper band
+      // Actual rate = 40,000 / ≈568,000 start-of-year-1 balance ≈ 7.0%, above the 4.8% upper band
       // (target 4% × 1.2) → 10% cut: 40,000 × 0.9 = 36,000 (NOT 42,200)
       expect(withdrawalAtAge(result, 66)).toBeCloseTo(36000, 2)
     })

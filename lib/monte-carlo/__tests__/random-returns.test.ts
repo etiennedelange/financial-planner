@@ -4,6 +4,8 @@ import {
   generateReturnSequence,
   getPercentile,
   createSeededRandom,
+  generateMarketShocks,
+  returnsFromShocks,
 } from "../random-returns"
 
 describe("randomNormal", () => {
@@ -240,5 +242,45 @@ describe("generateReturnSequence with injected rng", () => {
     const seq = generateReturnSequence(0.11, 0.15, 10)
     expect(seq).toHaveLength(10)
     expect(seq.every((r) => Number.isFinite(r))).toBe(true)
+  })
+})
+
+describe("generateMarketShocks / returnsFromShocks", () => {
+  it("one shock per year, reproducible from a seed", () => {
+    expect(generateMarketShocks(30, createSeededRandom(5))).toHaveLength(30)
+    expect(generateMarketShocks(10, createSeededRandom(5))).toEqual(
+      generateMarketShocks(10, createSeededRandom(5)),
+    )
+  })
+
+  it("accounts built from the same shocks move together", () => {
+    const shocks = generateMarketShocks(200, createSeededRandom(11))
+    const a = returnsFromShocks(0.1, 0.16, shocks)
+    const b = returnsFromShocks(0.08, 0.16, shocks)
+    // Same shock, same volatility: every year's log-return differs by the same constant
+    const gap = Math.log(1 + a[0]) - Math.log(1 + b[0])
+    a.forEach((r, t) => expect(Math.log(1 + r) - Math.log(1 + b[t])).toBeCloseTo(gap, 10))
+  })
+
+  it("zero volatility returns exactly the expected return every year", () => {
+    const returns = returnsFromShocks(0.07, 0, generateMarketShocks(5, createSeededRandom(1)))
+    returns.forEach((r) => expect(r).toBeCloseTo(0.07, 12))
+  })
+
+  it("the arithmetic mean of the simple returns approximates the expected return", () => {
+    const shocks = generateMarketShocks(20000, createSeededRandom(3))
+    const returns = returnsFromShocks(0.1, 0.165, shocks)
+    const mean = returns.reduce((s, r) => s + r, 0) / returns.length
+    expect(mean).toBeCloseTo(0.1, 2)
+  })
+
+  it("generateReturnSequence draws the same values as before the refactor", () => {
+    // generateReturnSequence is now returnsFromShocks over generateMarketShocks; both
+    // consume the generator identically, so seeded sequences are unchanged.
+    const rng = createSeededRandom(42)
+    const logMean = Math.log(1.1) - (0.15 * 0.15) / 2
+    const expected = Array.from({ length: 5 }, () => Math.exp(randomNormal(logMean, 0.15, rng)) - 1)
+    const actual = generateReturnSequence(0.1, 0.15, 5, createSeededRandom(42))
+    actual.forEach((r, t) => expect(r).toBeCloseTo(expected[t], 12))
   })
 })

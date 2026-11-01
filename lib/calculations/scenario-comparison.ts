@@ -38,7 +38,7 @@ export const INVESTMENT_SCENARIOS = {
 
 export type ScenarioType = keyof typeof INVESTMENT_SCENARIOS
 
-interface ScenarioComparisonParams {
+export interface ScenarioComparisonParams {
   currentSavings: number
   monthlyContribution: number
   personalInfo: PersonalInfo
@@ -62,7 +62,7 @@ interface ScenarioResult {
   monthlyIncomeAtRetirement: number
 }
 
-interface ScenarioComparisonResult {
+export interface ScenarioComparisonResult {
   conservative: ScenarioResult
   balanced: ScenarioResult
   aggressive: ScenarioResult

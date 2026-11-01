@@ -2,12 +2,10 @@
 
 import { TrendingUp, TrendingDown, Wallet, Calendar } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import type { ProjectionResult, SimulationResult } from "@/types"
+import type { ProjectionResult } from "@/types"
 import { formatCurrency } from "@/lib/utils/currency"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { cn } from "@/lib/utils"
-import { getSuccessRateStyle } from "@/lib/utils/success-rate"
 
 interface ProjectionSummaryProps {
   projection: ProjectionResult | null
@@ -15,8 +13,6 @@ interface ProjectionSummaryProps {
   currentAge: number
   lifeExpectancy: number
   inflationRate: number
-  simulationResult: SimulationResult | null
-  isSimulating?: boolean
 }
 
 export function ProjectionSummary({
@@ -25,17 +21,12 @@ export function ProjectionSummary({
   currentAge,
   lifeExpectancy,
   inflationRate,
-  simulationResult,
-  isSimulating = false,
 }: ProjectionSummaryProps) {
   const { displayMode } = useCalculatorStore()
 
   if (!projection) {
     return null
   }
-
-  const successRate = simulationResult?.successRate ?? 0
-  const successTier = getSuccessRateStyle(successRate)
 
   const yearsToRetirement = retirementAge - currentAge
   const yearsToLifeExpectancy = lifeExpectancy - currentAge
@@ -67,7 +58,12 @@ export function ProjectionSummary({
       label: "Portfolio Depletion",
       value: projection.portfolioDepletionAge ? `Age ${projection.portfolioDepletionAge}` : "Never",
       icon: projection.portfolioDepletionAge ? TrendingDown : TrendingUp,
-      description: projection.portfolioDepletionAge ? "Funds run out" : "Funds last lifetime",
+      // A living annuity capped at 17.5% can fail to fund the income without reaching R0
+      description: !projection.portfolioDepletionAge
+        ? "Funds last lifetime"
+        : projection.surplusAmount > 0
+          ? "Income falls short (17.5% annuity limit)"
+          : "Funds run out",
       isWarning: !!projection.portfolioDepletionAge,
     },
     {
@@ -85,38 +81,6 @@ export function ProjectionSummary({
 
   return (
     <div className="space-y-3 md:space-y-4">
-      {(simulationResult || isSimulating) && (
-        <Card>
-          <CardContent className="pt-4 md:pt-6">
-            <div className="flex items-center justify-between gap-4" aria-live="polite">
-              {isSimulating ? (
-                <>
-                  <div className="space-y-2">
-                    <div className="h-4 w-32 rounded bg-muted animate-pulse" />
-                    <div className="h-7 w-16 rounded bg-muted animate-pulse" />
-                  </div>
-                  <span className="text-xs text-muted-foreground">Recalculating…</span>
-                </>
-              ) : (
-                <>
-                  <dl>
-                    <dt className="text-sm text-muted-foreground">Plan Success Rate</dt>
-                    <dd className="text-2xl font-bold font-mono">{successRate.toFixed(0)}%</dd>
-                  </dl>
-                  <Badge
-                    variant="outline"
-                    className={cn("border-current", successTier.text)}
-                    aria-label={`Retirement success rate: ${successTier.label}`}
-                  >
-                    {successTier.label}
-                  </Badge>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
         {baseMetrics.map((metric) => (
           <Card key={metric.label}>

@@ -5,6 +5,7 @@ import {
   TFSA_LIMITS_CONFIG,
   MAX_LUMP_SUM_COMMUTATION_PERCENTAGE,
   CGT_ANNUAL_EXCLUSION_CONFIG,
+  LIVING_ANNUITY_DRAWDOWN_BAND_CONFIG,
 } from "./tax-year.config"
 
 /**
@@ -45,4 +46,9 @@ export const SA_TAX_LIMITS = {
   // Max % of a pension/RA/preservation fund that may be commuted as a lump sum;
   // the remainder must be annuitised (SA Income Tax Act one-third rule)
   maxLumpSumCommutationPercentage: MAX_LUMP_SUM_COMMUTATION_PERCENTAGE,
+
+  // Living annuity annual income band, as a fraction of the annuity's value at the start
+  // of each drawdown year
+  livingAnnuityMinDrawdownRate: LIVING_ANNUITY_DRAWDOWN_BAND_CONFIG.minimumRate,
+  livingAnnuityMaxDrawdownRate: LIVING_ANNUITY_DRAWDOWN_BAND_CONFIG.maximumRate,
 } as const

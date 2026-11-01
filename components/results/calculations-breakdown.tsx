@@ -22,7 +22,6 @@ import {
   Calculator,
   TrendingUp,
   TrendingDown,
-  Shuffle,
   Receipt,
   FileText,
   Percent,
@@ -40,6 +39,7 @@ import {
 import { escalate } from "@/lib/calculations/utils/money-time"
 import { calculateRAOptimization } from "@/lib/calculations/utils/ra-optimization"
 import { formatCurrency } from "@/lib/utils/currency"
+import { describeTaxReliefAssumption } from "@/lib/calculations/utils/tax-relief"
 import type { ProjectionResult } from "@/types"
 
 function formatPercent(value: number, decimals: number = 2): string {
@@ -161,7 +161,6 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
       monthlyReturn,
       yearsToRetirement,
       yearsInRetirement,
-      volatility: assumptions.equityVolatility,
       desiredMonthlyAtRetirement,
       firstRetirementYear,
       applicableRebate,
@@ -590,7 +589,9 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                   </Table>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  TFSA (tax-free) → Discretionary (CGT only) → Pension/RA (full income tax)
+                  Living annuity 2.5% minimum → TFSA (tax-free) → Discretionary (CGT only) →
+                  Pension/RA (full income tax, up to the 17.5% living annuity maximum). Income is
+                  paid monthly.
                 </p>
 
                 {/* Account Depletion Timeline */}
@@ -709,65 +710,6 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
             </AccordionContent>
           </AccordionItem>
 
-          {/* Monte Carlo Info */}
-          <AccordionItem value="montecarlo" className="border-b last:border-b-0">
-            <AccordionTrigger className="text-base font-semibold">
-              <div className="flex items-center gap-2">
-                <Shuffle className="h-4 w-4 text-muted-foreground flex-none" />
-                Monte Carlo Simulation
-              </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              <div className="space-y-4">
-                <div className="rounded-lg border p-4 space-y-2">
-                  <h4 className="font-medium">How It Works</h4>
-                  <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                    <li>Run 1,000 simulations with random returns</li>
-                    <li>Each year&apos;s return is drawn from a log-normal distribution</li>
-                    <li>Track how many simulations don&apos;t run out of money</li>
-                    <li>Success rate = successful runs ÷ total runs × 100</li>
-                  </ol>
-                </div>
-
-                <div className="rounded-lg bg-muted p-4 space-y-3">
-                  <div>
-                    <p className="text-sm font-medium">Log-Normal Return Formula:</p>
-                    <code className="text-sm bg-background px-2 py-1 rounded block mt-1">
-                      logMean = ln(1 + return) - 0.5 × volatility²
-                    </code>
-                    <code className="text-sm bg-background px-2 py-1 rounded block mt-1">
-                      randomReturn = e^(logMean + volatility × Z) - 1
-                    </code>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      where Z is a standard normal random variable (Box-Muller transform)
-                    </p>
-                  </div>
-                </div>
-
-                <Table>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>Expected Return (net of fees)</TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatPercent(calculations.netReturn * 100)}
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Volatility (Std Dev)</TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatPercent(calculations.volatility)}
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Number of Simulations</TableCell>
-                      <TableCell className="text-right font-mono">1,000</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
           {/* Retirement Tax Analysis */}
           <AccordionItem value="tax-analysis" className="border-b last:border-b-0">
             <AccordionTrigger className="text-base font-semibold">
@@ -831,8 +773,9 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                       </TableBody>
                     </Table>
                     <p className="text-xs text-muted-foreground mt-2">
-                      First R550,000 is tax-free; R550k–R770k @ 18%; R770k–R1.155M @ 27%; above
-                      R1.155M @ 36%
+                      2026/27 table: first R550,000 tax-free; R550k–R770k @ 18%; R770k–R1.155M @
+                      27%; above R1.155M @ 36%. Bands are raised to your retirement year per your
+                      Future Tax Relief setting.
                     </p>
                   </div>
                 ) : (
@@ -843,7 +786,13 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                 )}
 
                 <div className="rounded-lg bg-muted p-4">
-                  <h4 className="font-medium text-foreground mb-3">Lifetime Tax Summary</h4>
+                  <h4 className="font-medium text-foreground mb-1">Lifetime Tax Summary</h4>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    {describeTaxReliefAssumption(
+                      assumptions.taxThresholdRelief,
+                      retirementGoals.inflationRate,
+                    )}
+                  </p>
                   <Table>
                     <TableBody>
                       <TableRow>
@@ -1051,6 +1000,10 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                   <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                     <li>Gross withdrawal is taken from your retirement portfolio</li>
                     <li>Income tax is calculated using SA tax brackets with age-based rebates</li>
+                    <li>
+                      Future tax depends on how much SARS raises brackets each year, which no one
+                      can know — see Future Tax Relief in Assumptions
+                    </li>
                     <li>Net income is what you actually receive for living expenses</li>
                     <li>Tax rates increase as withdrawals increase (progressive taxation)</li>
                     <li>Older retirees benefit from higher rebates (lower effective tax)</li>

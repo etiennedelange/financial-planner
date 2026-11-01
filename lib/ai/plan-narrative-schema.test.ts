@@ -27,7 +27,6 @@ function validPayload() {
       monthlyNetIncomeAtRetirement: 3800,
       portfolioDepletionAge: null,
     },
-    simulation: null,
   }
 }
 
@@ -65,5 +64,12 @@ describe("planNarrativeRequestSchema", () => {
     expect(planNarrativeRequestSchema.safeParse(payload).success).toBe(true)
     expect(planNarrativeRequestSchema.safeParse({ ...payload, tier: "ultra" }).success).toBe(false)
     expect(planNarrativeRequestSchema.safeParse({ ...payload, tier: "best" }).success).toBe(true)
+  })
+
+  it("accepts a projection with or without incomeGoalShortfallAge (older clients omit it)", () => {
+    const withField = validPayload()
+    ;(withField.projection as Record<string, unknown>).incomeGoalShortfallAge = 72
+    expect(planNarrativeRequestSchema.safeParse(withField).success).toBe(true)
+    expect(planNarrativeRequestSchema.safeParse(validPayload()).success).toBe(true)
   })
 })

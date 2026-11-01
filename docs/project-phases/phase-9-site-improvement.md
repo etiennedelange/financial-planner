@@ -112,6 +112,69 @@ _Identified 2026-06-07 via parallel agent audit (UI/UX, calculations, test cover
 
 ---
 
+## 9.5 — SA Retirement Calculation Audit (2026-10-31)
+
+Full write-up, sources and measured effects: [history](../history/2026-10-31-sa-retirement-calc-audit.md).
+
+- [x] **Tax thresholds indexed** — brackets, rebates, s6A credits, lump-sum table, CGT exclusion and s11F cap (`taxThresholdScale`)
+- [x] **Future Tax Relief setting** — default from 2016/17–2026/27 history (`historical`), plus `full` and a `none` stress test; caveat shown under the setting, in the tax breakdown and the printed report
+- [x] **Living annuity 2.5%–17.5% band** enforced per annuity in both engines
+- [x] **Monthly drawdown honouring `compoundingMethod`** — shared `runDrawdownYear` replaces the two copied loops
+- [x] **Monte Carlo accounts correlated** (one market shock per year) and depletion no longer a year late
+- [x] **TFSA limits per taxpayer**, enforced in Monte Carlo too (`tfsa-allowance.ts`)
+- [x] **Optimal contribution reports unreachable goals** (`isAchievable`) instead of R0 / "on track"
+- [x] **Debug window year-1 tax reads the engine row** — it re-taxed the gross withdrawal with the unindexed table, no s11F credit, no account mix
+
+### Pending (statutory rules not yet modelled)
+- [ ] De minimis commutation (R360k retirement interest; R150k living annuity)
+- [ ] Two-pot savings-pot withdrawals before retirement
+- [ ] Minimum retirement-fund access age (55) when retirement age is earlier
+- [ ] Lifetime aggregation of retirement/withdrawal lump sums
+- [ ] Annual tax on discretionary interest/dividends (interest exemption, DWT)
+- [ ] Reinvest after-tax living-annuity income above the target (2.5% minimum) instead of spending it
+
+---
+
+## 9.6 — Risk Page (2026-10-31)
+
+Write-up: [history](../history/2026-10-31-risk-page.md).
+
+- [x] **Monte Carlo and volatility moved to `/calculator/risk`**; other pages deterministic, Overview links to Risk
+- [x] **Simulation runs only on Risk**; what-if and insights no longer run their own simulations
+- [x] **AI narrative** no longer receives or quotes the success rate
+
+### Pending
+- [ ] Per-account investment types with verified volatilities (Nasdaq 100, MSCI World, balanced, cash…) and partial correlation between types — handoff plan: [plans/2026-11-01-investment-types-range-stress-test.md](../superpowers/plans/2026-11-01-investment-types-range-stress-test.md) (also covers the next two items)
+- [ ] Show success as a range (cautious–central volatility) instead of one figure
+- [ ] Historical stress test (e.g. a 2008-style fall at retirement), sourced from verified SA fund data
+- [ ] Rebuild the investment-scenario comparison on the user's own accounts and the living annuity rules (currently a pooled discretionary model with hard-coded returns)
+- [ ] Plan → Market Assumptions: equity/bond/cash expected returns feed no calculation (labelled "reference only" 2026-10-31); wire them into the investment types or remove them
+
+---
+
+## 9.7 — Audit Fixes (2026-11-01)
+
+Write-up and main-vs-branch comparison: [history](../history/2026-11-01-audit-fixes.md).
+
+- [x] "On Track" means the income goal is met (`incomeGoalShortfallAge`), not merely that money survives
+- [x] Headline gross income is the amount actually paid within the living annuity band
+- [x] Monte Carlo centred on the projection's effective annual growth (nominal bias removed)
+- [x] Withdrawal order: annuity into the tax-free room, discretionary, annuity, TFSA last
+- [x] s11F carry-forward absorbed by later deduction room
+
+### Pending (from the audit)
+- [ ] Medical aid escalation at 9% for decades: cap or taper, and feed it into depletion/on-track
+- [ ] Decide whether expected return is an arithmetic (mean) or compound (median) return in Monte Carlo
+- [ ] Longer-history check of "historical" tax relief; neutral option labels
+- [ ] Shortfall depth instead of all-or-nothing success; one set of tone labels
+- [ ] Risk page: `compareScenarios` memo depends on the whole `assumptions` object
+- [ ] Optimal contribution: 0% withdrawal rate reported as achievable
+- [ ] Edge cases: negative inflation thresholds, depletion age 0, net return below −100%
+- [ ] Docs: two-pot R240k de minimis test, provident vested-rights wording, cite National Treasury for the LA band
+- [ ] Single source of truth: tax figures duplicated in `tax-relief-history.ts`, "R550k" copy, 0.4 rates
+
+---
+
 ## Suggested Work Order
 
 1. **9.2 Critical** — store tests first; they block meaningful coverage numbers

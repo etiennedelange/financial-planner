@@ -90,7 +90,10 @@ describe('functionName', () => {
 ## App Structure (post-redesign)
 
 - Layout: fixed left sidebar (220px) + sticky top bar + scrollable page content area
-- Routes: `app/calculator/{overview,plan,projections,settings,accounts,expenses}/page.tsx`
+- Routes: `app/calculator/{overview,accounts,plan,expenses,projections,risk,charts,settings}/page.tsx`
+- **Monte Carlo lives only on Risk** (`components/pages/risk-page.tsx`): volatility inputs, success
+  rate, fan chart, investment scenarios. The worker runs only on `/calculator/risk`
+  (`lib/context/calculator-context.tsx`); every other page shows deterministic results
 - `lib/store/calculator-store.ts` — scenario state (per-scenario)
 - `lib/store/expenses-store.ts` — **global** (not scenario-tied); reflects real current spending
 
@@ -161,6 +164,8 @@ Design rules:
 - ❌ Don't use local formatCurrency — import from `lib/utils/currency`
 - ❌ Don't hardcode colors (`bg-blue-500`) — use semantic tokens (`bg-primary`, `text-foreground`)
 - ❌ Don't tie expenses to a scenario — `expenses-store.ts` is intentionally global
+- ❌ Don't show Monte Carlo results (success rate, percentiles) outside the Risk page — Overview
+  links to it instead. Decided 2026-10-31; see `docs/history/2026-10-31-risk-page.md`
 - ❌ Don't write raw `<p className="text-[10px] font-mono uppercase...">` — use `<SectionLabel>` or `<PageCard>`
 - ❌ Don't use `Card + CardHeader + CardTitle` for section cards — `CardTitle` renders `text-2xl font-semibold` which violates the design system
 - ⚠️ `calculator-store.ts` / `expenses-store.ts` branch coverage is ~72-76%, below the 85%

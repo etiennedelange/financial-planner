@@ -5,19 +5,13 @@ import { CalculationsBreakdown } from "@/components/results/calculations-breakdo
 import { ProjectionSummary } from "@/components/results/projection-summary"
 import { WhatIfPanel } from "@/components/results/what-if-panel"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
-import type { ProjectionResult, SimulationResult } from "@/types"
+import type { ProjectionResult } from "@/types"
 
 interface ProjectionsPageProps {
   projection: ProjectionResult | null
-  simulationResult: SimulationResult | null
-  isSimulating?: boolean
 }
 
-export function ProjectionsPage({
-  projection,
-  simulationResult,
-  isSimulating,
-}: ProjectionsPageProps) {
+export function ProjectionsPage({ projection }: ProjectionsPageProps) {
   const { personalInfo, retirementGoals } = useCalculatorStore()
 
   return (
@@ -35,8 +29,6 @@ export function ProjectionsPage({
         currentAge={personalInfo.currentAge}
         lifeExpectancy={personalInfo.lifeExpectancy}
         inflationRate={retirementGoals.inflationRate}
-        simulationResult={simulationResult}
-        isSimulating={isSimulating}
       />
 
       <WhatIfPanel />

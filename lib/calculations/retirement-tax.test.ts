@@ -8,6 +8,8 @@ import {
   calculateExcessContributionCredit,
   calculateReplacementRatio,
   calculateLifetimeTaxBurden,
+  calculateIndexedIncomeTax,
+  taxThresholdScale,
 } from "./retirement-tax"
 import { SA_TAX_LIMITS } from "../constants/limits"
 import { todayRands } from "./utils/money-time"
@@ -282,7 +284,7 @@ describe("retirement-tax", () => {
 
   describe("calculateLumpSumCommutation", () => {
     it("should handle 0% lump sum", () => {
-      const result = calculateLumpSumCommutation(3000000, 0)
+      const result = calculateLumpSumCommutation(3000000, 0, 0, 1)
 
       expect(result.lumpSumAmount).toBe(0)
       expect(result.lumpSumTax).toBe(0)
@@ -294,7 +296,7 @@ describe("retirement-tax", () => {
       const portfolioValue = 3000000
       const lumpSumPercentage = 33.33
 
-      const result = calculateLumpSumCommutation(portfolioValue, lumpSumPercentage)
+      const result = calculateLumpSumCommutation(portfolioValue, lumpSumPercentage, 0, 1)
 
       const expectedLumpSum = 3000000 * 0.3333
       expect(result.lumpSumAmount).toBeCloseTo(expectedLumpSum, 0)
@@ -311,7 +313,7 @@ describe("retirement-tax", () => {
 
     it("should calculate tax for 50% lump sum", () => {
       const portfolioValue = 2400000
-      const result = calculateLumpSumCommutation(portfolioValue, 50)
+      const result = calculateLumpSumCommutation(portfolioValue, 50, 0, 1)
 
       const expectedLumpSum = 1200000
       expect(result.lumpSumAmount).toBe(expectedLumpSum)
@@ -327,7 +329,7 @@ describe("retirement-tax", () => {
 
     it("should handle 100% lump sum (full commutation)", () => {
       const portfolioValue = 1500000
-      const result = calculateLumpSumCommutation(portfolioValue, 100)
+      const result = calculateLumpSumCommutation(portfolioValue, 100, 0, 1)
 
       expect(result.lumpSumAmount).toBe(1500000)
       expect(result.lumpSumTax).toBe(267750) // Tax on R1.5M
@@ -336,19 +338,19 @@ describe("retirement-tax", () => {
     })
 
     it("should cap percentage at 100%", () => {
-      const result = calculateLumpSumCommutation(1000000, 150)
+      const result = calculateLumpSumCommutation(1000000, 150, 0, 1)
       expect(result.lumpSumAmount).toBe(1000000)
     })
 
     it("should handle negative percentage as 0%", () => {
-      const result = calculateLumpSumCommutation(1000000, -10)
+      const result = calculateLumpSumCommutation(1000000, -10, 0, 1)
       expect(result.lumpSumAmount).toBe(0)
       expect(result.remainingPortfolio).toBe(1000000)
     })
 
     it("should handle small portfolios (below tax-free threshold)", () => {
       const portfolioValue = 500000
-      const result = calculateLumpSumCommutation(portfolioValue, 100)
+      const result = calculateLumpSumCommutation(portfolioValue, 100, 0, 1)
 
       expect(result.lumpSumAmount).toBe(500000)
       expect(result.lumpSumTax).toBe(0) // Below R550k threshold
@@ -360,7 +362,7 @@ describe("retirement-tax", () => {
       it("should reduce taxable lump sum by credit when credit < lump sum", () => {
         // R1,200,000 lump sum, R200,000 credit
         // taxableLumpSum = R1,000,000 (tier 3: R39,600 + (R1,000,000 - R770,000) × 27% = R101,700)
-        const result = calculateLumpSumCommutation(2400000, 50, 200000)
+        const result = calculateLumpSumCommutation(2400000, 50, 200000, 1)
         expect(result.lumpSumAmount).toBe(1200000)
         expect(result.taxableLumpSum).toBe(1000000)
         expect(result.lumpSumTax).toBe(101700)
@@ -373,7 +375,7 @@ describe("retirement-tax", () => {
       it("should carry excess credit into drawdown when credit > lump sum", () => {
         // R500,000 lump sum (100%), R800,000 credit
         // taxableLumpSum = 0 → tax = 0; R300,000 carried forward
-        const result = calculateLumpSumCommutation(500000, 100, 800000)
+        const result = calculateLumpSumCommutation(500000, 100, 800000, 1)
         expect(result.lumpSumAmount).toBe(500000)
         expect(result.taxableLumpSum).toBe(0)
         expect(result.lumpSumTax).toBe(0)
@@ -383,8 +385,8 @@ describe("retirement-tax", () => {
       })
 
       it("should behave identically to zero credit when credit is 0", () => {
-        const withCredit = calculateLumpSumCommutation(2400000, 50, 0)
-        const withoutCredit = calculateLumpSumCommutation(2400000, 50)
+        const withCredit = calculateLumpSumCommutation(2400000, 50, 0, 1)
+        const withoutCredit = calculateLumpSumCommutation(2400000, 50, 0, 1)
         expect(withCredit.lumpSumTax).toBe(withoutCredit.lumpSumTax)
         expect(withCredit.taxableLumpSum).toBe(withCredit.lumpSumAmount)
         expect(withCredit.creditAppliedToLumpSum).toBe(0)
@@ -392,14 +394,14 @@ describe("retirement-tax", () => {
       })
 
       it("should handle credit exactly equal to lump sum", () => {
-        const result = calculateLumpSumCommutation(1000000, 50, 500000)
+        const result = calculateLumpSumCommutation(1000000, 50, 500000, 1)
         expect(result.taxableLumpSum).toBe(0)
         expect(result.lumpSumTax).toBe(0)
         expect(result.creditCarriedIntoDrawdown).toBe(0)
       })
 
       it("should carry full credit into drawdown when lump sum is 0%", () => {
-        const result = calculateLumpSumCommutation(3000000, 0, 400000)
+        const result = calculateLumpSumCommutation(3000000, 0, 400000, 1)
         expect(result.lumpSumAmount).toBe(0)
         expect(result.creditAppliedToLumpSum).toBe(0)
         expect(result.creditCarriedIntoDrawdown).toBe(400000)
@@ -411,32 +413,32 @@ describe("retirement-tax", () => {
     it("should return 0 when contributions are below the 27.5% limit", () => {
       // income R1,200,000 → limit = min(R330,000, R430,000) = R330,000
       // contributions R300,000 < R330,000 → no excess
-      expect(calculateExcessContributionCredit(300000, 1200000)).toBe(0)
+      expect(calculateExcessContributionCredit(300000, 1200000, 1)).toBe(0)
     })
 
     it("should return 0 when contributions exactly equal the limit", () => {
       // income R1,200,000 → limit R330,000
-      expect(calculateExcessContributionCredit(330000, 1200000)).toBe(0)
+      expect(calculateExcessContributionCredit(330000, 1200000, 1)).toBe(0)
     })
 
     it("should compute correct excess below the R430k cap", () => {
       // income R1,000,000 → limit = R275,000; contributions R500,000 → excess R225,000
-      expect(calculateExcessContributionCredit(500000, 1000000)).toBe(225000)
+      expect(calculateExcessContributionCredit(500000, 1000000, 1)).toBe(225000)
     })
 
     it("should use the R430k cap when income is high enough", () => {
       // income R2,000,000 → 27.5% = R550,000 but capped at R430,000
       // contributions R500,000 → excess R70,000
-      expect(calculateExcessContributionCredit(500000, 2000000)).toBe(70000)
+      expect(calculateExcessContributionCredit(500000, 2000000, 1)).toBe(70000)
     })
 
     it("should return full contribution amount when income is zero", () => {
       // limit = min(0, R430,000) = 0 → all contributions are disallowed
-      expect(calculateExcessContributionCredit(120000, 0)).toBe(120000)
+      expect(calculateExcessContributionCredit(120000, 0, 1)).toBe(120000)
     })
 
     it("should return 0 when contributions are zero", () => {
-      expect(calculateExcessContributionCredit(0, 1000000)).toBe(0)
+      expect(calculateExcessContributionCredit(0, 1000000, 1)).toBe(0)
     })
   })
 
@@ -571,6 +573,78 @@ describe("retirement-tax", () => {
 
       // Age 75+ should have lower average tax rate due to tertiary rebate
       expect(result75.averageEffectiveTaxRate).toBeLessThan(result65.averageEffectiveTaxRate)
+    })
+  })
+
+  describe("Tax threshold indexation", () => {
+    describe("Critical SA scenarios", () => {
+      it("taxes a future nominal income against brackets and rebates scaled by the same factor", () => {
+        // Hand-built scaled table: 10 years at 5.5% → s = 1.055^10 ≈ 1.7081.
+        // R1,000,000 nominal at 66 is ≈ R585k in today's money: the 36% bracket.
+        const s = Math.pow(1.055, 10)
+        const income = 1_000_000
+        const expected = 125599 * s + (income - 530200 * s) * 0.36 - (17820 + 9765) * s
+        expect(calculateIndexedIncomeTax(income, 66, undefined, s)).toBeCloseTo(expected, 6)
+        // Without indexation the same nominal income lands in the 41% bracket:
+        // 259,783 + 41% × (1,000,000 − 887,000) − 27,585 = R278,528, about 38% more
+        expect(calculateIncomeTaxWithRebates(income, 66)).toBeCloseTo(278_528, 6)
+        expect(expected).toBeCloseTo(201_385, 0)
+      })
+
+      it("holds tax constant in real terms for a constant real income", () => {
+        const realIncome = 400_000
+        const today = calculateIncomeTaxWithRebates(realIncome, 70)
+        for (const years of [5, 20, 40]) {
+          const s = taxThresholdScale(years, 0.055)
+          expect(calculateIndexedIncomeTax(realIncome * s, 70, undefined, s) / s).toBeCloseTo(
+            today,
+            6,
+          )
+        }
+      })
+
+      it("scales the s6A medical credit with the rest of the table", () => {
+        const s = 2
+        const base = calculateIncomeTaxWithRebates(300_000, 68, 1)
+        expect(calculateIndexedIncomeTax(600_000, 68, 1, s)).toBeCloseTo(base * 2, 6)
+      })
+
+      it("indexes the retirement lump-sum table: R550k tax-free becomes R1.1M at scale 2", () => {
+        // R1.5M lump sum, scale 2: tax-free to R1.1M, 18% to R1.54M → 18% × R400k
+        const r = calculateLumpSumCommutation(1_500_000, 100, 0, 2)
+        expect(r.lumpSumTax).toBeCloseTo(72_000, 6)
+        expect(calculateLumpSumCommutation(1_100_000, 100, 0, 2).lumpSumTax).toBe(0)
+      })
+
+      it("indexes the s11F R430k cap but not the 27.5% rate", () => {
+        // scale 1.5 → cap R645k; income R3M → 27.5% = R825k, so the cap binds
+        expect(calculateExcessContributionCredit(700_000, 3_000_000, 1.5)).toBeCloseTo(55_000, 6)
+        // income R1M → 27.5% = R275k binds whatever the scale
+        expect(calculateExcessContributionCredit(300_000, 1_000_000, 3)).toBeCloseTo(25_000, 6)
+      })
+    })
+
+    describe("Edge cases", () => {
+      it("scale is 1 today and for negative years; 0% indexation never scales", () => {
+        expect(taxThresholdScale(0, 0.055)).toBe(1)
+        expect(taxThresholdScale(-3, 0.055)).toBe(1)
+        expect(taxThresholdScale(25, 0)).toBe(1)
+        expect(taxThresholdScale(2, 0.1)).toBeCloseTo(1.21, 12)
+      })
+
+      it("an unusable scale falls back to the published 2026/27 tables", () => {
+        const published = calculateIncomeTaxWithRebates(500_000, 50)
+        for (const bad of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
+          expect(calculateIndexedIncomeTax(500_000, 50, undefined, bad)).toBe(published)
+          // R39,600 + 27% × (R1,000,000 − R770,000)
+          expect(calculateLumpSumCommutation(1_000_000, 100, 0, bad).lumpSumTax).toBe(101_700)
+        }
+      })
+
+      it("zero and negative income attract no tax at any scale", () => {
+        expect(calculateIndexedIncomeTax(0, 70, undefined, 3)).toBe(0)
+        expect(calculateIndexedIncomeTax(-1000, 70, undefined, 3)).toBe(0)
+      })
     })
   })
 })

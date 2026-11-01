@@ -8,6 +8,7 @@
  */
 import { describe, expect, it } from "vite-plus/test"
 import { runAccumulationPhase, runDrawdownPhase, type DrawdownAccount } from "../projection-engine"
+import { resolveTaxThresholdIndexation } from "../utils/tax-relief"
 import type { Account, DrawdownConfig, PersonalInfo, RetirementGoals } from "@/types"
 
 const accounts: Account[] = [
@@ -56,9 +57,10 @@ const config: DrawdownConfig = {
 
 const YEARS_TO_RETIREMENT = 30
 const INFLATION = 0.055
+const TAX = resolveTaxThresholdIndexation("historical", INFLATION)
 
 const accumulate = () =>
-  runAccumulationPhase(accounts, personalInfo, YEARS_TO_RETIREMENT, INFLATION, "nominal")
+  runAccumulationPhase(accounts, personalInfo, YEARS_TO_RETIREMENT, INFLATION, "nominal", TAX)
 
 describe("runAccumulationPhase", () => {
   it("produces exactly one row per accumulation year", () => {
@@ -135,6 +137,8 @@ describe("runDrawdownPhase", () => {
       INFLATION,
       initialWithdrawal,
       0,
+      "nominal",
+      TAX,
     )
 
   it("produces exactly one row per drawdown year", () => {
@@ -191,6 +195,8 @@ describe("runDrawdownPhase", () => {
       INFLATION,
       300000,
       0,
+      "nominal",
+      TAX,
     )
 
     expect(r.portfolioDepletionAge).toBe(personalInfo.retirementAge)
@@ -202,10 +208,19 @@ describe("runDrawdownPhase", () => {
 
   it("depletes and records an age when the withdrawal is ruinous", () => {
     // A withdrawal far beyond what the portfolio can sustain must exhaust it.
+    // The TFSA empties; the RA, drawn as a living annuity, can only pay 17.5% a year, so
+    // a residual balance survives even though the income has failed.
     const r = drawdown(50_000_000)
     expect(typeof r.portfolioDepletionAge).toBe("number")
-    expect(r.finalBalance).toBe(0)
-    expect(r.portfolioDepletionAge).toBeGreaterThanOrEqual(personalInfo.retirementAge)
-    expect(r.portfolioDepletionAge).toBeLessThanOrEqual(personalInfo.lifeExpectancy)
+    // R50M cannot be paid even in the first year
+    expect(r.portfolioDepletionAge).toBe(personalInfo.retirementAge)
+    const last = r.rows[r.rows.length - 1]
+    expect(last.accountBalances?.["2"]).toBe(0)
+    expect(last.accountBalances?.["1"]).toBeGreaterThan(0)
+    r.rows.forEach((row) =>
+      expect(row.pensionWithdrawal ?? 0, `age ${row.age}`).toBeLessThanOrEqual(
+        row.startingBalance * 0.175 + 1e-6,
+      ),
+    )
   })
 })

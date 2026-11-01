@@ -23,16 +23,25 @@ import {
 import {
   calculateRetirementTax,
   calculateReplacementRatio,
+  taxThresholdScale,
 } from "@/lib/calculations/retirement-tax"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import { calculateInitialWithdrawal } from "@/lib/calculations/utils/drawdown-withdrawal"
+import {
+  DEFAULT_TAX_THRESHOLD_RELIEF,
+  resolveTaxThresholdIndexation,
+} from "@/lib/calculations/utils/tax-relief"
 import {
   escalate,
   escalateToRetirement,
   retirementRands,
   todayRands,
 } from "@/lib/calculations/utils/money-time"
-import { COMPOUNDING_METHOD_LABELS, COMPOUNDING_METHOD_DESCRIPTIONS } from "@/types"
+import {
+  COMPOUNDING_METHOD_LABELS,
+  COMPOUNDING_METHOD_DESCRIPTIONS,
+  TAX_THRESHOLD_RELIEF_LABELS,
+} from "@/types"
 import type { Account, ProjectionResult, SimulationResult } from "@/types"
 
 interface DebugWindowProps {
@@ -151,13 +160,30 @@ export function DebugWindow({ className, projection, simulationResult }: DebugWi
     inflationRate,
   )
 
-  // 3. Tax calculations at retirement (first year)
+  // 3. Tax in the first drawdown year — read from the engine's own row. This window used
+  // to re-tax the whole gross withdrawal against the unindexed 2026/27 table, ignoring the
+  // account mix (TFSA is tax-free), the s11F credit, medical credits and the tax-relief
+  // setting, so its "Year 1" tax contradicted the projection printed beside it.
   const retirementAge = personalInfo.retirementAge
-  const taxAtRetirement = calculateRetirementTax(initialWithdrawalAnnual, {
-    age: retirementAge,
-    monthlyMedicalAid: 0, // Could be made configurable
-    preRetirementIncome: personalInfo.annualIncome,
-  })
+  const firstDrawdownRow = projection?.yearlyProjections[yearsToRetirement]
+  const firstYear = {
+    withdrawals: firstDrawdownRow?.withdrawals ?? 0,
+    taxableIncome: firstDrawdownRow?.taxableIncome ?? 0,
+    incomeTax: firstDrawdownRow?.incomeTax ?? 0,
+    netIncome: firstDrawdownRow?.netIncome ?? 0,
+    excessCreditApplied: firstDrawdownRow?.excessCreditApplied ?? 0,
+  }
+  const firstYearEffectiveRate =
+    firstYear.withdrawals > 0 ? (firstYear.incomeTax / firstYear.withdrawals) * 100 : 0
+
+  // Rebate and threshold for the retirement tax year, indexed the same way the engine
+  // indexes them (Future Tax Relief setting)
+  const thresholdScale = taxThresholdScale(
+    yearsToRetirement,
+    resolveTaxThresholdIndexation(assumptions?.taxThresholdRelief, inflationRate).incomeTax,
+  )
+  const applicableRebate =
+    calculateRetirementTax(0, { age: retirementAge }).applicableRebate * thresholdScale
 
   // Replacement ratio: gross retirement income / gross pre-retirement income.
   // Both sides must be in the same money. `initialWithdrawalAnnual` is nominal at
@@ -172,17 +198,18 @@ export function DebugWindow({ className, projection, simulationResult }: DebugWi
     escalateToRetirement(todayRands(personalInfo.annualIncome), yearsToRetirement, inflationRate),
   )
 
-  // Tax threshold for retirement age
-  let taxThreshold: number = SA_TAX_LIMITS.taxThresholdUnder65
+  // Tax threshold for retirement age, indexed to the retirement tax year
+  let baseTaxThreshold: number = SA_TAX_LIMITS.taxThresholdUnder65
   if (retirementAge >= 75) {
-    taxThreshold = SA_TAX_LIMITS.taxThreshold75Plus
+    baseTaxThreshold = SA_TAX_LIMITS.taxThreshold75Plus
   } else if (retirementAge >= 65) {
-    taxThreshold = SA_TAX_LIMITS.taxThreshold65To74
+    baseTaxThreshold = SA_TAX_LIMITS.taxThreshold65To74
   }
-  const isBelowThreshold = initialWithdrawalAnnual <= taxThreshold
+  const taxThreshold = baseTaxThreshold * thresholdScale
+  const isBelowThreshold = firstYear.taxableIncome <= taxThreshold
 
   // Use projection tax data if available
-  const effectiveTaxRate = projection?.averageEffectiveTaxRate || taxAtRetirement.effectiveTaxRate
+  const effectiveTaxRate = projection?.averageEffectiveTaxRate || firstYearEffectiveRate
   const lifetimeIncomeTax = projection?.totalLifetimeIncomeTax || 0
 
   const formatPercent = (value: number) => `${(value * 100).toFixed(2)}%`
@@ -213,6 +240,7 @@ CALCULATION METHOD ⚙️
 Compounding Method: ${COMPOUNDING_METHOD_LABELS[compoundingMethod]}
 Description: ${COMPOUNDING_METHOD_DESCRIPTIONS[compoundingMethod]}
 Monthly Return Formula: ${monthlyReturnFormula}
+Future Tax Relief: ${TAX_THRESHOLD_RELIEF_LABELS[assumptions?.taxThresholdRelief ?? DEFAULT_TAX_THRESHOLD_RELIEF]}
 Calculated Monthly Return: ${formatPercent(monthlyReturn)}
 
 Display Mode: ${displayModeLabel}
@@ -306,14 +334,16 @@ Replacement Ratio: ${replacementRatio.toFixed(1)}% of pre-retirement income
 =====================================================
 TAX CALCULATIONS (RETIREMENT PHASE)
 =====================================================
-Annual Income Tax (Year 1): ${formatCurrency(taxAtRetirement.incomeTax)}
-Effective Tax Rate (Year 1): ${taxAtRetirement.effectiveTaxRate.toFixed(2)}%
+Taxable Income (Year 1): ${formatCurrency(firstYear.taxableIncome)}
+s11F Credit Applied (Year 1): ${formatCurrency(firstYear.excessCreditApplied)}
+Annual Income Tax (Year 1): ${formatCurrency(firstYear.incomeTax)}
+Effective Tax Rate (Year 1): ${firstYearEffectiveRate.toFixed(2)}%
 Average Effective Rate (Lifetime): ${effectiveTaxRate.toFixed(2)}%
 Lifetime Income Tax: ${formatCurrency(lifetimeIncomeTax)}
-Age-Based Rebate (at retirement): ${formatCurrency(taxAtRetirement.applicableRebate)}
-Tax-Free Threshold (at retirement): ${formatCurrency(taxThreshold)}
+Age-Based Rebate (at retirement, indexed): ${formatCurrency(applicableRebate)}
+Tax-Free Threshold (at retirement, indexed): ${formatCurrency(taxThreshold)}
 Below Tax Threshold: ${isBelowThreshold ? "YES" : "NO"}
-Net Monthly Income (Year 1): ${formatCurrency(taxAtRetirement.netIncome / 12)}
+Net Monthly Income (Year 1): ${formatCurrency(firstYear.netIncome / 12)}
 
 =====================================================
 DRAWDOWN CONFIGURATION
@@ -752,13 +782,21 @@ Single Source of Truth:
 
               <Section title="Tax Calculations (Retirement Phase)">
                 <Param
+                  label="Taxable Income (Year 1)"
+                  value={formatCurrency(firstYear.taxableIncome)}
+                />
+                <Param
+                  label="s11F Credit Applied (Year 1)"
+                  value={formatCurrency(firstYear.excessCreditApplied)}
+                />
+                <Param
                   label="Annual Income Tax (Year 1)"
-                  value={formatCurrency(taxAtRetirement.incomeTax)}
+                  value={formatCurrency(firstYear.incomeTax)}
                   highlight
                 />
                 <Param
                   label="Effective Tax Rate (Year 1)"
-                  value={`${taxAtRetirement.effectiveTaxRate.toFixed(2)}%`}
+                  value={`${firstYearEffectiveRate.toFixed(2)}%`}
                   highlight
                 />
                 <Param
@@ -768,10 +806,10 @@ Single Source of Truth:
                 />
                 <Param label="Lifetime Income Tax" value={formatCurrency(lifetimeIncomeTax)} />
                 <Param
-                  label="Age-Based Rebate"
-                  value={formatCurrency(taxAtRetirement.applicableRebate)}
+                  label="Age-Based Rebate (indexed)"
+                  value={formatCurrency(applicableRebate)}
                 />
-                <Param label="Tax-Free Threshold" value={formatCurrency(taxThreshold)} />
+                <Param label="Tax-Free Threshold (indexed)" value={formatCurrency(taxThreshold)} />
                 <Param
                   label="Below Tax Threshold?"
                   value={isBelowThreshold ? "YES" : "NO"}
@@ -779,7 +817,7 @@ Single Source of Truth:
                 />
                 <Param
                   label="Net Monthly Income (Year 1)"
-                  value={formatCurrency(taxAtRetirement.netIncome / 12)}
+                  value={formatCurrency(firstYear.netIncome / 12)}
                   highlight
                 />
               </Section>

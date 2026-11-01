@@ -7,6 +7,12 @@
  *  3. Run `npm test` — failing tests will show you what changed
  *
  * Source: https://www.sars.gov.za/wp-content/uploads/Docs/Budget/Budget2026/Budget-tax-guide-2026-web-version.pdf
+ * Re-verified 2026-10-31 against https://www.sars.gov.za/tax-rates/income-tax/rates-of-tax-for-individuals/,
+ * https://www.sars.gov.za/tax-rates/income-tax/retirement-lump-sum-benefits/ and the SARS Budget 2026 FAQ.
+ *
+ * Every rand figure here is NOMINAL for 2026/2027. The engines treat this tax year as
+ * "today" and index the thresholds forward with `taxThresholdScale` (retirement-tax.ts) —
+ * see that function for the indexation assumption.
  */
 
 export const TAX_YEAR = "2026/2027"
@@ -42,6 +48,19 @@ export const RETIREMENT_LUMP_SUM_CONFIG = [
 // one-third of the retirement-fund interest.
 // ---------------------------------------------------------------------------
 export const MAX_LUMP_SUM_COMMUTATION_PERCENTAGE = 100 / 3
+
+// ---------------------------------------------------------------------------
+// Living annuity drawdown band — regulatory, NOT a tax-year figure, so it does not change
+// with TAX_YEAR. A living annuity bought on or after 21 February 2007 must pay an annual
+// income of between 2.5% and 17.5% of its value, chosen once a year on the policy
+// anniversary (ASISA; the 2020 temporary 0.5%–20% relief has expired).
+// The engines model the annuitised part of every pension/RA/preservation fund as a
+// living annuity, so this band bounds what can be drawn from it each year.
+// ---------------------------------------------------------------------------
+export const LIVING_ANNUITY_DRAWDOWN_BAND_CONFIG = {
+  minimumRate: 0.025,
+  maximumRate: 0.175,
+} as const
 
 // ---------------------------------------------------------------------------
 // Capital Gains Tax — annual exclusion for individuals (s5(1) Eighth Schedule)

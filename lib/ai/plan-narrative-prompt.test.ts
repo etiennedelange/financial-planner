@@ -5,7 +5,6 @@ import type {
   RetirementGoals,
   DrawdownConfig,
   ProjectionResult,
-  SimulationResult,
 } from "@/types"
 import { buildPlanNarrativePayload, buildPlanNarrativePrompt } from "./plan-narrative-prompt"
 
@@ -65,6 +64,7 @@ function baseProjection(overrides: Partial<ProjectionResult> = {}): ProjectionRe
     monthlyIncomeAtRetirement: 28000,
     monthlyNetIncomeAtRetirement: 25000,
     portfolioDepletionAge: null,
+    incomeGoalShortfallAge: null,
     shortfallAmount: 0,
     surplusAmount: 0,
     totalLifetimeIncomeTax: 0,
@@ -88,17 +88,6 @@ function baseProjection(overrides: Partial<ProjectionResult> = {}): ProjectionRe
   }
 }
 
-function baseSimulation(overrides: Partial<SimulationResult> = {}): SimulationResult {
-  return {
-    runs: [],
-    successRate: 78,
-    percentiles: { p10: [], p25: [], p50: [], p75: [], p90: [] },
-    medianDepletionAge: null,
-    averageFinalBalance: 4200000,
-    ...overrides,
-  }
-}
-
 describe("buildPlanNarrativePayload", () => {
   it("returns null when there is no projection yet", () => {
     const result = buildPlanNarrativePayload({
@@ -107,21 +96,19 @@ describe("buildPlanNarrativePayload", () => {
       retirementGoals,
       drawdownConfig,
       projection: null,
-      simulationResult: null,
     })
     expect(result).toBeNull()
   })
 
-  it("carries simulation as null when Monte Carlo hasn't run", () => {
+  it("sends no Monte Carlo figures: market risk lives on the Risk page", () => {
     const result = buildPlanNarrativePayload({
       accounts: [ra],
       personalInfo,
       retirementGoals,
       drawdownConfig,
       projection: baseProjection(),
-      simulationResult: null,
     })
-    expect(result?.simulation).toBeNull()
+    expect(result).not.toHaveProperty("simulation")
   })
 })
 
@@ -133,7 +120,6 @@ describe("buildPlanNarrativePrompt", () => {
       retirementGoals,
       drawdownConfig,
       projection: baseProjection(),
-      simulationResult: baseSimulation(),
     })!
     const { system } = buildPlanNarrativePrompt(payload)
     expect(system).toContain("NEVER use second-person directives")
@@ -146,7 +132,6 @@ describe("buildPlanNarrativePrompt", () => {
       retirementGoals,
       drawdownConfig,
       projection: baseProjection(),
-      simulationResult: baseSimulation(),
     })!
     const { prompt } = buildPlanNarrativePrompt(payload)
     expect(prompt).toContain("Retirement Annuity (RA)")
@@ -160,23 +145,20 @@ describe("buildPlanNarrativePrompt", () => {
       retirementGoals,
       drawdownConfig,
       projection: baseProjection(),
-      simulationResult: baseSimulation(),
     })!
     const { prompt } = buildPlanNarrativePrompt(payload)
     expect(prompt).toContain("Retirement Annuity (RA)")
   })
 
-  it("reports a 0% success probability plainly rather than omitting it", () => {
+  it("reports a deterministic depletion age plainly", () => {
     const payload = buildPlanNarrativePayload({
       accounts: [ra],
       personalInfo,
       retirementGoals,
       drawdownConfig,
       projection: baseProjection({ portfolioDepletionAge: 78 }),
-      simulationResult: baseSimulation({ successRate: 0 }),
     })!
     const { prompt } = buildPlanNarrativePrompt(payload)
-    expect(prompt).toContain("0%")
     expect(prompt).toContain("funds running out at age 78")
   })
 
@@ -187,22 +169,56 @@ describe("buildPlanNarrativePrompt", () => {
       retirementGoals,
       drawdownConfig,
       projection: baseProjection(),
-      simulationResult: baseSimulation(),
     })!
     const { prompt } = buildPlanNarrativePrompt(payload)
     expect(prompt).toContain("R 0/month contribution")
   })
 
-  it("notes when Monte Carlo has not been run yet", () => {
+  it("states that the figures assume steady returns and quotes no success rate", () => {
     const payload = buildPlanNarrativePayload({
       accounts: [ra],
       personalInfo,
       retirementGoals,
       drawdownConfig,
       projection: baseProjection(),
-      simulationResult: null,
     })!
     const { prompt } = buildPlanNarrativePrompt(payload)
-    expect(prompt).toContain("has not been run")
+    expect(prompt).toContain("assume steady investment returns")
+    expect(prompt).not.toMatch(/success probability|Monte Carlo/i)
+  })
+
+  it("states whether the projected income meets the desired income", () => {
+    const meets = buildPlanNarrativePrompt(
+      buildPlanNarrativePayload({
+        accounts: [ra],
+        personalInfo,
+        retirementGoals,
+        drawdownConfig,
+        projection: baseProjection(),
+      })!,
+    ).prompt
+    expect(meets).toContain("meets the desired income every year")
+    const short = buildPlanNarrativePrompt(
+      buildPlanNarrativePayload({
+        accounts: [ra],
+        personalInfo,
+        retirementGoals,
+        drawdownConfig,
+        projection: baseProjection({ incomeGoalShortfallAge: 70 }),
+      })!,
+    ).prompt
+    expect(short).toContain("falls below the desired income from age 70")
+  })
+
+  it("omits the goal line for a payload from a client that predates the field", () => {
+    const payload = buildPlanNarrativePayload({
+      accounts: [ra],
+      personalInfo,
+      retirementGoals,
+      drawdownConfig,
+      projection: baseProjection(),
+    })!
+    delete payload.projection.incomeGoalShortfallAge
+    expect(buildPlanNarrativePrompt(payload).prompt).not.toContain("desired income every year")
   })
 })

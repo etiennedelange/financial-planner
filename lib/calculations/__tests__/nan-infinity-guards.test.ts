@@ -8,6 +8,7 @@
  */
 import { describe, expect, it } from "vite-plus/test"
 import { calculateProjection, runAccumulationPhase, runDrawdownPhase } from "../projection-engine"
+import { resolveTaxThresholdIndexation } from "../utils/tax-relief"
 import { runMonteCarloSimulation } from "@/lib/monte-carlo/simulation-engine"
 import { calculateOptimalContribution } from "../optimal-contribution"
 import type { Account, DrawdownConfig, PersonalInfo, RetirementGoals } from "@/types"
@@ -146,6 +147,7 @@ describe("runAccumulationPhase — non-finite inputs", () => {
       30,
       0.055,
       "nominal",
+      resolveTaxThresholdIndexation("historical", 0.055),
     )
     expect(r.rows.every((row) => finite(row.endingBalance) && finite(row.growth))).toBe(true)
   })
@@ -184,6 +186,8 @@ describe("runDrawdownPhase — non-finite inputs", () => {
       0.055,
       120000,
       0,
+      "nominal",
+      resolveTaxThresholdIndexation("historical", 0.055),
     )
     expect(r.rows.every((row) => finite(row.endingBalance) && finite(row.withdrawals))).toBe(true)
   })
@@ -199,6 +203,8 @@ describe("runDrawdownPhase — non-finite inputs", () => {
       0.055,
       120000,
       0,
+      "nominal",
+      resolveTaxThresholdIndexation("historical", 0.055),
     )
     expect(
       r.rows.every((row) => row.cgtTaxableAmount === undefined || finite(row.cgtTaxableAmount)),

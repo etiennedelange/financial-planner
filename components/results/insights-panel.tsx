@@ -3,22 +3,13 @@
 import Link from "next/link"
 import { PageCard } from "@/components/ui/page-card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import {
-  TrendingUp,
-  Clock,
-  PieChart,
-  Heart,
-  AlertTriangle,
-  CheckCircle2,
-  Target,
-} from "lucide-react"
+import { TrendingUp, Clock, Heart, AlertTriangle, CheckCircle2, Target } from "lucide-react"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useShallow } from "zustand/react/shallow"
 import { calculateOptimalContribution } from "@/lib/calculations/optimal-contribution"
 import { calculateCostOfDelay } from "@/lib/calculations/cost-of-delay"
-import { compareScenarios, type ScenarioType } from "@/lib/calculations/scenario-comparison"
 import { projectMedicalCosts } from "@/lib/calculations/medical-costs"
+import { computePortfolioTotals } from "@/lib/calculations/utils/portfolio-totals"
 import { formatCurrency } from "@/lib/utils/currency"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 
@@ -38,26 +29,8 @@ export function InsightsPanel() {
   const insights = (() => {
     if (accounts.length === 0) return null
 
-    const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
-    const totalContribution = accounts.reduce((sum, acc) => sum + acc.monthlyContribution, 0)
-    const weightedReturn =
-      totalBalance > 0
-        ? accounts.reduce(
-            (sum, acc) => sum + (acc.expectedReturn / 100) * (acc.currentBalance / totalBalance),
-            0,
-          )
-        : 0.1
-    const weightedFees =
-      totalBalance > 0
-        ? accounts.reduce(
-            (sum, acc) => sum + (acc.annualFees / 100) * (acc.currentBalance / totalBalance),
-            0,
-          )
-        : 0.01
-    const avgEscalation =
-      accounts.length > 0
-        ? accounts.reduce((sum, acc) => sum + acc.contributionEscalation / 100, 0) / accounts.length
-        : 0.06
+    const { totalBalance, totalContribution, weightedReturn, weightedFees, avgEscalation } =
+      computePortfolioTotals(accounts)
 
     const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
     const inflationRate = retirementGoals.inflationRate / 100
@@ -86,18 +59,6 @@ export function InsightsPanel() {
       compoundingMethod: assumptions.compoundingMethod,
     })
 
-    // Scenario comparison
-    const scenarioResult = compareScenarios({
-      currentSavings: totalBalance,
-      monthlyContribution: totalContribution,
-      personalInfo,
-      retirementGoals,
-      drawdownConfig,
-      contributionEscalation: avgEscalation,
-      fees: weightedFees,
-      compoundingMethod: assumptions.compoundingMethod,
-    })
-
     // Medical costs
     const medicalResult = projectMedicalCosts({
       currentAge: personalInfo.currentAge,
@@ -108,7 +69,6 @@ export function InsightsPanel() {
     return {
       optimal: optimalResult,
       costOfDelay: costOfDelayResult,
-      scenarios: scenarioResult,
       medical: medicalResult,
       currentContribution: totalContribution,
       yearsToRetirement,
@@ -132,7 +92,8 @@ export function InsightsPanel() {
 
   const contributionDiff =
     insights.optimal.optimalMonthlyContribution - insights.currentContribution
-  const isOnTrack = contributionDiff <= 0
+  const isAchievable = insights.optimal.isAchievable
+  const isOnTrack = isAchievable && contributionDiff <= 0
 
   return (
     <div className="space-y-4">
@@ -156,7 +117,15 @@ export function InsightsPanel() {
       >
         <div className="space-y-3">
           {/* Status first — the key takeaway */}
-          {isOnTrack ? (
+          {!isAchievable ? (
+            <div className="flex items-center gap-2 rounded-md bg-warning/10 p-2 text-warning">
+              <AlertTriangle className="h-4 w-4 flex-none" />
+              <span className="text-sm">
+                Contributions alone can&apos;t reach this target before your retirement date.
+                Consider a later retirement age or a lower income goal.
+              </span>
+            </div>
+          ) : isOnTrack ? (
             <div className="flex items-center gap-2 rounded-md bg-primary/10 p-2 text-primary">
               <CheckCircle2 className="h-4 w-4 flex-none" />
               <span className="text-sm">
@@ -177,12 +146,14 @@ export function InsightsPanel() {
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Recommended monthly:</span>
             <span className="font-semibold">
-              {formatCurrency(
-                insights.optimal.optimalMonthlyContribution,
-                displayMode,
-                0,
-                insights.inflationRate,
-              )}
+              {isAchievable
+                ? formatCurrency(
+                    insights.optimal.optimalMonthlyContribution,
+                    displayMode,
+                    0,
+                    insights.inflationRate,
+                  )
+                : "Not reachable"}
             </span>
           </div>
           <div className="flex items-center justify-between">
@@ -281,84 +252,6 @@ export function InsightsPanel() {
               </span>
             </div>
           </div>
-        </div>
-      </PageCard>
-
-      {/* Scenario Comparison */}
-      <PageCard
-        label="Investment Scenarios"
-        leading={<PieChart className="h-4 w-4 text-muted-foreground flex-none" />}
-        trailing={
-          <InfoTooltip
-            content="Compares how different investment strategies (Conservative, Balanced, Aggressive) affect your retirement outcomes. Each scenario runs a full Monte Carlo simulation (1,000 iterations) including both the accumulation phase (while saving) and drawdown phase (during retirement). Higher returns come with higher volatility."
-            side="right"
-          />
-        }
-        contentClassName="space-y-4"
-      >
-        <div className="space-y-4">
-          {(["conservative", "balanced", "aggressive"] as ScenarioType[]).map((key) => {
-            const scenario = insights.scenarios[key]
-            const isRecommended = key === insights.scenarios.recommendedScenario
-            return (
-              <div
-                key={key}
-                className={`rounded-lg border p-3 ${
-                  isRecommended ? "border-primary bg-primary/5" : "border-border"
-                }`}
-              >
-                <div className="mb-2 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{scenario.scenario}</span>
-                    {isRecommended && (
-                      <Badge variant="default" className="text-xs">
-                        Recommended
-                      </Badge>
-                    )}
-                  </div>
-                  <span className="text-sm text-muted-foreground">
-                    {scenario.nominalReturn.toFixed(1)}% return
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Nest egg: </span>
-                    <span>
-                      {formatCurrency(
-                        scenario.projectedNestEgg,
-                        displayMode,
-                        insights.yearsToRetirement,
-                        insights.inflationRate,
-                      )}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Success: </span>
-                    <span
-                      className={
-                        scenario.successProbability >= 75
-                          ? "text-chart-2"
-                          : scenario.successProbability >= 50
-                            ? "text-warning"
-                            : "text-destructive"
-                      }
-                    >
-                      {scenario.successProbability.toFixed(0)}%
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Lasts: </span>
-                    <span>{scenario.yearsLasts} years</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Volatility: </span>
-                    <span>{scenario.volatility.toFixed(0)}%</span>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-          <p className="text-sm text-muted-foreground">{insights.scenarios.recommendation}</p>
         </div>
       </PageCard>
 

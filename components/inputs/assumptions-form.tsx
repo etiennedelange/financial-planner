@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { motion, useReducedMotion } from "motion/react"
+import Link from "next/link"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PageCard } from "@/components/ui/page-card"
@@ -16,8 +17,16 @@ import { SA_DEFAULTS_DISPLAY } from "@/lib/constants/defaults"
 import { useShallow } from "zustand/react/shallow"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 import { cn } from "@/lib/utils"
-import { COMPOUNDING_METHOD_DESCRIPTIONS, COMPOUNDING_METHOD_LABELS } from "@/types"
-import type { CompoundingMethod } from "@/types"
+import {
+  COMPOUNDING_METHOD_DESCRIPTIONS,
+  COMPOUNDING_METHOD_LABELS,
+  TAX_THRESHOLD_RELIEF_LABELS,
+} from "@/types"
+import type { CompoundingMethod, TaxThresholdRelief } from "@/types"
+import {
+  DEFAULT_TAX_THRESHOLD_RELIEF,
+  describeTaxReliefAssumption,
+} from "@/lib/calculations/utils/tax-relief"
 import { useAnimatedIcon } from "@/components/ui/animated-icon"
 
 const schema = z.object({
@@ -33,14 +42,6 @@ const schema = z.object({
     .number({ error: "Enter a cash return" })
     .min(0, "Cash return must be between 0% and 15%")
     .max(15, "Cash return must be between 0% and 15%"),
-  equityVolatility: z
-    .number({ error: "Enter equity volatility" })
-    .min(0, "Equity volatility must be between 0% and 40%")
-    .max(40, "Equity volatility must be between 0% and 40%"),
-  bondVolatility: z
-    .number({ error: "Enter bond volatility" })
-    .min(0, "Bond volatility must be between 0% and 20%")
-    .max(20, "Bond volatility must be between 0% and 20%"),
   inflationRate: z
     .number({ error: "Enter an inflation rate" })
     .min(0, "Inflation rate must be between 0% and 20%")
@@ -48,6 +49,60 @@ const schema = z.object({
 })
 
 type FormData = z.infer<typeof schema>
+
+const TAX_RELIEF_OPTIONS: { value: TaxThresholdRelief; description: string }[] = [
+  {
+    value: "historical",
+    description: "Thresholds rise as SARS raised them over the last decade. Recommended.",
+  },
+  { value: "full", description: "Thresholds keep pace with inflation every year. Optimistic." },
+  { value: "none", description: "Today's thresholds never change. Pessimistic stress test." },
+]
+
+/** A selectable card with an animated active background, shared by the choice groups below. */
+function OptionCard({
+  active,
+  layoutId,
+  label,
+  description,
+  onSelect,
+  reduceMotion,
+}: {
+  active: boolean
+  layoutId: string
+  label: string
+  description: string
+  onSelect: () => void
+  reduceMotion: boolean | null
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onSelect}
+      className={cn(
+        "relative isolate flex h-auto min-h-16 flex-col items-start justify-start gap-1 overflow-hidden rounded-md border border-transparent px-3 py-3 text-left text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        active
+          ? "text-primary-foreground"
+          : "border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground",
+      )}
+    >
+      {active && (
+        <motion.span
+          layoutId={layoutId}
+          className="absolute inset-0 -z-10 bg-primary"
+          transition={
+            reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 38 }
+          }
+        />
+      )}
+      <span className="relative z-10 block text-sm font-medium">{label}</span>
+      <span className="relative z-10 block text-xs font-normal leading-5 opacity-80">
+        {description}
+      </span>
+    </button>
+  )
+}
 
 export function AssumptionsForm() {
   const { assumptions, setAssumptions, retirementGoals, setRetirementGoals } = useCalculatorStore(
@@ -65,8 +120,6 @@ export function AssumptionsForm() {
       equityReturn: assumptions.equityReturn,
       bondReturn: assumptions.bondReturn,
       cashReturn: assumptions.cashReturn,
-      equityVolatility: assumptions.equityVolatility,
-      bondVolatility: assumptions.bondVolatility,
       inflationRate: retirementGoals.inflationRate,
     },
     mode: "onChange", // Validate as user types for immediate feedback
@@ -76,8 +129,6 @@ export function AssumptionsForm() {
     equityReturn: SA_DEFAULTS_DISPLAY.equityReturn,
     bondReturn: SA_DEFAULTS_DISPLAY.bondReturn,
     cashReturn: SA_DEFAULTS_DISPLAY.cashReturn,
-    equityVolatility: SA_DEFAULTS_DISPLAY.equityVolatility,
-    bondVolatility: SA_DEFAULTS_DISPLAY.bondVolatility,
     inflationRate: SA_DEFAULTS_DISPLAY.inflation,
   }
 
@@ -86,7 +137,10 @@ export function AssumptionsForm() {
 
   const handleReset = useCallback(() => {
     reset(saDefaults)
-    setAssumptions({ compoundingMethod: "nominal" })
+    setAssumptions({
+      compoundingMethod: "nominal",
+      taxThresholdRelief: DEFAULT_TAX_THRESHOLD_RELIEF,
+    })
     setResetSpins((n) => n + 1)
   }, [reset, setAssumptions]) // oxlint-disable-line react-hooks/exhaustive-deps
 
@@ -108,8 +162,6 @@ export function AssumptionsForm() {
       current.equityReturn === assumptions.equityReturn &&
       current.bondReturn === assumptions.bondReturn &&
       current.cashReturn === assumptions.cashReturn &&
-      current.equityVolatility === assumptions.equityVolatility &&
-      current.bondVolatility === assumptions.bondVolatility &&
       current.inflationRate === retirementGoals.inflationRate
     ) {
       return
@@ -118,16 +170,12 @@ export function AssumptionsForm() {
       equityReturn: assumptions.equityReturn,
       bondReturn: assumptions.bondReturn,
       cashReturn: assumptions.cashReturn,
-      equityVolatility: assumptions.equityVolatility,
-      bondVolatility: assumptions.bondVolatility,
       inflationRate: retirementGoals.inflationRate,
     })
   }, [
     assumptions.equityReturn,
     assumptions.bondReturn,
     assumptions.cashReturn,
-    assumptions.equityVolatility,
-    assumptions.bondVolatility,
     retirementGoals.inflationRate,
     reset,
     getValues,
@@ -175,7 +223,17 @@ export function AssumptionsForm() {
   return (
     <PageCard
       label="Market Assumptions"
-      description="Reference values for asset class returns and inflation. Each account uses its own expected return setting. Volatility is used in Monte Carlo simulations."
+      description={
+        <>
+          Inflation, return calculation method and future tax relief apply to every projection. The
+          equity, bond and cash returns are not currently used by any calculation — each account
+          uses its own expected return. Volatility and market-risk simulations are on the{" "}
+          <Link href="/calculator/risk" className="text-foreground underline underline-offset-2">
+            Risk
+          </Link>{" "}
+          page.
+        </>
+      }
       trailing={resetButton}
       contentClassName="space-y-6"
     >
@@ -183,10 +241,13 @@ export function AssumptionsForm() {
         <div className="flex items-center gap-2">
           <SectionLabel>Expected Returns (Nominal)</SectionLabel>
           <InfoTooltip
-            content="These are reference values for different asset classes. Each account uses its own expected return rate. Nominal returns include inflation - a 10% nominal return with 5% inflation gives ~5% real growth."
+            content="Not currently used by any calculation: projections and simulations use each account's own expected return. Nominal returns include inflation - a 10% nominal return with 5% inflation gives ~5% real growth."
             side="right"
           />
         </div>
+        <p className="text-xs text-muted-foreground">
+          Reference only — changing these does not affect your results.
+        </p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="space-y-2">
             <Label htmlFor="equityReturn">Equity (%)</Label>
@@ -226,41 +287,6 @@ export function AssumptionsForm() {
         </div>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <SectionLabel>Volatility (Std Dev)</SectionLabel>
-          <InfoTooltip
-            content="Volatility measures how much returns vary from year to year. Higher volatility means more uncertainty. In Monte Carlo simulations, higher volatility reduces the probability of success because of sequence-of-returns risk. Typical SA equity volatility: 15-18%."
-            side="right"
-          />
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="equityVolatility">Equity (%)</Label>
-            <Input
-              id="equityVolatility"
-              type="number"
-              min="0"
-              max="40"
-              step="0.5"
-              {...register("equityVolatility", { valueAsNumber: true })}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="bondVolatility">Bonds (%)</Label>
-            <Input
-              id="bondVolatility"
-              type="number"
-              min="0"
-              max="20"
-              step="0.5"
-              {...register("bondVolatility", { valueAsNumber: true })}
-            />
-          </div>
-        </div>
-      </div>
-
       <div className="space-y-4 border-t border-border pt-4">
         <div className="flex items-center gap-2">
           <SectionLabel>Return Calculation Method</SectionLabel>
@@ -270,42 +296,49 @@ export function AssumptionsForm() {
           />
         </div>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {(["nominal", "compound"] as CompoundingMethod[]).map((method) => {
-            const active = assumptions.compoundingMethod === method
-            return (
-              <button
-                key={method}
-                type="button"
-                aria-pressed={active}
-                onClick={() => setAssumptions({ compoundingMethod: method })}
-                className={cn(
-                  "relative isolate flex h-auto min-h-16 flex-col items-start justify-start gap-1 overflow-hidden rounded-md border border-transparent px-3 py-3 text-left text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  active
-                    ? "text-primary-foreground"
-                    : "border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground",
-                )}
-              >
-                {active && (
-                  <motion.span
-                    layoutId="compounding-method-active"
-                    className="absolute inset-0 -z-10 bg-primary"
-                    transition={
-                      shouldReduceMotion
-                        ? { duration: 0 }
-                        : { type: "spring", stiffness: 500, damping: 38 }
-                    }
-                  />
-                )}
-                <span className="relative z-10 block text-sm font-medium">
-                  {COMPOUNDING_METHOD_LABELS[method]}
-                </span>
-                <span className="relative z-10 block text-xs font-normal leading-5 opacity-80">
-                  {COMPOUNDING_METHOD_DESCRIPTIONS[method]}
-                </span>
-              </button>
-            )
-          })}
+          {(["nominal", "compound"] as CompoundingMethod[]).map((method) => (
+            <OptionCard
+              key={method}
+              active={assumptions.compoundingMethod === method}
+              layoutId="compounding-method-active"
+              label={COMPOUNDING_METHOD_LABELS[method]}
+              description={COMPOUNDING_METHOD_DESCRIPTIONS[method]}
+              onSelect={() => setAssumptions({ compoundingMethod: method })}
+              reduceMotion={shouldReduceMotion}
+            />
+          ))}
         </div>
+      </div>
+
+      <div className="space-y-4 border-t border-border pt-4">
+        <div className="flex items-center gap-2">
+          <SectionLabel>Future Tax Relief</SectionLabel>
+          <InfoTooltip
+            content="SARS publishes only this year's tax tables. This sets how much brackets, rebates, the tax-free lump sum and the retirement deduction cap are assumed to rise in future years. Less relief means more tax on the same real income."
+            side="right"
+          />
+        </div>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {TAX_RELIEF_OPTIONS.map((option) => (
+            <OptionCard
+              key={option.value}
+              active={
+                (assumptions.taxThresholdRelief ?? DEFAULT_TAX_THRESHOLD_RELIEF) === option.value
+              }
+              layoutId="tax-relief-active"
+              label={TAX_THRESHOLD_RELIEF_LABELS[option.value]}
+              description={option.description}
+              onSelect={() => setAssumptions({ taxThresholdRelief: option.value })}
+              reduceMotion={shouldReduceMotion}
+            />
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {describeTaxReliefAssumption(
+            assumptions.taxThresholdRelief,
+            retirementGoals.inflationRate,
+          )}
+        </p>
       </div>
 
       <div className="pt-2 border-t border-border">
