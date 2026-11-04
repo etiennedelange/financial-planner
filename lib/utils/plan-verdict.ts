@@ -1,3 +1,5 @@
+import { getSuccessRateBand } from "./success-rate"
+
 export type PlanVerdictTone = "neutral" | "success" | "good" | "warning" | "danger"
 
 export interface PlanVerdict {
@@ -17,6 +19,9 @@ const LIFE_EXPECTANCY = 90
  * hold? The Monte Carlo success rate sets the base tone, and an income
  * depletion that happens before life expectancy overrides the verdict —
  * running out of money is always the headline even when the median succeeds.
+ *
+ * Tone and headline come from the shared SUCCESS_RATE_BANDS, so they agree with the
+ * metric label. The Risk page passes the CAUTIOUS (lower) end of the success range.
  */
 export function buildPlanVerdict({ successRate, depletionAge }: PlanVerdictInput): PlanVerdict {
   if (depletionAge !== null && depletionAge < LIFE_EXPECTANCY) {
@@ -30,17 +35,6 @@ export function buildPlanVerdict({ successRate, depletionAge }: PlanVerdictInput
     return { tone: "neutral", headline: "Run the simulation to see whether your plan holds" }
   }
 
-  if (successRate >= 90) {
-    return { tone: "success", headline: "Your plan holds" }
-  }
-  if (successRate >= 75) {
-    return { tone: "good", headline: "Your plan is likely to hold" }
-  }
-  if (successRate >= 60) {
-    return { tone: "warning", headline: "Your plan is at risk" }
-  }
-  if (successRate >= 40) {
-    return { tone: "warning", headline: "Your plan is under pressure" }
-  }
-  return { tone: "danger", headline: "Your plan is unlikely to hold" }
+  const { tone, headline } = getSuccessRateBand(successRate)
+  return { tone, headline }
 }

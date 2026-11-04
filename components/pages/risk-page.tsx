@@ -9,7 +9,8 @@ import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { compareScenarios } from "@/lib/calculations/scenario-comparison"
 import { computePortfolioTotals } from "@/lib/calculations/utils/portfolio-totals"
 import { buildPlanVerdict, type PlanVerdictTone } from "@/lib/utils/plan-verdict"
-import { getSuccessRateStyle } from "@/lib/utils/success-rate"
+import { formatSuccessRange, getSuccessRateStyle, successRange } from "@/lib/utils/success-rate"
+import { CAUTIOUS_VOLATILITY_FACTOR } from "@/lib/constants/investment-types"
 import { Button } from "@/components/ui/button"
 import { PageCard } from "@/components/ui/page-card"
 import { DashboardMetricCard } from "@/components/dashboard/dashboard-metric-card"
@@ -37,7 +38,8 @@ const verdictToneStyles: Record<PlanVerdictTone, string> = {
  * The simulation only runs while this page is open (see calculator-context.tsx).
  */
 export function RiskPage() {
-  const { projection, simulationResult, isSimulating, simulationError } = useCalculator()
+  const { projection, simulationResult, cautiousSimulationResult, isSimulating, simulationError } =
+    useCalculator()
   const { accounts, personalInfo, retirementGoals, drawdownConfig, assumptions, displayMode } =
     useCalculatorStore(
       useShallow((s) => ({
@@ -68,16 +70,35 @@ export function RiskPage() {
             fees: totals.weightedFees,
             compoundingMethod: assumptions.compoundingMethod,
           }),
-    [accounts.length, totals, personalInfo, retirementGoals, drawdownConfig, assumptions],
+    // compareScenarios reads only the compounding method from assumptions. Depending on the
+    // whole object re-ran 3 × 1,000 main-thread simulations on every volatility keystroke.
+    [
+      accounts.length,
+      totals,
+      personalInfo,
+      retirementGoals,
+      drawdownConfig,
+      assumptions.compoundingMethod,
+    ],
+  )
+
+  // Success at central and cautious volatility, run on the same simulated futures. The
+  // verdict and tone follow the cautious (lower) end.
+  const range = useMemo(
+    () =>
+      simulationResult
+        ? successRange(simulationResult.successRate, cautiousSimulationResult?.successRate ?? null)
+        : null,
+    [simulationResult, cautiousSimulationResult],
   )
 
   const verdict = useMemo(
     () =>
       buildPlanVerdict({
-        successRate: simulationResult?.successRate ?? null,
+        successRate: range?.low ?? null,
         depletionAge: projection?.portfolioDepletionAge ?? null,
       }),
-    [simulationResult, projection],
+    [range, projection],
   )
 
   if (accounts.length === 0) {
@@ -97,7 +118,7 @@ export function RiskPage() {
     )
   }
 
-  const successRate = simulationResult?.successRate ?? null
+  const successRate = range?.low ?? null
   const pending = isSimulating ? "…" : "--"
   const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
 
@@ -125,21 +146,23 @@ export function RiskPage() {
         <DashboardMetricCard
           icon={Gauge}
           label="Plan Success Rate"
-          value={successRate !== null ? `${successRate.toFixed(0)}%` : pending}
+          value={range ? formatSuccessRange(range) : pending}
           description={
             successRate !== null
-              ? getSuccessRateStyle(successRate).label
+              ? `Likely range · ${getSuccessRateStyle(successRate).label}`
               : isSimulating
                 ? "Simulating…"
                 : "Waiting for simulation"
           }
           successRate={successRate ?? undefined}
-          tooltip="Share of simulated markets in which your plan pays your full income every year to life expectancy."
+          tooltip={`Share of simulated markets in which your plan pays your full income every year to life expectancy. The higher figure uses each investment's long-run volatility; the lower one uses ${CAUTIOUS_VOLATILITY_FACTOR}× that, as in SA equity's most turbulent decade. Both use the same simulated markets. The rating follows the lower figure.`}
         />
         <DashboardMetricCard
           icon={TrendingDown}
           label="Futures That Fall Short"
-          value={successRate !== null ? `${(100 - successRate).toFixed(0)}%` : pending}
+          value={
+            range ? formatSuccessRange({ low: 100 - range.high, high: 100 - range.low }) : pending
+          }
           description="Income could not be paid in full at some point"
           tooltip="Includes futures where money remains but a living annuity has reached its 17.5% legal maximum, so the full income cannot be drawn."
         />
@@ -153,7 +176,7 @@ export function RiskPage() {
                 : "None"
               : pending
           }
-          description="Median first short year, among futures that fall short"
+          description="Median first short year, among futures that fall short (long-run volatility)"
           tooltip="Among simulated futures that fall short, the median age at which the income first could not be paid in full."
         />
       </div>
@@ -162,6 +185,7 @@ export function RiskPage() {
 
       <MonteCarloChart
         simulationResult={simulationResult}
+        successRange={range}
         currentAge={personalInfo.currentAge}
         retirementAge={personalInfo.retirementAge}
         isRunning={isSimulating}

@@ -1,6 +1,7 @@
 # Documentation Update Log
 
 ## 2026-11-04
+* **Update**: [Success shown as a cautious–central range](history/2026-11-04-success-range.md) - Risk page runs the same futures at 1× and 1.3× volatility and shows "likely X–Y%"; verdict follows the lower bound; success labels unified; scenario memo no longer reruns on volatility keystrokes.
 * **Update**: [Investment types per account](history/2026-11-04-investment-types-per-account.md) - Optional investmentType drives Monte Carlo volatility and one-factor correlation; untyped accounts reproduce the old result exactly; DB column, import, form, list and Risk page updated.
 * **Update**: [Investment-type risk research: volatilities, worst falls and correlations in rand](history/2026-11-04-investment-type-risk-research.md) - Sourced rand volatility, worst 12-month return, drawdown and one-factor loadings for six investment types; gaps listed.
 * **Update**: [Monte Carlo expected return is the typical (median) return](history/2026-11-04-mc-median-return-basis.md) - The −σ²/2 drag removed so the projection is the middle of the Monte Carlo range; tests, golden file and methodology copy updated.

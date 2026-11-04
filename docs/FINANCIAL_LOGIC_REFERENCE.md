@@ -882,6 +882,22 @@ The arithmetic mean of the draws is higher, `(1 + r)·e^(σ²/2) − 1` (≈ 11.
 simulated mean equalled the projection, and the median path landed ~34% below it after
 30 years at σ = 16.5%.
 
+### Success as a range (cautious–central)
+
+The Risk page runs the simulation twice per input change, in one worker request with one
+seed (common random numbers): `SimulationConfig.volatilityScale` = 1 (central) and
+`CAUTIOUS_VOLATILITY_FACTOR` = 1.3 (cautious). The scale multiplies every account's
+resolved volatility, typed and untyped alike. It is a **required** field, so every caller
+states which volatility it models. A non-finite scale means 1; a negative one clamps to 0.
+
+- Shown as "X–Y%" (`successRange`, `formatSuccessRange` in `lib/utils/success-rate.ts`),
+  ordered low to high, because an adaptive strategy or sampling can invert a close pair.
+- The verdict, tone and label follow the **lower** bound. Labels and headlines come from one
+  table, `SUCCESS_RATE_BANDS`.
+- The fan chart, shortfall age and every other figure use the central run.
+- 1.3 is the worst rolling 10-year ALSI volatility divided by its long-run figure: 1.33 over
+  1990–2017 and 1.32 over 1974–2017. See [history/2026-11-04-investment-type-risk-research.md](history/2026-11-04-investment-type-risk-research.md).
+
 ### Simulation Run — Accumulation Phase
 
 Each account's return sequence comes from the run's shared shocks, centred on the effective

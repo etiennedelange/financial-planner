@@ -10,7 +10,10 @@ import { useShallow } from "zustand/react/shallow"
 
 interface CalculatorContextValue {
   projection: ProjectionResult | null
+  /** Central volatility: drives the fan chart and every other Monte Carlo figure */
   simulationResult: SimulationResult | null
+  /** Same futures at CAUTIOUS_VOLATILITY_FACTOR × volatility: the low end of the range */
+  cautiousSimulationResult: SimulationResult | null
   isSimulating: boolean
   isDeferred: boolean
   simulationError: boolean
@@ -19,6 +22,7 @@ interface CalculatorContextValue {
 const CalculatorContext = createContext<CalculatorContextValue>({
   projection: null,
   simulationResult: null,
+  cautiousSimulationResult: null,
   isSimulating: false,
   isDeferred: false,
   simulationError: false,
@@ -51,6 +55,7 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
 
   const {
     simulationResult,
+    cautiousResult,
     isRunning: isWorkerRunning,
     hasError,
   } = useMonteCarloWorker(
@@ -94,7 +99,14 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
 
   return (
     <CalculatorContext.Provider
-      value={{ projection, simulationResult, isSimulating, isDeferred, simulationError: hasError }}
+      value={{
+        projection,
+        simulationResult,
+        cautiousSimulationResult: cautiousResult,
+        isSimulating,
+        isDeferred,
+        simulationError: hasError,
+      }}
     >
       {children}
     </CalculatorContext.Provider>

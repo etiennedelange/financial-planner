@@ -55,6 +55,7 @@ describe("runMonteCarloSimulation", () => {
 
   const baseSimulationConfig: SimulationConfig = {
     numberOfRuns: 100, // Smaller for testing
+    volatilityScale: 1,
     // Fixed seed: several assertions here compare success rates across configurations,
     // which is only meaningful when the draws are identical.
     randomSeed: 20260726,
@@ -67,7 +68,7 @@ describe("runMonteCarloSimulation", () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 50, randomSeed: 20260726 },
+        { numberOfRuns: 50, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       expect(result.runs.length).toBe(50)
@@ -220,7 +221,7 @@ describe("runMonteCarloSimulation", () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 50, randomSeed: 20260726 },
+        { numberOfRuns: 50, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       // Well-funded should have good success rate
@@ -349,7 +350,7 @@ describe("runMonteCarloSimulation", () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 0, randomSeed: 20260726 },
+        { numberOfRuns: 0, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       expect(result.runs.length).toBe(0)
@@ -396,7 +397,7 @@ describe("runMonteCarloSimulation", () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
         {
           compoundingMethod: "nominal",
           equityReturn: 12,
@@ -413,7 +414,7 @@ describe("runMonteCarloSimulation", () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
         {
           compoundingMethod: "compound",
           equityReturn: 12,
@@ -497,7 +498,7 @@ describe("runMonteCarloSimulation", () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
         {
           compoundingMethod: "nominal",
           equityReturn: 12,
@@ -514,7 +515,7 @@ describe("runMonteCarloSimulation", () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
         {
           compoundingMethod: "nominal",
           equityReturn: 12,
@@ -543,7 +544,7 @@ describe("runMonteCarloSimulation", () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 10, randomSeed: 20260726 },
+        { numberOfRuns: 10, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       for (const run of result.runs) {
@@ -558,7 +559,7 @@ describe("runMonteCarloSimulation", () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 20, randomSeed: 20260726 },
+        { numberOfRuns: 20, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       const successfulRuns = result.runs.filter((r) => r.success)
@@ -571,7 +572,7 @@ describe("runMonteCarloSimulation", () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 20, randomSeed: 20260726 },
+        { numberOfRuns: 20, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       const ids = result.runs.map((r) => r.runId)
@@ -609,7 +610,7 @@ describe("runMonteCarloSimulation", () => {
           legacyAmount: 0,
         },
         baseDrawdownConfig,
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       // Professional with decent savings and modest goals should have reasonable success rate
@@ -644,7 +645,7 @@ describe("runMonteCarloSimulation", () => {
           legacyAmount: 0,
         },
         baseDrawdownConfig,
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       // Underfunded scenario — success rate will be low but non-zero
@@ -681,7 +682,7 @@ describe("runMonteCarloSimulation", () => {
           legacyAmount: 0,
         },
         baseDrawdownConfig,
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       // Pre-retiree with substantial balance and reasonable goals should succeed in many scenarios
@@ -730,7 +731,7 @@ describe("runMonteCarloSimulation", () => {
           maximumWithdrawal: 60000,
           lumpSumPercentage: 0,
         },
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       // With R4k/month contributions for 27 years, portfolio will be ~R9M
@@ -782,7 +783,7 @@ describe("runMonteCarloSimulation", () => {
           maximumWithdrawal: 60000,
           lumpSumPercentage: 0,
         },
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       // Well-funded portfolio with modest goals should have good success rate
@@ -836,7 +837,7 @@ describe("runMonteCarloSimulation", () => {
         personalInfo,
         lowIncome,
         drawdownConfig,
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       const highIncomeResult = runMonteCarloSimulation(
@@ -844,7 +845,7 @@ describe("runMonteCarloSimulation", () => {
         personalInfo,
         highIncome,
         drawdownConfig,
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       // Higher desired income should result in lower success rate
@@ -895,7 +896,7 @@ describe("runMonteCarloSimulation", () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 30 },
-        { numberOfRuns: 1, randomSeed: 20260726 },
+        { numberOfRuns: 1, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       // No pension-type balance exists, so the 30% lump sum request must not reduce
@@ -912,7 +913,7 @@ describe("runMonteCarloSimulation", () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 30 },
-        { numberOfRuns: 1, randomSeed: 20260726 },
+        { numberOfRuns: 1, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       expect(
@@ -926,7 +927,7 @@ describe("runMonteCarloSimulation", () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 20 },
-        { numberOfRuns: 1, randomSeed: 20260726 },
+        { numberOfRuns: 1, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       // 20% commuted, no growth. The remaining R800,000 is a living annuity, which must pay
@@ -942,7 +943,7 @@ describe("runMonteCarloSimulation", () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 90 },
-        { numberOfRuns: 1, randomSeed: 20260726 },
+        { numberOfRuns: 1, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       const atCap = runMonteCarloSimulation(
@@ -953,7 +954,7 @@ describe("runMonteCarloSimulation", () => {
           ...zeroWithdrawalDrawdownConfig,
           lumpSumPercentage: SA_TAX_LIMITS.maxLumpSumCommutationPercentage,
         },
-        { numberOfRuns: 1, randomSeed: 20260726 },
+        { numberOfRuns: 1, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       const idx = flatPersonalInfo.retirementAge - flatPersonalInfo.currentAge
@@ -974,7 +975,7 @@ describe("runMonteCarloSimulation", () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         zeroWithdrawalDrawdownConfig,
-        { numberOfRuns: 1, randomSeed: 20260726 },
+        { numberOfRuns: 1, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       expect(result.runs[0].lumpSumTax).toBe(0)
@@ -990,7 +991,7 @@ describe("runMonteCarloSimulation", () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 20 },
-        { numberOfRuns: 1, randomSeed: 20260726 },
+        { numberOfRuns: 1, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       // No growth before retirement (expectedReturn: 0), so the pension balance at
@@ -1007,7 +1008,7 @@ describe("runMonteCarloSimulation", () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 30 },
-        { numberOfRuns: 1, randomSeed: 20260726 },
+        { numberOfRuns: 1, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       expect(result.runs[0].lumpSumTax).toBe(0)
@@ -1047,7 +1048,7 @@ describe("runMonteCarloSimulation", () => {
           maximumWithdrawal: 0,
           lumpSumPercentage: 0,
         },
-        { numberOfRuns: 1, randomSeed: 20260726 },
+        { numberOfRuns: 1, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       expect(result.averageLifetimeIncomeTax).toBe(0)
@@ -1128,7 +1129,7 @@ describe("runMonteCarloSimulation", () => {
             maximumWithdrawal: 0,
             lumpSumPercentage: 0,
           },
-          { numberOfRuns: 1 },
+          { numberOfRuns: 1, volatilityScale: 1 },
           marketAssumptions,
         )
       }
@@ -1204,7 +1205,7 @@ describe("runMonteCarloSimulation", () => {
         personalInfo,
         goals,
         config,
-        { numberOfRuns: 1, randomSeed: 20260726 },
+        { numberOfRuns: 1, randomSeed: 20260726, volatilityScale: 1 },
         zeroVolatility,
       )
     }
@@ -1337,6 +1338,7 @@ describe("Reproducibility via randomSeed", () => {
   const run = (randomSeed?: number) =>
     runMonteCarloSimulation([seedAccount], seedPersonal, seedGoals, seedConfig, {
       numberOfRuns: 100,
+      volatilityScale: 1,
       randomSeed,
     })
 

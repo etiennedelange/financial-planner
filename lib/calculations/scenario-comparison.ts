@@ -155,7 +155,7 @@ function runFullMonteCarloSimulation(
     personalInfo,
     retirementGoals,
     syntheticDrawdownConfig,
-    { numberOfRuns: iterations },
+    { numberOfRuns: iterations, volatilityScale: 1 },
     marketAssumptions,
   )
 

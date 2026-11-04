@@ -145,7 +145,7 @@ Write-up: [history](../history/2026-10-31-risk-page.md).
 
 ### Pending
 - [x] Per-account investment types with verified volatilities and one-factor correlation (2026-11-04) — [research](../history/2026-11-04-investment-type-risk-research.md), [feature](../history/2026-11-04-investment-types-per-account.md); handoff plan: [plans/2026-11-01-investment-types-range-stress-test.md](../superpowers/plans/2026-11-01-investment-types-range-stress-test.md) (also covers the next two items)
-- [ ] Show success as a range (cautious–central volatility) instead of one figure
+- [x] Show success as a range (cautious–central volatility) instead of one figure (2026-11-04) — [history](../history/2026-11-04-success-range.md)
 - [ ] Historical stress test (e.g. a 2008-style fall at retirement), sourced from verified SA fund data
 - [ ] Rebuild the investment-scenario comparison on the user's own accounts and the living annuity rules (currently a pooled discretionary model with hard-coded returns)
 - [ ] Plan → Market Assumptions: equity/bond/cash expected returns feed no calculation (labelled "reference only" 2026-10-31); wire them into the investment types or remove them
@@ -166,8 +166,8 @@ Write-up and main-vs-branch comparison: [history](../history/2026-11-01-audit-fi
 - [ ] Medical aid escalation at 9% for decades: cap or taper, and feed it into depletion/on-track
 - [x] Expected return is the typical (median) return in Monte Carlo (2026-11-04) — [history](../history/2026-11-04-mc-median-return-basis.md)
 - [ ] Longer-history check of "historical" tax relief; neutral option labels
-- [ ] Shortfall depth instead of all-or-nothing success; one set of tone labels
-- [ ] Risk page: `compareScenarios` memo depends on the whole `assumptions` object
+- [ ] Shortfall depth instead of all-or-nothing success (one set of tone labels: done 2026-11-04, [history](../history/2026-11-04-success-range.md))
+- [x] Risk page: `compareScenarios` memo depends on the whole `assumptions` object (2026-11-04) — [history](../history/2026-11-04-success-range.md)
 - [ ] Optimal contribution: 0% withdrawal rate reported as achievable
 - [ ] Edge cases: negative inflation thresholds, depletion age 0, net return below −100%
 - [ ] Docs: two-pot R240k de minimis test, provident vested-rights wording, cite National Treasury for the LA band

@@ -12,6 +12,9 @@ import { calculateIncomeTaxWithRebates } from "../retirement-tax"
 import { calculateOptimalContribution } from "../optimal-contribution"
 import { runMonteCarloSimulation } from "@/lib/monte-carlo/simulation-engine"
 import { TFSA_LIMITS_CONFIG } from "@/lib/constants/tax-year.config"
+import { CAUTIOUS_VOLATILITY_FACTOR } from "@/lib/constants/investment-types"
+import { successRange } from "@/lib/utils/success-rate"
+import { buildPlanVerdict } from "@/lib/utils/plan-verdict"
 
 const account = (o: Partial<Account> = {}): Account => ({
   id: "1",
@@ -317,7 +320,7 @@ describe("SA audit scenarios — future tax relief setting", () => {
         person(55, 65),
         goals(25_000),
         fixedAmount,
-        { numberOfRuns: 50, randomSeed: 3 },
+        { numberOfRuns: 50, randomSeed: 3, volatilityScale: 1 },
         { equityVolatility: 16.5, compoundingMethod: "nominal", taxThresholdRelief } as never,
       )
     expect(mc("full").averageLifetimeIncomeTax!).toBeLessThan(mc("none").averageLifetimeIncomeTax!)
@@ -366,7 +369,7 @@ describe("SA audit scenarios — Monte Carlo agrees with the projection", () => 
         p,
         g,
         fixedAmount,
-        { numberOfRuns: 1, randomSeed: 1 },
+        { numberOfRuns: 1, randomSeed: 1, volatilityScale: 1 },
         { equityVolatility: 0, compoundingMethod } as never,
       )
       det.yearlyProjections.forEach((row, t) =>
@@ -395,7 +398,7 @@ describe("SA audit scenarios — Monte Carlo agrees with the projection", () => 
         person(65, 65),
         goals(0),
         fixedAmount,
-        { numberOfRuns: 4000, randomSeed: 11 },
+        { numberOfRuns: 4000, randomSeed: 11, volatilityScale: 1 },
         { equityVolatility: 16, compoundingMethod } as never,
       )
       const finals = mc.runs.map((r) => r.finalBalance).sort((a, b) => a - b)
@@ -434,7 +437,7 @@ describe("SA audit scenarios — Monte Carlo agrees with the projection", () => 
         person(35, 65),
         goals(30_000),
         fixedAmount,
-        { numberOfRuns: 500, randomSeed: 7 },
+        { numberOfRuns: 500, randomSeed: 7, volatilityScale: 1 },
         { equityVolatility: 16.5, compoundingMethod: "nominal" } as never,
       )
     const a = run(whole)
@@ -454,7 +457,7 @@ describe("SA audit scenarios — investment types in Monte Carlo", () => {
       person(45, 65),
       goals(25_000),
       fixedAmount,
-      { numberOfRuns: 600, randomSeed: seed },
+      { numberOfRuns: 600, randomSeed: seed, volatilityScale: 1 },
       { equityVolatility, compoundingMethod: "compound" } as never,
     )
   const atRetirement = 20 - 1
@@ -524,7 +527,7 @@ describe("SA audit scenarios — investment types in Monte Carlo", () => {
         person(45, 65),
         goals(0),
         fixedAmount,
-        { numberOfRuns: 400, randomSeed: 3 },
+        { numberOfRuns: 400, randomSeed: 3, volatilityScale: 1 },
         { equityVolatility: 16.5, compoundingMethod } as never,
       )
       expect(mc.percentiles.p50[atRetirement] / deterministic.portfolioAtRetirement).toBeCloseTo(
@@ -539,6 +542,85 @@ describe("SA audit scenarios — investment types in Monte Carlo", () => {
     const mixed = (vol: number) =>
       band(run([typed("cash", { id: "1" }), typed(undefined, { id: "2" })], 7, vol))
     expect(mixed(25)).toBeGreaterThan(mixed(10))
+  })
+})
+
+describe("SA audit scenarios — success as a range (volatilityScale)", () => {
+  const plan = (o: Partial<Account> = {}) => [
+    account({
+      currentBalance: 2_500_000,
+      monthlyContribution: 10_000,
+      expectedReturn: 11,
+      annualFees: 1,
+      ...o,
+    }),
+  ]
+  const run = (
+    accounts: Account[],
+    volatilityScale: number,
+    seed = 21,
+    equityVolatility = 16.5,
+    income = 30_000,
+  ) =>
+    runMonteCarloSimulation(
+      accounts,
+      person(45, 65),
+      goals(income),
+      fixedAmount,
+      { numberOfRuns: 800, randomSeed: seed, volatilityScale },
+      { equityVolatility, compoundingMethod: "nominal" } as never,
+    )
+
+  it.each([
+    ["untyped", undefined],
+    ["balanced", "balanced"],
+    ["global equity", "global_equity"],
+    ["concentrated equity", "concentrated_equity"],
+  ] as const)(
+    "%s: cautious success is no higher than central for the same seed",
+    (_label, investmentType) => {
+      const central = run(plan({ investmentType }), 1)
+      const cautious = run(plan({ investmentType }), CAUTIOUS_VOLATILITY_FACTOR)
+      expect(cautious.successRate).toBeLessThanOrEqual(central.successRate)
+    },
+  )
+
+  it("the range is strictly wider than a point for a plan near the edge", () => {
+    const central = run(plan({ investmentType: "sa_equity" }), 1)
+    const cautious = run(plan({ investmentType: "sa_equity" }), CAUTIOUS_VOLATILITY_FACTOR)
+    expect(central.successRate).toBeGreaterThan(5)
+    expect(central.successRate).toBeLessThan(95)
+    expect(cautious.successRate).toBeLessThan(central.successRate)
+  })
+
+  it("collapses to a point at zero volatility", () => {
+    const central = run(plan(), 1, 21, 0)
+    const cautious = run(plan(), CAUTIOUS_VOLATILITY_FACTOR, 21, 0)
+    expect(cautious.successRate).toBe(central.successRate)
+    expect(cautious.percentiles.p50).toEqual(central.percentiles.p50)
+  })
+
+  it("scales typed and untyped accounts alike: 1.3x volatility widens the band", () => {
+    const width = (r: ReturnType<typeof run>) => r.percentiles.p90[19] / r.percentiles.p10[19]
+    for (const investmentType of [undefined, "global_equity"] as const) {
+      expect(width(run(plan({ investmentType }), CAUTIOUS_VOLATILITY_FACTOR))).toBeGreaterThan(
+        width(run(plan({ investmentType }), 1)),
+      )
+    }
+  })
+
+  it("a scale of 0 removes all volatility; NaN means unscaled; negative clamps to 0", () => {
+    const typed = plan({ investmentType: "concentrated_equity" })
+    const zero = run(typed, 0)
+    expect(zero.percentiles.p10[19]).toBeCloseTo(zero.percentiles.p90[19], 6)
+    expect(run(typed, -2).percentiles.p50).toEqual(zero.percentiles.p50)
+    expect(run(typed, Number.NaN).percentiles.p50).toEqual(run(typed, 1).percentiles.p50)
+  })
+
+  it("the verdict follows the cautious (lower) bound", () => {
+    // A 92% central result with a 70% cautious one reads "Fair", not "Excellent"
+    const { low } = successRange(92, 70)
+    expect(buildPlanVerdict({ successRate: low, depletionAge: null }).tone).toBe("warning")
   })
 })
 

@@ -3,6 +3,7 @@
 import { PageCard } from "@/components/ui/page-card"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { Shuffle } from "lucide-react"
+import { CAUTIOUS_VOLATILITY_FACTOR } from "@/lib/constants/investment-types"
 
 interface MonteCarloMethodologyProps {
   /** Balance-weighted return net of fees, as a decimal */
@@ -47,6 +48,11 @@ export function MonteCarloMethodology({
         <li>
           A future succeeds if it pays your full income every year to life expectancy; success rate
           = successful futures ÷ all futures
+        </li>
+        <li>
+          The same futures are run twice: once at each investment&apos;s long-run volatility, and
+          once at {CAUTIOUS_VOLATILITY_FACTOR}× it, roughly how turbulent SA equity&apos;s worst
+          decade was. The two success rates are the likely range; the rating follows the lower one
         </li>
       </ol>
 

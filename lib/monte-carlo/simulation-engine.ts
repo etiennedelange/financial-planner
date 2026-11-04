@@ -378,9 +378,16 @@ export function runMonteCarloSimulation(
     : SA_DEFAULTS.equityVolatility
   // Resolved once, from the same sanitised accounts each run uses (a NaN expected return
   // is 0 there, which resolveAccountRisk treats as a cash account — as before).
-  const accountRisks = sanitizeAccounts(accounts).map((acc) =>
-    resolveAccountRisk(acc, untypedVolatility),
-  )
+  // The cautious end of the success range scales every volatility, typed and untyped
+  // alike. A non-finite scale means "unscaled"; a negative one is meaningless and clamps
+  // to 0 (no volatility at all).
+  const volatilityScale = Number.isFinite(config.volatilityScale)
+    ? Math.max(0, config.volatilityScale)
+    : 1
+  const accountRisks = sanitizeAccounts(accounts).map((acc) => {
+    const risk = resolveAccountRisk(acc, untypedVolatility)
+    return { ...risk, volatility: risk.volatility * volatilityScale }
+  })
   // Loadings for the types present, in the fixed INVESTMENT_TYPES order so the generator
   // is consumed reproducibly. Untyped accounts need no entry: they use the market shock.
   const riskLoadings = new Map<string, number>()

@@ -22,27 +22,42 @@ export interface WorkerRequest {
   personalInfo: PersonalInfo
   retirementGoals: RetirementGoals
   drawdownConfig: DrawdownConfig
-  config: SimulationConfig
+  /**
+   * One simulation per entry, in order. Every simulation uses the same `randomSeed`
+   * (common random numbers), so results for different volatility scales differ only
+   * because of volatility, not sampling noise.
+   */
+  configs: SimulationConfig[]
   marketAssumptions?: MarketAssumptions
 }
 
 export interface WorkerResponse {
   id: number
-  result: SimulationResult
+  /** Same order as `WorkerRequest.configs` */
+  results: SimulationResult[]
 }
 
 addEventListener("message", (event: MessageEvent<WorkerRequest>) => {
-  const { id, accounts, personalInfo, retirementGoals, drawdownConfig, config, marketAssumptions } =
-    event.data
-
-  const result = runMonteCarloSimulation(
+  const {
+    id,
     accounts,
     personalInfo,
     retirementGoals,
     drawdownConfig,
-    config,
+    configs,
     marketAssumptions,
+  } = event.data
+
+  const results = configs.map((config) =>
+    runMonteCarloSimulation(
+      accounts,
+      personalInfo,
+      retirementGoals,
+      drawdownConfig,
+      config,
+      marketAssumptions,
+    ),
   )
 
-  postMessage({ id, result } as WorkerResponse)
+  postMessage({ id, results } as WorkerResponse)
 })
