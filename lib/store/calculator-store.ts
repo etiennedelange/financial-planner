@@ -133,6 +133,7 @@ const defaultSettings = {
     bondVolatility: SA_DEFAULTS_DISPLAY.bondVolatility,
     inflationRate: SA_DEFAULTS_DISPLAY.inflation,
     compoundingMethod: "nominal" as const,
+    taxThresholdRelief: "historical" as const,
   } as MarketAssumptions,
   drawdownConfig: {
     strategy: "fixed_percentage" as const,

@@ -5,7 +5,6 @@ import type {
   RetirementGoals,
   DrawdownConfig,
   ProjectionResult,
-  SimulationResult,
 } from "@/types"
 import { ACCOUNT_TYPE_LABELS, DRAWDOWN_STRATEGY_LABELS } from "@/types"
 import { formatCurrency } from "@/lib/utils/currency"
@@ -28,11 +27,9 @@ export interface PlanNarrativePayload {
     monthlyIncomeAtRetirement: number
     monthlyNetIncomeAtRetirement: number
     portfolioDepletionAge: number | null
+    /** Absent from clients deployed before 2026-11-01 */
+    incomeGoalShortfallAge?: number | null
   }
-  simulation: {
-    successRate: number
-    medianDepletionAge: number | null
-  } | null
 }
 
 interface BuildPayloadInput {
@@ -41,7 +38,6 @@ interface BuildPayloadInput {
   retirementGoals: RetirementGoals
   drawdownConfig: DrawdownConfig
   projection: ProjectionResult | null
-  simulationResult: SimulationResult | null
 }
 
 /** Reduces the real scenario down to what the narrative needs — not the full
@@ -65,13 +61,8 @@ export function buildPlanNarrativePayload(input: BuildPayloadInput): PlanNarrati
       monthlyIncomeAtRetirement: input.projection.monthlyIncomeAtRetirement,
       monthlyNetIncomeAtRetirement: input.projection.monthlyNetIncomeAtRetirement,
       portfolioDepletionAge: input.projection.portfolioDepletionAge,
+      incomeGoalShortfallAge: input.projection.incomeGoalShortfallAge,
     },
-    simulation: input.simulationResult
-      ? {
-          successRate: input.simulationResult.successRate,
-          medianDepletionAge: input.simulationResult.medianDepletionAge,
-        }
-      : null,
   }
 }
 
@@ -116,9 +107,16 @@ export function buildPlanNarrativePrompt(payload: PlanNarrativePayload): {
     payload.projection.portfolioDepletionAge !== null
       ? `The deterministic projection shows funds running out at age ${payload.projection.portfolioDepletionAge}.`
       : `The deterministic projection shows funds lasting through life expectancy.`,
-    payload.simulation
-      ? `Monte Carlo success probability (funds lasting to life expectancy across 1,000 simulated markets): ${payload.simulation.successRate.toFixed(0)}%.`
-      : `Monte Carlo simulation has not been run for this plan yet.`,
+    ...(payload.projection.incomeGoalShortfallAge === undefined
+      ? []
+      : [
+          payload.projection.incomeGoalShortfallAge !== null
+            ? `The projected income falls below the desired income from age ${payload.projection.incomeGoalShortfallAge}.`
+            : `The projected income meets the desired income every year to life expectancy.`,
+        ]),
+    // Monte Carlo results live on the Risk page only; the narrative describes the
+    // deterministic projection and must not present it as certain.
+    `These figures assume steady investment returns every year. Real markets vary, so actual outcomes will differ.`,
   ]
 
   return {

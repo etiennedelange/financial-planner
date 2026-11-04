@@ -1,4 +1,10 @@
 import { describe, it, expect } from "vite-plus/test"
+import {
+  formatSuccessRange,
+  getSuccessRateBand,
+  SUCCESS_RATE_BANDS,
+  successRange,
+} from "./success-rate"
 import { getSuccessRateStyle } from "./success-rate"
 
 describe("getSuccessRateStyle", () => {
@@ -66,5 +72,43 @@ describe("getSuccessRateStyle", () => {
     const style = getSuccessRateStyle(0)
     expect(style.label).toBe("Critical")
     expect(style.text).toBe("text-destructive")
+  })
+})
+
+describe("SUCCESS_RATE_BANDS", () => {
+  it("is ordered from the highest threshold down and ends with a catch-all", () => {
+    const mins = SUCCESS_RATE_BANDS.map((b) => b.min)
+    expect(mins).toEqual([...mins].sort((a, b) => b - a))
+    expect(mins.at(-1)).toBe(-Infinity)
+  })
+
+  it("puts a NaN rate in the Critical band rather than throwing", () => {
+    expect(getSuccessRateBand(Number.NaN).label).toBe("Critical")
+  })
+})
+
+describe("successRange", () => {
+  it("orders cautious and central low to high", () => {
+    expect(successRange(82, 70)).toEqual({ low: 70, high: 82 })
+  })
+
+  it("still orders an inverted pair (adaptive strategies, sampling)", () => {
+    expect(successRange(70, 72)).toEqual({ low: 70, high: 72 })
+  })
+
+  it("collapses to the central figure with no cautious result", () => {
+    expect(successRange(82, null)).toEqual({ low: 82, high: 82 })
+    expect(successRange(82, Number.NaN)).toEqual({ low: 82, high: 82 })
+  })
+})
+
+describe("formatSuccessRange", () => {
+  it("shows a range with an en dash", () => {
+    expect(formatSuccessRange({ low: 70.4, high: 82.2 })).toBe("70–82%")
+  })
+
+  it("shows one figure when both ends round to the same percent (e.g. zero volatility)", () => {
+    expect(formatSuccessRange({ low: 99.6, high: 100 })).toBe("100%")
+    expect(formatSuccessRange({ low: 0, high: 0 })).toBe("0%")
   })
 })

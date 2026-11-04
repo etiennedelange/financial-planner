@@ -1,7 +1,7 @@
 ---
 type: History Entry
 title: "2026-11-04 — Overview redesigned: verdict first"
-description: "Overview page rebuilt around one verdict sentence plus a market-risk check, timeline, today figures and next best step; derivation moved to tested overview-summary.ts and four dashboard components deleted."
+description: "Overview page rebuilt around one verdict sentence plus a market-risk caveat, timeline, today figures and next best step; derivation moved to tested overview-summary.ts; grid, Key Insights and RiskLink deleted."
 date: 2026-11-04
 tags: [ui, overview, calculations]
 ---
@@ -12,30 +12,33 @@ Direction "A · Verdict first" from the Overview redesign canvas.
 
 ## Why
 
-The Overview gave the same answer three times (on-track badge, income-replacement badge,
-depletion tile), showed seven equal-weight tiles with truncated labels, and printed the
-steady-return figures with no market-risk caveat beside them. The success rate and
-depletion age lived in tiles 6 and 7; the Monte Carlo result was a 12px status line.
+The Overview gave the same answer three times ("Goal Income Until" tile, On Track badge,
+Income Replacement badge), showed six equal-weight tiles with truncated labels, and repeated
+the steady-returns caveat in a tile, a banner and an insight.
 
 ## What changed
 
 | Area | Change |
 |---|---|
-| `lib/calculations/utils/overview-summary.ts` (new) | `calculateOverviewSummary` — years to retirement, income end age (depletion age, else life expectancy), shortfall years, today's-rand income and portfolio (`deflateToToday`), income replacement on the retirement-date basis (`escalateToRetirement`), on-track verdict, RA deduction room. Pure; non-finite inputs degrade to 0. The on-track rule (MC ≥ `ON_TRACK_SUCCESS_RATE` = 70, else steady-return depletion) and the replacement basis are unchanged from the old `KeyInsightsSummary`. |
-| `components/dashboard/overview-verdict-card.tsx` (new) | Hero: "Your plan pays R X a month from age 65 to age N" (or "…but runs out at age N"), % of goal plus the other money basis, and a market-risk row: running → passes (≥70%) → runs short → "Market risk not included" when no simulation result. Side panel: portfolio at retirement and income-lasts-until. Headline follows `displayMode`; the secondary line always shows the other basis. |
-| `components/dashboard/retirement-timeline.tsx` (new) | Proportional saving / income / shortfall bar, ages under each boundary. |
+| `lib/calculations/utils/overview-summary.ts` (new) | `calculateOverviewSummary` — years to retirement, goal-income-until age (`incomeGoalShortfallAge`, else life expectancy), years of goal income and years below goal, today's-rand income and portfolio (`deflateToToday`), income replacement on the retirement-date basis (`escalateToRetirement`), on-track verdict, RA deduction room. Pure; non-finite inputs degrade to 0. The on-track rule (`incomeGoalShortfallAge === null`) and the replacement basis are unchanged from the old `KeyInsightsSummary`. |
+| `components/dashboard/overview-verdict-card.tsx` (new) | Hero: "Your plan pays R X a month from age 65 to age N" (or "…but falls below your goal from age N"), % of goal plus the other money basis, and a "Market risk not included" row linking to `/calculator/risk`. Overview stays deterministic only — no Monte Carlo numbers. Side panel: portfolio at retirement and goal income until. Headline follows `displayMode`; the secondary line always shows the other basis. |
+| `components/dashboard/retirement-timeline.tsx` (new) | Proportional saving / goal income / below-goal bar, ages under each boundary. |
 | `components/dashboard/overview-today-stats.tsx`, `next-best-step-card.tsx` (new) | Saved today, contributing, time to retirement; RA deduction limit as one action (hidden at R0 income). |
 | `components/pages/overview-page.tsx` | Composes the above with the existing `PlanNarrativeCard`; `GettingStarted` when there are no accounts or no projection. Takes `displayMode` and `accountCount` (was `hasAccounts`). |
-| Deleted | `dashboard-metrics-grid.tsx`, `dashboard-metric-card.tsx`, `key-insights-summary.tsx`, `simulation-run-status.tsx` — only the Overview used them. |
+| Deleted | `dashboard-metrics-grid.tsx`, `key-insights-summary.tsx`, `risk-link.tsx` (its caveat now sits in the verdict card). `dashboard-metric-card.tsx` stays: the Risk page uses it. |
+
+Merged with `main` after PR #29 (SA calc audit), which made the Overview deterministic-only and
+redefined on track as "pays the goal income every year"; this redesign follows both.
 
 Compounding method does not apply: the summary only moves amounts through time with
 inflation (`money-time.ts`); it calculates no returns.
 
 ## Verification
 
-- `overview-summary.test.ts`: 19 tests (SA scenarios, MC verdict incl. threshold, 0% inflation,
-  zero years, inverted ages, zero balance, no goal, non-finite inputs); 100% statement/branch
-  coverage. Expected today's-rand values checked against `=x/1.055^26`.
-- Full suite 1045/1045, `pnpm typecheck` clean, `vp check` 0 errors (no warnings in new
-  files), `pnpm build` clean (with placeholder Supabase env), shadscan 93/100 unchanged.
+- `overview-summary.test.ts`: 16 tests (SA scenarios incl. shortfall from the first retirement
+  year, 0% inflation, zero years, inverted ages, zero balance, no goal, out-of-window shortfall
+  age, non-finite inputs); 100% statement/branch coverage. Expected today's-rand values checked against `=x/1.055^26`.
+- Full suite 1280/1280 (after merging `main`), `pnpm typecheck` clean, `vp check` 0 errors (no
+  warnings in new files), `pnpm build` clean (with placeholder Supabase env), shadscan 90/100 —
+  the same as `main` at the merge base.
 - Browser: dev server with one account, Overview at 1440px dark + light and 390px dark.

@@ -9,12 +9,31 @@ import type {
   DrawdownConfig,
   SimulationResult,
 } from "@/types"
+import { CAUTIOUS_VOLATILITY_FACTOR } from "@/lib/constants/investment-types"
 import type { WorkerRequest, WorkerResponse } from "./simulation.worker"
 
-type SimState = { result: SimulationResult | null; isRunning: boolean; hasError: boolean }
-type SimAction = { type: "START" } | { type: "DONE"; result: SimulationResult } | { type: "ERROR" }
+/** Central (researched) and cautious (stressed) volatility, run together */
+export interface SimulationRange {
+  central: SimulationResult
+  cautious: SimulationResult
+}
+
+type SimState = { result: SimulationRange | null; isRunning: boolean; hasError: boolean }
+type SimAction = { type: "START" } | { type: "DONE"; result: SimulationRange } | { type: "ERROR" }
 
 export const initialSimState: SimState = { result: null, isRunning: false, hasError: false }
+
+/** The two volatility scales the Risk page runs, central first */
+export const RANGE_VOLATILITY_SCALES = [1, CAUTIOUS_VOLATILITY_FACTOR] as const
+
+/**
+ * A fresh seed per request, shared by both simulations in it. Each request still samples
+ * new futures (as the unseeded engine did), but the central and cautious runs see the
+ * SAME futures, so the range reflects volatility alone.
+ */
+export function newRangeSeed(random: () => number = Math.random): number {
+  return Math.floor(random() * 2 ** 31)
+}
 
 export function simReducer(state: SimState, action: SimAction): SimState {
   switch (action.type) {
@@ -28,7 +47,8 @@ export function simReducer(state: SimState, action: SimAction): SimState {
 }
 
 /**
- * Runs Monte Carlo simulations in a Web Worker to keep the main thread free.
+ * Runs Monte Carlo simulations in a Web Worker to keep the main thread free: the central
+ * and cautious volatility profiles, with common random numbers (Feature 2, 2026-11-04).
  *
  * A single worker is lazily created and reused across runs. Each run is tagged
  * with a monotonically increasing id; responses for superseded runs are silently
@@ -44,7 +64,12 @@ export function useMonteCarloWorker(
   numberOfRuns: number,
   marketAssumptions?: MarketAssumptions,
   enabled = true,
-): { simulationResult: SimulationResult | null; isRunning: boolean; hasError: boolean } {
+): {
+  simulationResult: SimulationResult | null
+  cautiousResult: SimulationResult | null
+  isRunning: boolean
+  hasError: boolean
+} {
   const [{ result, isRunning, hasError }, dispatch] = useReducer(simReducer, initialSimState)
 
   const workerRef = useRef<Worker | null>(null)
@@ -66,10 +91,10 @@ export function useMonteCarloWorker(
     if (!workerRef.current) {
       const worker = new Worker(new URL("./simulation.worker.ts", import.meta.url))
       worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
-        const { id, result: workerResult } = e.data
+        const { id, results } = e.data
         // Ignore responses for superseded runs
         if (id === latestIdRef.current) {
-          dispatch({ type: "DONE", result: workerResult })
+          dispatch({ type: "DONE", result: { central: results[0], cautious: results[1] } })
         }
       }
       worker.onerror = (e) => {
@@ -80,6 +105,7 @@ export function useMonteCarloWorker(
     }
 
     const id = ++latestIdRef.current
+    const seed = newRangeSeed()
     dispatch({ type: "START" })
 
     const request: WorkerRequest = {
@@ -88,7 +114,11 @@ export function useMonteCarloWorker(
       personalInfo,
       retirementGoals,
       drawdownConfig,
-      config: { numberOfRuns },
+      configs: RANGE_VOLATILITY_SCALES.map((volatilityScale) => ({
+        numberOfRuns,
+        randomSeed: seed,
+        volatilityScale,
+      })),
       marketAssumptions,
     }
     workerRef.current.postMessage(request)
@@ -106,7 +136,8 @@ export function useMonteCarloWorker(
   // without needing a setState call inside the effect body.
   const isEmpty = accounts.length === 0
   return {
-    simulationResult: isEmpty ? null : result,
+    simulationResult: isEmpty ? null : (result?.central ?? null),
+    cautiousResult: isEmpty ? null : (result?.cautious ?? null),
     isRunning: isEmpty ? false : isRunning,
     hasError: isEmpty ? false : hasError,
   }

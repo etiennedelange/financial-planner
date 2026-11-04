@@ -61,13 +61,9 @@ export const planNarrativeRequestSchema = z.object({
     monthlyIncomeAtRetirement: finiteNumber,
     monthlyNetIncomeAtRetirement: finiteNumber,
     portfolioDepletionAge: finiteNumber.nullable(),
+    // Optional so a client deployed before 2026-11-01 is still accepted
+    incomeGoalShortfallAge: finiteNumber.nullable().optional(),
   }),
-  simulation: z
-    .object({
-      successRate: finiteNumber,
-      medianDepletionAge: finiteNumber.nullable(),
-    })
-    .nullable(),
   tier: z.enum(["fast", "balanced", "best"]).optional(),
 })
 

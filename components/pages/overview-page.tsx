@@ -7,13 +7,11 @@ import { OverviewVerdictCard } from "@/components/dashboard/overview-verdict-car
 import { PlanNarrativeCard } from "@/components/dashboard/plan-narrative-card"
 import { RetirementTimeline } from "@/components/dashboard/retirement-timeline"
 import { calculateOverviewSummary } from "@/lib/calculations/utils/overview-summary"
-import type { ProjectionResult, SimulationResult } from "@/types"
+import type { ProjectionResult } from "@/types"
 import { useMemo } from "react"
 
 interface OverviewPageProps {
   projection: ProjectionResult | null
-  simulationResult: SimulationResult | null
-  isSimulating: boolean
   displayMode: "nominal" | "real"
   retirementAge: number
   currentAge: number
@@ -28,13 +26,11 @@ interface OverviewPageProps {
 
 /**
  * Overview — verdict first. One sentence answers "am I okay?", the market-risk
- * check sits directly under it, then the timeline, today's figures and the
- * next action.
+ * caveat sits directly under it, then the timeline, today's figures and the
+ * next action. Deterministic only: Monte Carlo results live on the Risk page.
  */
 export function OverviewPage({
   projection,
-  simulationResult,
-  isSimulating,
   displayMode,
   retirementAge,
   currentAge,
@@ -46,8 +42,6 @@ export function OverviewPage({
   annualIncome,
   accountCount,
 }: OverviewPageProps) {
-  const successRate = simulationResult?.successRate ?? null
-
   const summary = useMemo(
     () =>
       projection
@@ -59,7 +53,6 @@ export function OverviewPage({
             annualIncome,
             desiredMonthlyIncome,
             inflationRate,
-            monteCarloSuccessRate: successRate,
           })
         : null,
     [
@@ -70,7 +63,6 @@ export function OverviewPage({
       annualIncome,
       desiredMonthlyIncome,
       inflationRate,
-      successRate,
     ],
   )
 
@@ -87,8 +79,6 @@ export function OverviewPage({
         retirementAge={retirementAge}
         lifeExpectancy={lifeExpectancy}
         displayMode={displayMode}
-        simulationResult={simulationResult}
-        isSimulating={isSimulating}
       />
 
       <RetirementTimeline

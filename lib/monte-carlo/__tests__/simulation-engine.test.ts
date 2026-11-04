@@ -55,6 +55,7 @@ describe("runMonteCarloSimulation", () => {
 
   const baseSimulationConfig: SimulationConfig = {
     numberOfRuns: 100, // Smaller for testing
+    volatilityScale: 1,
     // Fixed seed: several assertions here compare success rates across configurations,
     // which is only meaningful when the draws are identical.
     randomSeed: 20260726,
@@ -67,7 +68,7 @@ describe("runMonteCarloSimulation", () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 50, randomSeed: 20260726 },
+        { numberOfRuns: 50, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       expect(result.runs.length).toBe(50)
@@ -220,7 +221,7 @@ describe("runMonteCarloSimulation", () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 50, randomSeed: 20260726 },
+        { numberOfRuns: 50, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       // Well-funded should have good success rate
@@ -349,7 +350,7 @@ describe("runMonteCarloSimulation", () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 0, randomSeed: 20260726 },
+        { numberOfRuns: 0, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       expect(result.runs.length).toBe(0)
@@ -396,7 +397,7 @@ describe("runMonteCarloSimulation", () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
         {
           compoundingMethod: "nominal",
           equityReturn: 12,
@@ -413,7 +414,7 @@ describe("runMonteCarloSimulation", () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
         {
           compoundingMethod: "compound",
           equityReturn: 12,
@@ -497,7 +498,7 @@ describe("runMonteCarloSimulation", () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
         {
           compoundingMethod: "nominal",
           equityReturn: 12,
@@ -514,7 +515,7 @@ describe("runMonteCarloSimulation", () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
         {
           compoundingMethod: "nominal",
           equityReturn: 12,
@@ -543,7 +544,7 @@ describe("runMonteCarloSimulation", () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 10, randomSeed: 20260726 },
+        { numberOfRuns: 10, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       for (const run of result.runs) {
@@ -558,7 +559,7 @@ describe("runMonteCarloSimulation", () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 20, randomSeed: 20260726 },
+        { numberOfRuns: 20, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       const successfulRuns = result.runs.filter((r) => r.success)
@@ -571,7 +572,7 @@ describe("runMonteCarloSimulation", () => {
         basePersonalInfo,
         baseRetirementGoals,
         baseDrawdownConfig,
-        { numberOfRuns: 20, randomSeed: 20260726 },
+        { numberOfRuns: 20, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       const ids = result.runs.map((r) => r.runId)
@@ -609,7 +610,7 @@ describe("runMonteCarloSimulation", () => {
           legacyAmount: 0,
         },
         baseDrawdownConfig,
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       // Professional with decent savings and modest goals should have reasonable success rate
@@ -644,7 +645,7 @@ describe("runMonteCarloSimulation", () => {
           legacyAmount: 0,
         },
         baseDrawdownConfig,
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       // Underfunded scenario — success rate will be low but non-zero
@@ -681,7 +682,7 @@ describe("runMonteCarloSimulation", () => {
           legacyAmount: 0,
         },
         baseDrawdownConfig,
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       // Pre-retiree with substantial balance and reasonable goals should succeed in many scenarios
@@ -730,7 +731,7 @@ describe("runMonteCarloSimulation", () => {
           maximumWithdrawal: 60000,
           lumpSumPercentage: 0,
         },
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       // With R4k/month contributions for 27 years, portfolio will be ~R9M
@@ -782,7 +783,7 @@ describe("runMonteCarloSimulation", () => {
           maximumWithdrawal: 60000,
           lumpSumPercentage: 0,
         },
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       // Well-funded portfolio with modest goals should have good success rate
@@ -836,7 +837,7 @@ describe("runMonteCarloSimulation", () => {
         personalInfo,
         lowIncome,
         drawdownConfig,
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       const highIncomeResult = runMonteCarloSimulation(
@@ -844,7 +845,7 @@ describe("runMonteCarloSimulation", () => {
         personalInfo,
         highIncome,
         drawdownConfig,
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       // Higher desired income should result in lower success rate
@@ -895,7 +896,7 @@ describe("runMonteCarloSimulation", () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 30 },
-        { numberOfRuns: 1, randomSeed: 20260726 },
+        { numberOfRuns: 1, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       // No pension-type balance exists, so the 30% lump sum request must not reduce
@@ -912,7 +913,7 @@ describe("runMonteCarloSimulation", () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 30 },
-        { numberOfRuns: 1, randomSeed: 20260726 },
+        { numberOfRuns: 1, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       expect(
@@ -926,13 +927,14 @@ describe("runMonteCarloSimulation", () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 20 },
-        { numberOfRuns: 1, randomSeed: 20260726 },
+        { numberOfRuns: 1, randomSeed: 20260726, volatilityScale: 1 },
       )
 
-      // 20% commuted, no growth, no withdrawal -> balance should be exactly 80% of the original
+      // 20% commuted, no growth. The remaining R800,000 is a living annuity, which must pay
+      // at least 2.5% a year even though the desired income is zero.
       expect(
         result.runs[0].yearlyBalances[flatPersonalInfo.retirementAge - flatPersonalInfo.currentAge],
-      ).toBeCloseTo(800_000, 5)
+      ).toBeCloseTo(800_000 * (1 - SA_TAX_LIMITS.livingAnnuityMinDrawdownRate), 5)
     })
 
     it("clamps lump sum commutation on pension-type balances to one-third", () => {
@@ -941,7 +943,7 @@ describe("runMonteCarloSimulation", () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 90 },
-        { numberOfRuns: 1, randomSeed: 20260726 },
+        { numberOfRuns: 1, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       const atCap = runMonteCarloSimulation(
@@ -952,7 +954,7 @@ describe("runMonteCarloSimulation", () => {
           ...zeroWithdrawalDrawdownConfig,
           lumpSumPercentage: SA_TAX_LIMITS.maxLumpSumCommutationPercentage,
         },
-        { numberOfRuns: 1, randomSeed: 20260726 },
+        { numberOfRuns: 1, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       const idx = flatPersonalInfo.retirementAge - flatPersonalInfo.currentAge
@@ -960,7 +962,11 @@ describe("runMonteCarloSimulation", () => {
         atCap.runs[0].yearlyBalances[idx],
         5,
       )
-      expect(overRequested.runs[0].yearlyBalances[idx]).toBeCloseTo(1_000_000 * (1 - 1 / 3), 5)
+      // One-third commuted, then the compulsory 2.5% living annuity income on the rest
+      expect(overRequested.runs[0].yearlyBalances[idx]).toBeCloseTo(
+        1_000_000 * (1 - 1 / 3) * (1 - SA_TAX_LIMITS.livingAnnuityMinDrawdownRate),
+        5,
+      )
     })
 
     it("reports zero lump sum tax when no lump sum is taken", () => {
@@ -969,7 +975,7 @@ describe("runMonteCarloSimulation", () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         zeroWithdrawalDrawdownConfig,
-        { numberOfRuns: 1, randomSeed: 20260726 },
+        { numberOfRuns: 1, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       expect(result.runs[0].lumpSumTax).toBe(0)
@@ -985,12 +991,12 @@ describe("runMonteCarloSimulation", () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 20 },
-        { numberOfRuns: 1, randomSeed: 20260726 },
+        { numberOfRuns: 1, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       // No growth before retirement (expectedReturn: 0), so the pension balance at
       // retirement equals the starting balance.
-      const expectedLumpSumTax = calculateLumpSumCommutation(largeBalance, 20).lumpSumTax
+      const expectedLumpSumTax = calculateLumpSumCommutation(largeBalance, 20, 0, 1).lumpSumTax
       expect(expectedLumpSumTax).toBeGreaterThan(0)
       expect(result.runs[0].lumpSumTax).toBeCloseTo(expectedLumpSumTax, 5)
       expect(result.averageLumpSumTax).toBeCloseTo(expectedLumpSumTax, 5)
@@ -1002,7 +1008,7 @@ describe("runMonteCarloSimulation", () => {
         flatPersonalInfo,
         zeroIncomeGoals,
         { ...zeroWithdrawalDrawdownConfig, lumpSumPercentage: 30 },
-        { numberOfRuns: 1, randomSeed: 20260726 },
+        { numberOfRuns: 1, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       expect(result.runs[0].lumpSumTax).toBe(0)
@@ -1042,7 +1048,7 @@ describe("runMonteCarloSimulation", () => {
           maximumWithdrawal: 0,
           lumpSumPercentage: 0,
         },
-        { numberOfRuns: 1, randomSeed: 20260726 },
+        { numberOfRuns: 1, randomSeed: 20260726, volatilityScale: 1 },
       )
 
       expect(result.averageLifetimeIncomeTax).toBe(0)
@@ -1073,15 +1079,19 @@ describe("runMonteCarloSimulation", () => {
       const equityVolatilityPct = 16
       const netReturn = expectedReturnPct / 100
       const vol = equityVolatilityPct / 100
-      const logMean = Math.log(1 + netReturn) - (vol * vol) / 2
+      // Returns are centred on the effective annual growth of the nominal method,
+      // (1 + r/12)^12 − 1, and each draw compounds geometrically over the year. The
+      // expected return is the median, so the log mean has no drag term
+      const effectiveAnnual = Math.pow(1 + netReturn / 12, 12) - 1
+      const logMean = Math.log(1 + effectiveAnnual)
       const z0 = Math.sqrt(-2 * Math.log(0.5)) * Math.cos(2 * Math.PI * 0.25)
       const r = Math.exp(logMean + vol * z0) - 1
 
-      const balanceAtRetirement = currentBalance * Math.pow(1 + r / 12, 12)
-      const balanceAfterDrawdownGrowth = balanceAtRetirement * (1 + r)
+      // The gain share of a withdrawal is measured on the start-of-year (retirement) value
+      const balanceAtRetirement = currentBalance * (1 + r)
       const gainFraction = Math.max(
         0,
-        Math.min(1, (balanceAfterDrawdownGrowth - currentBalance) / balanceAfterDrawdownGrowth),
+        Math.min(1, (balanceAtRetirement - currentBalance) / balanceAtRetirement),
       )
 
       const account: Account = {
@@ -1119,7 +1129,7 @@ describe("runMonteCarloSimulation", () => {
             maximumWithdrawal: 0,
             lumpSumPercentage: 0,
           },
-          { numberOfRuns: 1 },
+          { numberOfRuns: 1, volatilityScale: 1 },
           marketAssumptions,
         )
       }
@@ -1132,7 +1142,8 @@ describe("runMonteCarloSimulation", () => {
       expect(smallResult.averageLifetimeIncomeTax).toBeCloseTo(0, 5)
 
       // Above the annual exclusion -> only the excess is taxed
-      const largeTake = 5_000_000
+      // Large enough that the taxable gain clears the primary rebate as well
+      const largeTake = 15_000_000
       const largeGain = largeTake * gainFraction
       expect(largeGain).toBeGreaterThan(SA_TAX_LIMITS.cgtAnnualExclusion)
       const taxableCapitalGain = largeGain - SA_TAX_LIMITS.cgtAnnualExclusion
@@ -1181,13 +1192,20 @@ describe("runMonteCarloSimulation", () => {
       inflationRate: 5.5,
     }
 
+    /** Independent month-by-month reference: grow, then pay one twelfth of the year's income. */
+    function afterMonthlyYear(balance: number, annualReturn: number, withdrawal: number) {
+      let b = balance
+      for (let m = 0; m < 12; m++) b = b * (1 + annualReturn / 12) - withdrawal / 12
+      return b
+    }
+
     function run(account: Account, config: DrawdownConfig) {
       return runMonteCarloSimulation(
         [account],
         personalInfo,
         goals,
         config,
-        { numberOfRuns: 1, randomSeed: 20260726 },
+        { numberOfRuns: 1, randomSeed: 20260726, volatilityScale: 1 },
         zeroVolatility,
       )
     }
@@ -1216,16 +1234,24 @@ describe("runMonteCarloSimulation", () => {
         lowerGuardrail: 20,
       })
 
-      // Year 0 balance: 1,000,000 * 0.5 - 40,000 = 460,000 (identical for both strategies)
-      expect(fixedAmountResult.runs[0].yearlyBalances[0]).toBeCloseTo(460000, 2)
-      expect(guardrailsResult.runs[0].yearlyBalances[0]).toBeCloseTo(460000, 2)
+      // Year 0: R40,000 paid monthly from R1,000,000 at -50%/12 a month (nominal method),
+      // ≈ R568,000 left — identical for both strategies.
+      const endOfYear0 = afterMonthlyYear(1000000, -0.5, 40000)
+      expect(fixedAmountResult.runs[0].yearlyBalances[0]).toBeCloseTo(endOfYear0, 2)
+      expect(guardrailsResult.runs[0].yearlyBalances[0]).toBeCloseTo(endOfYear0, 2)
 
-      // Year 1: balance grows to 460,000 * 0.5 = 230,000 before withdrawal.
-      // fixed_amount_inflation_adjusted: withdrawal = 40,000 * 1.055 = 42,200 -> ending 187,800
-      // guardrails: actual rate 40,000/230,000 ≈ 17.4% breaches the 4.8% upper band
-      //   -> 10% cut: withdrawal = 36,000 -> ending 194,000 (NOT 187,800)
-      expect(fixedAmountResult.runs[0].yearlyBalances[1]).toBeCloseTo(230000 - 42200, 2)
-      expect(guardrailsResult.runs[0].yearlyBalances[1]).toBeCloseTo(230000 - 36000, 2)
+      // Year 1, measured on the start-of-year balance:
+      // fixed_amount_inflation_adjusted: withdrawal = 40,000 * 1.055 = 42,200
+      // guardrails: actual rate 40,000/≈568,000 ≈ 7.0% breaches the 4.8% upper band
+      //   -> 10% cut: withdrawal = 36,000
+      expect(fixedAmountResult.runs[0].yearlyBalances[1]).toBeCloseTo(
+        afterMonthlyYear(endOfYear0, -0.5, 42200),
+        2,
+      )
+      expect(guardrailsResult.runs[0].yearlyBalances[1]).toBeCloseTo(
+        afterMonthlyYear(endOfYear0, -0.5, 36000),
+        2,
+      )
       expect(guardrailsResult.runs[0].yearlyBalances[1]).not.toBeCloseTo(
         fixedAmountResult.runs[0].yearlyBalances[1],
         2,
@@ -1251,16 +1277,25 @@ describe("runMonteCarloSimulation", () => {
       })
       const fixedPctResult = run(account, { ...baseConfig, strategy: "fixed_percentage" })
 
-      // Year 0 balance: 1,000,000 * 1.11 - 40,000 = 1,070,000 (identical for both)
-      expect(fixedAmountResult.runs[0].yearlyBalances[0]).toBeCloseTo(1070000, 2)
-      expect(fixedPctResult.runs[0].yearlyBalances[0]).toBeCloseTo(1070000, 2)
+      // Year 0: R40,000 paid monthly from R1,000,000 at 11%/12 a month, ≈ R1,073,600 left
+      const endOfYear0 = afterMonthlyYear(1000000, 0.11, 40000)
+      expect(fixedAmountResult.runs[0].yearlyBalances[0]).toBeCloseTo(endOfYear0, 2)
+      expect(fixedPctResult.runs[0].yearlyBalances[0]).toBeCloseTo(endOfYear0, 2)
 
-      // Year 1: balance grows to 1,070,000 * 1.11 = 1,187,700 before withdrawal.
+      // Year 1, measured on the start-of-year balance:
       // fixed_amount_inflation_adjusted: withdrawal = 40,000 * 1.055 = 42,200
-      // fixed_percentage: 4% of 1,187,700 = 47,508 (exceeds the desired-income
+      // fixed_percentage: 4% of ≈1,073,600 ≈ 42,946 (exceeds the desired-income
       //   floor of 42,200, so the live-balance percentage wins) -> diverges
-      expect(fixedAmountResult.runs[0].yearlyBalances[1]).toBeCloseTo(1187700 - 42200, 2)
-      expect(fixedPctResult.runs[0].yearlyBalances[1]).toBeCloseTo(1187700 - 47508, 2)
+      const fixedPctYear1 = endOfYear0 * 0.04
+      expect(fixedPctYear1).toBeGreaterThan(42200)
+      expect(fixedAmountResult.runs[0].yearlyBalances[1]).toBeCloseTo(
+        afterMonthlyYear(endOfYear0, 0.11, 42200),
+        2,
+      )
+      expect(fixedPctResult.runs[0].yearlyBalances[1]).toBeCloseTo(
+        afterMonthlyYear(endOfYear0, 0.11, fixedPctYear1),
+        2,
+      )
       expect(fixedPctResult.runs[0].yearlyBalances[1]).not.toBeCloseTo(
         fixedAmountResult.runs[0].yearlyBalances[1],
         2,
@@ -1303,6 +1338,7 @@ describe("Reproducibility via randomSeed", () => {
   const run = (randomSeed?: number) =>
     runMonteCarloSimulation([seedAccount], seedPersonal, seedGoals, seedConfig, {
       numberOfRuns: 100,
+      volatilityScale: 1,
       randomSeed,
     })
 

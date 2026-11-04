@@ -11,7 +11,12 @@ import {
 } from "@/components/ui/chart"
 import { formatCurrency } from "@/lib/utils/currency"
 import { formatPercentileTooltip } from "@/lib/utils/chart-tooltip"
-import { getSuccessRateStyle } from "@/lib/utils/success-rate"
+import { buildPercentileSeries } from "@/lib/utils/chart-series"
+import {
+  formatSuccessRange,
+  getSuccessRateStyle,
+  type SuccessRange,
+} from "@/lib/utils/success-rate"
 import type { SimulationResult } from "@/types"
 import { Activity, AlertTriangle, CheckCircle2, Loader2, Wallet } from "lucide-react"
 import { memo, useMemo } from "react"
@@ -20,7 +25,12 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
 interface MonteCarloChartProps {
+  /** Central-volatility run: the fan chart plots this one */
   simulationResult: SimulationResult | null
+  /** Cautious–central success range; the header shows it and rates by its low end */
+  successRange: SuccessRange | null
+  /** Today's total balance: the series starts here, at the current age */
+  startingBalance: number
   currentAge: number
   retirementAge: number
   isRunning?: boolean
@@ -42,24 +52,20 @@ const chartConfig = {
  */
 export const MonteCarloChart = memo(function MonteCarloChart({
   simulationResult,
+  successRange,
+  startingBalance,
   currentAge,
   retirementAge,
   isRunning = false,
   hasError = false,
   hasAccounts = false,
 }: MonteCarloChartProps) {
-  const data = useMemo(() => {
-    const percentiles = simulationResult?.percentiles
-    if (!percentiles || percentiles.p50.length === 0) return []
-    return percentiles.p50.map((_, index) => ({
-      age: currentAge + index,
-      p10: percentiles.p10[index],
-      p25: percentiles.p25[index],
-      p50: percentiles.p50[index],
-      p75: percentiles.p75[index],
-      p90: percentiles.p90[index],
-    }))
-  }, [simulationResult, currentAge])
+  // Each balance is plotted at the age just reached, so the value at the retirement line
+  // is the balance at retirement (see chart-series.ts)
+  const data = useMemo(
+    () => buildPercentileSeries(simulationResult?.percentiles, currentAge, startingBalance),
+    [simulationResult, currentAge, startingBalance],
+  )
 
   if (!simulationResult || simulationResult.percentiles.p50.length === 0) {
     return (
@@ -128,8 +134,11 @@ export const MonteCarloChart = memo(function MonteCarloChart({
   }
 
   const { percentiles } = simulationResult
-  const successRate = simulationResult.successRate
-  const rateStyle = getSuccessRateStyle(successRate)
+  const range = successRange ?? {
+    low: simulationResult.successRate,
+    high: simulationResult.successRate,
+  }
+  const rateStyle = getSuccessRateStyle(range.low)
 
   return (
     <Card
@@ -148,7 +157,7 @@ export const MonteCarloChart = memo(function MonteCarloChart({
             aria-hidden="true"
           />
           <span className={`font-mono text-2xl font-semibold tabular-nums ${rateStyle.text}`}>
-            {successRate.toFixed(0)}%
+            {formatSuccessRange(range)}
           </span>
           <span className="text-xs text-muted-foreground">
             success · {simulationResult.runs.length.toLocaleString()} simulations ·{" "}

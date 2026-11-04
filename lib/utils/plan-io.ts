@@ -5,6 +5,7 @@ import type {
   PersonalInfo,
   RetirementGoals,
 } from "@/types"
+import { isInvestmentType } from "@/types"
 
 const PLAN_VERSION = 1
 
@@ -70,7 +71,14 @@ export function parsePlanFile(file: File): Promise<PlanExport> {
           reject(new Error("Plan file is missing required fields."))
           return
         }
-        resolve(raw as PlanExport)
+        // investmentType is optional (older files lack it); an unrecognised value is
+        // dropped so the account imports as untyped rather than carrying a bad string
+        const accounts = plan.accounts.map((acc: Account) =>
+          acc.investmentType === undefined || isInvestmentType(acc.investmentType)
+            ? acc
+            : { ...acc, investmentType: undefined },
+        )
+        resolve({ ...(raw as PlanExport), plan: { ...plan, accounts } })
       } catch {
         reject(new Error("Could not parse file — make sure it's a valid JSON plan."))
       }

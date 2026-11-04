@@ -24,6 +24,7 @@ const PAGE_TITLES: Record<string, string> = {
   plan: "Plan",
   expenses: "Expenses",
   projections: "Projections",
+  risk: "Risk",
   charts: "Charts",
   settings: "Settings",
 }

@@ -1,16 +1,12 @@
 import { describe, expect, it } from "vite-plus/test"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
-import {
-  calculateOverviewSummary,
-  ON_TRACK_SUCCESS_RATE,
-  type OverviewSummaryInput,
-} from "./overview-summary"
+import { calculateOverviewSummary, type OverviewSummaryInput } from "./overview-summary"
 
 const base: OverviewSummaryInput = {
   projection: {
     portfolioAtRetirement: 64_694_735,
     monthlyIncomeAtRetirement: 140_810,
-    portfolioDepletionAge: null,
+    incomeGoalShortfallAge: null,
   },
   currentAge: 39,
   retirementAge: 65,
@@ -18,22 +14,24 @@ const base: OverviewSummaryInput = {
   annualIncome: 1_150_000,
   desiredMonthlyIncome: 35_000,
   inflationRate: 5.5,
-  monteCarloSuccessRate: null,
 }
 
 const factor26 = Math.pow(1.055, 26)
 
+const withShortfall = (age: number | null): OverviewSummaryInput => ({
+  ...base,
+  projection: { ...base.projection, incomeGoalShortfallAge: age },
+})
+
 describe("calculateOverviewSummary", () => {
   describe("Critical SA scenarios", () => {
-    it("reports a plan that lasts to life expectancy as on track on steady returns", () => {
+    it("is on track when the projection pays the goal income every year", () => {
       const s = calculateOverviewSummary(base)
       expect(s.yearsToRetirement).toBe(26)
-      expect(s.incomeEndAge).toBe(100)
-      expect(s.yearsOfIncome).toBe(35)
-      expect(s.shortfallYears).toBe(0)
-      expect(s.lastsToLifeExpectancy).toBe(true)
+      expect(s.goalIncomeUntilAge).toBe(100)
+      expect(s.yearsOfGoalIncome).toBe(35)
+      expect(s.yearsBelowGoal).toBe(0)
       expect(s.isOnTrack).toBe(true)
-      expect(s.verdictBasis).toBe("steady-returns")
     })
 
     it("expresses retirement figures in today's rands at the inflation assumption", () => {
@@ -60,56 +58,20 @@ describe("calculateOverviewSummary", () => {
       expect(s.maxMonthlyRaContribution).toBeCloseTo(SA_TAX_LIMITS.pensionRaMaxDeduction / 12, 6)
     })
 
-    it("flags early depletion and counts the shortfall years", () => {
-      const s = calculateOverviewSummary({
-        ...base,
-        projection: { ...base.projection, portfolioDepletionAge: 82 },
-      })
-      expect(s.incomeEndAge).toBe(82)
-      expect(s.yearsOfIncome).toBe(17)
-      expect(s.shortfallYears).toBe(18)
-      expect(s.lastsToLifeExpectancy).toBe(false)
+    it("is not on track once income falls below the goal, and counts the years below it", () => {
+      const s = calculateOverviewSummary(withShortfall(82))
+      expect(s.goalIncomeUntilAge).toBe(82)
+      expect(s.yearsOfGoalIncome).toBe(17)
+      expect(s.yearsBelowGoal).toBe(18)
       expect(s.isOnTrack).toBe(false)
     })
 
-    it("treats depletion at or after life expectancy as lasting", () => {
-      const s = calculateOverviewSummary({
-        ...base,
-        projection: { ...base.projection, portfolioDepletionAge: 100 },
-      })
-      expect(s.lastsToLifeExpectancy).toBe(true)
-      expect(s.shortfallYears).toBe(0)
-    })
-  })
-
-  describe("Monte Carlo verdict", () => {
-    it("uses the success rate when one is available", () => {
-      const s = calculateOverviewSummary({ ...base, monteCarloSuccessRate: 55 })
-      expect(s.verdictBasis).toBe("monte-carlo")
+    it("is not on track even when income is below goal from the first retirement year", () => {
+      const s = calculateOverviewSummary(withShortfall(65))
+      expect(s.goalIncomeUntilAge).toBe(65)
+      expect(s.yearsOfGoalIncome).toBe(0)
+      expect(s.yearsBelowGoal).toBe(35)
       expect(s.isOnTrack).toBe(false)
-    })
-
-    it("is on track exactly at the threshold", () => {
-      const s = calculateOverviewSummary({
-        ...base,
-        monteCarloSuccessRate: ON_TRACK_SUCCESS_RATE,
-      })
-      expect(s.isOnTrack).toBe(true)
-    })
-
-    it("lets a strong success rate override steady-return depletion", () => {
-      const s = calculateOverviewSummary({
-        ...base,
-        projection: { ...base.projection, portfolioDepletionAge: 90 },
-        monteCarloSuccessRate: 85,
-      })
-      expect(s.isOnTrack).toBe(true)
-      expect(s.lastsToLifeExpectancy).toBe(false)
-    })
-
-    it("ignores a non-finite success rate", () => {
-      const s = calculateOverviewSummary({ ...base, monteCarloSuccessRate: Number.NaN })
-      expect(s.verdictBasis).toBe("steady-returns")
     })
   })
 
@@ -131,7 +93,7 @@ describe("calculateOverviewSummary", () => {
     it("clamps negative years (retirement age below current age)", () => {
       const s = calculateOverviewSummary({ ...base, currentAge: 70, retirementAge: 65 })
       expect(s.yearsToRetirement).toBe(0)
-      expect(s.yearsOfIncome).toBe(30)
+      expect(s.yearsOfGoalIncome).toBe(30)
     })
 
     it("returns null replacement when there is no income goal", () => {
@@ -145,23 +107,19 @@ describe("calculateOverviewSummary", () => {
         projection: {
           portfolioAtRetirement: 0,
           monthlyIncomeAtRetirement: 0,
-          portfolioDepletionAge: 65,
+          incomeGoalShortfallAge: 65,
         },
       })
       expect(s.portfolioAtRetirementToday).toBe(0)
       expect(s.incomeReplacementPercent).toBe(0)
-      expect(s.incomeEndAge).toBe(65)
-      expect(s.yearsOfIncome).toBe(0)
       expect(s.isOnTrack).toBe(false)
     })
 
-    it("never puts the income end before retirement", () => {
-      const s = calculateOverviewSummary({
-        ...base,
-        projection: { ...base.projection, portfolioDepletionAge: 50 },
-      })
-      expect(s.incomeEndAge).toBe(65)
-      expect(s.yearsOfIncome).toBe(0)
+    it("keeps a shortfall age inside the retirement window", () => {
+      expect(calculateOverviewSummary(withShortfall(50)).goalIncomeUntilAge).toBe(65)
+      const late = calculateOverviewSummary(withShortfall(110))
+      expect(late.goalIncomeUntilAge).toBe(100)
+      expect(late.yearsBelowGoal).toBe(0)
     })
 
     it("returns zero RA room for zero income", () => {
@@ -178,12 +136,13 @@ describe("calculateOverviewSummary", () => {
         projection: {
           portfolioAtRetirement: Number.POSITIVE_INFINITY,
           monthlyIncomeAtRetirement: Number.NaN,
-          portfolioDepletionAge: null,
+          incomeGoalShortfallAge: Number.NaN,
         },
       })
       expect(s.maxMonthlyRaContribution).toBe(0)
       expect(s.monthlyIncomeToday).toBe(0)
       expect(s.portfolioAtRetirementToday).toBe(0)
+      expect(s.isOnTrack).toBe(true)
       expect(Number.isFinite(s.incomeReplacementPercent ?? 0)).toBe(true)
     })
   })

@@ -1,13 +1,12 @@
 "use client"
 
-import { useDeferredValue, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
 import { PageCard } from "@/components/ui/page-card"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { calculateProjection } from "@/lib/calculations/projection-engine"
-import { useMonteCarloWorker } from "@/lib/monte-carlo/use-monte-carlo-worker"
 import {
   applySensitivityDeltas,
   DEFAULT_SENSITIVITY_DELTAS,
@@ -89,38 +88,6 @@ export function WhatIfPanel() {
     ],
   )
 
-  // Debounced (Monte Carlo) side: baseline uses the real plan directly; sandbox
-  // uses deferred deltas so rapid dragging doesn't spam the worker.
-  const { simulationResult: baselineSimulation } = useMonteCarloWorker(
-    accounts,
-    personalInfo,
-    retirementGoals,
-    drawdownConfig,
-    1000,
-    assumptions,
-    accounts.length > 0,
-  )
-
-  const deferredDeltas = useDeferredValue(deltas)
-  const {
-    accounts: mcAccounts,
-    personalInfo: mcPersonalInfo,
-    retirementGoals: mcRetirementGoals,
-  } = useMemo(
-    () => applySensitivityDeltas(accounts, personalInfo, retirementGoals, deferredDeltas),
-    [accounts, personalInfo, retirementGoals, deferredDeltas],
-  )
-  const { simulationResult: sandboxSimulation, isRunning: isSandboxSimulating } =
-    useMonteCarloWorker(
-      mcAccounts,
-      mcPersonalInfo,
-      mcRetirementGoals,
-      drawdownConfig,
-      1000,
-      assumptions,
-      accounts.length > 0,
-    )
-
   const handleReset = () => setDeltas(DEFAULT_SENSITIVITY_DELTAS)
 
   const handleApply = () => {
@@ -159,10 +126,12 @@ export function WhatIfPanel() {
   const nestEggDelta =
     (sandboxProjection?.portfolioAtRetirement ?? 0) -
     (baselineProjection?.portfolioAtRetirement ?? 0)
-  const successRateDelta =
-    sandboxSimulation && baselineSimulation
-      ? sandboxSimulation.successRate - baselineSimulation.successRate
-      : null
+  // Deterministic: the first age the income cannot be paid in full (null = never).
+  // Market-risk odds live on the Risk page, not here.
+  const lifeExpectancy = scaledPersonalInfo.lifeExpectancy
+  const lastsUntil = (shortfallAge: number | null | undefined) => shortfallAge ?? lifeExpectancy
+  const sandboxLastsUntil = lastsUntil(sandboxProjection?.incomeGoalShortfallAge)
+  const lastsUntilDelta = sandboxLastsUntil - lastsUntil(baselineProjection?.incomeGoalShortfallAge)
 
   return (
     <PageCard
@@ -255,23 +224,14 @@ export function WhatIfPanel() {
           </div>
 
           <div>
-            <p className="text-sm text-muted-foreground">Success probability</p>
-            {isSandboxSimulating ? (
-              <div className="h-7 w-16 rounded bg-muted animate-pulse" />
-            ) : (
-              <p className="text-2xl font-bold font-mono">
-                {sandboxSimulation ? `${sandboxSimulation.successRate.toFixed(0)}%` : "—"}
-              </p>
-            )}
-            {!atDefault && successRateDelta !== null && (
+            <p className="text-sm text-muted-foreground">Goal income until</p>
+            <p className="text-2xl font-bold font-mono">{`Age ${sandboxLastsUntil}`}</p>
+            {!atDefault && lastsUntilDelta !== 0 && (
               <p
-                className={cn(
-                  "text-xs",
-                  successRateDelta >= 0 ? "text-chart-2" : "text-destructive",
-                )}
+                className={cn("text-xs", lastsUntilDelta > 0 ? "text-chart-2" : "text-destructive")}
               >
-                {successRateDelta >= 0 ? "+" : ""}
-                {successRateDelta.toFixed(0)}pts vs your current plan
+                {lastsUntilDelta > 0 ? "+" : ""}
+                {lastsUntilDelta} years vs your current plan
               </p>
             )}
           </div>

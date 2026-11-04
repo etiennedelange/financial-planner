@@ -1,9 +1,20 @@
 # Documentation Update Log
 
 ## 2026-11-04
-* **Update**: [Overview redesigned: verdict first](history/2026-11-04-overview-verdict-first.md) - The metric-tile grid and Key Insights give way to one verdict sentence, the market-risk check, a timeline and a next-best-step card.
+* **Update**: [Overview redesigned: verdict first](history/2026-11-04-overview-verdict-first.md) - The metric-tile grid and Key Insights give way to one verdict sentence, a market-risk caveat linking to Risk, a timeline and a next-best-step card.
+* **Update**: [Balance charts plotted each year a year early](history/2026-11-04-chart-age-off-by-one.md) - Both balance charts put year-end balances at the age during the year (R66.3M shown at 65 vs R65.0M at retirement); fixed with shared series builders; table deflation corrected; Overview says "steady returns only".
+* **Update**: [Historical stress test: a 2008-style first year of retirement](history/2026-11-04-historical-stress-test.md) - Deterministic Risk-page card comparing steady returns with each investment's worst researched 12-month fall in year one; reuses the projection engine through a required drawdown return override.
+* **Update**: [Success shown as a cautious–central range](history/2026-11-04-success-range.md) - Risk page runs the same futures at 1× and 1.3× volatility and shows "likely X–Y%"; verdict follows the lower bound; success labels unified; scenario memo no longer reruns on volatility keystrokes.
+* **Update**: [Investment types per account](history/2026-11-04-investment-types-per-account.md) - Optional investmentType drives Monte Carlo volatility and one-factor correlation; untyped accounts reproduce the old result exactly; DB column, import, form, list and Risk page updated.
+* **Update**: [Investment-type risk research: volatilities, worst falls and correlations in rand](history/2026-11-04-investment-type-risk-research.md) - Sourced rand volatility, worst 12-month return, drawdown and one-factor loadings for six investment types; gaps listed.
+* **Update**: [Monte Carlo expected return is the typical (median) return](history/2026-11-04-mc-median-return-basis.md) - The −σ²/2 drag removed so the projection is the middle of the Monte Carlo range; tests, golden file and methodology copy updated.
+
+## 2026-11-01
+* **Update**: [Multi-agent audit fixes: on-track definition, headline income, MC bias, withdrawal order, s11F carry-forward](history/2026-11-01-audit-fixes.md) - Five audit findings fixed with tests; the withdrawal-order trade-off measured; main vs branch compared on the user's exact plan.
 
 ## 2026-10-31
+* **Update**: [Risk page: Monte Carlo and volatility moved into their own section](history/2026-10-31-risk-page.md) - New /calculator/risk page holds every Monte Carlo input and result; all other pages, and the AI narrative, show deterministic results only.
+* **Update**: [SA retirement calculation audit: tax relief setting, living annuity band, monthly drawdown, MC correlation](history/2026-10-31-sa-retirement-calc-audit.md) - Seven confirmed calculation defects fixed with independent tests; future tax relief defaults to the last decade's SARS history with a no-relief stress test; open statutory gaps listed.
 * **Update**: [Next.js 16.4 re-verified; in-range dependency refresh; pnpm audit clean](history/2026-10-31-next-16-4-verification-dep-refresh.md) - Full suite re-run on Next 16.4.3 (closes #9); dev-only undici and zod advisories fixed; Playwright journeys found stale.
 * **Update**: [Lint, format and tests moved to Vite+ (Oxlint, Oxfmt, Vitest 5)](history/2026-10-31-vite-plus-oxc-migration.md) - ESLint and Prettier-style tooling replaced by `vp check`; the money-time guard ported to an Oxlint plugin; repo reformatted in one blame-ignored commit.
 

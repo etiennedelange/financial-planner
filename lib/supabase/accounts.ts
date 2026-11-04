@@ -1,4 +1,4 @@
-import type { Account } from "@/types"
+import { isInvestmentType, type Account } from "@/types"
 import { createClient } from "./client"
 
 type AccountRow = {
@@ -13,6 +13,7 @@ type AccountRow = {
   annual_fees: number
   contribution_escalation: number
   tfsa_contributions_to_date?: number | null
+  investment_type?: string | null
 }
 
 function toRow(account: Account, scenarioId: string): AccountRow {
@@ -28,6 +29,7 @@ function toRow(account: Account, scenarioId: string): AccountRow {
     annual_fees: account.annualFees,
     contribution_escalation: account.contributionEscalation,
     tfsa_contributions_to_date: account.tfsaContributionsToDate ?? null,
+    investment_type: account.investmentType ?? null,
   }
 }
 
@@ -43,6 +45,8 @@ function fromRow(row: AccountRow): Account {
     annualFees: row.annual_fees,
     contributionEscalation: row.contribution_escalation,
     tfsaContributionsToDate: row.tfsa_contributions_to_date ?? undefined,
+    // The column has a check constraint; an unknown value still degrades to "untyped"
+    investmentType: isInvestmentType(row.investment_type) ? row.investment_type : undefined,
   }
 }
 

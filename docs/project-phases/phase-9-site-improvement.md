@@ -55,7 +55,8 @@ _Identified 2026-06-07 via parallel agent audit (UI/UX, calculations, test cover
 
 ### Medium Priority
 - [ ] **Supabase test strategy** — current tests mock the entire Supabase query chain (brittle to API changes); consider integration tests against the local test DB
-- [ ] **`monte-carlo/use-monte-carlo-worker.ts`** — worker lifecycle and message-passing errors untested
+- [ ] **`monte-carlo/use-monte-carlo-worker.ts`** — worker lifecycle and message-passing errors untested (23% lines; only the reducer and range helpers are unit-tested, 2026-11-04)
+- [ ] **Global branch coverage below threshold** — `npm run test:coverage` fails the 85% global branch threshold: 82.41% at `e7d4978`, 82.8% after the 2026-11-04 work. CI does not run coverage, so nothing flags it
 - [ ] **`currency.ts` / `formatters.ts`** — no tests for negative values, very large numbers, or rounding edge cases
 - [ ] **`scenario-comparison.ts`** — `compareScenarios` function barely tested; missing zero-contribution, short (1-5 year) and long (40+ year) horizon cases
 
@@ -84,7 +85,7 @@ _Identified 2026-06-07 via parallel agent audit (UI/UX, calculations, test cover
 - [x] **PWA: installable + offline-capable** (2026-08-29) — manifest (`app/manifest.ts`, `display: standalone`, teal theme/background, start_url `/calculator`), shared-artwork icons (`/icon1` 192, `/icon2` 512, `/apple-icon` 180 via `lib/pwa/icon-artwork.tsx`), hand-written `public/sw.js` (network-first navigations with inline offline fallback page, cache-first `/_next/static/*` into `static-assets-v1`, `no-store` headers on `/sw.js`), production-only registration in the root layout + `appleWebApp` metadata + theme-adaptive `themeColor`. No new dependencies. Verified against a production build: manifest/icons/headers 200, SW active + controlling, 38 cached chunks served offline, fallback renders offline with zero console errors, zero CSP violations, Lighthouse 11.7.1 PWA 0.88/1 (`installable-manifest` 1; sole advisory `maskable-icon`). 1002/1002 tests, typecheck/lint/build clean, shadscan 93/100 unchanged. Full write-up: [history/2026-08-29-pwa-installable.md](../history/2026-08-29-pwa-installable.md)
 - [x] **PWA icon: safe-zone padding, maskable manifest entries, single icon route** (2026-08-29) — confirmed `icon.tsx`/`icon1.tsx`/`icon2.tsx`/`apple-icon.tsx` were all live Next file-convention routes (not dead code — verified in the rendered `<head>`), then collapsed the three near-identical `icon.tsx`/`icon1.tsx`/`icon2.tsx` files into one `app/icon.tsx` via `generateImageMetadata()` (now serves `/icon/32`, `/icon/192`, `/icon/512`); `apple-icon.tsx` stays separate since it's a distinct Next convention. Closed the `maskable-icon` advisory left open above: `PwaIconArtwork`'s foreground glyph now sits in an inset `<g transform="translate(2.3 2.14) scale(0.83)">` (background stays full-bleed) so OS icon masks — Windows taskbar/Start pinning, Android adaptive icons, iOS auto-rounding — can't clip the bars/trend-line/dot; `app/manifest.ts` adds explicit `purpose: "maskable"` `/icon/192`+`/icon/512` entries. 1003/1003 tests (4 new), typecheck/lint/build clean, shadscan 93/100 unchanged. Full write-up: [history/2026-08-29-pwa-maskable-icon-safe-zone.md](../history/2026-08-29-pwa-maskable-icon-safe-zone.md)
 
-- [x] **Overview redesigned: verdict first** (2026-11-04) — the 7-tile metrics grid, Key Insights and simulation status line are replaced by one verdict sentence with the market-risk check under it, a proportional timeline, three today figures and a next-best-step card. Derivation moved into new tested `lib/calculations/utils/overview-summary.ts`. → [history/2026-11-04-overview-verdict-first.md](../history/2026-11-04-overview-verdict-first.md)
+- [x] **Overview redesigned: verdict first** (2026-11-04) — the 6-tile metrics grid, Key Insights and the steady-returns `RiskLink` line are replaced by one verdict sentence with the market-risk caveat (linking to Risk) under it, a proportional timeline, three today figures and a next-best-step card. Derivation moved into new tested `lib/calculations/utils/overview-summary.ts`. → [history/2026-11-04-overview-verdict-first.md](../history/2026-11-04-overview-verdict-first.md)
 
 ### Medium Priority
 - [x] **Responsive gaps** (2026-08-14) — audited against current code: all three sub-items were already resolved. Sidebar is `hidden md:flex` + a mobile `BottomNav` (no drawer needed); `dashboard-metrics-grid.tsx:139` has a `grid-cols-2` base below `sm`; expenses page grid is single-column below `lg` with `order-first lg:order-last` summary. No changes needed.
@@ -111,6 +112,72 @@ _Identified 2026-06-07 via parallel agent audit (UI/UX, calculations, test cover
 ### High Priority
 
 - [x] **Centralize bootstrap and data ownership** (2026-08-15) — one serialized XState coordinator now owns hydration (once per guest/user scope, never concurrent), verified auth, MFA gating, claim, and sync; the auth listener is a pure event forwarder. Guest/user persistence scopes with one-time legacy-key migration, sign-out eviction, stale-transition cancellation, generation-checked sync, explicit claim sources, and reload/account-switch/MFA/print e2e regressions. [Implementation plan](../superpowers/plans/2026-08-15-bootstrap-data-ownership-hardening.md) · [planning record](../history/2026-08-15-bootstrap-data-ownership-hardening-plan.md) · [implementation record](../history/2026-08-15-bootstrap-data-ownership-hardening.md)
+
+---
+
+## 9.5 — SA Retirement Calculation Audit (2026-10-31)
+
+Full write-up, sources and measured effects: [history](../history/2026-10-31-sa-retirement-calc-audit.md).
+
+- [x] **Tax thresholds indexed** — brackets, rebates, s6A credits, lump-sum table, CGT exclusion and s11F cap (`taxThresholdScale`)
+- [x] **Future Tax Relief setting** — default from 2016/17–2026/27 history (`historical`), plus `full` and a `none` stress test; caveat shown under the setting, in the tax breakdown and the printed report
+- [x] **Living annuity 2.5%–17.5% band** enforced per annuity in both engines
+- [x] **Monthly drawdown honouring `compoundingMethod`** — shared `runDrawdownYear` replaces the two copied loops
+- [x] **Monte Carlo accounts correlated** (one market shock per year) and depletion no longer a year late
+- [x] **TFSA limits per taxpayer**, enforced in Monte Carlo too (`tfsa-allowance.ts`)
+- [x] **Optimal contribution reports unreachable goals** (`isAchievable`) instead of R0 / "on track"
+- [x] **Debug window year-1 tax reads the engine row** — it re-taxed the gross withdrawal with the unindexed table, no s11F credit, no account mix
+
+### Pending (statutory rules not yet modelled)
+- [ ] De minimis commutation (R360k retirement interest; R150k living annuity)
+- [ ] Two-pot savings-pot withdrawals before retirement
+- [ ] Minimum retirement-fund access age (55) when retirement age is earlier
+- [ ] Lifetime aggregation of retirement/withdrawal lump sums
+- [ ] Annual tax on discretionary interest/dividends (interest exemption, DWT)
+- [ ] Reinvest after-tax living-annuity income above the target (2.5% minimum) instead of spending it
+
+---
+
+## 9.6 — Risk Page (2026-10-31)
+
+Write-up: [history](../history/2026-10-31-risk-page.md).
+
+- [x] **Monte Carlo and volatility moved to `/calculator/risk`**; other pages deterministic, Overview links to Risk
+- [x] **Simulation runs only on Risk**; what-if and insights no longer run their own simulations
+- [x] **AI narrative** no longer receives or quotes the success rate
+
+### Pending
+- [x] Per-account investment types with verified volatilities and one-factor correlation (2026-11-04) — [research](../history/2026-11-04-investment-type-risk-research.md), [feature](../history/2026-11-04-investment-types-per-account.md); handoff plan: [plans/2026-11-01-investment-types-range-stress-test.md](../superpowers/plans/2026-11-01-investment-types-range-stress-test.md) (also covers the next two items)
+- [x] Show success as a range (cautious–central volatility) instead of one figure (2026-11-04) — [history](../history/2026-11-04-success-range.md)
+- [x] Historical stress test (e.g. a 2008-style fall at retirement), sourced from verified SA fund data (2026-11-04) — [history](../history/2026-11-04-historical-stress-test.md)
+- [ ] Rebuild the investment-scenario comparison on the user's own accounts and the living annuity rules (currently a pooled discretionary model with hard-coded returns)
+- [x] Plan → Market Assumptions: equity/bond/cash expected returns feed no calculation (labelled "reference only" 2026-10-31) — **decided: keep as-is** (Etienne, 2026-11-01); investment types carry their own suggested returns as form hints instead
+- [ ] Monte Carlo fan chart in Today's Value mode: axis reached ~R1.8B on a plan whose real final balance is ~R27M, so it may plot nominal values regardless of display mode (seen 2026-11-04, not yet checked)
+
+---
+
+## 9.7 — Audit Fixes (2026-11-01)
+
+Write-up and main-vs-branch comparison: [history](../history/2026-11-01-audit-fixes.md).
+
+- [x] "On Track" means the income goal is met (`incomeGoalShortfallAge`), not merely that money survives
+- [x] Headline gross income is the amount actually paid within the living annuity band
+- [x] Monte Carlo centred on the projection's effective annual growth (nominal bias removed)
+- [x] Withdrawal order: annuity into the tax-free room, discretionary, annuity, TFSA last
+- [x] s11F carry-forward absorbed by later deduction room
+
+- [x] Balance charts plotted each year-end balance a year early; table deflation one year short (2026-11-04) — [history](../history/2026-11-04-chart-age-off-by-one.md)
+
+### Pending (from the audit)
+- [ ] Medical aid escalation at 9% for decades: cap or taper, and feed it into depletion/on-track
+- [x] Expected return is the typical (median) return in Monte Carlo (2026-11-04) — [history](../history/2026-11-04-mc-median-return-basis.md)
+- [ ] Longer-history check of "historical" tax relief; neutral option labels
+- [ ] Shortfall depth instead of all-or-nothing success (one set of tone labels: done 2026-11-04, [history](../history/2026-11-04-success-range.md))
+- [x] Risk page: `compareScenarios` memo depends on the whole `assumptions` object (2026-11-04) — [history](../history/2026-11-04-success-range.md)
+- [ ] Optimal contribution: 0% withdrawal rate reported as achievable
+- [ ] Edge cases: negative inflation thresholds, depletion age 0, net return below −100%
+- [ ] Docs: two-pot R240k de minimis test, provident vested-rights wording, cite National Treasury for the LA band
+- [ ] Single source of truth: tax figures duplicated in `tax-relief-history.ts`, "R550k" copy, 0.4 rates
 
 ---
 

@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  ActivityIcon,
   ChartColumnIcon,
   LayoutDashboardIcon,
   ReceiptIcon,
@@ -20,6 +21,7 @@ const NAV_ITEMS: { href: string; label: string; icon: AnimatedIconComponent }[] 
   { href: "/calculator/plan", label: "Plan", icon: SlidersHorizontalIcon },
   { href: "/calculator/expenses", label: "Expenses", icon: ReceiptIcon },
   { href: "/calculator/projections", label: "Projections", icon: TrendingUpIcon },
+  { href: "/calculator/risk", label: "Risk", icon: ActivityIcon },
   { href: "/calculator/charts", label: "Charts", icon: ChartColumnIcon },
   { href: "/calculator/settings", label: "Settings", icon: SettingsIcon },
 ]

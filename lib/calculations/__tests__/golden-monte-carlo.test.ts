@@ -95,6 +95,7 @@ function buildMatrix(): Record<string, unknown> {
         const key = `${persona.label}|${strategy}|${band.label}`
         const r = runMonteCarloSimulation([ra, tfsa], persona.p, persona.g, cfg, {
           numberOfRuns: 200,
+          volatilityScale: 1,
           randomSeed: SEED,
         })
         const atRetirement = persona.p.retirementAge - persona.p.currentAge

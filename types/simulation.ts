@@ -1,6 +1,12 @@
 export interface SimulationConfig {
   numberOfRuns: number // 1000-10000
   randomSeed?: number // for reproducibility
+  /**
+   * Multiplier on every account's volatility. 1 = the researched (central) figures;
+   * CAUTIOUS_VOLATILITY_FACTOR for the cautious end of the success range. Required, so
+   * each caller states which volatility it models rather than inheriting a default.
+   */
+  volatilityScale: number
 }
 
 export interface SimulationRun {

@@ -30,6 +30,7 @@ import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { SEED_ACCOUNTS } from "@/lib/dev/seed-accounts"
 import { formatCurrency } from "@/lib/utils/currency"
 import { TFSA_LIMITS_CONFIG } from "@/lib/constants/tax-year.config"
+import { INVESTMENT_TYPE_RISK } from "@/lib/constants/investment-types"
 import { cn } from "@/lib/utils"
 import type { Account, AccountType } from "@/types"
 import { useShallow } from "zustand/react/shallow"
@@ -416,9 +417,15 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
                 />
               )}
             </div>
-            {account.provider && (
-              <p className="text-xs text-muted-foreground truncate">{account.provider}</p>
-            )}
+            <p className="text-xs text-muted-foreground truncate">
+              {account.provider}
+              {account.provider && " · "}
+              {account.investmentType ? (
+                INVESTMENT_TYPE_RISK[account.investmentType].label
+              ) : (
+                <span className="text-warning">Choose what it&apos;s invested in</span>
+              )}
+            </p>
           </div>
 
           {/* Secondary stats — hidden on mobile */}

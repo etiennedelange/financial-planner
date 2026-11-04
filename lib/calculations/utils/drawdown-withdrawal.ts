@@ -94,11 +94,16 @@ export function calculateInitialWithdrawal(
  *
  * Called once per drawdown year (year >= 1; year 0's withdrawal comes from
  * the initial-withdrawal calculation in each engine). `currentBalance` must
- * be the post-growth, pre-withdrawal portfolio balance for that year so all
+ * be the portfolio balance at the START of that drawdown year, so all
  * strategies react to the live portfolio rather than a stale snapshot.
  *
+ * Start-of-year is the anniversary value a living annuity's drawdown rate is set
+ * on, and the same basis year 0 uses. Both engines previously passed the
+ * post-growth balance here, so from year 1 a percentage was taken of a balance
+ * one year's growth further along than in year 0.
+ *
  * @param previousWithdrawal - The annual withdrawal used in the prior year
- * @param currentBalance - Portfolio balance this year, after growth, before withdrawal
+ * @param currentBalance - Portfolio balance at the start of this drawdown year
  * @param config - Drawdown configuration (strategy, rate, min/max, guardrails)
  * @param yearsSinceToday - Years from today to this drawdown year (yearsToRetirement + year), for inflating min/max to nominal terms
  * @param inflationRate - Annual inflation rate (decimal)
@@ -139,7 +144,7 @@ export function calculateNextWithdrawal(
 
     case "guardrails": {
       // Decision rules: hold the inflation-adjusted withdrawal steady unless
-      // the actual rate (previous withdrawal / current balance) breaches the
+      // the actual rate (previous withdrawal / start-of-year balance) breaches the
       // upper or lower guardrail band around the target rate, in which case
       // apply a one-off step adjustment.
       const targetRate = config.initialWithdrawalRate / 100

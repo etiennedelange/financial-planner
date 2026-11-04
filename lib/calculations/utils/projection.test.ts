@@ -2,6 +2,7 @@ import { describe, it, expect } from "vite-plus/test"
 import {
   projectFinalSavings,
   calculateMonthlyReturn,
+  calculateEffectiveAnnualReturn,
   formatMonthlyReturnFormula,
 } from "./projection"
 
@@ -316,5 +317,30 @@ describe("formatMonthlyReturnFormula", () => {
 
     const formula2 = formatMonthlyReturnFormula(0.15, "compound")
     expect(formula2).toContain("0.1500")
+  })
+})
+
+describe("calculateEffectiveAnnualReturn", () => {
+  describe("Compounding methods", () => {
+    it("nominal 12% compounds to (1.01)^12 − 1 ≈ 12.68% a year", () => {
+      expect(calculateEffectiveAnnualReturn(0.12, "nominal")).toBeCloseTo(
+        Math.pow(1.01, 12) - 1,
+        12,
+      )
+    })
+
+    it("compound returns the annual rate unchanged", () => {
+      expect(calculateEffectiveAnnualReturn(0.12, "compound")).toBeCloseTo(0.12, 12)
+    })
+  })
+
+  describe("Edge cases", () => {
+    it("0% stays 0% and negative returns compound below the simple rate", () => {
+      expect(calculateEffectiveAnnualReturn(0, "nominal")).toBe(0)
+      expect(calculateEffectiveAnnualReturn(-0.12, "nominal")).toBeCloseTo(
+        Math.pow(0.99, 12) - 1,
+        12,
+      )
+    })
   })
 })

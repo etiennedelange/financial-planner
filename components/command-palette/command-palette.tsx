@@ -15,6 +15,7 @@ import { ACCOUNT_TYPE_LABELS } from "@/types"
 import type { AccountType } from "@/types"
 import { formatCurrency } from "@/lib/utils/currency"
 import {
+  Activity,
   BarChart2,
   BarChart3,
   DollarSign,
@@ -40,6 +41,7 @@ const NAV_ITEMS: CommandItemDef[] = [
   { id: "nav-plan", label: "Plan", href: "/calculator/plan", icon: ListChecks },
   { id: "nav-expenses", label: "Expenses", href: "/calculator/expenses", icon: DollarSign },
   { id: "nav-projections", label: "Projections", href: "/calculator/projections", icon: BarChart2 },
+  { id: "nav-risk", label: "Risk", href: "/calculator/risk", icon: Activity },
   { id: "nav-charts", label: "Charts", href: "/calculator/charts", icon: BarChart3 },
   { id: "nav-settings", label: "Settings", href: "/calculator/settings", icon: Settings },
 ]

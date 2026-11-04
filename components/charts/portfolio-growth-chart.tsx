@@ -1,6 +1,7 @@
 "use client"
 
 import { Area, AreaChart, CartesianGrid, ReferenceLine, XAxis, YAxis } from "recharts"
+import { buildBalanceSeries } from "@/lib/utils/chart-series"
 import { Card, CardContent } from "@/components/ui/card"
 import { SectionLabel } from "@/components/ui/section-label"
 import { ChartDataTable } from "@/components/ui/chart-data-table"
@@ -31,16 +32,9 @@ export const PortfolioGrowthChart = memo(function PortfolioGrowthChart({
   projections,
   retirementAge,
 }: PortfolioGrowthChartProps) {
-  const data = useMemo(
-    () =>
-      projections.map((p) => ({
-        age: p.age,
-        balance: p.endingBalance,
-        contributions: p.contributions,
-        withdrawals: p.withdrawals,
-      })),
-    [projections],
-  )
+  // Each balance is plotted at the age just reached, so the value at the retirement line
+  // is the balance at retirement (see chart-series.ts)
+  const data = useMemo(() => buildBalanceSeries(projections), [projections])
 
   if (projections.length === 0) {
     return (
@@ -103,13 +97,13 @@ export const PortfolioGrowthChart = memo(function PortfolioGrowthChart({
     <Card
       className="dashboard-card shadow-none"
       role="figure"
-      aria-label={`Portfolio balance projection from age ${projections[0].age} to ${projections[projections.length - 1].age}`}
+      aria-label={`Portfolio balance projection from age ${projections[0].age} to ${projections[projections.length - 1].age + 1}`}
     >
       <div className="px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-3 space-y-1">
         <SectionLabel>Portfolio Growth Over Time</SectionLabel>
         <p className="text-sm text-muted-foreground pl-3">
           Projected balance from age {projections[0].age} to{" "}
-          {projections[projections.length - 1].age}
+          {projections[projections.length - 1].age + 1}
         </p>
       </div>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
@@ -196,7 +190,7 @@ export const PortfolioGrowthChart = memo(function PortfolioGrowthChart({
           },
         ]}
         rows={data}
-        caption={`Portfolio balance from age ${projections[0].age} to ${projections[projections.length - 1].age}`}
+        caption={`Portfolio balance from age ${projections[0].age} to ${projections[projections.length - 1].age + 1}`}
       />
     </Card>
   )

@@ -21,7 +21,7 @@ interface Segment {
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`
 
-/** A proportional bar of the plan's life: saving → income → (any) shortfall. */
+/** A proportional bar of the plan's life: saving → goal income → (any) years below goal. */
 export function RetirementTimeline({
   summary,
   currentAge,
@@ -38,16 +38,16 @@ export function RetirementTimeline({
     },
     {
       key: "income",
-      years: summary.yearsOfIncome,
+      years: summary.yearsOfGoalIncome,
       startAge: retirementAge,
       caption: "Retire",
       barClassName: "bg-primary/40",
     },
     {
       key: "shortfall",
-      years: summary.shortfallYears,
-      startAge: summary.incomeEndAge,
-      caption: "Money runs out",
+      years: summary.yearsBelowGoal,
+      startAge: summary.goalIncomeUntilAge,
+      caption: summary.yearsOfGoalIncome > 0 ? "Below goal" : "Retire · below goal",
       barClassName: "bg-warning/60",
     },
   ].filter((s) => s.years > 0)
@@ -57,8 +57,8 @@ export function RetirementTimeline({
   const columns = segments.map((s) => `${s.years}fr`).join(" ")
   const description = [
     summary.yearsToRetirement > 0 && `${plural(summary.yearsToRetirement, "year")} saving`,
-    summary.yearsOfIncome > 0 && `${plural(summary.yearsOfIncome, "year")} of income`,
-    summary.shortfallYears > 0 && `${plural(summary.shortfallYears, "year")} without income`,
+    summary.yearsOfGoalIncome > 0 && `${plural(summary.yearsOfGoalIncome, "year")} of goal income`,
+    summary.yearsBelowGoal > 0 && `${plural(summary.yearsBelowGoal, "year")} below goal`,
   ]
     .filter(Boolean)
     .join(" · ")

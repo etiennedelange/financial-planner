@@ -139,6 +139,36 @@ describe("parsePlanFile", () => {
     expect(tfsa?.tfsaContributionsToDate).toBe(80000)
   })
 
+  const planWith = (accs: unknown[]) =>
+    makePlanFile({
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      plan: {
+        personalInfo,
+        retirementGoals,
+        assumptions,
+        drawdownConfig,
+        displayMode: "real",
+        accounts: accs,
+      },
+    })
+
+  it("preserves a valid investment type", async () => {
+    const result = await parsePlanFile(planWith([{ ...accounts[0], investmentType: "balanced" }]))
+    expect(result.plan.accounts[0].investmentType).toBe("balanced")
+  })
+
+  it("imports a file without investment types (older exports) as untyped", async () => {
+    const result = await parsePlanFile(planWith(accounts))
+    result.plan.accounts.forEach((a) => expect(a.investmentType).toBeUndefined())
+  })
+
+  it("drops an unrecognised investment type so the account imports as untyped", async () => {
+    const result = await parsePlanFile(planWith([{ ...accounts[0], investmentType: "crypto" }]))
+    expect(result.plan.accounts[0].investmentType).toBeUndefined()
+    expect(result.plan.accounts[0].name).toBe(accounts[0].name)
+  })
+
   it("rejects a file missing the plan key", async () => {
     const file = makePlanFile({ version: 1 })
     await expect(parsePlanFile(file)).rejects.toThrow("missing version or plan data")

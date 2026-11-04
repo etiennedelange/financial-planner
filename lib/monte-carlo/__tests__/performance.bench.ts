@@ -49,6 +49,7 @@ describe("Monte Carlo simulation throughput", () => {
     await bench("100 runs  (baseline)", () => {
       runMonteCarloSimulation([account], personalInfo, retirementGoals, drawdownConfig, {
         numberOfRuns: 100,
+        volatilityScale: 1,
       })
     }).run()
   })
@@ -57,6 +58,7 @@ describe("Monte Carlo simulation throughput", () => {
     await bench("1 000 runs (production default)", () => {
       runMonteCarloSimulation([account], personalInfo, retirementGoals, drawdownConfig, {
         numberOfRuns: 1_000,
+        volatilityScale: 1,
       })
     }).run()
   })
@@ -65,6 +67,7 @@ describe("Monte Carlo simulation throughput", () => {
     await bench("5 000 runs (stress)", () => {
       runMonteCarloSimulation([account], personalInfo, retirementGoals, drawdownConfig, {
         numberOfRuns: 5_000,
+        volatilityScale: 1,
       })
     }).run()
   })
@@ -98,6 +101,7 @@ describe("Multi-account portfolio throughput (realistic)", () => {
     await bench("3 accounts × 1 000 runs (production)", () => {
       runMonteCarloSimulation(accounts, personalInfo, retirementGoals, drawdownConfig, {
         numberOfRuns: 1_000,
+        volatilityScale: 1,
       })
     }).run()
   })

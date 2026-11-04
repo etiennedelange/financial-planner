@@ -34,14 +34,18 @@ npm run docs:check       # validate docs/ (frontmatter title+description, doc li
 container reload, so the audit works offline and can never drift versions.
 
 **Run `npm run shadscan` before committing** (or `shadscan:gate` for a
-hard-fail at <90/100). Baseline: 93/100 (A). Known non-passing findings
-(the only two that reduce the score; the "Worth checking" items do not):
+hard-fail at <90/100). Baseline: 90/100 (A). Known non-passing findings
+(the only three that reduce the score; the "Worth checking" items do not):
 - `mobile-nav-present` — waived (mobile bottom tab bar is the pattern); see
   [docs/history/2026-08-16-shadscan-accessibility-audit.md](docs/history/2026-08-16-shadscan-accessibility-audit.md).
 - `icon-buttons-have-labels` at `components/ui/animated-icon-button.tsx` — static
   false positive: the wrapper spreads `...props` onto `Button`, so the scanner can't
   see the label. All 11 call sites (`accounts-page.tsx`, `expenses-page.tsx`) pass
   `aria-label` (verified 2026-10-25). New call sites must keep doing so.
+- `empty-state-present` at `components/results/stress-test-card.tsx` — waived 2026-11-04: the
+  flagged table is the steady vs 2008-style comparison, which always has exactly three fixed
+  rows, so an empty state would be dead code (the per-account falls table does have one); see
+  [docs/history/2026-11-04-historical-stress-test.md](docs/history/2026-11-04-historical-stress-test.md).
 
 When a new finding appears, fix it or record an explicit implement/waive
 decision; never churn code just to move score-neutral advisories.
@@ -90,7 +94,10 @@ describe('functionName', () => {
 ## App Structure (post-redesign)
 
 - Layout: fixed left sidebar (220px) + sticky top bar + scrollable page content area
-- Routes: `app/calculator/{overview,plan,projections,settings,accounts,expenses}/page.tsx`
+- Routes: `app/calculator/{overview,accounts,plan,expenses,projections,risk,charts,settings}/page.tsx`
+- **Monte Carlo lives only on Risk** (`components/pages/risk-page.tsx`): volatility inputs, success
+  rate, fan chart, investment scenarios. The worker runs only on `/calculator/risk`
+  (`lib/context/calculator-context.tsx`); every other page shows deterministic results
 - `lib/store/calculator-store.ts` — scenario state (per-scenario)
 - `lib/store/expenses-store.ts` — **global** (not scenario-tied); reflects real current spending
 
@@ -161,6 +168,8 @@ Design rules:
 - ❌ Don't use local formatCurrency — import from `lib/utils/currency`
 - ❌ Don't hardcode colors (`bg-blue-500`) — use semantic tokens (`bg-primary`, `text-foreground`)
 - ❌ Don't tie expenses to a scenario — `expenses-store.ts` is intentionally global
+- ❌ Don't show Monte Carlo results (success rate, percentiles) outside the Risk page — Overview
+  links to it instead. Decided 2026-10-31; see `docs/history/2026-10-31-risk-page.md`
 - ❌ Don't write raw `<p className="text-[10px] font-mono uppercase...">` — use `<SectionLabel>` or `<PageCard>`
 - ❌ Don't use `Card + CardHeader + CardTitle` for section cards — `CardTitle` renders `text-2xl font-semibold` which violates the design system
 - ⚠️ `calculator-store.ts` / `expenses-store.ts` branch coverage is ~72-76%, below the 85%

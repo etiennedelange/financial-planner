@@ -25,6 +25,7 @@ import { calculateProjection } from "../projection-engine"
 import { calculateReplacementRatio } from "../retirement-tax"
 import type { Account, DrawdownConfig, PersonalInfo, RetirementGoals } from "@/types"
 import { todayRands } from "../utils/money-time"
+import { HISTORICAL_RELIEF_SHARE } from "../utils/tax-relief"
 
 const basePersonalInfo: PersonalInfo = {
   currentAge: 35,
@@ -67,9 +68,13 @@ const survivingAccount: Account = {
  * percentage-of-balance strategies decay geometrically and never reach zero, so they
  * cannot produce a depletion at all. A fixture that fails to deplete would make every
  * depletion test below vacuous — which is exactly what happened in the old file.
+ *
+ * Discretionary, not an RA: a retirement fund is drawn as a living annuity whose 17.5%
+ * ceiling keeps a residual balance, so it can fail without ever reaching R0.
  */
 const depletingAccount: Account = {
   ...survivingAccount,
+  type: "discretionary",
   currentBalance: 200000,
   monthlyContribution: 500,
 }
@@ -268,10 +273,22 @@ describe("Projection Invariants", () => {
       const rows = surviving().yearlyProjections.slice(RETIREMENT_IDX)
       rows.forEach((y) => expect(y.incomeTax).toBeGreaterThanOrEqual(0))
 
-      // Magnitude check: a multi-million-rand annual pension withdrawal must attract
-      // material tax. A bug that zeroed income tax would pass a >= 0 check alone.
+      // Magnitude check: a bug that zeroed income tax would pass a >= 0 check alone.
+      // Under the default historical relief, brackets rise at ~57% of the 5.5% inflation, so
+      // check the first drawdown year by hand in 2026/27 money: scale the income down by
+      // 30 years of that relief, apply the 26% bracket less the R27,585 primary + secondary
+      // rebates, then scale back up.
+      const scale = Math.pow(1 + HISTORICAL_RELIEF_SHARE.incomeTax * 0.055, RETIREMENT_IDX)
+      const income = rows[0].withdrawals / scale
+      expect(income).toBeGreaterThan(245_100) // inside the 26% bracket
+      expect(income).toBeLessThan(383_100)
+      expect(rows[0].incomeTax).toBeCloseTo(
+        (44_118 + (income - 245_100) * 0.26 - (17820 + 9765)) * scale,
+        2,
+      )
+
       const totalTax = rows.reduce((sum, y) => sum + y.incomeTax, 0)
-      expect(totalTax).toBeGreaterThan(1_000_000)
+      expect(totalTax).toBeGreaterThan(250_000)
     })
 
     it("INV-018: lump-sum tax is reported in the total but NOT attributed per-year", () => {
