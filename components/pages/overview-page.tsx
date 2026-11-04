@@ -1,14 +1,18 @@
 "use client"
 
-import { DashboardMetricsGrid } from "@/components/dashboard/dashboard-metrics-grid"
 import { GettingStarted } from "@/components/dashboard/getting-started"
-import { KeyInsightsSummary } from "@/components/dashboard/key-insights-summary"
+import { NextBestStepCard } from "@/components/dashboard/next-best-step-card"
+import { OverviewTodayStats } from "@/components/dashboard/overview-today-stats"
+import { OverviewVerdictCard } from "@/components/dashboard/overview-verdict-card"
 import { PlanNarrativeCard } from "@/components/dashboard/plan-narrative-card"
-import { RiskLink } from "@/components/dashboard/risk-link"
+import { RetirementTimeline } from "@/components/dashboard/retirement-timeline"
+import { calculateOverviewSummary } from "@/lib/calculations/utils/overview-summary"
 import type { ProjectionResult } from "@/types"
+import { useMemo } from "react"
 
 interface OverviewPageProps {
   projection: ProjectionResult | null
+  displayMode: "nominal" | "real"
   retirementAge: number
   currentAge: number
   lifeExpectancy: number
@@ -17,11 +21,17 @@ interface OverviewPageProps {
   totalMonthlyContributions: number
   desiredMonthlyIncome: number
   annualIncome: number
-  hasAccounts: boolean
+  accountCount: number
 }
 
+/**
+ * Overview — verdict first. One sentence answers "am I okay?", the market-risk
+ * caveat sits directly under it, then the timeline, today's figures and the
+ * next action. Deterministic only: Monte Carlo results live on the Risk page.
+ */
 export function OverviewPage({
   projection,
+  displayMode,
   retirementAge,
   currentAge,
   lifeExpectancy,
@@ -30,37 +40,67 @@ export function OverviewPage({
   totalMonthlyContributions,
   desiredMonthlyIncome,
   annualIncome,
-  hasAccounts,
+  accountCount,
 }: OverviewPageProps) {
+  const summary = useMemo(
+    () =>
+      projection
+        ? calculateOverviewSummary({
+            projection,
+            currentAge,
+            retirementAge,
+            lifeExpectancy,
+            annualIncome,
+            desiredMonthlyIncome,
+            inflationRate,
+          })
+        : null,
+    [
+      projection,
+      currentAge,
+      retirementAge,
+      lifeExpectancy,
+      annualIncome,
+      desiredMonthlyIncome,
+      inflationRate,
+    ],
+  )
+
+  if (accountCount === 0 || !projection || !summary) {
+    return <GettingStarted />
+  }
+
   return (
-    <div className="space-y-6">
-      <DashboardMetricsGrid
-        projection={projection}
+    <div className="mx-auto max-w-6xl space-y-6">
+      <OverviewVerdictCard
+        summary={summary}
+        monthlyIncomeAtRetirement={projection.monthlyIncomeAtRetirement}
+        portfolioAtRetirement={projection.portfolioAtRetirement}
         retirementAge={retirementAge}
-        currentAge={currentAge}
         lifeExpectancy={lifeExpectancy}
-        inflationRate={inflationRate}
-        totalCurrentBalance={totalCurrentBalance}
-        totalMonthlyContributions={totalMonthlyContributions}
+        displayMode={displayMode}
       />
 
-      <RiskLink hasAccounts={hasAccounts} />
+      <RetirementTimeline
+        summary={summary}
+        currentAge={currentAge}
+        retirementAge={retirementAge}
+        lifeExpectancy={lifeExpectancy}
+      />
 
-      {projection ? (
-        <KeyInsightsSummary
-          projection={projection}
-          currentAge={currentAge}
-          retirementAge={retirementAge}
-          lifeExpectancy={lifeExpectancy}
-          currentMonthlyIncome={annualIncome / 12}
-          desiredMonthlyIncome={desiredMonthlyIncome}
-          inflationRate={inflationRate}
-        />
-      ) : (
-        <GettingStarted />
-      )}
+      <OverviewTodayStats
+        totalCurrentBalance={totalCurrentBalance}
+        totalMonthlyContributions={totalMonthlyContributions}
+        accountCount={accountCount}
+        yearsToRetirement={summary.yearsToRetirement}
+        currentAge={currentAge}
+        retirementAge={retirementAge}
+      />
 
-      <PlanNarrativeCard />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <NextBestStepCard maxMonthlyRaContribution={summary.maxMonthlyRaContribution} />
+        <PlanNarrativeCard />
+      </div>
     </div>
   )
 }

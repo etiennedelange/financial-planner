@@ -810,8 +810,8 @@ income gap whenever a depletion age exists. No negative balances are permitted.
   the living annuity band can pay less (17.5% ceiling) or more (2.5% minimum).
 - `incomeGoalShortfallAge` (`selectIncomeGoalShortfallAge`) is the first age at which the
   income paid is below the goal: desired income escalated to that year × spending-phase
-  multiplier. `null` = goal met every year. Overview's "On Track", "Goal Income Until", the
-  what-if readout, the printed verdict and the AI narrative use it. `portfolioDepletionAge`
+  multiplier. `null` = goal met every year. The Overview verdict ("On track", "Goal income until",
+  via `calculateOverviewSummary`), the what-if readout, the printed verdict and the AI narrative use it. `portfolioDepletionAge`
   alone cannot answer "on track": a fixed-percentage strategy never runs out, however little
   it pays.
 
