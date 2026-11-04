@@ -1,16 +1,20 @@
 "use client"
 
-import { DashboardMetricsGrid } from "@/components/dashboard/dashboard-metrics-grid"
 import { GettingStarted } from "@/components/dashboard/getting-started"
-import { KeyInsightsSummary } from "@/components/dashboard/key-insights-summary"
+import { NextBestStepCard } from "@/components/dashboard/next-best-step-card"
+import { OverviewTodayStats } from "@/components/dashboard/overview-today-stats"
+import { OverviewVerdictCard } from "@/components/dashboard/overview-verdict-card"
 import { PlanNarrativeCard } from "@/components/dashboard/plan-narrative-card"
-import { SimulationRunStatus } from "@/components/dashboard/simulation-run-status"
+import { RetirementTimeline } from "@/components/dashboard/retirement-timeline"
+import { calculateOverviewSummary } from "@/lib/calculations/utils/overview-summary"
 import type { ProjectionResult, SimulationResult } from "@/types"
+import { useMemo } from "react"
 
 interface OverviewPageProps {
   projection: ProjectionResult | null
   simulationResult: SimulationResult | null
   isSimulating: boolean
+  displayMode: "nominal" | "real"
   retirementAge: number
   currentAge: number
   lifeExpectancy: number
@@ -19,13 +23,19 @@ interface OverviewPageProps {
   totalMonthlyContributions: number
   desiredMonthlyIncome: number
   annualIncome: number
-  hasAccounts: boolean
+  accountCount: number
 }
 
+/**
+ * Overview — verdict first. One sentence answers "am I okay?", the market-risk
+ * check sits directly under it, then the timeline, today's figures and the
+ * next action.
+ */
 export function OverviewPage({
   projection,
   simulationResult,
   isSimulating,
+  displayMode,
   retirementAge,
   currentAge,
   lifeExpectancy,
@@ -34,44 +44,73 @@ export function OverviewPage({
   totalMonthlyContributions,
   desiredMonthlyIncome,
   annualIncome,
-  hasAccounts,
+  accountCount,
 }: OverviewPageProps) {
+  const successRate = simulationResult?.successRate ?? null
+
+  const summary = useMemo(
+    () =>
+      projection
+        ? calculateOverviewSummary({
+            projection,
+            currentAge,
+            retirementAge,
+            lifeExpectancy,
+            annualIncome,
+            desiredMonthlyIncome,
+            inflationRate,
+            monteCarloSuccessRate: successRate,
+          })
+        : null,
+    [
+      projection,
+      currentAge,
+      retirementAge,
+      lifeExpectancy,
+      annualIncome,
+      desiredMonthlyIncome,
+      inflationRate,
+      successRate,
+    ],
+  )
+
+  if (accountCount === 0 || !projection || !summary) {
+    return <GettingStarted />
+  }
+
   return (
-    <div className="space-y-6">
-      <DashboardMetricsGrid
-        projection={projection}
+    <div className="mx-auto max-w-6xl space-y-6">
+      <OverviewVerdictCard
+        summary={summary}
+        monthlyIncomeAtRetirement={projection.monthlyIncomeAtRetirement}
+        portfolioAtRetirement={projection.portfolioAtRetirement}
+        retirementAge={retirementAge}
+        lifeExpectancy={lifeExpectancy}
+        displayMode={displayMode}
         simulationResult={simulationResult}
         isSimulating={isSimulating}
-        retirementAge={retirementAge}
+      />
+
+      <RetirementTimeline
+        summary={summary}
         currentAge={currentAge}
+        retirementAge={retirementAge}
         lifeExpectancy={lifeExpectancy}
-        inflationRate={inflationRate}
+      />
+
+      <OverviewTodayStats
         totalCurrentBalance={totalCurrentBalance}
         totalMonthlyContributions={totalMonthlyContributions}
+        accountCount={accountCount}
+        yearsToRetirement={summary.yearsToRetirement}
+        currentAge={currentAge}
+        retirementAge={retirementAge}
       />
 
-      <SimulationRunStatus
-        simulationResult={simulationResult}
-        isSimulating={isSimulating}
-        hasAccounts={hasAccounts}
-      />
-
-      {projection ? (
-        <KeyInsightsSummary
-          projection={projection}
-          currentAge={currentAge}
-          retirementAge={retirementAge}
-          lifeExpectancy={lifeExpectancy}
-          currentMonthlyIncome={annualIncome / 12}
-          desiredMonthlyIncome={desiredMonthlyIncome}
-          inflationRate={inflationRate}
-          monteCarloSuccessRate={simulationResult?.successRate}
-        />
-      ) : (
-        <GettingStarted />
-      )}
-
-      <PlanNarrativeCard />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <NextBestStepCard maxMonthlyRaContribution={summary.maxMonthlyRaContribution} />
+        <PlanNarrativeCard />
+      </div>
     </div>
   )
 }

@@ -1,5 +1,8 @@
 # Documentation Update Log
 
+## 2026-11-04
+* **Update**: [Overview redesigned: verdict first](history/2026-11-04-overview-verdict-first.md) - The metric-tile grid and Key Insights give way to one verdict sentence, the market-risk check, a timeline and a next-best-step card.
+
 ## 2026-10-31
 * **Update**: [Next.js 16.4 re-verified; in-range dependency refresh; pnpm audit clean](history/2026-10-31-next-16-4-verification-dep-refresh.md) - Full suite re-run on Next 16.4.3 (closes #9); dev-only undici and zod advisories fixed; Playwright journeys found stale.
 * **Update**: [Lint, format and tests moved to Vite+ (Oxlint, Oxfmt, Vitest 5)](history/2026-10-31-vite-plus-oxc-migration.md) - ESLint and Prettier-style tooling replaced by `vp check`; the money-time guard ported to an Oxlint plugin; repo reformatted in one blame-ignored commit.

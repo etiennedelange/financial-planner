@@ -7,11 +7,12 @@ import { useShallow } from "zustand/react/shallow"
 
 export default function OverviewRoute() {
   const { projection, simulationResult, isSimulating } = useCalculator()
-  const { personalInfo, retirementGoals, accounts } = useCalculatorStore(
+  const { personalInfo, retirementGoals, accounts, displayMode } = useCalculatorStore(
     useShallow((s) => ({
       personalInfo: s.personalInfo,
       retirementGoals: s.retirementGoals,
       accounts: s.accounts,
+      displayMode: s.displayMode,
     })),
   )
 
@@ -26,6 +27,7 @@ export default function OverviewRoute() {
       projection={projection}
       simulationResult={simulationResult}
       isSimulating={isSimulating}
+      displayMode={displayMode}
       retirementAge={personalInfo.retirementAge}
       currentAge={personalInfo.currentAge}
       lifeExpectancy={personalInfo.lifeExpectancy}
@@ -34,7 +36,7 @@ export default function OverviewRoute() {
       totalMonthlyContributions={totalMonthlyContributions}
       desiredMonthlyIncome={retirementGoals.desiredMonthlyIncome}
       annualIncome={personalInfo.annualIncome}
-      hasAccounts={accounts.length > 0}
+      accountCount={accounts.length}
     />
   )
 }
