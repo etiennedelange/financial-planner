@@ -9,31 +9,18 @@ import type {
   DrawdownConfig,
   SimulationResult,
 } from "@/types"
-import { CAUTIOUS_VOLATILITY_FACTOR } from "@/lib/constants/investment-types"
-import type { WorkerRequest, WorkerResponse } from "./simulation.worker"
+import {
+  createRangeWorkerClient,
+  type RangeWorkerClient,
+  type SimulationRange,
+} from "./range-worker-client"
 
-/** Central (researched) and cautious (stressed) volatility, run together */
-export interface SimulationRange {
-  central: SimulationResult
-  cautious: SimulationResult
-}
+export { RANGE_VOLATILITY_SCALES, newRangeSeed, type SimulationRange } from "./range-worker-client"
 
 type SimState = { result: SimulationRange | null; isRunning: boolean; hasError: boolean }
 type SimAction = { type: "START" } | { type: "DONE"; result: SimulationRange } | { type: "ERROR" }
 
 export const initialSimState: SimState = { result: null, isRunning: false, hasError: false }
-
-/** The two volatility scales the Risk page runs, central first */
-export const RANGE_VOLATILITY_SCALES = [1, CAUTIOUS_VOLATILITY_FACTOR] as const
-
-/**
- * A fresh seed per request, shared by both simulations in it. Each request still samples
- * new futures (as the unseeded engine did), but the central and cautious runs see the
- * SAME futures, so the range reflects volatility alone.
- */
-export function newRangeSeed(random: () => number = Math.random): number {
-  return Math.floor(random() * 2 ** 31)
-}
 
 export function simReducer(state: SimState, action: SimAction): SimState {
   switch (action.type) {
@@ -72,14 +59,13 @@ export function useMonteCarloWorker(
 } {
   const [{ result, isRunning, hasError }, dispatch] = useReducer(simReducer, initialSimState)
 
-  const workerRef = useRef<Worker | null>(null)
-  const latestIdRef = useRef(0)
+  const clientRef = useRef<RangeWorkerClient | null>(null)
 
   // Tear down the worker when the component unmounts
   useEffect(() => {
     return () => {
-      workerRef.current?.terminate()
-      workerRef.current = null
+      clientRef.current?.dispose()
+      clientRef.current = null
     }
   }, [])
 
@@ -87,41 +73,23 @@ export function useMonteCarloWorker(
   useEffect(() => {
     if (!enabled || accounts.length === 0) return
 
-    // Lazily create the worker once
-    if (!workerRef.current) {
-      const worker = new Worker(new URL("./simulation.worker.ts", import.meta.url))
-      worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
-        const { id, results } = e.data
-        // Ignore responses for superseded runs
-        if (id === latestIdRef.current) {
-          dispatch({ type: "DONE", result: { central: results[0], cautious: results[1] } })
-        }
-      }
-      worker.onerror = (e) => {
-        console.error("Monte Carlo worker error:", e)
+    clientRef.current ??= createRangeWorkerClient(
+      () => new Worker(new URL("./simulation.worker.ts", import.meta.url)),
+      (range) => dispatch({ type: "DONE", result: range }),
+      (error) => {
+        console.error("Monte Carlo worker error:", error)
         dispatch({ type: "ERROR" })
-      }
-      workerRef.current = worker
-    }
-
-    const id = ++latestIdRef.current
-    const seed = newRangeSeed()
+      },
+    )
     dispatch({ type: "START" })
-
-    const request: WorkerRequest = {
-      id,
+    clientRef.current.run({
       accounts,
       personalInfo,
       retirementGoals,
       drawdownConfig,
-      configs: RANGE_VOLATILITY_SCALES.map((volatilityScale) => ({
-        numberOfRuns,
-        randomSeed: seed,
-        volatilityScale,
-      })),
+      numberOfRuns,
       marketAssumptions,
-    }
-    workerRef.current.postMessage(request)
+    })
   }, [
     enabled,
     accounts,
