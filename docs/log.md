@@ -2,6 +2,7 @@
 
 ## 2026-11-04
 * **Update**: [Overview redesigned: verdict first](history/2026-11-04-overview-verdict-first.md) - The metric-tile grid and Key Insights give way to one verdict sentence, a market-risk caveat linking to Risk, a timeline and a next-best-step card.
+* **Update**: [Balance charts now respect Today's Value](history/2026-11-04-charts-today-value.md) - Fan chart and growth chart always plotted nominal rands; series builders now take a required display basis.
 * **Update**: [Coverage gaps closed: worker lifecycle, currency, tooltips](history/2026-11-04-coverage-gaps-worker-currency.md) - Worker lifecycle extracted to a tested client; currency tests found and fixed five display bugs; global branch coverage back above 85% (82.8% → 85.87%).
 * **Update**: [Balance charts plotted each year a year early](history/2026-11-04-chart-age-off-by-one.md) - Both balance charts put year-end balances at the age during the year (R66.3M shown at 65 vs R65.0M at retirement); fixed with shared series builders; table deflation corrected; Overview says "steady returns only".
 * **Update**: [Historical stress test: a 2008-style first year of retirement](history/2026-11-04-historical-stress-test.md) - Deterministic Risk-page card comparing steady returns with each investment's worst researched 12-month fall in year one; reuses the projection engine through a required drawdown return override.

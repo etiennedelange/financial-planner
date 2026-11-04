@@ -152,7 +152,7 @@ Write-up: [history](../history/2026-10-31-risk-page.md).
 - [x] Historical stress test (e.g. a 2008-style fall at retirement), sourced from verified SA fund data (2026-11-04) — [history](../history/2026-11-04-historical-stress-test.md)
 - [ ] Rebuild the investment-scenario comparison on the user's own accounts and the living annuity rules (currently a pooled discretionary model with hard-coded returns)
 - [x] Plan → Market Assumptions: equity/bond/cash expected returns feed no calculation (labelled "reference only" 2026-10-31) — **decided: keep as-is** (Etienne, 2026-11-01); investment types carry their own suggested returns as form hints instead
-- [ ] Monte Carlo fan chart in Today's Value mode: axis reached ~R1.8B on a plan whose real final balance is ~R27M, so it may plot nominal values regardless of display mode (seen 2026-11-04, not yet checked)
+- [x] Monte Carlo fan chart (and the growth chart) ignored Today's Value and plotted nominal rands — fixed 2026-11-04, [history](../history/2026-11-04-charts-today-value.md)
 
 ---
 

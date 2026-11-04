@@ -1,4 +1,25 @@
 import type { SimulationResult, YearlyProjection } from "@/types"
+import { toRealValue } from "./currency"
+
+/**
+ * How a chart expresses rands: future (nominal) amounts, or today's rands. Required by the
+ * builders, so a chart cannot forget it: until 2026-11-04 both balance charts ignored the
+ * app's Today's Value setting and always plotted nominal rands (a plan worth ~R27M in
+ * today's rands plotted up to ~R1.8B), while the income chart beside them did convert.
+ */
+export interface DisplayBasis {
+  displayMode: "nominal" | "real"
+  /** Annual inflation as a decimal (0.055) */
+  inflationRate: number
+  currentAge: number
+}
+
+/** A point's balance is ON a birthday, `age − currentAge` years from now */
+function atAge(value: number, age: number, basis: DisplayBasis): number {
+  return basis.displayMode === "real"
+    ? toRealValue(value, age - basis.currentAge, basis.inflationRate)
+    : value
+}
 
 /**
  * Balance-over-age chart series. Both engines record each year's ENDING balance against
@@ -19,17 +40,26 @@ export interface BalancePoint {
   withdrawals: number
 }
 
-export function buildBalanceSeries(projections: YearlyProjection[]): BalancePoint[] {
+export function buildBalanceSeries(
+  projections: YearlyProjection[],
+  basis: DisplayBasis,
+): BalancePoint[] {
   if (projections.length === 0) return []
   const first = projections[0]
   return [
-    { age: first.age, balance: first.startingBalance, contributions: 0, withdrawals: 0 },
+    {
+      age: first.age,
+      balance: atAge(first.startingBalance, first.age, basis),
+      contributions: 0,
+      withdrawals: 0,
+    },
     ...projections.map((p) => ({
       age: p.age + 1,
-      balance: p.endingBalance,
-      // Flows that happened during the year leading up to this age
-      contributions: p.contributions,
-      withdrawals: p.withdrawals,
+      balance: atAge(p.endingBalance, p.age + 1, basis),
+      // Flows during the year leading up to this age, on the start-of-year basis the
+      // tables use (yearsFromNowAtRowStart)
+      contributions: atAge(p.contributions, p.age, basis),
+      withdrawals: atAge(p.withdrawals, p.age, basis),
     })),
   ]
 }
@@ -45,21 +75,25 @@ export interface PercentilePoint {
 
 export function buildPercentileSeries(
   percentiles: SimulationResult["percentiles"] | undefined,
-  currentAge: number,
   startingBalance: number,
+  basis: DisplayBasis,
 ): PercentilePoint[] {
   if (!percentiles || percentiles.p50.length === 0) return []
+  const { currentAge } = basis
   const start = Number.isFinite(startingBalance) ? startingBalance : 0
   return [
     { age: currentAge, p10: start, p25: start, p50: start, p75: start, p90: start },
-    ...percentiles.p50.map((_, index) => ({
-      age: currentAge + index + 1,
-      p10: percentiles.p10[index],
-      p25: percentiles.p25[index],
-      p50: percentiles.p50[index],
-      p75: percentiles.p75[index],
-      p90: percentiles.p90[index],
-    })),
+    ...percentiles.p50.map((_, index) => {
+      const age = currentAge + index + 1
+      return {
+        age,
+        p10: atAge(percentiles.p10[index], age, basis),
+        p25: atAge(percentiles.p25[index], age, basis),
+        p50: atAge(percentiles.p50[index], age, basis),
+        p75: atAge(percentiles.p75[index], age, basis),
+        p90: atAge(percentiles.p90[index], age, basis),
+      }
+    }),
   ]
 }
 

@@ -33,6 +33,8 @@ const dd = {
   lumpSumPercentage: 4,
 } as DrawdownConfig
 const assumptions = { compoundingMethod: "compound", equityVolatility: 0 } as never
+const nominalAt39 = { displayMode: "nominal", inflationRate: 0.055, currentAge: 39 } as const
+const realAt39 = { displayMode: "real", inflationRate: 0.055, currentAge: 39 } as const
 
 describe("chart series: a balance is plotted at the age just reached", () => {
   describe("Critical SA scenarios", () => {
@@ -41,7 +43,7 @@ describe("chart series: a balance is plotted at the age just reached", () => {
       // that year, so "65" showed the balance after the first retirement year
       // (R66.3M against R65.0M at retirement for the user's plan, 2026-11-04)
       const p = calculateProjection(accounts, person, goals, dd, assumptions)
-      const series = buildBalanceSeries(p.yearlyProjections)
+      const series = buildBalanceSeries(p.yearlyProjections, nominalAt39)
       expect(series.find((pt) => pt.age === 65)!.balance).toBeCloseTo(p.portfolioAtRetirement, 6)
     })
 
@@ -55,8 +57,8 @@ describe("chart series: a balance is plotted at the age just reached", () => {
         { numberOfRuns: 1, randomSeed: 1, volatilityScale: 1 },
         assumptions,
       )
-      const det = buildBalanceSeries(p.yearlyProjections)
-      const sim = buildPercentileSeries(mc.percentiles, person.currentAge, 1_750_000)
+      const det = buildBalanceSeries(p.yearlyProjections, nominalAt39)
+      const sim = buildPercentileSeries(mc.percentiles, 1_750_000, nominalAt39)
       expect(sim.map((pt) => pt.age)).toEqual(det.map((pt) => pt.age))
       sim.forEach((pt, i) => expect(pt.p50).toBeCloseTo(det[i].balance, 4))
       expect(sim.find((pt) => pt.age === 65)!.p50).toBeCloseTo(p.portfolioAtRetirement, 4)
@@ -66,14 +68,18 @@ describe("chart series: a balance is plotted at the age just reached", () => {
   describe("Series shape", () => {
     it("starts at today's balance at the current age and ends at life expectancy", () => {
       const p = calculateProjection(accounts, person, goals, dd, assumptions)
-      const series = buildBalanceSeries(p.yearlyProjections)
+      const series = buildBalanceSeries(p.yearlyProjections, nominalAt39)
       expect(series[0]).toEqual({ age: 39, balance: 1_750_000, contributions: 0, withdrawals: 0 })
       expect(series.at(-1)!.age).toBe(100)
       expect(series).toHaveLength(p.yearlyProjections.length + 1)
     })
 
     it("percentile series starts every band at the starting balance", () => {
-      const s = buildPercentileSeries({ p10: [1], p25: [2], p50: [3], p75: [4], p90: [5] }, 40, 100)
+      const s = buildPercentileSeries({ p10: [1], p25: [2], p50: [3], p75: [4], p90: [5] }, 100, {
+        displayMode: "nominal",
+        inflationRate: 0.055,
+        currentAge: 40,
+      })
       expect(s).toEqual([
         { age: 40, p10: 100, p25: 100, p50: 100, p75: 100, p90: 100 },
         { age: 41, p10: 1, p25: 2, p50: 3, p75: 4, p90: 5 },
@@ -83,10 +89,10 @@ describe("chart series: a balance is plotted at the age just reached", () => {
 
   describe("Edge cases", () => {
     it("empty input gives an empty series", () => {
-      expect(buildBalanceSeries([])).toEqual([])
-      expect(buildPercentileSeries(undefined, 40, 100)).toEqual([])
+      expect(buildBalanceSeries([], nominalAt39)).toEqual([])
+      expect(buildPercentileSeries(undefined, 100, nominalAt39)).toEqual([])
       expect(
-        buildPercentileSeries({ p10: [], p25: [], p50: [], p75: [], p90: [] }, 40, 100),
+        buildPercentileSeries({ p10: [], p25: [], p50: [], p75: [], p90: [] }, 100, nominalAt39),
       ).toEqual([])
     })
 
@@ -94,8 +100,8 @@ describe("chart series: a balance is plotted at the age just reached", () => {
       expect(
         buildPercentileSeries(
           { p10: [1], p25: [1], p50: [1], p75: [1], p90: [1] },
-          40,
           Number.NaN,
+          nominalAt39,
         )[0].p50,
       ).toBe(0)
     })
@@ -157,6 +163,63 @@ describe("table deflation: a row's ending balance in today's rands", () => {
 
     it("0% inflation: start and end bases give the same figure", () => {
       expect(toRealValue(1000, yearsFromNowAtRowEnd(50, 39), 0)).toBe(1000)
+    })
+  })
+})
+
+describe("chart series in Today's Value mode", () => {
+  describe("Critical SA scenarios", () => {
+    it("the balance at the retirement line is portfolioAtRetirement in today's rands", () => {
+      // Regression: both balance charts ignored Today's Value and plotted nominal rands
+      const p = calculateProjection(accounts, person, goals, dd, assumptions)
+      const at65 = buildBalanceSeries(p.yearlyProjections, realAt39).find((pt) => pt.age === 65)!
+      expect(at65.balance).toBeCloseTo(toRealValue(p.portfolioAtRetirement, 26, 0.055), 4)
+      expect(at65.balance).toBeLessThan(p.portfolioAtRetirement / 3)
+    })
+
+    it("Monte Carlo and deterministic real series agree at every age at zero volatility", () => {
+      const p = calculateProjection(accounts, person, goals, dd, assumptions)
+      const mc = runMonteCarloSimulation(
+        accounts,
+        person,
+        goals,
+        dd,
+        { numberOfRuns: 1, randomSeed: 1, volatilityScale: 1 },
+        assumptions,
+      )
+      const det = buildBalanceSeries(p.yearlyProjections, realAt39)
+      const sim = buildPercentileSeries(mc.percentiles, 1_750_000, realAt39)
+      sim.forEach((pt, i) => expect(pt.p50).toBeCloseTo(det[i].balance, 4))
+    })
+
+    it("each point is deflated by the years to that birthday; today's balance is unchanged", () => {
+      const s = buildPercentileSeries(
+        { p10: [1055], p25: [1055], p50: [1055], p75: [1055], p90: [1055] },
+        1000,
+        { displayMode: "real", inflationRate: 0.055, currentAge: 40 },
+      )
+      expect(s[0].p50).toBe(1000)
+      expect(s[1].p50).toBeCloseTo(1000, 10)
+    })
+  })
+
+  describe("Edge cases", () => {
+    it("flows are deflated on the start-of-year basis the tables use", () => {
+      const p = calculateProjection(accounts, person, goals, dd, assumptions)
+      const row = p.yearlyProjections[10]
+      const pt = buildBalanceSeries(p.yearlyProjections, realAt39)[11]
+      expect(pt.age).toBe(row.age + 1)
+      expect(pt.contributions).toBeCloseTo(
+        toRealValue(row.contributions, yearsFromNowAtRowStart(row.age, 39), 0.055),
+        6,
+      )
+    })
+
+    it("0% inflation: real and nominal series are identical", () => {
+      const p = calculateProjection(accounts, person, goals, dd, assumptions)
+      expect(buildBalanceSeries(p.yearlyProjections, { ...realAt39, inflationRate: 0 })).toEqual(
+        buildBalanceSeries(p.yearlyProjections, nominalAt39),
+      )
     })
   })
 })
