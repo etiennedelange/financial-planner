@@ -12,7 +12,20 @@ export interface AccountRisk {
   /** Accounts in the same group share one shock sequence */
   riskGroup: InvestmentType | typeof UNTYPED_RISK_GROUP
   investmentType: InvestmentType | null
+  /**
+   * The account's market return in the historical stress test's bad year, decimal;
+   * null = it does not fall (keeps its own expected return).
+   */
+  stressReturn: number | null
 }
+
+/**
+ * Stress return for an untyped account with a non-zero expected return: the SA equity
+ * figure (−37.6%, the 2008–09 category fall). Untyped accounts already take the global
+ * EQUITY volatility in Monte Carlo, so treating them as SA equity here is the consistent,
+ * cautious reading; a 0% expected return still marks cash, which does not fall.
+ */
+export const UNTYPED_STRESS_RETURN = INVESTMENT_TYPE_RISK.sa_equity.stressReturn
 
 /**
  * The volatility and market loading for one account — the single place this is decided.
@@ -36,13 +49,15 @@ export function resolveAccountRisk(
 ): AccountRisk {
   const type = account.investmentType
   if (type && type in INVESTMENT_TYPE_RISK) {
-    const { volatility, factorLoading } = INVESTMENT_TYPE_RISK[type]
-    return { volatility, factorLoading, riskGroup: type, investmentType: type }
+    const { volatility, factorLoading, stressReturn } = INVESTMENT_TYPE_RISK[type]
+    return { volatility, factorLoading, riskGroup: type, investmentType: type, stressReturn }
   }
+  const isCash = account.expectedReturn === 0
   return {
-    volatility: account.expectedReturn === 0 ? 0 : untypedVolatility,
+    volatility: isCash ? 0 : untypedVolatility,
     factorLoading: 1,
     riskGroup: UNTYPED_RISK_GROUP,
     investmentType: null,
+    stressReturn: isCash ? null : UNTYPED_STRESS_RETURN,
   }
 }

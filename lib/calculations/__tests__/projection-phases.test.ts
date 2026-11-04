@@ -139,6 +139,7 @@ describe("runDrawdownPhase", () => {
       0,
       "nominal",
       TAX,
+      [],
     )
 
   it("produces exactly one row per drawdown year", () => {
@@ -197,6 +198,7 @@ describe("runDrawdownPhase", () => {
       0,
       "nominal",
       TAX,
+      [],
     )
 
     expect(r.portfolioDepletionAge).toBe(personalInfo.retirementAge)

@@ -1002,6 +1002,33 @@ Computed percentiles: p10, p25, p50, p75, p90 — per year across all runs.
 
 ---
 
+### Historical stress test (deterministic)
+
+`calculateStressTest` (`lib/calculations/stress-test.ts`) compares the plan with steady
+returns against the same plan with a bad first year of retirement. In drawdown year 0 each
+account earns its `resolveAccountRisk(...).stressReturn`, less its own fees. From year 1 it
+earns its expected return again.
+
+| Account | First-year market return |
+|---|---|
+| Typed | the type's worst researched 12-month return (SA equity −37.6%, Balanced −16.7%, Conservative −7.4%, cash +3.8%); calendar 2008 in rand for global (−19.6%) and Nasdaq-100 (−21.2%), flagged as understating |
+| Untyped, non-zero return | SA equity (−37.6%), consistent with untyped accounts taking equity volatility in Monte Carlo |
+| Untyped, 0% return | no fall (cash marker) |
+
+**Engine.**
+- It reuses the whole engine. `calculateProjectionWithDrawdownReturns(…, overrides)` is the
+  one orchestration, and `calculateProjection` calls it with `[]`.
+- `runDrawdownPhase` takes a required `returnOverrides[year][account]`. A number replaces that
+  account's net return for the year, converted to monthly geometrically, (1 + R)^(1/12) − 1,
+  so the year returns exactly R under either compounding method. `null` keeps the account's
+  own return; NaN is ignored; anything below −100% clamps.
+
+**Outputs:**
+- `incomeGoalShortfallAge`;
+- money left at life expectancy, nominal and in today's rands;
+- the lowest year's income as a share of that year's goal, using `incomeGoalForDrawdownYear`,
+  the same goal the shortfall selector uses.
+
 ## 8. Investment Scenarios
 
 Three pre-defined SA-specific investment scenarios (nominal returns):

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vite-plus/test"
 import { INVESTMENT_TYPE_RISK } from "@/lib/constants/investment-types"
 import { INVESTMENT_TYPES, type InvestmentType } from "@/types"
-import { resolveAccountRisk, UNTYPED_RISK_GROUP } from "./account-risk"
+import { resolveAccountRisk, UNTYPED_RISK_GROUP, UNTYPED_STRESS_RETURN } from "./account-risk"
 
 describe("resolveAccountRisk", () => {
   describe("Critical SA scenarios", () => {
@@ -15,6 +15,7 @@ describe("resolveAccountRisk", () => {
         factorLoading: 0.88,
         riskGroup: "concentrated_equity",
         investmentType: "concentrated_equity",
+        stressReturn: -0.212,
       })
     })
 
@@ -33,6 +34,7 @@ describe("resolveAccountRisk", () => {
         factorLoading: 1,
         riskGroup: UNTYPED_RISK_GROUP,
         investmentType: null,
+        stressReturn: UNTYPED_STRESS_RETURN,
       })
     })
 
@@ -59,6 +61,23 @@ describe("resolveAccountRisk", () => {
       )
       expect(risk.riskGroup).toBe(UNTYPED_RISK_GROUP)
       expect(risk.volatility).toBe(0.165)
+    })
+  })
+
+  describe("Stress return (historical stress test)", () => {
+    it.each(INVESTMENT_TYPES)("%s: uses its type's researched stress return", (t) => {
+      expect(
+        resolveAccountRisk({ expectedReturn: 10, investmentType: t }, 0.165).stressReturn,
+      ).toBe(INVESTMENT_TYPE_RISK[t].stressReturn)
+    })
+
+    it("an untyped equity account falls like SA equity (-37.6%)", () => {
+      expect(UNTYPED_STRESS_RETURN).toBe(-0.376)
+      expect(resolveAccountRisk({ expectedReturn: 11 }, 0.165).stressReturn).toBe(-0.376)
+    })
+
+    it("an untyped 0% (cash) account does not fall", () => {
+      expect(resolveAccountRisk({ expectedReturn: 0 }, 0.165).stressReturn).toBeNull()
     })
   })
 })

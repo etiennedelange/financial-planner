@@ -19,6 +19,8 @@ import { MonteCarloChart } from "@/components/charts/monte-carlo-chart"
 import { ScenarioComparisonChart } from "@/components/charts/scenario-comparison-chart"
 import { InvestmentScenariosCard } from "@/components/results/investment-scenarios-card"
 import { MonteCarloMethodology } from "@/components/results/monte-carlo-methodology"
+import { StressTestCard } from "@/components/results/stress-test-card"
+import { calculateStressTest } from "@/lib/calculations/stress-test"
 
 /** Matches the simulation size the calculator context requests from the worker. */
 const NUMBER_OF_RUNS = 1000
@@ -80,6 +82,15 @@ export function RiskPage() {
       drawdownConfig,
       assumptions.compoundingMethod,
     ],
+  )
+
+  // Deterministic, two projections: cheap enough to compute directly (no worker)
+  const stressTest = useMemo(
+    () =>
+      accounts.length === 0
+        ? null
+        : calculateStressTest(accounts, personalInfo, retirementGoals, drawdownConfig, assumptions),
+    [accounts, personalInfo, retirementGoals, drawdownConfig, assumptions],
   )
 
   // Success at central and cautious volatility, run on the same simulated futures. The
@@ -192,6 +203,8 @@ export function RiskPage() {
         hasError={simulationError}
         hasAccounts={accounts.length > 0}
       />
+
+      {stressTest && <StressTestCard result={stressTest} displayMode={displayMode} />}
 
       {scenarios && (
         <div className="grid gap-6 lg:grid-cols-2">

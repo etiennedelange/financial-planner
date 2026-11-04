@@ -260,7 +260,16 @@ export interface DrawdownResult {
  *
  * `portfolioDepletionAge` is the first year the portfolio could not pay the full income:
  * either it ran out, or what is left sits in a living annuity already at its 17.5% ceiling.
+ *
+ * `returnOverrides[year][accountIndex]`, when a number, replaces that account's net annual
+ * return for that drawdown year (the historical stress test); `null`, or a year beyond the
+ * array, keeps the account's own return. An override is converted to monthly
+ * GEOMETRICALLY, (1 + R)^(1/12) − 1, whatever the compounding method, so the year returns
+ * exactly R — the nominal R/12 convention would turn a −37.6% year into about −31.8%.
+ * Required, so every caller states whether it is projecting steady returns (`[]`).
  */
+export type DrawdownReturnOverrides = ReadonlyArray<ReadonlyArray<number | null>>
+
 export function runDrawdownPhase(
   drawdownAccounts: DrawdownAccount[],
   personalInfo: PersonalInfo,
@@ -273,6 +282,7 @@ export function runDrawdownPhase(
   creditCarriedIntoDrawdown: number,
   compoundingMethod: CompoundingMethod,
   taxIndexation: TaxThresholdIndexation,
+  returnOverrides: DrawdownReturnOverrides,
 ): DrawdownResult {
   const rows: YearlyProjection[] = []
   let annualWithdrawal = initialAnnualWithdrawal
@@ -364,9 +374,18 @@ export function runDrawdownPhase(
     const pensionTaxFreeRoom = taxThresholdForAge(age) * thresholdScale + creditRemaining
 
     const targetWithdrawal = annualWithdrawal * getSpendingPhaseMultiplier(year)
+    const overridesThisYear = returnOverrides[year]
+    const ratesThisYear = overridesThisYear
+      ? monthlyRates.map((rate, i) => {
+          const override = overridesThisYear[i]
+          return override === null || override === undefined || !Number.isFinite(override)
+            ? rate
+            : calculateMonthlyReturn(Math.max(-1, override), "compound")
+        })
+      : monthlyRates
     const yearOutcome = runDrawdownYear(
       drawdownAccounts,
-      monthlyRates,
+      ratesThisYear,
       targetWithdrawal,
       pensionTaxFreeRoom,
     )
@@ -573,6 +592,18 @@ const INCOME_GOAL_TOLERANCE = 1e-6
  * "is the plan on track?" signal: `portfolioDepletionAge` alone cannot answer it, because a
  * percentage-of-portfolio strategy never depletes yet can pay a fraction of the goal.
  */
+export function incomeGoalForDrawdownYear(
+  desiredMonthlyIncomeToday: number,
+  yearsToRetirement: number,
+  drawdownYear: number,
+  inflationRate: number,
+): number {
+  return (
+    escalate(desiredMonthlyIncomeToday * 12, yearsToRetirement + drawdownYear, inflationRate) *
+    getSpendingPhaseMultiplier(drawdownYear)
+  )
+}
+
 export function selectIncomeGoalShortfallAge(
   rows: YearlyProjection[],
   yearsToRetirement: number,
@@ -582,9 +613,12 @@ export function selectIncomeGoalShortfallAge(
   if (!(desiredMonthlyIncomeToday > 0)) return null
   const drawdownRows = rows.slice(yearsToRetirement)
   for (let year = 0; year < drawdownRows.length; year++) {
-    const goal =
-      escalate(desiredMonthlyIncomeToday * 12, yearsToRetirement + year, inflationRate) *
-      getSpendingPhaseMultiplier(year)
+    const goal = incomeGoalForDrawdownYear(
+      desiredMonthlyIncomeToday,
+      yearsToRetirement,
+      year,
+      inflationRate,
+    )
     if (drawdownRows[year].withdrawals < goal * (1 - INCOME_GOAL_TOLERANCE)) {
       return drawdownRows[year].age
     }
@@ -625,6 +659,29 @@ export function calculateProjection(
   retirementGoals: RetirementGoals,
   drawdownConfig: DrawdownConfig,
   assumptions?: MarketAssumptions,
+): ProjectionResult {
+  return calculateProjectionWithDrawdownReturns(
+    accounts,
+    personalInfo,
+    retirementGoals,
+    drawdownConfig,
+    assumptions,
+    [],
+  )
+}
+
+/**
+ * The full projection with per-year drawdown return overrides (see `runDrawdownPhase`).
+ * `calculateProjection` is this with `[]`; the historical stress test passes a shocked
+ * first retirement year. One orchestration, so the two cannot drift apart.
+ */
+export function calculateProjectionWithDrawdownReturns(
+  accounts: Account[],
+  personalInfo: PersonalInfo,
+  retirementGoals: RetirementGoals,
+  drawdownConfig: DrawdownConfig,
+  assumptions: MarketAssumptions | undefined,
+  drawdownReturnOverrides: DrawdownReturnOverrides,
 ): ProjectionResult {
   // NaN ages fail `x < 0` comparisons (NaN < 0 is false), so a NaN age used to slip
   // straight past the guard below and poison every subsequent division. Detect
@@ -759,6 +816,7 @@ export function calculateProjection(
     lumpSumCommutation.creditCarriedIntoDrawdown,
     compoundingMethod,
     taxIndexation,
+    drawdownReturnOverrides,
   )
   yearlyProjections.push(...drawdown.rows)
 

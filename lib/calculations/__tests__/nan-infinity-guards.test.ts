@@ -188,6 +188,7 @@ describe("runDrawdownPhase — non-finite inputs", () => {
       0,
       "nominal",
       resolveTaxThresholdIndexation("historical", 0.055),
+      [],
     )
     expect(r.rows.every((row) => finite(row.endingBalance) && finite(row.withdrawals))).toBe(true)
   })
@@ -205,6 +206,7 @@ describe("runDrawdownPhase — non-finite inputs", () => {
       0,
       "nominal",
       resolveTaxThresholdIndexation("historical", 0.055),
+      [],
     )
     expect(
       r.rows.every((row) => row.cgtTaxableAmount === undefined || finite(row.cgtTaxableAmount)),

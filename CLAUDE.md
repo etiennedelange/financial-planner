@@ -34,14 +34,18 @@ npm run docs:check       # validate docs/ (frontmatter title+description, doc li
 container reload, so the audit works offline and can never drift versions.
 
 **Run `npm run shadscan` before committing** (or `shadscan:gate` for a
-hard-fail at <90/100). Baseline: 93/100 (A). Known non-passing findings
-(the only two that reduce the score; the "Worth checking" items do not):
+hard-fail at <90/100). Baseline: 90/100 (A). Known non-passing findings
+(the only three that reduce the score; the "Worth checking" items do not):
 - `mobile-nav-present` — waived (mobile bottom tab bar is the pattern); see
   [docs/history/2026-08-16-shadscan-accessibility-audit.md](docs/history/2026-08-16-shadscan-accessibility-audit.md).
 - `icon-buttons-have-labels` at `components/ui/animated-icon-button.tsx` — static
   false positive: the wrapper spreads `...props` onto `Button`, so the scanner can't
   see the label. All 11 call sites (`accounts-page.tsx`, `expenses-page.tsx`) pass
   `aria-label` (verified 2026-10-25). New call sites must keep doing so.
+- `empty-state-present` at `components/results/stress-test-card.tsx` — waived 2026-11-04: the
+  flagged table is the steady vs 2008-style comparison, which always has exactly three fixed
+  rows, so an empty state would be dead code (the per-account falls table does have one); see
+  [docs/history/2026-11-04-historical-stress-test.md](docs/history/2026-11-04-historical-stress-test.md).
 
 When a new finding appears, fix it or record an explicit implement/waive
 decision; never churn code just to move score-neutral advisories.
