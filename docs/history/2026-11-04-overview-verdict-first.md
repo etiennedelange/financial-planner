@@ -38,7 +38,7 @@ inflation (`money-time.ts`); it calculates no returns.
 - `overview-summary.test.ts`: 16 tests (SA scenarios incl. shortfall from the first retirement
   year, 0% inflation, zero years, inverted ages, zero balance, no goal, out-of-window shortfall
   age, non-finite inputs); 100% statement/branch coverage. Expected today's-rand values checked against `=x/1.055^26`.
-- Full suite 1280/1280 (after merging `main`), `pnpm typecheck` clean, `vp check` 0 errors (no
+- Full suite 1337/1337 with coverage thresholds (after merging `main` through #31), `pnpm typecheck` clean, `vp check` 0 errors (no
   warnings in new files), `pnpm build` clean (with placeholder Supabase env), shadscan 90/100 —
   the same as `main` at the merge base.
 - Browser: dev server with one account, Overview at 1440px dark + light and 390px dark.

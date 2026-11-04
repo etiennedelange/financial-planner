@@ -55,9 +55,9 @@ _Identified 2026-06-07 via parallel agent audit (UI/UX, calculations, test cover
 
 ### Medium Priority
 - [ ] **Supabase test strategy** — current tests mock the entire Supabase query chain (brittle to API changes); consider integration tests against the local test DB
-- [ ] **`monte-carlo/use-monte-carlo-worker.ts`** — worker lifecycle and message-passing errors untested (23% lines; only the reducer and range helpers are unit-tested, 2026-11-04)
-- [ ] **Global branch coverage below threshold** — `npm run test:coverage` fails the 85% global branch threshold: 82.41% at `e7d4978`, 82.8% after the 2026-11-04 work. CI does not run coverage, so nothing flags it
-- [ ] **`currency.ts` / `formatters.ts`** — no tests for negative values, very large numbers, or rounding edge cases
+- [x] **`monte-carlo/use-monte-carlo-worker.ts`** — worker lifecycle moved to the tested `range-worker-client.ts` (2026-11-04) — [history](../history/2026-11-04-coverage-gaps-worker-currency.md)
+- [x] **Global branch coverage below threshold** — back above 85% (82.8% → 85.87%, 2026-11-04) — [history](../history/2026-11-04-coverage-gaps-worker-currency.md). CI still does not run coverage, so a regression would go unflagged
+- [x] **`currency.ts`** — negative, large, rounding and non-finite cases tested; five display bugs fixed (2026-11-04) — [history](../history/2026-11-04-coverage-gaps-worker-currency.md). (`formatters.ts` no longer exists)
 - [ ] **`scenario-comparison.ts`** — `compareScenarios` function barely tested; missing zero-contribution, short (1-5 year) and long (40+ year) horizon cases
 
 ---
