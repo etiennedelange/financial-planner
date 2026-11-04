@@ -47,8 +47,11 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Test
-        run: npm run test
+      # Runs the full suite with coverage; fails below the thresholds in vite.config.ts
+      # (85% global branches). Before 2026-11-04 CI ran plain tests, so coverage sat
+      # below its own threshold unnoticed.
+      - name: Test (with coverage thresholds)
+        run: npm run test:coverage
 
       - name: Build
         run: npm run build

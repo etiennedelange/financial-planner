@@ -109,3 +109,70 @@ describe("getPayloadConfigFromPayload", () => {
     expect(entry?.label).toBe("Likely range")
   })
 })
+
+describe("chart tooltips — edge cases", () => {
+  describe("getPayloadConfigFromPayload", () => {
+    it("returns undefined for a missing payload item", () => {
+      expect(getPayloadConfigFromPayload(config, null, "p50")).toBeUndefined()
+      expect(getPayloadConfigFromPayload(config, undefined, "p50")).toBeUndefined()
+    })
+
+    it("resolves through a string field on the item itself", () => {
+      // item.name = "p50" redirects the lookup from "name" to the p50 entry
+      expect(getPayloadConfigFromPayload(config, { name: "p50" }, "name")?.label).toBe("Median")
+    })
+
+    it("falls back to the key's own entry when the redirected key is not configured", () => {
+      expect(getPayloadConfigFromPayload(config, { name: "unknown" }, "nestEgg")?.label).toBe(
+        "Nest egg",
+      )
+    })
+
+    it("ignores a non-object nested payload", () => {
+      const item = { dataKey: "p90", payload: null }
+      expect(getPayloadConfigFromPayload(config, item, "p90")?.label).toBe("Possible range")
+    })
+
+    it("returns undefined when neither key is configured", () => {
+      expect(getPayloadConfigFromPayload(config, { dataKey: "zzz" }, "zzz")).toBeUndefined()
+    })
+  })
+
+  describe("resolveTooltipLabelValue", () => {
+    it("uses an explicit labelKey's config label instead of the x value", () => {
+      const v = resolveTooltipLabelValue("2026", {
+        labelKey: "p75",
+        payload: [{ dataKey: "p50" }],
+        config,
+      })
+      expect(v).toBe("Likely range")
+    })
+
+    it("falls back to the item name, then to 'value', for the config key", () => {
+      expect(resolveTooltipLabelValue(undefined, { payload: [{ name: "p90" }], config })).toBe(
+        "Possible range",
+      )
+      expect(resolveTooltipLabelValue(undefined, { payload: [{}], config })).toBeNull()
+    })
+  })
+
+  describe("formatters with missing or bad values", () => {
+    it("formats a non-numeric percentile value as R 0, keyed 'value' with no item", () => {
+      expect(formatPercentileTooltip("abc", undefined, config)).toBe(`value: ${formatCurrency(0)}`)
+    })
+
+    it("uses the item name when there is no dataKey, and the raw key when unconfigured", () => {
+      expect(formatPercentileTooltip(1000, { name: "p50" }, config)).toBe(
+        `Median: ${formatCurrency(1000)}`,
+      )
+      expect(formatPercentileTooltip(1000, { dataKey: "p99" }, config)).toBe(
+        `p99: ${formatCurrency(1000)}`,
+      )
+    })
+
+    it("treats a missing scenario item or bad value as currency zero", () => {
+      expect(formatScenarioTooltip("abc", undefined)).toBe(formatCurrency(0))
+      expect(formatScenarioTooltip(undefined, { dataKey: "success" })).toBe("0%")
+    })
+  })
+})
