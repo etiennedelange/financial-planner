@@ -71,18 +71,21 @@ export function formatCurrency(
     inflationRate: infl = 0.055,
   } = options
 
-  const displayValue = displayMode === "real" ? toRealValue(value, fromNow, infl) : value
+  const rawValue = displayMode === "real" ? toRealValue(value, fromNow, infl) : value
+  // An invalid number is a defect upstream, not an amount: show "—", never "RNaN" or "R∞"
+  if (!Number.isFinite(rawValue)) return NO_VALUE
+  // −0.4 rounds to zero at 0 decimals; without this Intl renders "-R 0"
+  const displayValue = roundsToZero(rawValue, decimals) ? 0 : rawValue
 
   if (compact) {
-    if (Math.abs(displayValue) >= 1_000_000_000) {
-      return `R${(displayValue / 1_000_000_000).toFixed(1)}B`
-    }
-    if (Math.abs(displayValue) >= 1_000_000) {
-      return `R${(displayValue / 1_000_000).toFixed(1)}M`
-    }
-    if (Math.abs(displayValue) >= 1_000) {
-      return `R${(displayValue / 1_000).toFixed(0)}K`
-    }
+    // Sign first, like the full format ("-R 1 250 000"), so the two read alike
+    const sign = displayValue < 0 ? "-" : ""
+    const abs = Math.abs(displayValue)
+    // Each threshold sits where the smaller unit would round up to 1,000 ("R1000.0M",
+    // "R1000K"), so the next unit takes over at that point
+    if (abs >= 999_950_000) return `${sign}R${(abs / 1_000_000_000).toFixed(1)}B`
+    if (abs >= 999_500) return `${sign}R${(abs / 1_000_000).toFixed(1)}M`
+    if (abs >= 999.5) return `${sign}R${(abs / 1_000).toFixed(0)}K`
   }
 
   return new Intl.NumberFormat("en-ZA", {
@@ -91,6 +94,14 @@ export function formatCurrency(
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   }).format(displayValue)
+}
+
+/** Shown in place of an amount that is not a finite number */
+export const NO_VALUE = "—"
+
+function roundsToZero(value: number, decimals: number): boolean {
+  const scale = Math.pow(10, decimals)
+  return Math.round(Math.abs(value) * scale) === 0
 }
 
 /**
@@ -104,12 +115,13 @@ export function formatCurrencyCompact(
 ): string {
   const displayValue =
     displayMode === "real" ? toRealValue(value, yearsFromNow, inflationRate) : value
+  if (!Number.isFinite(displayValue)) return NO_VALUE
 
-  if (displayValue >= 1_000_000) {
-    return `R${(displayValue / 1_000_000).toFixed(1)}M`
-  } else if (displayValue >= 1_000) {
-    return `R${(displayValue / 1_000).toFixed(0)}k`
-  } else {
-    return `R${displayValue.toFixed(0)}`
-  }
+  // Thresholds on the magnitude, so negatives compact too ("-R2.5M", not "R-2500000"), and
+  // on the ROUNDED value, so R999.60 reads "R1k" rather than "R1000"
+  const sign = Math.round(displayValue) < 0 ? "-" : ""
+  const abs = Math.abs(displayValue)
+  if (abs >= 999_500) return `${sign}R${(abs / 1_000_000).toFixed(1)}M`
+  if (abs >= 999.5) return `${sign}R${(abs / 1_000).toFixed(0)}k`
+  return `${sign}R${abs.toFixed(0)}`
 }
