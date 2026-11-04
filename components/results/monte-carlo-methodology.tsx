@@ -35,6 +35,10 @@ export function MonteCarloMethodology({
           Run {numberOfRuns.toLocaleString()} simulated futures, each with random yearly returns
         </li>
         <li>
+          Each account&apos;s expected return is treated as its typical (median) yearly return, so
+          half the simulated futures do better than your projection and half do worse
+        </li>
+        <li>
           Each year draws one market move shared by all your accounts, so they rise and fall
           together
         </li>
@@ -48,7 +52,7 @@ export function MonteCarloMethodology({
       <div className="rounded-lg bg-muted p-4 space-y-1">
         <p className="text-sm font-medium">Log-normal return formula</p>
         <code className="text-sm bg-background px-2 py-1 rounded block">
-          logMean = ln(1 + return) − 0.5 × volatility²
+          logMean = ln(1 + return)
         </code>
         <code className="text-sm bg-background px-2 py-1 rounded block">
           randomReturn = e^(logMean + volatility × Z) − 1

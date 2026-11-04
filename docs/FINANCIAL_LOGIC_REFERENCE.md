@@ -840,35 +840,37 @@ const shocks = generateMarketShocks(totalYears, rng)              // z_t ~ N(0, 
 accountReturns = accounts.map(acc =>
   returnsFromShocks(calculateEffectiveAnnualReturn(netReturn, method), vol, shocks))
 // each draw R is then converted to monthly GEOMETRICALLY: (1 + R)^(1/12) − 1
-// r_t = exp(log(1 + netReturn) − vol²/2 + vol × z_t) − 1
+// r_t = exp(log(1 + netReturn) + vol × z_t) − 1
 ```
 
-**Log-normal returns** (corrected for Jensen's inequality / volatility drag):
+**Log-normal returns, centred on the median** (`returnsFromShocks`,
+`lib/monte-carlo/random-returns.ts`, the only place this formula lives):
 ```typescript
-function generateReturnSequence(
-  expectedReturn: number,
-  volatility: number,
-  years: number
-): number[] {
-  return Array.from({ length: years }, () => {
-    // Drift adjustment: ensures geometric mean = stated expectedReturn
-    const logMean = Math.log(1 + expectedReturn) - (volatility * volatility) / 2
-    const logReturn = randomNormal(logMean, volatility)
-    return Math.exp(logReturn) - 1
-  })
+function returnsFromShocks(expectedReturn: number, volatility: number, shocks: number[]) {
+  const logMean = Math.log(1 + expectedReturn)          // no −σ²/2 drag term
+  return shocks.map((z) => Math.exp(logMean + volatility * z) - 1)
 }
 ```
 
-Why log-normal: simple normally distributed returns can go below -100%.
-The drift correction `-σ²/2` (Jensen's inequality) ensures the expected geometric
-growth rate matches the stated `expectedReturn`.
+Why log-normal: simple normally distributed returns can go below −100%.
+
+**Expected return = typical (median, compound) return** (decided 2026-11-04). With
+`logMean = ln(1 + r)`, each year's median simple return is `r` and the median path compounds
+at exactly `r`, so the deterministic projection sits in the middle of the Monte Carlo range.
+The arithmetic mean of the draws is higher, `(1 + r)·e^(σ²/2) − 1` (≈ 11.5% for r = 10%,
+σ = 16.5%). This matches how SA fund and index long-run returns are quoted (CAGR). Before
+2026-11-04 the log mean was `ln(1 + r) − σ²/2`, treating `r` as an arithmetic mean: the
+simulated mean equalled the projection, and the median path landed ~34% below it after
+30 years at σ = 16.5%.
 
 ### Simulation Run — Accumulation Phase
 
 Each account's return sequence comes from the run's shared shocks, centred on the effective
 annual growth the projection compounds to (`calculateEffectiveAnnualReturn`: (1 + r/12)^12 − 1
-under nominal, r under compound) and converted to monthly geometrically. The simulated mean
-therefore equals the projection under both methods; the median sits below it (log-normal).
+under nominal, r under compound) and converted to monthly geometrically. With no cash flows
+the simulated median therefore equals the projection under both methods; the mean sits above
+it (log-normal). With contributions or withdrawals the median is close to, not exactly, the
+projection.
 Before 2026-11-01 each draw used the nominal R/12, which inflated mean growth from 10.47% to
 ~12.1% a year at a 10% return and 16% volatility. The shared TFSA allowance matches the
 deterministic engine:

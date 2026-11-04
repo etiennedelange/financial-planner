@@ -378,11 +378,12 @@ describe("SA audit scenarios — Monte Carlo agrees with the projection", () => 
   )
 
   it.each(["nominal", "compound"] as const)(
-    "%s: at 16 percent volatility the mean final balance equals the deterministic projection",
+    "%s: at 16 percent volatility the median final balance equals the deterministic projection",
     (compoundingMethod) => {
       // R1M TFSA, retired, nothing withdrawn: the projection compounds 10% net for 25 years.
-      // Converting each random year with R/12 under `nominal` used to inflate the mean by
-      // ~43% over 25 years (12.1% vs 10.47% a year); the mean must now match within noise.
+      // Converting each random year with R/12 under `nominal` used to inflate growth by
+      // ~43% over 25 years (12.1% vs 10.47% a year). Expected returns are the typical
+      // (median) return, so with no cash flows the median path IS the projection.
       const tfsa = [account({ type: "tfsa", currentBalance: 1_000_000, expectedReturn: 10 })]
       const deterministic = calculateProjection(tfsa, person(65, 65), goals(0), fixedAmount, {
         compoundingMethod,
@@ -397,9 +398,14 @@ describe("SA audit scenarios — Monte Carlo agrees with the projection", () => 
         { numberOfRuns: 4000, randomSeed: 11 },
         { equityVolatility: 16, compoundingMethod } as never,
       )
-      // Standard error of the mean here is ~1.5%; 5% is a 3-sigma band
-      expect(mc.averageFinalBalance / expected).toBeGreaterThan(0.95)
-      expect(mc.averageFinalBalance / expected).toBeLessThan(1.05)
+      const finals = mc.runs.map((r) => r.finalBalance).sort((a, b) => a - b)
+      const median = (finals[1999] + finals[2000]) / 2
+      // Standard error of the median here is ~1.6% (1.2533 · σ√25 / √4000 in log terms);
+      // 5% is a 3-sigma band
+      expect(median / expected).toBeGreaterThan(0.95)
+      expect(median / expected).toBeLessThan(1.05)
+      // The mean sits above by the volatility drag: e^(25 · 0.16² / 2) ≈ 1.377
+      expect(mc.averageFinalBalance / expected).toBeGreaterThan(1.25)
     },
   )
 

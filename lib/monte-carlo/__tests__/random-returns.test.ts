@@ -267,18 +267,33 @@ describe("generateMarketShocks / returnsFromShocks", () => {
     returns.forEach((r) => expect(r).toBeCloseTo(0.07, 12))
   })
 
-  it("the arithmetic mean of the simple returns approximates the expected return", () => {
+  it("the median of the simple returns approximates the expected (typical) return", () => {
+    const shocks = generateMarketShocks(20000, createSeededRandom(3))
+    const returns = returnsFromShocks(0.1, 0.165, shocks).sort((a, b) => a - b)
+    const median = (returns[9999] + returns[10000]) / 2
+    expect(median).toBeCloseTo(0.1, 2)
+  })
+
+  it("the arithmetic mean sits above the expected return by the volatility drag", () => {
+    // E[e^(μ + σZ)] = e^(μ + σ²/2), so with μ = ln(1.1) the mean is 1.1·e^(σ²/2) − 1
     const shocks = generateMarketShocks(20000, createSeededRandom(3))
     const returns = returnsFromShocks(0.1, 0.165, shocks)
     const mean = returns.reduce((s, r) => s + r, 0) / returns.length
-    expect(mean).toBeCloseTo(0.1, 2)
+    const theoretical = 1.1 * Math.exp((0.165 * 0.165) / 2) - 1 // ≈ 11.51%
+    expect(mean).toBeCloseTo(theoretical, 2)
+    expect(mean).toBeGreaterThan(0.1)
+  })
+
+  it("a zero shock returns exactly the expected return at any volatility", () => {
+    returnsFromShocks(0.1, 0.3, [0, 0]).forEach((r) => expect(r).toBeCloseTo(0.1, 12))
   })
 
   it("generateReturnSequence draws the same values as before the refactor", () => {
     // generateReturnSequence is now returnsFromShocks over generateMarketShocks; both
-    // consume the generator identically, so seeded sequences are unchanged.
+    // consume the generator identically, so seeded sequences are unchanged. The log mean
+    // is ln(1 + r) with no drag term (median-return basis, 2026-11-04).
     const rng = createSeededRandom(42)
-    const logMean = Math.log(1.1) - (0.15 * 0.15) / 2
+    const logMean = Math.log(1.1)
     const expected = Array.from({ length: 5 }, () => Math.exp(randomNormal(logMean, 0.15, rng)) - 1)
     const actual = generateReturnSequence(0.1, 0.15, 5, createSeededRandom(42))
     actual.forEach((r, t) => expect(r).toBeCloseTo(expected[t], 12))

@@ -66,15 +66,21 @@ export function generateMarketShocks(years: number, rng: RandomSource = Math.ran
 /**
  * Annual log-normal returns for one account from a shared shock sequence.
  *
- * The log mean is lowered by half the variance (volatility drag) so the arithmetic mean
- * of the simple returns equals `expectedReturn`.
+ * `expectedReturn` is the TYPICAL (median, compound) annual return: logMean = ln(1 + r),
+ * with no volatility-drag correction. Every year's median simple return is therefore r,
+ * the median path compounds at exactly r, and the deterministic projection sits in the
+ * middle of the Monte Carlo range. The arithmetic mean of the draws is higher,
+ * (1 + r)·e^(σ²/2) − 1. Decided 2026-11-04, because SA fund and index long-run returns
+ * are quoted as compound (CAGR) figures; before that the log mean was lowered by σ²/2 so
+ * the arithmetic mean equalled r and the median path landed ~34% below the projection
+ * after 30 years at σ = 16.5%.
  */
 export function returnsFromShocks(
   expectedReturn: number,
   volatility: number,
   shocks: number[],
 ): number[] {
-  const logMean = Math.log(1 + expectedReturn) - (volatility * volatility) / 2
+  const logMean = Math.log(1 + expectedReturn)
   return shocks.map((z) => Math.exp(logMean + volatility * z) - 1)
 }
 

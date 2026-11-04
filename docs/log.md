@@ -1,5 +1,8 @@
 # Documentation Update Log
 
+## 2026-11-04
+* **Update**: [Monte Carlo expected return is the typical (median) return](history/2026-11-04-mc-median-return-basis.md) - The −σ²/2 drag removed so the projection is the middle of the Monte Carlo range; tests, golden file and methodology copy updated.
+
 ## 2026-11-01
 * **Update**: [Multi-agent audit fixes: on-track definition, headline income, MC bias, withdrawal order, s11F carry-forward](history/2026-11-01-audit-fixes.md) - Five audit findings fixed with tests; the withdrawal-order trade-off measured; main vs branch compared on the user's exact plan.
 

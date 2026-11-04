@@ -164,7 +164,7 @@ Write-up and main-vs-branch comparison: [history](../history/2026-11-01-audit-fi
 
 ### Pending (from the audit)
 - [ ] Medical aid escalation at 9% for decades: cap or taper, and feed it into depletion/on-track
-- [ ] Decide whether expected return is an arithmetic (mean) or compound (median) return in Monte Carlo
+- [x] Expected return is the typical (median) return in Monte Carlo (2026-11-04) — [history](../history/2026-11-04-mc-median-return-basis.md)
 - [ ] Longer-history check of "historical" tax relief; neutral option labels
 - [ ] Shortfall depth instead of all-or-nothing success; one set of tone labels
 - [ ] Risk page: `compareScenarios` memo depends on the whole `assumptions` object

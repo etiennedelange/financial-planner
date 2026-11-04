@@ -1079,9 +1079,10 @@ describe("runMonteCarloSimulation", () => {
       const netReturn = expectedReturnPct / 100
       const vol = equityVolatilityPct / 100
       // Returns are centred on the effective annual growth of the nominal method,
-      // (1 + r/12)^12 − 1, and each draw compounds geometrically over the year
+      // (1 + r/12)^12 − 1, and each draw compounds geometrically over the year. The
+      // expected return is the median, so the log mean has no drag term
       const effectiveAnnual = Math.pow(1 + netReturn / 12, 12) - 1
-      const logMean = Math.log(1 + effectiveAnnual) - (vol * vol) / 2
+      const logMean = Math.log(1 + effectiveAnnual)
       const z0 = Math.sqrt(-2 * Math.log(0.5)) * Math.cos(2 * Math.PI * 0.25)
       const r = Math.exp(logMean + vol * z0) - 1
 
