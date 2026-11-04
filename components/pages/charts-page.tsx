@@ -5,27 +5,17 @@ import { useShallow } from "zustand/react/shallow"
 import { useCalculator } from "@/lib/context/calculator-context"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { PortfolioGrowthChart } from "@/components/charts/portfolio-growth-chart"
-import { MonteCarloChart } from "@/components/charts/monte-carlo-chart"
 import { IncomeSustainabilityChart } from "@/components/charts/income-sustainability-chart"
 import { SensitivityTornadoChart } from "@/components/charts/sensitivity-tornado-chart"
-import { ScenarioComparisonChart } from "@/components/charts/scenario-comparison-chart"
 import { CostOfDelayChart } from "@/components/charts/cost-of-delay-chart"
 import { Button } from "@/components/ui/button"
+import { computePortfolioTotals } from "@/lib/calculations/utils/portfolio-totals"
 import { PageCard } from "@/components/ui/page-card"
-import { buildPlanVerdict, type PlanVerdictTone } from "@/lib/utils/plan-verdict"
 import { Wallet } from "lucide-react"
 import Link from "next/link"
 
-const verdictToneStyles: Record<PlanVerdictTone, { text: string; icon: string }> = {
-  neutral: { text: "text-muted-foreground", icon: "text-muted-foreground" },
-  success: { text: "text-chart-2", icon: "text-chart-2" },
-  good: { text: "text-chart-4", icon: "text-chart-4" },
-  warning: { text: "text-warning", icon: "text-warning" },
-  danger: { text: "text-destructive", icon: "text-destructive" },
-}
-
 export function ChartsPage() {
-  const { projection, simulationResult, isSimulating, simulationError } = useCalculator()
+  const { projection } = useCalculator()
 
   const { displayMode, accounts, personalInfo, retirementGoals, drawdownConfig, assumptions } =
     useCalculatorStore(
@@ -39,38 +29,7 @@ export function ChartsPage() {
       })),
     )
 
-  const totals = useMemo(() => {
-    const totalBalance = accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
-    const totalContribution = accounts.reduce((sum, acc) => sum + acc.monthlyContribution, 0)
-    const weightedReturn =
-      totalBalance > 0
-        ? accounts.reduce(
-            (sum, acc) => sum + (acc.expectedReturn / 100) * (acc.currentBalance / totalBalance),
-            0,
-          )
-        : 0.1
-    const weightedFees =
-      totalBalance > 0
-        ? accounts.reduce(
-            (sum, acc) => sum + (acc.annualFees / 100) * (acc.currentBalance / totalBalance),
-            0,
-          )
-        : 0.01
-    const avgEscalation =
-      accounts.length > 0
-        ? accounts.reduce((sum, acc) => sum + acc.contributionEscalation / 100, 0) / accounts.length
-        : 0.06
-    return { totalBalance, totalContribution, weightedReturn, weightedFees, avgEscalation }
-  }, [accounts])
-
-  const verdict = useMemo(
-    () =>
-      buildPlanVerdict({
-        successRate: simulationResult?.successRate ?? null,
-        depletionAge: projection?.portfolioDepletionAge ?? null,
-      }),
-    [simulationResult, projection],
-  )
+  const totals = useMemo(() => computePortfolioTotals(accounts), [accounts])
 
   if (accounts.length === 0) {
     return (
@@ -92,30 +51,15 @@ export function ChartsPage() {
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground max-w-prose">
-        Every visualization your plan can produce. Review each one, then jump back to Overview or
-        Projections to act on what you see.
+        Your plan as projected with steady returns. For how market ups and downs could change it,
+        see{" "}
+        <Link href="/calculator/risk" className="text-foreground underline underline-offset-2">
+          Risk
+        </Link>
+        .
       </p>
 
-      <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3">
-        <span
-          className={`font-mono text-lg font-semibold tabular-nums ${verdictToneStyles[verdict.tone].text}`}
-        >
-          {verdict.tone === "neutral" ? "—" : "◆"}
-        </span>
-        <p className={`text-sm font-medium ${verdictToneStyles[verdict.tone].text}`}>
-          {verdict.headline}
-        </p>
-      </div>
-
       <div className="grid gap-6 lg:grid-cols-2">
-        <MonteCarloChart
-          simulationResult={simulationResult}
-          currentAge={personalInfo.currentAge}
-          retirementAge={personalInfo.retirementAge}
-          isRunning={isSimulating}
-          hasError={simulationError}
-          hasAccounts={accounts.length > 0}
-        />
         {projection && (
           <IncomeSustainabilityChart
             projection={projection}
@@ -139,17 +83,6 @@ export function ChartsPage() {
           fees={totals.weightedFees}
           contributionEscalation={totals.avgEscalation}
           compoundingMethod={assumptions.compoundingMethod}
-        />
-        <ScenarioComparisonChart
-          currentSavings={totals.totalBalance}
-          monthlyContribution={totals.totalContribution}
-          personalInfo={personalInfo}
-          retirementGoals={retirementGoals}
-          drawdownConfig={drawdownConfig}
-          contributionEscalation={totals.avgEscalation}
-          fees={totals.weightedFees}
-          compoundingMethod={assumptions.compoundingMethod}
-          displayMode={displayMode}
         />
         <SensitivityTornadoChart
           accounts={accounts}

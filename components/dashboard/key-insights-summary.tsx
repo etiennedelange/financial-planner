@@ -19,7 +19,6 @@ interface KeyInsightsSummaryProps {
   currentMonthlyIncome: number
   desiredMonthlyIncome: number
   inflationRate: number
-  monteCarloSuccessRate?: number | null
 }
 
 export function KeyInsightsSummary({
@@ -30,7 +29,6 @@ export function KeyInsightsSummary({
   currentMonthlyIncome,
   desiredMonthlyIncome,
   inflationRate,
-  monteCarloSuccessRate,
 }: KeyInsightsSummaryProps) {
   const derived = useMemo(() => {
     if (!projection) return null
@@ -50,30 +48,19 @@ export function KeyInsightsSummary({
       percentToRate(inflationRate),
     )
 
-    const hasSuccessRate = monteCarloSuccessRate !== null && monteCarloSuccessRate !== undefined
-    const portfolioLastsUntilLifeExpectancy =
-      projection.portfolioDepletionAge === null ||
-      projection.portfolioDepletionAge >= lifeExpectancy
-
-    const isOnTrack = hasSuccessRate
-      ? monteCarloSuccessRate >= 70
-      : portfolioLastsUntilLifeExpectancy
+    // Deterministic only: market-risk odds live on the Risk page. On track means the
+    // projection pays the income GOAL every year — not merely that money survives, which a
+    // percentage strategy always does however little it pays.
+    const shortfallAge = projection.incomeGoalShortfallAge
+    const isOnTrack = shortfallAge === null
 
     const incomeReplacementRatio = Math.round(
       (projection.monthlyIncomeAtRetirement / desiredIncomeAtRetirement) * 100,
     )
 
-    let onTrackDescription: string
-    if (hasSuccessRate) {
-      onTrackDescription =
-        monteCarloSuccessRate >= 70
-          ? `${monteCarloSuccessRate.toFixed(0)}% success rate`
-          : `Only ${monteCarloSuccessRate.toFixed(0)}% success rate`
-    } else if (portfolioLastsUntilLifeExpectancy) {
-      onTrackDescription = "Portfolio lasts until life expectancy"
-    } else {
-      onTrackDescription = `Portfolio depletes at age ${projection.portfolioDepletionAge}`
-    }
+    const onTrackDescription = isOnTrack
+      ? `Pays your goal income to age ${lifeExpectancy} with steady returns only; market ups and downs can bring this forward (see Risk)`
+      : `Below your goal income from age ${shortfallAge}, even with steady returns`
 
     return { monthlyRaContribution, isOnTrack, incomeReplacementRatio, onTrackDescription }
   }, [
@@ -83,7 +70,6 @@ export function KeyInsightsSummary({
     currentMonthlyIncome,
     inflationRate,
     desiredMonthlyIncome,
-    monteCarloSuccessRate,
     lifeExpectancy,
   ])
 

@@ -9,6 +9,8 @@
 import { describe, expect, it } from "vite-plus/test"
 import {
   selectAverageEffectiveTaxRate,
+  selectIncomeGoalShortfallAge,
+  selectMonthlyGrossIncomeAtRetirement,
   selectMonthlyNetIncomeAtRetirement,
   selectRawIncomeGap,
   selectShortfallAmount,
@@ -112,20 +114,64 @@ describe("selectSurplusAmount", () => {
 describe("selectShortfallAmount", () => {
   /**
    * SETTLED SEMANTICS — shortfall means "the money ran out before I died", not
-   * "cumulative income gap". A surviving portfolio therefore reports no shortfall even
-   * when the plan delivered less income than was asked for. These tests pin that decision
-   * so a future change to it has to be deliberate.
+   * "cumulative income gap". A plan that funded its income to life expectancy therefore
+   * reports no shortfall even when the strategy delivered less income than was asked for.
+   * These tests pin that decision so a future change to it has to be deliberate.
    */
   it("reports the full gap when the portfolio depleted", () => {
-    expect(selectShortfallAmount(9_000_000, 0)).toBe(9_000_000)
+    expect(selectShortfallAmount(9_000_000, 78)).toBe(9_000_000)
   })
 
-  it("reports zero when the portfolio survived, however large the income gap", () => {
-    expect(selectShortfallAmount(91_000_000, 1)).toBe(0)
+  it("reports zero when the plan never ran short, however large the income gap", () => {
+    expect(selectShortfallAmount(91_000_000, null)).toBe(0)
   })
 
-  it("treats a surplus of exactly zero as depleted", () => {
-    // The boundary: R0 left means the money ran out.
-    expect(selectShortfallAmount(500_000, 0)).toBe(500_000)
+  it("reports the gap even when a residual balance survives", () => {
+    // A living annuity at its 17.5% ceiling cannot fund the income, yet keeps a balance.
+    // The old surplus-based rule reported R0 shortfall for that plan.
+    expect(selectShortfallAmount(2_500_000, 84)).toBe(2_500_000)
+  })
+})
+
+describe("selectMonthlyGrossIncomeAtRetirement", () => {
+  it("reads the gross income actually paid in the first drawdown year", () => {
+    const rows = [row({ age: 64 }), row({ age: 65, withdrawals: 175_000 })]
+    expect(selectMonthlyGrossIncomeAtRetirement(rows, 1)).toBeCloseTo(175_000 / 12, 9)
+  })
+
+  it("is 0 when there is no drawdown year", () => {
+    expect(selectMonthlyGrossIncomeAtRetirement([row()], 1)).toBe(0)
+  })
+})
+
+describe("selectIncomeGoalShortfallAge", () => {
+  // Retiring now (no years to escalate); R10,000/month goal = R120,000 a year at 0% inflation
+  const flat = (withdrawals: number[]) =>
+    withdrawals.map((w, i) => row({ age: 65 + i, withdrawals: w }))
+
+  it("is null when every year pays the goal", () => {
+    expect(selectIncomeGoalShortfallAge(flat([120_000, 120_000, 130_000]), 0, 10_000, 0)).toBeNull()
+  })
+
+  it("returns the first age paying less than the goal, even if money remains", () => {
+    expect(selectIncomeGoalShortfallAge(flat([120_000, 119_000, 120_000]), 0, 10_000, 0)).toBe(66)
+  })
+
+  it("escalates the goal with inflation from today to each drawdown year", () => {
+    // 2 years to retirement at 10%: goal R145,200 in the first drawdown year
+    const rows = [row({ age: 63 }), row({ age: 64 }), row({ age: 65, withdrawals: 145_000 })]
+    expect(selectIncomeGoalShortfallAge(rows, 2, 10_000, 0.1)).toBe(65)
+    rows[2].withdrawals = 145_200
+    expect(selectIncomeGoalShortfallAge(rows, 2, 10_000, 0.1)).toBeNull()
+  })
+
+  it("applies the spending-phase multiplier: 80% of the goal is enough from year 16", () => {
+    const withdrawals = Array.from({ length: 20 }, (_, y) => (y <= 15 ? 120_000 : 96_000))
+    expect(selectIncomeGoalShortfallAge(flat(withdrawals), 0, 10_000, 0)).toBeNull()
+  })
+
+  it("no goal (R0 or negative) means no shortfall", () => {
+    expect(selectIncomeGoalShortfallAge(flat([0, 0]), 0, 0, 0.05)).toBeNull()
+    expect(selectIncomeGoalShortfallAge(flat([0, 0]), 0, -5, 0.05)).toBeNull()
   })
 })

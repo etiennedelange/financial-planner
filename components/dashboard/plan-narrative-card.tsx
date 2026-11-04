@@ -39,7 +39,7 @@ export function PlanNarrativeCard() {
       drawdownConfig: state.drawdownConfig,
     })),
   )
-  const { projection, simulationResult } = useCalculator()
+  const { projection } = useCalculator()
 
   const [tier, setTier] = useState<ModelTier>(DEFAULT_MODEL_TIER)
 
@@ -66,7 +66,6 @@ export function PlanNarrativeCard() {
     retirementGoals,
     drawdownConfig,
     projection,
-    simulationResult,
     tier,
   })
 

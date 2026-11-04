@@ -10,23 +10,19 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
-import { compareScenarios } from "@/lib/calculations/scenario-comparison"
+import type { ScenarioComparisonResult } from "@/lib/calculations/scenario-comparison"
 import { formatCurrency } from "@/lib/utils/currency"
 import { formatScenarioTooltip } from "@/lib/utils/chart-tooltip"
 import { deflate } from "@/lib/calculations/utils/money-time"
-import type { PersonalInfo, RetirementGoals, DrawdownConfig, CompoundingMethod } from "@/types"
 import { PieChart } from "lucide-react"
 import { memo, useMemo } from "react"
 
 interface ScenarioComparisonChartProps {
-  currentSavings: number
-  monthlyContribution: number
-  personalInfo: PersonalInfo
-  retirementGoals: RetirementGoals
-  drawdownConfig: DrawdownConfig
-  contributionEscalation: number
-  fees: number
-  compoundingMethod: CompoundingMethod
+  /** From `compareScenarios`, computed once by the page and shared with the scenarios card. */
+  result: ScenarioComparisonResult
+  hasAnyInput: boolean
+  yearsToRetirement: number
+  inflationRate: number // percent, e.g. 5.5
   displayMode: "nominal" | "real"
 }
 
@@ -36,48 +32,20 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export const ScenarioComparisonChart = memo(function ScenarioComparisonChart({
-  currentSavings,
-  monthlyContribution,
-  personalInfo,
-  retirementGoals,
-  drawdownConfig,
-  contributionEscalation,
-  fees,
-  compoundingMethod,
+  result,
+  hasAnyInput,
+  yearsToRetirement,
+  inflationRate: inflationRatePercent,
   displayMode,
 }: ScenarioComparisonChartProps) {
-  const result = useMemo(
-    () =>
-      compareScenarios({
-        currentSavings,
-        monthlyContribution,
-        personalInfo,
-        retirementGoals,
-        drawdownConfig,
-        contributionEscalation,
-        fees,
-        compoundingMethod,
-      }),
-    [
-      currentSavings,
-      monthlyContribution,
-      personalInfo,
-      retirementGoals,
-      drawdownConfig,
-      contributionEscalation,
-      fees,
-      compoundingMethod,
-    ],
-  )
-
-  const yearsToRetirement = personalInfo.retirementAge - personalInfo.currentAge
-  const inflationRate = retirementGoals.inflationRate / 100
+  const inflationRate = inflationRatePercent / 100
 
   const data = useMemo(
     () =>
       (["conservative", "balanced", "aggressive"] as const).map((key) => {
         const scenario = result[key]
         return {
+          key,
           name: scenario.scenario,
           nestEgg:
             displayMode === "real"
@@ -88,8 +56,6 @@ export const ScenarioComparisonChart = memo(function ScenarioComparisonChart({
       }),
     [result, displayMode, yearsToRetirement, inflationRate],
   )
-
-  const hasAnyInput = currentSavings > 0 || monthlyContribution > 0
 
   if (!hasAnyInput) {
     return (
@@ -177,7 +143,7 @@ export const ScenarioComparisonChart = memo(function ScenarioComparisonChart({
                 <Cell
                   key={row.name}
                   fill={
-                    row.name === result.recommendedScenario
+                    row.key === result.recommendedScenario
                       ? "hsl(var(--chart-1))"
                       : "hsl(var(--muted))"
                   }

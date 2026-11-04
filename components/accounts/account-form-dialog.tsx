@@ -28,10 +28,11 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
+import { INVESTMENT_TYPE_RISK } from "@/lib/constants/investment-types"
 import { MAX_MONETARY_AMOUNT, SA_TAX_LIMITS } from "@/lib/constants/limits"
 import { useBoundedMonetary } from "@/lib/hooks/use-bounded-monetary"
 import type { Account } from "@/types"
-import { ACCOUNT_TYPE_LABELS } from "@/types"
+import { ACCOUNT_TYPE_LABELS, INVESTMENT_TYPES } from "@/types"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useEffect, useState } from "react"
 import { Controller, useForm, useFormState } from "react-hook-form"
@@ -69,6 +70,8 @@ const accountSchema = z.object({
     .number({ error: "Enter contribution escalation" })
     .min(0, "Escalation must be between 0% and 20%")
     .max(20, "Escalation must be between 0% and 20%"),
+  // Optional so an existing untyped account can be edited without choosing one
+  investmentType: z.enum(INVESTMENT_TYPES).optional(),
   tfsaContributionsToDate: z
     .number({ error: "Enter contributions to date" })
     .min(0, "Contributions cannot be negative")
@@ -106,6 +109,9 @@ const getDefaultValues = (account?: Account | null): AccountFormData => ({
   contributionEscalation:
     account?.contributionEscalation ?? SA_DEFAULTS.defaultContributionEscalation,
   tfsaContributionsToDate: account?.tfsaContributionsToDate,
+  // New accounts default to Balanced; an existing untyped account stays untyped until the
+  // user chooses (its Monte Carlo behaviour must not change silently)
+  investmentType: account ? account.investmentType : "balanced",
 })
 
 // ─── Progress header (add flow only) ─────────────────────────────────────────
@@ -229,6 +235,8 @@ function PerformanceFields({ form }: { form: FormRef }) {
   const { register, watch, control } = form
   const { errors } = useFormState({ control })
   const selectedType = watch("type")
+  const investmentType = watch("investmentType")
+  const typeRisk = investmentType ? INVESTMENT_TYPE_RISK[investmentType] : null
 
   // Physically block TFSA contribution input above the lifetime limit.
   const { onChange: tfsaOnChange, ...tfsaRegister } = register("tfsaContributionsToDate", {
@@ -241,12 +249,47 @@ function PerformanceFields({ form }: { form: FormRef }) {
 
   return (
     <div className="space-y-4">
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5">
+          <Label htmlFor="af-investment-type">Invested In</Label>
+          <InfoTooltip
+            content="Sets how much this account's value swings in the Risk page simulation, and how it moves with your other accounts. It does not change the projection."
+            side="top"
+          />
+        </div>
+        <Controller
+          name="investmentType"
+          control={control}
+          render={({ field }) => (
+            <Select value={field.value ?? ""} onValueChange={field.onChange}>
+              <SelectTrigger id="af-investment-type" aria-label="Invested in">
+                <SelectValue placeholder="Choose an investment type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {INVESTMENT_TYPES.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {INVESTMENT_TYPE_RISK[t].label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          )}
+        />
+        <p className="text-xs text-muted-foreground">
+          {typeRisk
+            ? `e.g. ${typeRisk.example}`
+            : "Not set: the simulation uses the equity volatility from the Risk page."}
+        </p>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <div className="flex items-center gap-1.5">
             <Label htmlFor="af-return">Expected Return (%)</Label>
             <InfoTooltip
-              content="SA equity: 10–12% | Balanced: 7–10% | Bonds: 8–9% | Cash: 7–8%"
+              content="A long-run compound (CAGR) return, as fund factsheets quote it. SA equity: 10–12% | Balanced: 9–10% | Bonds: 8–9% | Cash: 6–7%"
               side="top"
             />
           </div>
@@ -305,7 +348,10 @@ function PerformanceFields({ form }: { form: FormRef }) {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Pre-filled with SA defaults — adjust if needed.
+        Use a long-run compound (CAGR) return.
+        {typeRisk
+          ? ` A typical long-run figure for ${typeRisk.label.toLowerCase()} is ${typeRisk.suggestedReturn}%.`
+          : " Pre-filled with SA defaults — adjust if needed."}
       </p>
 
       {selectedType === "tfsa" && (

@@ -1,7 +1,36 @@
 import { calculateIncomeTax, calculateLumpSumTax } from "../constants/tax-tables"
 import { SA_TAX_LIMITS } from "../constants/limits"
 import { MEDICAL_AID_CREDITS_CONFIG } from "../constants/tax-year.config"
-import type { MoneyBasis, Rands } from "./utils/money-time"
+import { inflationFactor } from "./utils/money-time"
+import type { DecimalRate, MoneyBasis, Rands } from "./utils/money-time"
+
+/**
+ * Factor by which every rand threshold in the 2026/27 tables is scaled for the tax year
+ * `yearsFromNow` years ahead. The current tax year is "today" (year 0, factor 1).
+ *
+ * ASSUMPTION, not statute: SARS publishes only the current year's tables. Applying those
+ * nominal figures unchanged to nominal incomes decades ahead assumes Treasury never again
+ * grants inflation relief. Under that reading, a retiree drawing R288k a year in today's
+ * money paid 41% effective tax at age 89 instead of about 8.5%.
+ *
+ * How fast each table grows is the user's `taxThresholdRelief` setting, resolved to a rate
+ * per threshold group by `resolveTaxThresholdIndexation` (utils/tax-relief.ts): by default
+ * the share of inflation SARS actually passed on over 2016/17–2026/27, or full inflation,
+ * or none at all as a stress test.
+ *
+ * Because every threshold in a table scales by the same factor and the tax is piecewise
+ * linear, tax under the scaled table is exactly `scale * tax(amount / scale)`.
+ *
+ * TFSA limits are deliberately NOT indexed — see the TFSA allowance in tfsa-allowance.ts.
+ */
+export function taxThresholdScale(yearsFromNow: number, indexationRate: DecimalRate): number {
+  return inflationFactor(Math.max(0, yearsFromNow), indexationRate)
+}
+
+/** A scale that cannot be used as a divisor falls back to the unscaled 2026/27 tables. */
+function usableScale(thresholdScale: number): number {
+  return Number.isFinite(thresholdScale) && thresholdScale > 0 ? thresholdScale : 1
+}
 
 /**
  * Configuration for retirement tax calculations
@@ -80,19 +109,38 @@ export function calculateIncomeTaxWithRebates(
 }
 
 /**
+ * Income tax with rebates and the optional s6A credit, under tables indexed by
+ * `thresholdScale` (see {@link taxThresholdScale}). With a scale of 1 this is exactly
+ * {@link calculateIncomeTaxWithRebates}.
+ */
+export function calculateIndexedIncomeTax(
+  annualIncome: number,
+  age: number,
+  medicalAidDependants: number | undefined,
+  thresholdScale: number,
+): number {
+  const scale = usableScale(thresholdScale)
+  return scale * calculateIncomeTaxWithRebates(annualIncome / scale, age, medicalAidDependants)
+}
+
+/**
  * Check if income is below tax-free threshold for given age
  * @param annualIncome Gross annual income
  * @param age Current age
  * @returns True if income is below tax-free threshold
  */
 export function isBelowTaxThreshold(annualIncome: number, age: number): boolean {
-  if (age >= 75) {
-    return annualIncome <= SA_TAX_LIMITS.taxThreshold75Plus
-  } else if (age >= 65) {
-    return annualIncome <= SA_TAX_LIMITS.taxThreshold65To74
-  } else {
-    return annualIncome <= SA_TAX_LIMITS.taxThresholdUnder65
-  }
+  return annualIncome <= taxThresholdForAge(age)
+}
+
+/**
+ * The 2026/27 tax-free threshold for a person of this age: the income at which the
+ * age-based rebates cover the tax. Multiply by `taxThresholdScale` for a later tax year.
+ */
+export function taxThresholdForAge(age: number): number {
+  if (age >= 75) return SA_TAX_LIMITS.taxThreshold75Plus
+  if (age >= 65) return SA_TAX_LIMITS.taxThreshold65To74
+  return SA_TAX_LIMITS.taxThresholdUnder65
 }
 
 /**
@@ -158,10 +206,11 @@ export function calculateRetirementTax(
 export function calculateExcessContributionCredit(
   annualPensionContributions: number,
   annualIncome: number,
+  thresholdScale: number,
 ): number {
   const limit = Math.min(
     annualIncome * SA_TAX_LIMITS.pensionRaDeductionRate,
-    SA_TAX_LIMITS.pensionRaMaxDeduction,
+    SA_TAX_LIMITS.pensionRaMaxDeduction * usableScale(thresholdScale),
   )
   return Math.max(0, annualPensionContributions - limit)
 }
@@ -174,11 +223,15 @@ export function calculateExcessContributionCredit(
  *
  * Note: the credit is applied against the full gross lump sum regardless of account mix
  * (a simplification — legally it applies only to pension/RA/preservation lump sums).
+ *
+ * @param thresholdScale - indexation of the lump-sum table to the retirement tax year; see
+ *   {@link taxThresholdScale}. Pass 1 for the 2026/27 table as published.
  */
 export function calculateLumpSumCommutation(
   portfolioValue: number,
   lumpSumPercentage: number,
-  accumulatedExcessCredit: number = 0,
+  accumulatedExcessCredit: number,
+  thresholdScale: number,
 ): {
   lumpSumAmount: number
   taxableLumpSum: number
@@ -194,7 +247,8 @@ export function calculateLumpSumCommutation(
 
   const creditAppliedToLumpSum = Math.min(accumulatedExcessCredit, lumpSumAmount)
   const taxableLumpSum = lumpSumAmount - creditAppliedToLumpSum
-  const lumpSumTax = calculateLumpSumTax(taxableLumpSum)
+  const scale = usableScale(thresholdScale)
+  const lumpSumTax = scale * calculateLumpSumTax(taxableLumpSum / scale)
   const netLumpSum = lumpSumAmount - lumpSumTax
   const remainingPortfolio = portfolioValue - lumpSumAmount
 

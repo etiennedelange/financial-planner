@@ -53,6 +53,13 @@ export interface ProjectionResult {
   monthlyIncomeAtRetirement: number
   monthlyNetIncomeAtRetirement: number // After-tax monthly income
   portfolioDepletionAge: number | null // null if never depletes
+  /**
+   * First age at which the income paid falls below the desired income (inflated to that
+   * year, after the spending-phase multiplier); null if the goal is met every year. Unlike
+   * `portfolioDepletionAge` this catches strategies that never run out of money but pay
+   * less than the goal — e.g. a fixed percentage of a small portfolio.
+   */
+  incomeGoalShortfallAge: number | null
   shortfallAmount: number
   surplusAmount: number
   totalLifetimeIncomeTax: number // Total income tax paid over retirement

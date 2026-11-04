@@ -116,7 +116,7 @@ export function RetirementGoalsForm() {
         <div className="flex items-center gap-2">
           <Label htmlFor="desiredMonthlyIncome">Desired Monthly Income (today&apos;s Rands)</Label>
           <InfoTooltip
-            content="How much monthly income you want in retirement, in today's money. The calculator automatically inflates this to retirement date. This is your target - the success rate shows the probability of achieving this income goal throughout retirement."
+            content="How much monthly income you want in retirement, in today's money and before tax. The calculator automatically inflates this to retirement date and shows the after-tax amount in the results. This is your target - the success rate shows the probability of achieving this income goal throughout retirement."
             side="right"
           />
         </div>

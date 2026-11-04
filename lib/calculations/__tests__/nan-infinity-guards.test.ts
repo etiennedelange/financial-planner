@@ -8,6 +8,7 @@
  */
 import { describe, expect, it } from "vite-plus/test"
 import { calculateProjection, runAccumulationPhase, runDrawdownPhase } from "../projection-engine"
+import { resolveTaxThresholdIndexation } from "../utils/tax-relief"
 import { runMonteCarloSimulation } from "@/lib/monte-carlo/simulation-engine"
 import { calculateOptimalContribution } from "../optimal-contribution"
 import type { Account, DrawdownConfig, PersonalInfo, RetirementGoals } from "@/types"
@@ -146,6 +147,7 @@ describe("runAccumulationPhase — non-finite inputs", () => {
       30,
       0.055,
       "nominal",
+      resolveTaxThresholdIndexation("historical", 0.055),
     )
     expect(r.rows.every((row) => finite(row.endingBalance) && finite(row.growth))).toBe(true)
   })
@@ -184,6 +186,9 @@ describe("runDrawdownPhase — non-finite inputs", () => {
       0.055,
       120000,
       0,
+      "nominal",
+      resolveTaxThresholdIndexation("historical", 0.055),
+      [],
     )
     expect(r.rows.every((row) => finite(row.endingBalance) && finite(row.withdrawals))).toBe(true)
   })
@@ -199,6 +204,9 @@ describe("runDrawdownPhase — non-finite inputs", () => {
       0.055,
       120000,
       0,
+      "nominal",
+      resolveTaxThresholdIndexation("historical", 0.055),
+      [],
     )
     expect(
       r.rows.every((row) => row.cgtTaxableAmount === undefined || finite(row.cgtTaxableAmount)),
@@ -213,7 +221,7 @@ describe("runMonteCarloSimulation — non-finite inputs", () => {
       personalInfo,
       goals,
       config,
-      { numberOfRuns: 10, randomSeed: 1 },
+      { numberOfRuns: 10, randomSeed: 1, volatilityScale: 1 },
     )
     expect(finite(r.successRate)).toBe(true)
     expect(r.percentiles.p50.every((v) => finite(v))).toBe(true)
@@ -225,7 +233,7 @@ describe("runMonteCarloSimulation — non-finite inputs", () => {
       personalInfo,
       goals,
       config,
-      { numberOfRuns: 10, randomSeed: 1 },
+      { numberOfRuns: 10, randomSeed: 1, volatilityScale: 1 },
     )
     for (const key of ["p10", "p25", "p50", "p75", "p90"] as const) {
       expect(r.percentiles[key].every((v) => finite(v))).toBe(true)
@@ -239,7 +247,7 @@ describe("runMonteCarloSimulation — non-finite inputs", () => {
       { ...personalInfo, currentAge: NaN },
       goals,
       config,
-      { numberOfRuns: 10, randomSeed: 1 },
+      { numberOfRuns: 10, randomSeed: 1, volatilityScale: 1 },
     )
     expect(r.runs).toHaveLength(0)
     expect(r.successRate).toBe(0)

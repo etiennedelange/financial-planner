@@ -4,7 +4,13 @@ import { calculateProjection } from "@/lib/calculations/projection-engine"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useAuth } from "@/components/supabase-provider"
 import { formatCurrency } from "@/lib/utils/currency"
+import { yearsFromNowAtRowEnd, yearsFromNowAtRowStart } from "@/lib/utils/chart-series"
 import type { ProjectionResult } from "@/types"
+import { TAX_THRESHOLD_RELIEF_LABELS } from "@/types"
+import {
+  DEFAULT_TAX_THRESHOLD_RELIEF,
+  describeTaxReliefAssumption,
+} from "@/lib/calculations/utils/tax-relief"
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useShallow } from "zustand/react/shallow"
@@ -126,7 +132,13 @@ export function PrintClient() {
 
   // Currency formatter that respects displayMode and age-based deflation
   function f(value: number, age: number) {
-    const yearsFromNow = age - personalInfo.currentAge
+    const yearsFromNow = yearsFromNowAtRowStart(age, personalInfo.currentAge)
+    return formatCurrency(value, displayMode, yearsFromNow, inflationRate)
+  }
+
+  // A row's ending balance is at the END of the year the person is `age`
+  function fEnd(value: number, age: number) {
+    const yearsFromNow = yearsFromNowAtRowEnd(age, personalInfo.currentAge)
     return formatCurrency(value, displayMode, yearsFromNow, inflationRate)
   }
 
@@ -221,21 +233,14 @@ export function PrintClient() {
             <div style={{ fontSize: 11, color: "#6b7280" }}>
               {yearsToRetirement} years to retirement
             </div>
+            {/* On track = the steady-return projection pays the income goal every year */}
             <div
-              className={`badge ${
-                projection.portfolioDepletionAge
-                  ? projection.portfolioDepletionAge < personalInfo.lifeExpectancy
-                    ? "tag-bad"
-                    : "tag-ok"
-                  : "tag-ok"
-              }`}
+              className={`badge ${projection.incomeGoalShortfallAge !== null ? "tag-bad" : "tag-ok"}`}
               style={{ marginTop: 4 }}
             >
-              {projection.portfolioDepletionAge
-                ? projection.portfolioDepletionAge >= personalInfo.lifeExpectancy
-                  ? "On Track"
-                  : `Shortfall at age ${projection.portfolioDepletionAge}`
-                : "Surplus at life expectancy"}
+              {projection.incomeGoalShortfallAge !== null
+                ? `Below goal income from age ${projection.incomeGoalShortfallAge}`
+                : "Goal income to life expectancy"}
             </div>
           </div>
         </div>
@@ -273,6 +278,12 @@ export function PrintClient() {
             <div className="metric-value">{pct(projection.averageEffectiveTaxRate)}</div>
           </div>
         </div>
+        <p style={{ fontSize: 11, color: "#6b7280", marginTop: 8 }}>
+          {describeTaxReliefAssumption(
+            assumptions.taxThresholdRelief,
+            retirementGoals.inflationRate,
+          )}
+        </p>
 
         {/* Accounts */}
         <div className="section">
@@ -342,6 +353,16 @@ export function PrintClient() {
                 <td>Compounding</td>
                 <td style={{ textTransform: "capitalize" }}>{assumptions.compoundingMethod}</td>
               </tr>
+              <tr>
+                <td>Future Tax Relief</td>
+                <td colSpan={3}>
+                  {
+                    TAX_THRESHOLD_RELIEF_LABELS[
+                      assumptions.taxThresholdRelief ?? DEFAULT_TAX_THRESHOLD_RELIEF
+                    ]
+                  }
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -379,7 +400,7 @@ export function PrintClient() {
                     <td>{f(r.contributions, r.age)}</td>
                     <td>{f(r.growth, r.age)}</td>
                     <td>{f(r.fees, r.age)}</td>
-                    <td style={{ fontWeight: 600 }}>{f(r.endingBalance, r.age)}</td>
+                    <td style={{ fontWeight: 600 }}>{fEnd(r.endingBalance, r.age)}</td>
                   </tr>
                 ))}
             </tbody>
@@ -417,7 +438,7 @@ export function PrintClient() {
                   <td
                     style={{ fontWeight: 600, color: r.endingBalance <= 0 ? "#dc2626" : undefined }}
                   >
-                    {r.endingBalance <= 0 ? "Depleted" : f(r.endingBalance, r.age)}
+                    {r.endingBalance <= 0 ? "Depleted" : fEnd(r.endingBalance, r.age)}
                   </td>
                 </tr>
               ))}

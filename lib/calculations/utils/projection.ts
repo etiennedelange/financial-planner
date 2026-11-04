@@ -71,6 +71,23 @@ export function calculateMonthlyReturn(annualReturn: number, method: Compounding
 }
 
 /**
+ * The effective annual growth the projection actually compounds to for `annualReturn`:
+ * nominal → (1 + r/12)^12 − 1 (12.68% at 12%), compound → r exactly.
+ *
+ * Monte Carlo draws each year's random return around this figure and converts it to
+ * monthly geometrically. Feeding a random annual return R through the nominal `R / 12`
+ * instead makes yearly growth (1 + R/12)^12, which is convex in R: gains are stretched and
+ * losses shrunk, so mean growth came out at ~12.1% against the projection's 10.47% at a
+ * 10% return and 16% volatility, overstating success under the default method.
+ */
+export function calculateEffectiveAnnualReturn(
+  annualReturn: number,
+  method: CompoundingMethod,
+): number {
+  return Math.pow(1 + calculateMonthlyReturn(annualReturn, method), 12) - 1
+}
+
+/**
  * Get a human-readable description of the monthly return calculation
  * Useful for debug output and user documentation
  *

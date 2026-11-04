@@ -25,6 +25,23 @@ export const COMPOUNDING_METHOD_DESCRIPTIONS: Record<CompoundingMethod, string> 
     "Compound conversion: (1.12)^(1/12) - 1 = 0.95% per month. Mathematically precise and recommended for accurate long-term projections.",
 }
 
+/**
+ * How SA tax thresholds are assumed to move in future years. SARS publishes only the
+ * current year's tables, so any projection beyond it is an assumption.
+ *
+ * - `historical` — each table rises by the share of inflation SARS actually passed on
+ *   from 2016/17 to 2026/27 (see lib/constants/tax-relief-history.ts)
+ * - `full`       — every threshold keeps pace with inflation
+ * - `none`       — stress test: today's 2026/27 thresholds never change
+ */
+export type TaxThresholdRelief = "historical" | "full" | "none"
+
+export const TAX_THRESHOLD_RELIEF_LABELS: Record<TaxThresholdRelief, string> = {
+  historical: "Historical relief",
+  full: "Full inflation relief",
+  none: "No relief (stress test)",
+}
+
 export interface MarketAssumptions {
   equityReturn: number // nominal annual %
   bondReturn: number
@@ -33,6 +50,11 @@ export interface MarketAssumptions {
   bondVolatility: number
   inflationRate: number
   compoundingMethod: CompoundingMethod
+  /**
+   * Absent on plans saved before 2026-10-31; `resolveTaxThresholdIndexation` reads that
+   * as the default, `historical`.
+   */
+  taxThresholdRelief?: TaxThresholdRelief
 }
 
 export type DrawdownStrategy =

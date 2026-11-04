@@ -2,15 +2,13 @@
 
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { formatCurrency } from "@/lib/utils/currency"
-import type { ProjectionResult, SimulationResult } from "@/types"
-import { Calendar, DollarSign, Gauge, Hourglass, Target, TrendingUp, Wallet } from "lucide-react"
+import type { ProjectionResult } from "@/types"
+import { Calendar, DollarSign, Hourglass, Target, TrendingUp, Wallet } from "lucide-react"
 import { useMemo } from "react"
 import { DashboardMetricCard } from "./dashboard-metric-card"
 
 interface DashboardMetricsGridProps {
   projection: ProjectionResult | null
-  simulationResult: SimulationResult | null
-  isSimulating: boolean
   retirementAge: number
   currentAge: number
   lifeExpectancy: number
@@ -21,8 +19,6 @@ interface DashboardMetricsGridProps {
 
 export function DashboardMetricsGrid({
   projection,
-  simulationResult,
-  isSimulating,
   retirementAge,
   currentAge,
   lifeExpectancy,
@@ -34,39 +30,11 @@ export function DashboardMetricsGrid({
 
   const yearsToRetirement = retirementAge - currentAge
 
-  // Always build all 7 metrics. Simulation cards show "--" until results arrive.
-  // This keeps the grid structure fixed so Monte Carlo finishing never causes CLS.
+  // Deterministic metrics only. Monte Carlo results live on the Risk page.
   const metrics = useMemo(() => {
-    const successRate = simulationResult?.successRate ?? null
-
-    const depletionValue = (() => {
-      if (!simulationResult) return isSimulating ? "…" : "--"
-      const age = simulationResult.medianDepletionAge
-      if (successRate === null) return age ? `Age ${age}` : "Never"
-      // Thresholds mirror the Excellent/Good/Fair/At Risk tiers used by the
-      // Plan Success Rate card below — a near-coin-flip success rate (e.g. 56%)
-      // shouldn't be described as "Likely Never".
-      if (successRate >= 90) return "Never"
-      if (successRate >= 75) return "Likely Never"
-      if (successRate >= 60) return "Uncertain"
-      return age ? `Age ${age}` : "Never"
-    })()
-
-    const depletionDescription = (() => {
-      if (!simulationResult) return isSimulating ? "Simulating…" : "Run simulation"
-      const sr = successRate ?? 0
-      const failureRate = 100 - sr
-      const depletionAge = simulationResult.medianDepletionAge
-      if (sr >= 50) {
-        return depletionAge && failureRate > 10
-          ? `${failureRate.toFixed(0)}% risk (median age ${depletionAge})`
-          : "Sustains through life expectancy"
-      }
-      const yearsUntilDepletion = depletionAge ? depletionAge - currentAge : null
-      return depletionAge
-        ? `${yearsUntilDepletion} years from now (${failureRate.toFixed(0)}% of scenarios)`
-        : "Sustains through life expectancy"
-    })()
+    // The first age the projection cannot pay the full income (null = never)
+    // The first age the projection pays less than the income goal (null = never)
+    const shortfallAge = projection?.incomeGoalShortfallAge ?? null
 
     return [
       {
@@ -126,40 +94,20 @@ export function DashboardMetricsGrid({
         description: `Currently age ${currentAge}`,
       },
       {
-        icon: Gauge,
-        label: "Plan Success Rate",
-        value: successRate !== null ? `${successRate.toFixed(0)}%` : isSimulating ? "…" : "--",
-        description:
-          successRate !== null
-            ? successRate >= 90
-              ? "Excellent"
-              : successRate >= 75
-                ? "Good"
-                : successRate >= 60
-                  ? "Fair"
-                  : "At Risk"
-            : isSimulating
-              ? "Simulating…"
-              : "Run simulation",
-        successRate: successRate ?? undefined,
-        tooltip:
-          "Probability of successfully meeting your income goal throughout retirement. Based on 1,000 Monte Carlo simulations.",
-      },
-      {
         icon: Hourglass,
-        label: "Portfolio Depletion",
-        value: depletionValue,
-        description: depletionDescription,
+        label: "Goal Income Until",
+        value: projection ? `Age ${shortfallAge ?? lifeExpectancy}` : "--",
+        description: projection
+          ? shortfallAge
+            ? `Falls below your goal ${lifeExpectancy - shortfallAge} years before age ${lifeExpectancy}`
+            : "Steady returns only · market ups and downs can bring this forward (see Risk)"
+          : "Requires projection",
         tooltip:
-          successRate !== null && successRate >= 60
-            ? "Reflects how confidently your plan avoids running out of money: 'Never' at 90%+ success, 'Likely Never' at 75%+, 'Uncertain' below that. The description shows the risk among scenarios that fail."
-            : "Below a 60% success rate, this shows the median age at which your portfolio runs out across failing scenarios. Increase contributions or adjust retirement age to improve this.",
+          "With steady returns every year. For how market ups and downs could change this, see the Risk page.",
       },
     ] as const
   }, [
     projection,
-    simulationResult,
-    isSimulating,
     displayMode,
     yearsToRetirement,
     retirementAge,
@@ -167,12 +115,13 @@ export function DashboardMetricsGrid({
     totalCurrentBalance,
     totalMonthlyContributions,
     currentAge,
+    lifeExpectancy,
   ])
 
   return (
     <div className="space-y-3">
-      {/* Fixed 7-column grid — never changes structure, only values update */}
-      <div className="dashboard-grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
+      {/* Fixed grid — never changes structure, only values update */}
+      <div className="dashboard-grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
         {metrics.map((metric) => (
           <DashboardMetricCard
             key={metric.label}
@@ -180,7 +129,6 @@ export function DashboardMetricsGrid({
             label={metric.label}
             value={metric.value}
             description={metric.description}
-            successRate={"successRate" in metric ? metric.successRate : undefined}
             tooltip={"tooltip" in metric ? metric.tooltip : undefined}
           />
         ))}

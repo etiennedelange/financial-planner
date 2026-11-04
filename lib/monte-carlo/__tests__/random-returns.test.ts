@@ -4,6 +4,9 @@ import {
   generateReturnSequence,
   getPercentile,
   createSeededRandom,
+  generateMarketShocks,
+  generateFactorShocks,
+  returnsFromShocks,
 } from "../random-returns"
 
 describe("randomNormal", () => {
@@ -240,5 +243,187 @@ describe("generateReturnSequence with injected rng", () => {
     const seq = generateReturnSequence(0.11, 0.15, 10)
     expect(seq).toHaveLength(10)
     expect(seq.every((r) => Number.isFinite(r))).toBe(true)
+  })
+})
+
+describe("generateMarketShocks / returnsFromShocks", () => {
+  it("one shock per year, reproducible from a seed", () => {
+    expect(generateMarketShocks(30, createSeededRandom(5))).toHaveLength(30)
+    expect(generateMarketShocks(10, createSeededRandom(5))).toEqual(
+      generateMarketShocks(10, createSeededRandom(5)),
+    )
+  })
+
+  it("accounts built from the same shocks move together", () => {
+    const shocks = generateMarketShocks(200, createSeededRandom(11))
+    const a = returnsFromShocks(0.1, 0.16, shocks)
+    const b = returnsFromShocks(0.08, 0.16, shocks)
+    // Same shock, same volatility: every year's log-return differs by the same constant
+    const gap = Math.log(1 + a[0]) - Math.log(1 + b[0])
+    a.forEach((r, t) => expect(Math.log(1 + r) - Math.log(1 + b[t])).toBeCloseTo(gap, 10))
+  })
+
+  it("zero volatility returns exactly the expected return every year", () => {
+    const returns = returnsFromShocks(0.07, 0, generateMarketShocks(5, createSeededRandom(1)))
+    returns.forEach((r) => expect(r).toBeCloseTo(0.07, 12))
+  })
+
+  it("the median of the simple returns approximates the expected (typical) return", () => {
+    const shocks = generateMarketShocks(20000, createSeededRandom(3))
+    const returns = returnsFromShocks(0.1, 0.165, shocks).sort((a, b) => a - b)
+    const median = (returns[9999] + returns[10000]) / 2
+    expect(median).toBeCloseTo(0.1, 2)
+  })
+
+  it("the arithmetic mean sits above the expected return by the volatility drag", () => {
+    // E[e^(μ + σZ)] = e^(μ + σ²/2), so with μ = ln(1.1) the mean is 1.1·e^(σ²/2) − 1
+    const shocks = generateMarketShocks(20000, createSeededRandom(3))
+    const returns = returnsFromShocks(0.1, 0.165, shocks)
+    const mean = returns.reduce((s, r) => s + r, 0) / returns.length
+    const theoretical = 1.1 * Math.exp((0.165 * 0.165) / 2) - 1 // ≈ 11.51%
+    expect(mean).toBeCloseTo(theoretical, 2)
+    expect(mean).toBeGreaterThan(0.1)
+  })
+
+  it("a zero shock returns exactly the expected return at any volatility", () => {
+    returnsFromShocks(0.1, 0.3, [0, 0]).forEach((r) => expect(r).toBeCloseTo(0.1, 12))
+  })
+
+  it("generateReturnSequence draws the same values as before the refactor", () => {
+    // generateReturnSequence is now returnsFromShocks over generateMarketShocks; both
+    // consume the generator identically, so seeded sequences are unchanged. The log mean
+    // is ln(1 + r) with no drag term (median-return basis, 2026-11-04).
+    const rng = createSeededRandom(42)
+    const logMean = Math.log(1.1)
+    const expected = Array.from({ length: 5 }, () => Math.exp(randomNormal(logMean, 0.15, rng)) - 1)
+    const actual = generateReturnSequence(0.1, 0.15, 5, createSeededRandom(42))
+    actual.forEach((r, t) => expect(r).toBeCloseTo(expected[t], 12))
+  })
+})
+
+describe("generateFactorShocks", () => {
+  const corr = (a: number[], b: number[]) => {
+    const ma = a.reduce((s, x) => s + x, 0) / a.length
+    const mb = b.reduce((s, x) => s + x, 0) / b.length
+    let cov = 0
+    let va = 0
+    let vb = 0
+    for (let i = 0; i < a.length; i++) {
+      cov += (a[i] - ma) * (b[i] - mb)
+      va += (a[i] - ma) ** 2
+      vb += (b[i] - mb) ** 2
+    }
+    return cov / Math.sqrt(va * vb)
+  }
+  const sd = (a: number[]) => {
+    const m = a.reduce((s, x) => s + x, 0) / a.length
+    return Math.sqrt(a.reduce((s, x) => s + (x - m) ** 2, 0) / (a.length - 1))
+  }
+
+  describe("Critical SA scenarios", () => {
+    it("SA and global equity shocks correlate at the researched sqrt(0.32 x 0.99) = 0.56", () => {
+      const { groups } = generateFactorShocks(
+        50_000,
+        new Map([
+          ["sa_equity", 0.32],
+          ["global_equity", 0.99],
+        ]),
+        createSeededRandom(5),
+      )
+      expect(corr(groups.get("sa_equity")!, groups.get("global_equity")!)).toBeCloseTo(
+        Math.sqrt(0.32 * 0.99),
+        1,
+      )
+    })
+
+    it("each group's shock is still standard normal, whatever its loading", () => {
+      const { groups } = generateFactorShocks(
+        50_000,
+        new Map([
+          ["a", 0.1],
+          ["b", 0.5],
+          ["c", 0.9],
+        ]),
+        createSeededRandom(6),
+      )
+      for (const shocks of groups.values()) expect(sd(shocks)).toBeCloseTo(1, 1)
+    })
+  })
+
+  describe("Backward compatibility", () => {
+    it("with no groups, draws exactly what generateMarketShocks draws", () => {
+      const { market } = generateFactorShocks(30, new Map(), createSeededRandom(42))
+      expect(market).toEqual(generateMarketShocks(30, createSeededRandom(42)))
+    })
+
+    it("a loading of 1 reuses the market sequence and consumes no extra draws", () => {
+      const rngA = createSeededRandom(9)
+      const { market, groups } = generateFactorShocks(20, new Map([["x", 1]]), rngA)
+      expect(groups.get("x")).toBe(market)
+      // The generator is left exactly where generateMarketShocks alone would leave it
+      const rngB = createSeededRandom(9)
+      generateMarketShocks(20, rngB)
+      expect(rngA()).toBe(rngB())
+    })
+  })
+
+  describe("Correlation structure", () => {
+    it("a loading of 0 is independent of the market", () => {
+      const { market, groups } = generateFactorShocks(
+        50_000,
+        new Map([["cash", 0]]),
+        createSeededRandom(7),
+      )
+      expect(Math.abs(corr(market, groups.get("cash")!))).toBeLessThan(0.02)
+    })
+
+    it("a group correlates sqrt(rho) with the market", () => {
+      const { market, groups } = generateFactorShocks(
+        50_000,
+        new Map([["balanced", 0.5]]),
+        createSeededRandom(8),
+      )
+      expect(corr(market, groups.get("balanced")!)).toBeCloseTo(Math.sqrt(0.5), 1)
+    })
+
+    it("is reproducible from the seed", () => {
+      const loadings = new Map([
+        ["sa_equity", 0.32],
+        ["cash", 0],
+      ])
+      const a = generateFactorShocks(15, loadings, createSeededRandom(3))
+      const b = generateFactorShocks(15, loadings, createSeededRandom(3))
+      expect(a.groups.get("sa_equity")).toEqual(b.groups.get("sa_equity"))
+      expect(a.groups.get("cash")).toEqual(b.groups.get("cash"))
+    })
+  })
+
+  describe("Edge cases", () => {
+    it("zero years gives empty sequences", () => {
+      const { market, groups } = generateFactorShocks(
+        0,
+        new Map([["a", 0.5]]),
+        createSeededRandom(1),
+      )
+      expect(market).toEqual([])
+      expect(groups.get("a")).toEqual([])
+    })
+
+    it("clamps loadings outside [0, 1] and treats a non-finite loading as 1", () => {
+      const { market, groups } = generateFactorShocks(
+        10,
+        new Map([
+          ["high", 1.7],
+          ["nan", Number.NaN],
+          ["low", -0.4],
+        ]),
+        createSeededRandom(2),
+      )
+      expect(groups.get("high")).toBe(market)
+      expect(groups.get("nan")).toBe(market)
+      // Clamped to 0: no market component, so it differs from the market sequence
+      expect(groups.get("low")).not.toEqual(market)
+      groups.get("low")!.forEach((z) => expect(Number.isFinite(z)).toBe(true))
+    })
   })
 })

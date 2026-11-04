@@ -154,7 +154,7 @@ describe("Cross-tab consistency", () => {
   })
 
   describe("Monte Carlo and Deterministic projection consistency", () => {
-    it("should have similar median outcome between deterministic and stochastic", () => {
+    it("puts the deterministic projection near the median, with the mean above it", () => {
       const projection = calculateProjection(
         testAccounts,
         testPersonalInfo,
@@ -168,21 +168,25 @@ describe("Cross-tab consistency", () => {
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        { numberOfRuns: 200, randomSeed: 20260726 },
+        { numberOfRuns: 200, randomSeed: 20260726, volatilityScale: 1 },
         testAssumptions,
       )
 
-      // Monte Carlo median (p50) at retirement should be reasonably close to deterministic
-      const accumulationYears = 30
-      const mcMedianAtRetirement = simulation.percentiles.p50[accumulationYears] || 0
+      // yearlyBalances[i] is the balance at the end of year i + 1, so after 30 years of
+      // saving the retirement balance sits at index 29
+      const atRetirement = 30 - 1
       const deterministicAtRetirement = projection.portfolioAtRetirement
+      const mcMean =
+        simulation.runs.reduce((sum, run) => sum + run.yearlyBalances[atRetirement], 0) /
+        simulation.runs.length
+      const mcMedian = simulation.percentiles.p50[atRetirement]
 
-      // Should be within 20% (Monte Carlo has variance)
-      const percentDiff =
-        Math.abs((mcMedianAtRetirement - deterministicAtRetirement) / deterministicAtRetirement) *
-        100
-
-      expect(percentDiff).toBeLessThan(20)
+      // Each account's expected return is the TYPICAL (median) return, so the projection
+      // is the middle of the range: the simulated median lands near it (within sampling
+      // noise for 200 runs; monthly contributions make it approximate, not exact)...
+      expect(Math.abs(mcMedian / deterministicAtRetirement - 1)).toBeLessThan(0.2)
+      // ...while log-normal skew puts the average outcome above it.
+      expect(mcMean).toBeGreaterThan(deterministicAtRetirement)
     })
 
     it("should have Monte Carlo percentiles ordered correctly", () => {
@@ -191,7 +195,7 @@ describe("Cross-tab consistency", () => {
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        { numberOfRuns: 100, randomSeed: 20260726 },
+        { numberOfRuns: 100, randomSeed: 20260726, volatilityScale: 1 },
         testAssumptions,
       )
 
@@ -226,7 +230,7 @@ describe("Cross-tab consistency", () => {
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        { numberOfRuns: 50, randomSeed: 20260726 },
+        { numberOfRuns: 50, randomSeed: 20260726, volatilityScale: 1 },
         { ...testAssumptions, compoundingMethod: "nominal" },
       )
 
@@ -244,7 +248,7 @@ describe("Cross-tab consistency", () => {
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        { numberOfRuns: 50, randomSeed: 20260726 },
+        { numberOfRuns: 50, randomSeed: 20260726, volatilityScale: 1 },
         { ...testAssumptions, compoundingMethod: "compound" },
       )
 
@@ -314,7 +318,7 @@ describe("Cross-tab consistency", () => {
           maximumWithdrawal: 60000,
           lumpSumPercentage: 0,
         },
-        { numberOfRuns: 50, randomSeed: 20260726 },
+        { numberOfRuns: 50, randomSeed: 20260726, volatilityScale: 1 },
         testAssumptions,
       )
 
@@ -366,7 +370,7 @@ describe("Cross-tab consistency", () => {
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        { numberOfRuns: 50, randomSeed: 20260726 },
+        { numberOfRuns: 50, randomSeed: 20260726, volatilityScale: 1 },
         testAssumptions,
       )
 
@@ -402,7 +406,7 @@ describe("Cross-tab consistency", () => {
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        { numberOfRuns: 50, randomSeed: 20260726 },
+        { numberOfRuns: 50, randomSeed: 20260726, volatilityScale: 1 },
         testAssumptions,
       )
 
@@ -430,7 +434,7 @@ describe("Cross-tab consistency", () => {
         testPersonalInfo,
         highIncomeGoals,
         testDrawdownConfig,
-        { numberOfRuns: 50, randomSeed: 20260726 },
+        { numberOfRuns: 50, randomSeed: 20260726, volatilityScale: 1 },
         testAssumptions,
       )
 
@@ -488,7 +492,7 @@ describe("Cross-tab consistency", () => {
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        { numberOfRuns: 50, randomSeed: 20260726 },
+        { numberOfRuns: 50, randomSeed: 20260726, volatilityScale: 1 },
         testAssumptions,
       )
 
@@ -522,7 +526,7 @@ describe("Cross-tab consistency", () => {
         testPersonalInfo,
         testRetirementGoals,
         testDrawdownConfig,
-        { numberOfRuns: 50, randomSeed: 20260726 },
+        { numberOfRuns: 50, randomSeed: 20260726, volatilityScale: 1 },
         testAssumptions,
       )
 
