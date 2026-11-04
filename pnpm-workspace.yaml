@@ -22,6 +22,9 @@ overrides:
   "@types/react-dom": "19.2.3"
   vite@*: "catalog:"
   vitest@*: "catalog:"
+  # @shadscan/cli pins zod 4.1.13 exactly (GHSA high: memory exhaustion, fixed in 4.6.6).
+  # Drop this once a shadscan release depends on zod >=4.6.6.
+  "@shadscan/cli>zod": "^4.6.7"
 
 # Vite+ (`vp`): one toolchain for test, lint and format (Next.js still owns dev
 # and build). Its `vite` is a repackaged Vite core; the override above makes

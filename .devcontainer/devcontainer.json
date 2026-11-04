@@ -10,7 +10,7 @@
     "ghcr.io/etiennedelange/devcontainer-features/dev-setup:1": {},
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/docker-in-docker:3.0.1": {}
+    "ghcr.io/devcontainers/features/docker-in-docker:4.1.3": {}
   },
 
   "customizations": {
