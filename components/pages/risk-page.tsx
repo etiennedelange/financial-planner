@@ -197,6 +197,7 @@ export function RiskPage() {
       <MonteCarloChart
         simulationResult={simulationResult}
         successRange={range}
+        startingBalance={totals.totalBalance}
         currentAge={personalInfo.currentAge}
         retirementAge={personalInfo.retirementAge}
         isRunning={isSimulating}

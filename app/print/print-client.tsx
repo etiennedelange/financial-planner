@@ -4,6 +4,7 @@ import { calculateProjection } from "@/lib/calculations/projection-engine"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useAuth } from "@/components/supabase-provider"
 import { formatCurrency } from "@/lib/utils/currency"
+import { yearsFromNowAtRowEnd, yearsFromNowAtRowStart } from "@/lib/utils/chart-series"
 import type { ProjectionResult } from "@/types"
 import { TAX_THRESHOLD_RELIEF_LABELS } from "@/types"
 import {
@@ -131,7 +132,13 @@ export function PrintClient() {
 
   // Currency formatter that respects displayMode and age-based deflation
   function f(value: number, age: number) {
-    const yearsFromNow = age - personalInfo.currentAge
+    const yearsFromNow = yearsFromNowAtRowStart(age, personalInfo.currentAge)
+    return formatCurrency(value, displayMode, yearsFromNow, inflationRate)
+  }
+
+  // A row's ending balance is at the END of the year the person is `age`
+  function fEnd(value: number, age: number) {
+    const yearsFromNow = yearsFromNowAtRowEnd(age, personalInfo.currentAge)
     return formatCurrency(value, displayMode, yearsFromNow, inflationRate)
   }
 
@@ -393,7 +400,7 @@ export function PrintClient() {
                     <td>{f(r.contributions, r.age)}</td>
                     <td>{f(r.growth, r.age)}</td>
                     <td>{f(r.fees, r.age)}</td>
-                    <td style={{ fontWeight: 600 }}>{f(r.endingBalance, r.age)}</td>
+                    <td style={{ fontWeight: 600 }}>{fEnd(r.endingBalance, r.age)}</td>
                   </tr>
                 ))}
             </tbody>
@@ -431,7 +438,7 @@ export function PrintClient() {
                   <td
                     style={{ fontWeight: 600, color: r.endingBalance <= 0 ? "#dc2626" : undefined }}
                   >
-                    {r.endingBalance <= 0 ? "Depleted" : f(r.endingBalance, r.age)}
+                    {r.endingBalance <= 0 ? "Depleted" : fEnd(r.endingBalance, r.age)}
                   </td>
                 </tr>
               ))}

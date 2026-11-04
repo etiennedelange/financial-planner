@@ -59,7 +59,7 @@ export function KeyInsightsSummary({
     )
 
     const onTrackDescription = isOnTrack
-      ? `Pays your goal income to age ${lifeExpectancy} if returns are steady`
+      ? `Pays your goal income to age ${lifeExpectancy} with steady returns only; market ups and downs can bring this forward (see Risk)`
       : `Below your goal income from age ${shortfallAge}, even with steady returns`
 
     return { monthlyRaContribution, isOnTrack, incomeReplacementRatio, onTrackDescription }

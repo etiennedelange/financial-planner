@@ -162,6 +162,8 @@ Write-up and main-vs-branch comparison: [history](../history/2026-11-01-audit-fi
 - [x] Withdrawal order: annuity into the tax-free room, discretionary, annuity, TFSA last
 - [x] s11F carry-forward absorbed by later deduction room
 
+- [x] Balance charts plotted each year-end balance a year early; table deflation one year short (2026-11-04) — [history](../history/2026-11-04-chart-age-off-by-one.md)
+
 ### Pending (from the audit)
 - [ ] Medical aid escalation at 9% for decades: cap or taper, and feed it into depletion/on-track
 - [x] Expected return is the typical (median) return in Monte Carlo (2026-11-04) — [history](../history/2026-11-04-mc-median-return-basis.md)

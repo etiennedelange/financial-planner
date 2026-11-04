@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/chart"
 import { formatCurrency } from "@/lib/utils/currency"
 import { formatPercentileTooltip } from "@/lib/utils/chart-tooltip"
+import { buildPercentileSeries } from "@/lib/utils/chart-series"
 import {
   formatSuccessRange,
   getSuccessRateStyle,
@@ -28,6 +29,8 @@ interface MonteCarloChartProps {
   simulationResult: SimulationResult | null
   /** Cautious–central success range; the header shows it and rates by its low end */
   successRange: SuccessRange | null
+  /** Today's total balance: the series starts here, at the current age */
+  startingBalance: number
   currentAge: number
   retirementAge: number
   isRunning?: boolean
@@ -50,24 +53,19 @@ const chartConfig = {
 export const MonteCarloChart = memo(function MonteCarloChart({
   simulationResult,
   successRange,
+  startingBalance,
   currentAge,
   retirementAge,
   isRunning = false,
   hasError = false,
   hasAccounts = false,
 }: MonteCarloChartProps) {
-  const data = useMemo(() => {
-    const percentiles = simulationResult?.percentiles
-    if (!percentiles || percentiles.p50.length === 0) return []
-    return percentiles.p50.map((_, index) => ({
-      age: currentAge + index,
-      p10: percentiles.p10[index],
-      p25: percentiles.p25[index],
-      p50: percentiles.p50[index],
-      p75: percentiles.p75[index],
-      p90: percentiles.p90[index],
-    }))
-  }, [simulationResult, currentAge])
+  // Each balance is plotted at the age just reached, so the value at the retirement line
+  // is the balance at retirement (see chart-series.ts)
+  const data = useMemo(
+    () => buildPercentileSeries(simulationResult?.percentiles, currentAge, startingBalance),
+    [simulationResult, currentAge, startingBalance],
+  )
 
   if (!simulationResult || simulationResult.percentiles.p50.length === 0) {
     return (

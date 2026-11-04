@@ -100,7 +100,7 @@ export function DashboardMetricsGrid({
         description: projection
           ? shortfallAge
             ? `Falls below your goal ${lifeExpectancy - shortfallAge} years before age ${lifeExpectancy}`
-            : "Full goal income to life expectancy, if returns are steady"
+            : "Steady returns only · market ups and downs can bring this forward (see Risk)"
           : "Requires projection",
         tooltip:
           "With steady returns every year. For how market ups and downs could change this, see the Risk page.",

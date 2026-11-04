@@ -39,6 +39,7 @@ import {
 import { escalate } from "@/lib/calculations/utils/money-time"
 import { calculateRAOptimization } from "@/lib/calculations/utils/ra-optimization"
 import { formatCurrency } from "@/lib/utils/currency"
+import { yearsFromNowAtRowEnd, yearsFromNowAtRowStart } from "@/lib/utils/chart-series"
 import { describeTaxReliefAssumption } from "@/lib/calculations/utils/tax-relief"
 import type { ProjectionResult } from "@/types"
 
@@ -453,16 +454,30 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                             <TableCell>{proj.year}</TableCell>
                             <TableCell>{proj.age}</TableCell>
                             <TableCell className="text-right font-mono text-sm">
-                              {fmt(proj.startingBalance, proj.age - personalInfo.currentAge)}
+                              {fmt(
+                                proj.startingBalance,
+                                yearsFromNowAtRowStart(proj.age, personalInfo.currentAge),
+                              )}
                             </TableCell>
                             <TableCell className="text-right font-mono text-sm text-chart-4">
-                              +{fmt(proj.contributions, proj.age - personalInfo.currentAge)}
+                              +
+                              {fmt(
+                                proj.contributions,
+                                yearsFromNowAtRowStart(proj.age, personalInfo.currentAge),
+                              )}
                             </TableCell>
                             <TableCell className="text-right font-mono text-sm text-chart-2">
-                              +{fmt(proj.growth, proj.age - personalInfo.currentAge)}
+                              +
+                              {fmt(
+                                proj.growth,
+                                yearsFromNowAtRowStart(proj.age, personalInfo.currentAge),
+                              )}
                             </TableCell>
                             <TableCell className="text-right font-mono text-sm font-medium">
-                              {fmt(proj.endingBalance, proj.age - personalInfo.currentAge)}
+                              {fmt(
+                                proj.endingBalance,
+                                yearsFromNowAtRowEnd(proj.age, personalInfo.currentAge),
+                              )}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -546,10 +561,17 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                               <TableCell>{idx + 1}</TableCell>
                               <TableCell>{proj.age}</TableCell>
                               <TableCell className="text-right font-mono text-sm">
-                                {fmt(proj.startingBalance, proj.age - personalInfo.currentAge)}
+                                {fmt(
+                                  proj.startingBalance,
+                                  yearsFromNowAtRowStart(proj.age, personalInfo.currentAge),
+                                )}
                               </TableCell>
                               <TableCell className="text-right font-mono text-sm text-chart-2">
-                                +{fmt(proj.growth, proj.age - personalInfo.currentAge)}
+                                +
+                                {fmt(
+                                  proj.growth,
+                                  yearsFromNowAtRowStart(proj.age, personalInfo.currentAge),
+                                )}
                               </TableCell>
                               <TableCell>
                                 <span className="text-xs">
@@ -558,29 +580,38 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                               </TableCell>
                               <TableCell className="text-right font-mono text-sm text-chart-2">
                                 {proj.tfsaWithdrawal
-                                  ? fmt(proj.tfsaWithdrawal, proj.age - personalInfo.currentAge)
+                                  ? fmt(
+                                      proj.tfsaWithdrawal,
+                                      yearsFromNowAtRowStart(proj.age, personalInfo.currentAge),
+                                    )
                                   : "—"}
                               </TableCell>
                               <TableCell className="text-right font-mono text-sm text-chart-4">
                                 {proj.discretionaryWithdrawal
                                   ? fmt(
                                       proj.discretionaryWithdrawal,
-                                      proj.age - personalInfo.currentAge,
+                                      yearsFromNowAtRowStart(proj.age, personalInfo.currentAge),
                                     )
                                   : "—"}
                               </TableCell>
                               <TableCell className="text-right font-mono text-sm text-warning">
                                 {proj.pensionWithdrawal
-                                  ? fmt(proj.pensionWithdrawal, proj.age - personalInfo.currentAge)
+                                  ? fmt(
+                                      proj.pensionWithdrawal,
+                                      yearsFromNowAtRowStart(proj.age, personalInfo.currentAge),
+                                    )
                                   : "—"}
                               </TableCell>
                               <TableCell className="text-right font-mono text-sm text-destructive">
                                 {proj.incomeTax > 0
-                                  ? `-${fmt(proj.incomeTax, proj.age - personalInfo.currentAge)}`
+                                  ? `-${fmt(proj.incomeTax, yearsFromNowAtRowStart(proj.age, personalInfo.currentAge))}`
                                   : "—"}
                               </TableCell>
                               <TableCell className="text-right font-mono text-sm font-medium">
-                                {fmt(proj.endingBalance, proj.age - personalInfo.currentAge)}
+                                {fmt(
+                                  proj.endingBalance,
+                                  yearsFromNowAtRowEnd(proj.age, personalInfo.currentAge),
+                                )}
                               </TableCell>
                             </TableRow>
                           )
@@ -866,13 +897,23 @@ export function CalculationsBreakdown({ projection }: CalculationsBreakdownProps
                               <TableCell>{proj.year}</TableCell>
                               <TableCell>{proj.age}</TableCell>
                               <TableCell className="text-right font-mono text-sm">
-                                {fmt(proj.withdrawals, proj.age - personalInfo.currentAge)}
+                                {fmt(
+                                  proj.withdrawals,
+                                  yearsFromNowAtRowStart(proj.age, personalInfo.currentAge),
+                                )}
                               </TableCell>
                               <TableCell className="text-right font-mono text-sm text-destructive">
-                                -{fmt(proj.incomeTax, proj.age - personalInfo.currentAge)}
+                                -
+                                {fmt(
+                                  proj.incomeTax,
+                                  yearsFromNowAtRowStart(proj.age, personalInfo.currentAge),
+                                )}
                               </TableCell>
                               <TableCell className="text-right font-mono text-sm text-chart-2">
-                                {fmt(proj.netIncome, proj.age - personalInfo.currentAge)}
+                                {fmt(
+                                  proj.netIncome,
+                                  yearsFromNowAtRowStart(proj.age, personalInfo.currentAge),
+                                )}
                               </TableCell>
                               <TableCell className="text-right font-mono text-sm">
                                 {proj.withdrawals > 0

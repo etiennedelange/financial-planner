@@ -1,6 +1,7 @@
 # Documentation Update Log
 
 ## 2026-11-04
+* **Update**: [Balance charts plotted each year a year early](history/2026-11-04-chart-age-off-by-one.md) - Both balance charts put year-end balances at the age during the year (R66.3M shown at 65 vs R65.0M at retirement); fixed with shared series builders; table deflation corrected; Overview says "steady returns only".
 * **Update**: [Historical stress test: a 2008-style first year of retirement](history/2026-11-04-historical-stress-test.md) - Deterministic Risk-page card comparing steady returns with each investment's worst researched 12-month fall in year one; reuses the projection engine through a required drawdown return override.
 * **Update**: [Success shown as a cautious–central range](history/2026-11-04-success-range.md) - Risk page runs the same futures at 1× and 1.3× volatility and shows "likely X–Y%"; verdict follows the lower bound; success labels unified; scenario memo no longer reruns on volatility keystrokes.
 * **Update**: [Investment types per account](history/2026-11-04-investment-types-per-account.md) - Optional investmentType drives Monte Carlo volatility and one-factor correlation; untyped accounts reproduce the old result exactly; DB column, import, form, list and Risk page updated.
