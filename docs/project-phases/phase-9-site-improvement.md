@@ -55,7 +55,8 @@ _Identified 2026-06-07 via parallel agent audit (UI/UX, calculations, test cover
 
 ### Medium Priority
 - [ ] **Supabase test strategy** — current tests mock the entire Supabase query chain (brittle to API changes); consider integration tests against the local test DB
-- [ ] **`monte-carlo/use-monte-carlo-worker.ts`** — worker lifecycle and message-passing errors untested
+- [ ] **`monte-carlo/use-monte-carlo-worker.ts`** — worker lifecycle and message-passing errors untested (23% lines; only the reducer and range helpers are unit-tested, 2026-11-04)
+- [ ] **Global branch coverage below threshold** — `npm run test:coverage` fails the 85% global branch threshold: 82.41% at `e7d4978`, 82.8% after the 2026-11-04 work. CI does not run coverage, so nothing flags it
 - [ ] **`currency.ts` / `formatters.ts`** — no tests for negative values, very large numbers, or rounding edge cases
 - [ ] **`scenario-comparison.ts`** — `compareScenarios` function barely tested; missing zero-contribution, short (1-5 year) and long (40+ year) horizon cases
 
@@ -148,7 +149,8 @@ Write-up: [history](../history/2026-10-31-risk-page.md).
 - [x] Show success as a range (cautious–central volatility) instead of one figure (2026-11-04) — [history](../history/2026-11-04-success-range.md)
 - [x] Historical stress test (e.g. a 2008-style fall at retirement), sourced from verified SA fund data (2026-11-04) — [history](../history/2026-11-04-historical-stress-test.md)
 - [ ] Rebuild the investment-scenario comparison on the user's own accounts and the living annuity rules (currently a pooled discretionary model with hard-coded returns)
-- [ ] Plan → Market Assumptions: equity/bond/cash expected returns feed no calculation (labelled "reference only" 2026-10-31); wire them into the investment types or remove them
+- [x] Plan → Market Assumptions: equity/bond/cash expected returns feed no calculation (labelled "reference only" 2026-10-31) — **decided: keep as-is** (Etienne, 2026-11-01); investment types carry their own suggested returns as form hints instead
+- [ ] Monte Carlo fan chart in Today's Value mode: axis reached ~R1.8B on a plan whose real final balance is ~R27M, so it may plot nominal values regardless of display mode (seen 2026-11-04, not yet checked)
 
 ---
 
