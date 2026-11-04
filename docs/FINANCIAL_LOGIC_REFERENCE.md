@@ -831,17 +831,36 @@ function randomNormal(mean: number, stdDev: number): number {
 }
 ```
 
-**One market shock per year, shared by every account in a run** (perfect correlation —
-consistent with every account carrying the same equity volatility). Before 2026-10-31 each
-account drew an independent sequence, which diversified one portfolio against itself:
+**Per-account risk from investment types, one-factor correlation** (2026-11-04). Each
+account's volatility and market loading ρ come from `resolveAccountRisk`
+(`lib/calculations/utils/account-risk.ts`), the only place the rule lives:
+
+| Account | Volatility | ρ |
+|---|---|---|
+| Has an `investmentType` | that type's researched rand figure (`lib/constants/investment-types.ts`) | the type's loading |
+| No type (pre-feature plans) | `assumptions.equityVolatility`, or 0 if expected return is 0% | 1 |
+
+Shocks come from `generateFactorShocks` (`lib/monte-carlo/random-returns.ts`):
 
 ```typescript
-const shocks = generateMarketShocks(totalYears, rng)              // z_t ~ N(0, 1)
+// per run, per year t: z_market(t) ~ N(0,1); z_type(t) ~ N(0,1) for each type present
+shock_type(t) = √ρ_type · z_market(t) + √(1 − ρ_type) · z_type(t)   // still N(0, 1)
+// corr(type i, type j) = √(ρ_i · ρ_j); same type → identical shocks; untyped → z_market
 accountReturns = accounts.map(acc =>
-  returnsFromShocks(calculateEffectiveAnnualReturn(netReturn, method), vol, shocks))
+  returnsFromShocks(calculateEffectiveAnnualReturn(netReturn, method), risk.volatility, shock_group))
 // each draw R is then converted to monthly GEOMETRICALLY: (1 + R)^(1/12) − 1
-// r_t = exp(log(1 + netReturn) + vol × z_t) − 1
+// r_t = exp(log(1 + netReturn) + vol × shock_t) − 1
 ```
+
+Loadings: global equity 0.99, Nasdaq-100 0.88 and SA equity 0.32 are fitted to measured
+rand correlations; Balanced 0.5 and Conservative 0.3 are documented assumptions; cash 0.
+See [history/2026-11-04-investment-type-risk-research.md](history/2026-11-04-investment-type-risk-research.md).
+
+**Backward compatibility.** Market shocks are drawn first, exactly as `generateMarketShocks`
+draws them, and ρ = 1 groups draw nothing more, so a plan with no typed accounts consumes the
+generator identically and reproduces the pre-feature result (the golden file was not
+regenerated). Before 2026-10-31 each account drew an independent sequence, which
+diversified one portfolio against itself; same-type accounts still share one sequence.
 
 **Log-normal returns, centred on the median** (`returnsFromShocks`,
 `lib/monte-carlo/random-returns.ts`, the only place this formula lives):

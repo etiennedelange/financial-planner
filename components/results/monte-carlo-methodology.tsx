@@ -39,8 +39,9 @@ export function MonteCarloMethodology({
           half the simulated futures do better than your projection and half do worse
         </li>
         <li>
-          Each year draws one market move shared by all your accounts, so they rise and fall
-          together
+          Each account&apos;s yearly swings come from what it is invested in. Accounts of the same
+          type rise and fall together; different types share one market move plus a move of their
+          own, so they are only partly correlated
         </li>
         <li>Retirement income is paid monthly, within the living annuity 2.5%–17.5% limits</li>
         <li>
@@ -58,7 +59,8 @@ export function MonteCarloMethodology({
           randomReturn = e^(logMean + volatility × Z) − 1
         </code>
         <p className="text-xs text-muted-foreground">
-          Z is the year&apos;s shared standard-normal market move (Box-Muller transform)
+          Z = √ρ × market move + √(1 − ρ) × the type&apos;s own move, both standard normal; ρ is the
+          type&apos;s loading on the market (untyped accounts: ρ = 1)
         </p>
       </div>
 
@@ -69,7 +71,7 @@ export function MonteCarloMethodology({
             <TableCell className="text-right font-mono">{formatPercent(netReturn * 100)}</TableCell>
           </TableRow>
           <TableRow>
-            <TableCell>Volatility (std dev)</TableCell>
+            <TableCell>Volatility for accounts without a type (std dev)</TableCell>
             <TableCell className="text-right font-mono">{formatPercent(volatility)}</TableCell>
           </TableRow>
           <TableRow>

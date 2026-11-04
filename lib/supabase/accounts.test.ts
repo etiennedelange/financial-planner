@@ -80,6 +80,24 @@ describe("fetchAccounts", () => {
     expect(result[0].tfsaContributionsToDate).toBe(80000)
   })
 
+  it("maps investment_type when present", async () => {
+    mockSupabase([{ ...accountRow, investment_type: "global_equity" }])
+    const result = await fetchAccounts("scenario-1")
+    expect(result[0].investmentType).toBe("global_equity")
+  })
+
+  it("leaves investmentType undefined for a null column (existing accounts stay untyped)", async () => {
+    mockSupabase([{ ...accountRow, investment_type: null }])
+    const result = await fetchAccounts("scenario-1")
+    expect(result[0].investmentType).toBeUndefined()
+  })
+
+  it("drops an unrecognised investment_type instead of passing it through", async () => {
+    mockSupabase([{ ...accountRow, investment_type: "crypto" }])
+    const result = await fetchAccounts("scenario-1")
+    expect(result[0].investmentType).toBeUndefined()
+  })
+
   it("throws on error", async () => {
     mockSupabase(null, { message: "DB error", code: "500" })
     await expect(fetchAccounts("scenario-1")).rejects.toMatchObject({ message: "DB error" })
@@ -90,6 +108,20 @@ describe("upsertAccount", () => {
   it("resolves without error on success", async () => {
     mockSupabase(null, null)
     await expect(upsertAccount(baseAccount, "scenario-1")).resolves.toBeUndefined()
+  })
+
+  it("writes investment_type, and null for an untyped account", async () => {
+    const chain = mockSupabase(null, null)
+    await upsertAccount({ ...baseAccount, investmentType: "sa_equity" }, "scenario-1")
+    expect(chain.upsert).toHaveBeenLastCalledWith(
+      expect.objectContaining({ investment_type: "sa_equity" }),
+      { onConflict: "id" },
+    )
+    await upsertAccount(baseAccount, "scenario-1")
+    expect(chain.upsert).toHaveBeenLastCalledWith(
+      expect.objectContaining({ investment_type: null }),
+      { onConflict: "id" },
+    )
   })
 
   it("throws on error", async () => {
@@ -118,6 +150,18 @@ describe("cloneAccounts", () => {
     expect(cloned[0].id).not.toBe(baseAccount.id)
     expect(cloned[1].id).not.toBe(acc2.id)
     expect(cloned[0].id).not.toBe(cloned[1].id)
+  })
+
+  it("carries the investment type onto the cloned rows", async () => {
+    const chain = mockSupabase(null, null)
+    const cloned = await cloneAccounts(
+      [{ ...baseAccount, investmentType: "concentrated_equity" }],
+      "new-scenario-id",
+    )
+    expect(cloned[0].investmentType).toBe("concentrated_equity")
+    expect(chain.insert).toHaveBeenCalledWith([
+      expect.objectContaining({ investment_type: "concentrated_equity" }),
+    ])
   })
 
   it("throws on insert error", async () => {

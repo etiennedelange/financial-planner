@@ -27,6 +27,7 @@ import {
 } from "@/lib/calculations/retirement-tax"
 import { SA_TAX_LIMITS } from "@/lib/constants/limits"
 import { calculateInitialWithdrawal } from "@/lib/calculations/utils/drawdown-withdrawal"
+import { resolveAccountRisk } from "@/lib/calculations/utils/account-risk"
 import {
   DEFAULT_TAX_THRESHOLD_RELIEF,
   resolveTaxThresholdIndexation,
@@ -117,8 +118,19 @@ export function DebugWindow({ className, projection, simulationResult }: DebugWi
   const monthlyReturnFormula = formatMonthlyReturnFormula(netReturn, compoundingMethod)
   const monthlyFeeRate = Math.pow(1 + weightedFees, 1 / 12) - 1
 
-  // Volatility from assumptions or defaults
+  // Volatility from assumptions or defaults (applies to accounts without a type)
   const volatility = assumptions?.equityVolatility || SA_DEFAULTS.equityVolatility * 100
+  // Per-account Monte Carlo risk, from the same function the engine calls
+  const accountRisks = accounts.map((acc) => ({
+    name: acc.name,
+    ...resolveAccountRisk(acc, volatility / 100),
+  }))
+  const accountRiskText = accountRisks
+    .map(
+      (r) =>
+        `- ${r.name}: ${r.investmentType ?? "untyped"} | vol ${(r.volatility * 100).toFixed(1)}% | market loading ${r.factorLoading}`,
+    )
+    .join("\n")
 
   // Display mode labels
   const displayModeLabel =
@@ -366,9 +378,12 @@ MARKET ASSUMPTIONS
 Equity Return: ${assumptions.equityReturn}%
 Bond Return: ${assumptions.bondReturn}%
 Cash Return: ${assumptions.cashReturn}%
-Equity Volatility: ${assumptions.equityVolatility}%
-Bond Volatility: ${assumptions.bondVolatility}%
+Equity Volatility (untyped accounts): ${assumptions.equityVolatility}%
+Bond Volatility (unused): ${assumptions.bondVolatility}%
 Inflation Rate: ${assumptions.inflationRate}%
+
+Per-account Monte Carlo risk (resolveAccountRisk):
+${accountRiskText || "- none"}
 `
     : ""
 }
@@ -718,9 +733,22 @@ Single Source of Truth:
                   <Param label="Equity Return" value={`${assumptions.equityReturn}%`} />
                   <Param label="Bond Return" value={`${assumptions.bondReturn}%`} />
                   <Param label="Cash Return" value={`${assumptions.cashReturn}%`} />
-                  <Param label="Equity Volatility" value={`${assumptions.equityVolatility}%`} />
-                  <Param label="Bond Volatility" value={`${assumptions.bondVolatility}%`} />
+                  <Param
+                    label="Equity Volatility (untyped accounts)"
+                    value={`${assumptions.equityVolatility}%`}
+                  />
+                  <Param
+                    label="Bond Volatility (unused)"
+                    value={`${assumptions.bondVolatility}%`}
+                  />
                   <Param label="Inflation Rate" value={`${assumptions.inflationRate}%`} />
+                  {accountRisks.map((r, i) => (
+                    <Param
+                      key={i}
+                      label={`MC risk: ${r.name}`}
+                      value={`${r.investmentType ?? "untyped"} · ${(r.volatility * 100).toFixed(1)}% · ρ ${r.factorLoading}`}
+                    />
+                  ))}
                 </Section>
               )}
             </CategorySection>

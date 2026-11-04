@@ -64,6 +64,48 @@ export function generateMarketShocks(years: number, rng: RandomSource = Math.ran
 }
 
 /**
+ * Correlated yearly shocks for a one-factor model: one market shock per year plus one
+ * idiosyncratic shock per group (investment type), combined as
+ *
+ *   shock_g(t) = √ρ_g · z_market(t) + √(1 − ρ_g) · z_g(t)
+ *
+ * so every shock is standard normal, two groups correlate √(ρ_i · ρ_j), and accounts in the
+ * same group share an identical sequence (splitting a portfolio across accounts of one
+ * type cannot diversify it against itself).
+ *
+ * Reproducibility and backward compatibility: the market shocks are drawn first, exactly
+ * as `generateMarketShocks` draws them, and a group with ρ = 1 consumes no further draws.
+ * A plan whose accounts all load fully on the market therefore consumes the generator
+ * identically to the pre-factor engine. Other groups draw their idiosyncratic sequences
+ * afterwards in the iteration order of `loadings`, so callers must pass a stable order.
+ *
+ * @param loadings - group id → ρ in [0, 1]; values outside are clamped, non-finite → 1
+ */
+export function generateFactorShocks(
+  years: number,
+  loadings: ReadonlyMap<string, number>,
+  rng: RandomSource = Math.random,
+): { market: number[]; groups: Map<string, number[]> } {
+  const market = generateMarketShocks(years, rng)
+  const groups = new Map<string, number[]>()
+  for (const [group, rawLoading] of loadings) {
+    const rho = Number.isFinite(rawLoading) ? Math.min(1, Math.max(0, rawLoading)) : 1
+    if (rho === 1) {
+      groups.set(group, market)
+      continue
+    }
+    const own = generateMarketShocks(years, rng)
+    const a = Math.sqrt(rho)
+    const b = Math.sqrt(1 - rho)
+    groups.set(
+      group,
+      market.map((z, t) => a * z + b * own[t]),
+    )
+  }
+  return { market, groups }
+}
+
+/**
  * Annual log-normal returns for one account from a shared shock sequence.
  *
  * `expectedReturn` is the TYPICAL (median, compound) annual return: logMean = ln(1 + r),

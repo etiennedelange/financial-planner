@@ -1,4 +1,7 @@
+import type { InvestmentType } from "@/types"
 import { SA_DEFAULTS } from "./defaults"
+
+export { INVESTMENT_TYPES, type InvestmentType } from "@/types"
 
 /**
  * What an account is invested in. Drives its Monte Carlo volatility, how much it moves with
@@ -13,17 +16,6 @@ import { SA_DEFAULTS } from "./defaults"
  * factsheet figures are "annualised monthly volatility" since inception, which is the
  * nearest published equivalent.
  */
-export const INVESTMENT_TYPES = [
-  "cash",
-  "conservative",
-  "balanced",
-  "sa_equity",
-  "global_equity",
-  "concentrated_equity",
-] as const
-
-export type InvestmentType = (typeof INVESTMENT_TYPES)[number]
-
 export interface InvestmentTypeSource {
   label: string
   url: string

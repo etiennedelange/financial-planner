@@ -8,7 +8,7 @@ tags: [monte-carlo, risk, calculations, handoff]
 
 # Investment Types, Success Range and Historical Stress Test — Handoff Plan
 
-Status: **Decision 0 and research done (2026-11-04); Features 1–3 not started**. Research and the decisions on it: [../../history/2026-11-04-investment-type-risk-research.md](../../history/2026-11-04-investment-type-risk-research.md); constants in `lib/constants/investment-types.ts`. Planned 2026-11-01 at the end of the SA calculation audit session.
+Status: **Decision 0, research and Feature 1 done (2026-11-04); Features 2–3 not started**. Feature 1: [../../history/2026-11-04-investment-types-per-account.md](../../history/2026-11-04-investment-types-per-account.md). Research and the decisions on it: [../../history/2026-11-04-investment-type-risk-research.md](../../history/2026-11-04-investment-type-risk-research.md); constants in `lib/constants/investment-types.ts`. Planned 2026-11-01 at the end of the SA calculation audit session.
 
 ## Start here
 
@@ -29,7 +29,7 @@ Status: **Decision 0 and research done (2026-11-04); Features 1–3 not started*
      - required named arguments, not omitted optionals
      - Monte Carlo only on Risk
      - three-tier docs
-3. Decision 0 (median return) and the research are done; start at Feature 1.
+3. Decision 0 (median return), the research and Feature 1 are done; start at Feature 2.
 
 ## Why
 

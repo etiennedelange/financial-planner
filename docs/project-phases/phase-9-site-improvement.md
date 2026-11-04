@@ -144,7 +144,7 @@ Write-up: [history](../history/2026-10-31-risk-page.md).
 - [x] **AI narrative** no longer receives or quotes the success rate
 
 ### Pending
-- [ ] Per-account investment types with verified volatilities (Nasdaq 100, MSCI World, balanced, cash…) and partial correlation between types — handoff plan: [plans/2026-11-01-investment-types-range-stress-test.md](../superpowers/plans/2026-11-01-investment-types-range-stress-test.md) (also covers the next two items)
+- [x] Per-account investment types with verified volatilities and one-factor correlation (2026-11-04) — [research](../history/2026-11-04-investment-type-risk-research.md), [feature](../history/2026-11-04-investment-types-per-account.md); handoff plan: [plans/2026-11-01-investment-types-range-stress-test.md](../superpowers/plans/2026-11-01-investment-types-range-stress-test.md) (also covers the next two items)
 - [ ] Show success as a range (cautious–central volatility) instead of one figure
 - [ ] Historical stress test (e.g. a 2008-style fall at retirement), sourced from verified SA fund data
 - [ ] Rebuild the investment-scenario comparison on the user's own accounts and the living annuity rules (currently a pooled discretionary model with hard-coded returns)

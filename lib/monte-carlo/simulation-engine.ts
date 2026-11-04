@@ -9,9 +9,10 @@ import type {
   SimulationRun,
   SimulationResult,
 } from "@/types"
+import { INVESTMENT_TYPES } from "@/types"
 import {
   createSeededRandom,
-  generateMarketShocks,
+  generateFactorShocks,
   getPercentile,
   returnsFromShocks,
 } from "./random-returns"
@@ -24,6 +25,7 @@ import {
   calculateMonthlyReturn,
 } from "@/lib/calculations/utils/projection"
 import { finiteOrZero, sanitizeAccounts } from "@/lib/calculations/utils/invariant-guards"
+import { resolveAccountRisk, type AccountRisk } from "@/lib/calculations/utils/account-risk"
 import {
   calculateIndexedIncomeTax,
   calculateLumpSumCommutation,
@@ -61,7 +63,8 @@ import {
 function simulateSingleRun(
   runId: number,
   accounts: Account[],
-  volatility: number,
+  accountRisks: readonly AccountRisk[],
+  riskLoadings: ReadonlyMap<string, number>,
   yearsToRetirement: number,
   yearsInRetirement: number,
   inflationRate: number,
@@ -83,21 +86,23 @@ function simulateSingleRun(
   const accountCostBases = safeAccounts.map((acc) => acc.currentBalance)
   const accountMonthlyContributions = safeAccounts.map((acc) => acc.monthlyContribution)
 
-  // One market shock per year, shared by every account (perfect correlation — see
-  // generateMarketShocks). Full totalYears length so the same sequence carries on into
-  // the drawdown phase (indices [yearsToRetirement, totalYears)).
-  const shocks = generateMarketShocks(totalYears, rng)
-  const accountReturns = safeAccounts.map((acc) => {
+  // One-factor shocks (generateFactorShocks): a market shock per year, plus one
+  // idiosyncratic sequence per investment type present. Untyped accounts take the market
+  // shock itself, so a plan with no typed accounts draws exactly what it did before types
+  // existed. Full totalYears length so the same sequence carries on into the drawdown
+  // phase (indices [yearsToRetirement, totalYears)).
+  const { market, groups } = generateFactorShocks(totalYears, riskLoadings, rng)
+  const accountReturns = safeAccounts.map((acc, accIdx) => {
     const netReturn = (acc.expectedReturn - acc.annualFees) / 100
-    // A 0% expected return marks a cash/fixed account, which gets no volatility
-    const accVolatility = acc.expectedReturn === 0 ? 0 : volatility
+    const risk = accountRisks[accIdx]
+    const shocks = groups.get(risk.riskGroup) ?? market
     // Centre the random returns on the effective annual growth the deterministic projection
     // compounds to, then convert each draw to monthly geometrically (below). This keeps
     // Monte Carlo's mean equal to the projection under BOTH compounding methods; see
     // calculateEffectiveAnnualReturn for the bias the nominal `R / 12` conversion caused.
     return returnsFromShocks(
       calculateEffectiveAnnualReturn(netReturn, compoundingMethod),
-      accVolatility,
+      risk.volatility,
       shocks,
     )
   })
@@ -366,10 +371,23 @@ export function runMonteCarloSimulation(
     }
   }
 
-  // Use volatility from market assumptions if provided, otherwise use default
-  const volatility = marketAssumptions
+  // Volatility for accounts WITHOUT an investment type: market assumptions if provided,
+  // otherwise the default. Typed accounts use their type's researched figure.
+  const untypedVolatility = marketAssumptions
     ? finiteOrZero(marketAssumptions.equityVolatility) / 100
     : SA_DEFAULTS.equityVolatility
+  // Resolved once, from the same sanitised accounts each run uses (a NaN expected return
+  // is 0 there, which resolveAccountRisk treats as a cash account — as before).
+  const accountRisks = sanitizeAccounts(accounts).map((acc) =>
+    resolveAccountRisk(acc, untypedVolatility),
+  )
+  // Loadings for the types present, in the fixed INVESTMENT_TYPES order so the generator
+  // is consumed reproducibly. Untyped accounts need no entry: they use the market shock.
+  const riskLoadings = new Map<string, number>()
+  for (const type of INVESTMENT_TYPES) {
+    const risk = accountRisks.find((r) => r.investmentType === type)
+    if (risk) riskLoadings.set(type, risk.factorLoading)
+  }
 
   // Use compounding method from market assumptions, default to nominal for backward compatibility
   const compoundingMethod = marketAssumptions?.compoundingMethod || "nominal"
@@ -387,7 +405,8 @@ export function runMonteCarloSimulation(
     const run = simulateSingleRun(
       runId,
       accounts,
-      volatility,
+      accountRisks,
+      riskLoadings,
       yearsToRetirement,
       yearsInRetirement,
       inflationRate,

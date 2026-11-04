@@ -444,6 +444,104 @@ describe("SA audit scenarios — Monte Carlo agrees with the projection", () => 
   })
 })
 
+describe("SA audit scenarios — investment types in Monte Carlo", () => {
+  // The golden Monte Carlo file pins the untyped path: its scenarios carry no
+  // investmentType, and it was not regenerated when types were added, so an account
+  // without a type gives exactly the pre-feature result.
+  const run = (accounts: Account[], seed = 7, equityVolatility = 16.5) =>
+    runMonteCarloSimulation(
+      accounts,
+      person(45, 65),
+      goals(25_000),
+      fixedAmount,
+      { numberOfRuns: 600, randomSeed: seed },
+      { equityVolatility, compoundingMethod: "compound" } as never,
+    )
+  const atRetirement = 20 - 1
+  const band = (r: ReturnType<typeof run>) =>
+    r.percentiles.p90[atRetirement] / r.percentiles.p10[atRetirement]
+  const typed = (investmentType: Account["investmentType"], o: Partial<Account> = {}) =>
+    account({
+      currentBalance: 2_000_000,
+      monthlyContribution: 8000,
+      expectedReturn: 11,
+      annualFees: 1,
+      investmentType,
+      ...o,
+    })
+
+  it("a wider-risk type gives a wider p10-p90 band at the same expected return", () => {
+    // Nasdaq 28.4% > MSCI World 16.3% > Balanced 9.1%
+    const nasdaq = band(run([typed("concentrated_equity")]))
+    const world = band(run([typed("global_equity")]))
+    const balanced = band(run([typed("balanced")]))
+    expect(nasdaq).toBeGreaterThan(world)
+    expect(world).toBeGreaterThan(balanced)
+  })
+
+  it("the global volatility setting no longer moves a typed account", () => {
+    const a = run([typed("global_equity")], 7, 10)
+    const b = run([typed("global_equity")], 7, 30)
+    expect(b.successRate).toBe(a.successRate)
+    expect(b.percentiles.p50).toEqual(a.percentiles.p50)
+  })
+
+  it("splitting money across accounts of one type does not change the result", () => {
+    const whole = [typed("sa_equity", { currentBalance: 3_000_000, monthlyContribution: 9000 })]
+    const thirds = [1, 2, 3].map((k) =>
+      typed("sa_equity", { id: String(k), currentBalance: 1_000_000, monthlyContribution: 3000 }),
+    )
+    const a = run(whole)
+    const b = run(thirds)
+    expect(b.successRate).toBe(a.successRate)
+    expect(b.percentiles.p50[atRetirement]).toBeCloseTo(a.percentiles.p50[atRetirement], 2)
+  })
+
+  it("SA and global equity diversify each other; two global halves do not", () => {
+    // Same volatility (16.0% vs 16.3%), but SA and global correlate only ~0.56
+    const halves = (a: Account["investmentType"], b: Account["investmentType"]) =>
+      band(
+        run([
+          typed(a, { id: "1", currentBalance: 1_000_000, monthlyContribution: 4000 }),
+          typed(b, { id: "2", currentBalance: 1_000_000, monthlyContribution: 4000 }),
+        ]),
+      )
+    expect(halves("sa_equity", "global_equity")).toBeLessThan(
+      halves("global_equity", "global_equity"),
+    )
+  })
+
+  it.each(["nominal", "compound"] as const)(
+    "%s: a cash-type account's median tracks the deterministic projection",
+    (compoundingMethod) => {
+      // 0.6% volatility: the median path is the projection within a fraction of a percent
+      const cash = [typed("cash", { expectedReturn: 7, annualFees: 0.5 })]
+      const deterministic = calculateProjection(cash, person(45, 65), goals(0), fixedAmount, {
+        compoundingMethod,
+      } as never)
+      const mc = runMonteCarloSimulation(
+        cash,
+        person(45, 65),
+        goals(0),
+        fixedAmount,
+        { numberOfRuns: 400, randomSeed: 3 },
+        { equityVolatility: 16.5, compoundingMethod } as never,
+      )
+      expect(mc.percentiles.p50[atRetirement] / deterministic.portfolioAtRetirement).toBeCloseTo(
+        1,
+        2,
+      )
+    },
+  )
+
+  it("an untyped account alongside a typed one keeps the global volatility", () => {
+    // Raising the global setting widens a mixed plan only through its untyped account
+    const mixed = (vol: number) =>
+      band(run([typed("cash", { id: "1" }), typed(undefined, { id: "2" })], 7, vol))
+    expect(mixed(25)).toBeGreaterThan(mixed(10))
+  })
+})
+
 describe("SA audit scenarios — optimal contribution", () => {
   const base = {
     currentSavings: 0,

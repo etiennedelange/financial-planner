@@ -1,6 +1,7 @@
 # Documentation Update Log
 
 ## 2026-11-04
+* **Update**: [Investment types per account](history/2026-11-04-investment-types-per-account.md) - Optional investmentType drives Monte Carlo volatility and one-factor correlation; untyped accounts reproduce the old result exactly; DB column, import, form, list and Risk page updated.
 * **Update**: [Investment-type risk research: volatilities, worst falls and correlations in rand](history/2026-11-04-investment-type-risk-research.md) - Sourced rand volatility, worst 12-month return, drawdown and one-factor loadings for six investment types; gaps listed.
 * **Update**: [Monte Carlo expected return is the typical (median) return](history/2026-11-04-mc-median-return-basis.md) - The −σ²/2 drag removed so the projection is the middle of the Monte Carlo range; tests, golden file and methodology copy updated.
 
