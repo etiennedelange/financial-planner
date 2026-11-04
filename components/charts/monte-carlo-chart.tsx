@@ -31,6 +31,10 @@ interface MonteCarloChartProps {
   successRange: SuccessRange | null
   /** Today's total balance: the series starts here, at the current age */
   startingBalance: number
+  /** Future (nominal) rands or today's rands, as the rest of the app shows them */
+  displayMode: "nominal" | "real"
+  /** Annual inflation as a decimal (0.055), for today's-rands conversion */
+  inflationRate: number
   currentAge: number
   retirementAge: number
   isRunning?: boolean
@@ -54,6 +58,8 @@ export const MonteCarloChart = memo(function MonteCarloChart({
   simulationResult,
   successRange,
   startingBalance,
+  displayMode,
+  inflationRate,
   currentAge,
   retirementAge,
   isRunning = false,
@@ -63,8 +69,13 @@ export const MonteCarloChart = memo(function MonteCarloChart({
   // Each balance is plotted at the age just reached, so the value at the retirement line
   // is the balance at retirement (see chart-series.ts)
   const data = useMemo(
-    () => buildPercentileSeries(simulationResult?.percentiles, currentAge, startingBalance),
-    [simulationResult, currentAge, startingBalance],
+    () =>
+      buildPercentileSeries(simulationResult?.percentiles, startingBalance, {
+        displayMode,
+        inflationRate,
+        currentAge,
+      }),
+    [simulationResult, startingBalance, displayMode, inflationRate, currentAge],
   )
 
   if (!simulationResult || simulationResult.percentiles.p50.length === 0) {
@@ -150,6 +161,7 @@ export const MonteCarloChart = memo(function MonteCarloChart({
         <SectionLabel>Will It Last?</SectionLabel>
         <p className="text-sm text-muted-foreground pl-3">
           Median balance with 25–75th and 10–90th percentile ranges
+          {displayMode === "real" ? " (today's value)" : ""}
         </p>
         <div className="pl-3 flex items-baseline gap-1.5">
           <CheckCircle2

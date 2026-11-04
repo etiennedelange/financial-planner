@@ -198,6 +198,8 @@ export function RiskPage() {
         simulationResult={simulationResult}
         successRange={range}
         startingBalance={totals.totalBalance}
+        displayMode={displayMode}
+        inflationRate={retirementGoals.inflationRate / 100}
         currentAge={personalInfo.currentAge}
         retirementAge={personalInfo.retirementAge}
         isRunning={isSimulating}
