@@ -73,6 +73,8 @@ export function ChartsPage() {
         <PortfolioGrowthChart
           projections={projection?.yearlyProjections || []}
           retirementAge={personalInfo.retirementAge}
+          displayMode={displayMode}
+          inflationRate={retirementGoals.inflationRate / 100}
         />
         <CostOfDelayChart
           currentSavings={totals.totalBalance}

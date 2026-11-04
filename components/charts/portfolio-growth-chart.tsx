@@ -19,6 +19,10 @@ import { memo, useMemo } from "react"
 interface PortfolioGrowthChartProps {
   projections: YearlyProjection[]
   retirementAge: number
+  /** Future (nominal) rands or today's rands, as the rest of the app shows them */
+  displayMode: "nominal" | "real"
+  /** Annual inflation as a decimal (0.055), for today's-rands conversion */
+  inflationRate: number
 }
 
 const chartConfig = {
@@ -31,10 +35,20 @@ const chartConfig = {
 export const PortfolioGrowthChart = memo(function PortfolioGrowthChart({
   projections,
   retirementAge,
+  displayMode,
+  inflationRate,
 }: PortfolioGrowthChartProps) {
   // Each balance is plotted at the age just reached, so the value at the retirement line
   // is the balance at retirement (see chart-series.ts)
-  const data = useMemo(() => buildBalanceSeries(projections), [projections])
+  const data = useMemo(
+    () =>
+      buildBalanceSeries(projections, {
+        displayMode,
+        inflationRate,
+        currentAge: projections[0]?.age ?? 0,
+      }),
+    [projections, displayMode, inflationRate],
+  )
 
   if (projections.length === 0) {
     return (
@@ -104,6 +118,7 @@ export const PortfolioGrowthChart = memo(function PortfolioGrowthChart({
         <p className="text-sm text-muted-foreground pl-3">
           Projected balance from age {projections[0].age} to{" "}
           {projections[projections.length - 1].age + 1}
+          {displayMode === "real" ? " (today's value)" : ""}
         </p>
       </div>
       <CardContent className="w-full overflow-x-auto px-2 pb-2 pt-0 md:px-6 md:pb-6">
