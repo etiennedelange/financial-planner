@@ -27,6 +27,7 @@ description: "Post-MVP enhancement ideas, split into completed and still pending
 - **Empty chart placeholders dominate viewport** — two large blank cards push all useful content below the fold before any data is added; make them compact or hidden until populated
 
 ### High Priority
+- **Reliable calculation audit report** — Rework the debug page or provide a dedicated report generator that copies all relevant plan inputs, assumptions, calculation outputs, and money basis directly from the actual projection/simulation implementation. Avoid duplicated formulas and stale explanatory text; make the report easy to paste to another agent for an independent accuracy review.
 - **Spouse/joint retirement planning** — model two incomes, two retirement dates, combined expenses and tax
 - **Annuity vs living annuity comparison** — side-by-side drawdown projections for guaranteed annuity vs living annuity
 - **Healthcare cost modeling** — medical cost escalation above CPI in retirement (e.g. medical inflation 8-9% vs 5.5% CPI)
