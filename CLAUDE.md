@@ -170,10 +170,15 @@ Design rules:
 - ❌ Don't tie expenses to a scenario — `expenses-store.ts` is intentionally global
 - ❌ Don't show Monte Carlo results (success rate, percentiles) outside the Risk page — Overview
   links to it instead. Decided 2026-10-31; see `docs/history/2026-10-31-risk-page.md`
+- ❌ Don't run expensive work (Monte Carlo, many projections) during render — not even in a
+  `useMemo`. `cacheComponents` keeps visited routes mounted in a hidden `<Activity>`, and hidden
+  routes still re-render on store changes, so it runs on every keystroke on *other* pages
+  (issue #34 page freeze). Run it in a worker from an effect: effects are torn down while hidden.
+  See `docs/history/2026-11-12-page-freeze-scenario-worker.md`
 - ❌ Don't write raw `<p className="text-[10px] font-mono uppercase...">` — use `<SectionLabel>` or `<PageCard>`
 - ❌ Don't use `Card + CardHeader + CardTitle` for section cards — `CardTitle` renders `text-2xl font-semibold` which violates the design system
-- ⚠️ `calculator-store.ts` / `expenses-store.ts` branch coverage is ~72-76%, below the 85%
-  threshold (they DO have tests — 52 of them; the old "zero tests" note here was stale)
+- ⚠️ `calculator-store.ts` branch coverage is ~82% (2026-11-12) and `expenses-store.ts` ~72-76%,
+  both below the 85% threshold (they DO have tests; the old "zero tests" note here was stale)
 
 ## Theming
 

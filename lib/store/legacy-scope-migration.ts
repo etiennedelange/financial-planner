@@ -15,11 +15,12 @@ import { scopedKeyFor } from "./persistence-scope"
 //
 // Delete-on-success only: a failed copy leaves the legacy key intact for retry.
 //
-// Version decision: the stores stay at `version: 2`. Scoped keys are new keys,
-// so there is no stale scoped data to migrate; a legacy payload keeps its own
-// `version` inside the copied blob, and zustand's `migrate` (the R1-trillion
-// monetary clamp) still runs for v1 payloads when the scoped key rehydrates.
-// Bumping to 3 would add nothing but a risk of skipping the clamp.
+// Version decision: scoped keys did not bump the store versions. Scoped keys are
+// new keys, so there is no stale scoped data to migrate; a legacy payload keeps its
+// own `version` inside the copied blob, and zustand's `migrate` still runs for older
+// payloads when the scoped key rehydrates. The calculator store is now at version 3
+// (invalid Market Assumptions rates, issue #34); its `migrate` is idempotent and runs
+// every step for any older version, so the v1 monetary clamp is never skipped.
 
 export const LEGACY_CALCULATOR_KEY = "financial-planner-storage"
 export const LEGACY_EXPENSES_KEY = "expenses-store-v2"

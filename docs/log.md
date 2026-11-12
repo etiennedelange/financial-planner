@@ -1,5 +1,8 @@
 # Documentation Update Log
 
+## 2026-11-12
+* **Update**: [Page freezes after editing Plan inputs (issue #34)](history/2026-11-12-page-freeze-scenario-worker.md) - A hidden Risk page re-ran 3 × 1,000 main-thread simulations on every Plan keystroke; the scenario comparison now runs in a Web Worker, and Market Assumptions validate before saving (store v3 repairs bad persisted rates).
+
 ## 2026-11-04
 * **Update**: [Overview redesigned: verdict first](history/2026-11-04-overview-verdict-first.md) - The metric-tile grid and Key Insights give way to one verdict sentence, a market-risk caveat linking to Risk, a timeline and a next-best-step card.
 * **Update**: [Balance charts now respect Today's Value](history/2026-11-04-charts-today-value.md) - Fan chart and growth chart always plotted nominal rands; series builders now take a required display basis.

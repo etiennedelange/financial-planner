@@ -28,6 +28,7 @@ import {
   type PersistenceScope,
 } from "@/lib/store/persistence-scope"
 import { clampMonetaryAmount } from "@/lib/utils/monetary"
+import { sanitizeAssumptionRate } from "@/lib/utils/assumption-rates"
 
 // Sign-out must be able to evict this store's user-scoped keys.
 registerStorageBaseName("financial-planner-storage")
@@ -451,21 +452,55 @@ export const useCalculatorStore = create<CalculatorState>()(
       name: "financial-planner-storage",
       storage,
       skipHydration: true,
-      version: 2,
+      version: 3,
       onRehydrateStorage: () => () => storage?.release(),
       // Sanitize monetary fields persisted before the input bounds fix (R1 trillion
       // cap): stale absurd values are clamped on rehydrate so they can neither break
       // layout nor poison calculations. Version 1 data predates the cap.
+      // Version 2 data may hold invalid Market Assumptions rates: before the form
+      // validated (issue #34) a cleared field persisted as null and any typed value was
+      // stored. Those are reset to the defaults. Every step is idempotent, so the whole
+      // function runs for any older version.
       migrate: (persistedState) => {
         const s = persistedState as CalculatorState
+        const defaults = defaultSettings.assumptions
+        const assumptions = s.assumptions ?? defaults
         return {
           ...s,
+          assumptions: {
+            ...assumptions,
+            equityReturn: sanitizeAssumptionRate(
+              assumptions.equityReturn,
+              "equityReturn",
+              defaults.equityReturn,
+            ),
+            bondReturn: sanitizeAssumptionRate(
+              assumptions.bondReturn,
+              "bondReturn",
+              defaults.bondReturn,
+            ),
+            cashReturn: sanitizeAssumptionRate(
+              assumptions.cashReturn,
+              "cashReturn",
+              defaults.cashReturn,
+            ),
+            inflationRate: sanitizeAssumptionRate(
+              assumptions.inflationRate,
+              "inflationRate",
+              defaults.inflationRate,
+            ),
+          },
           personalInfo: {
             ...s.personalInfo,
             annualIncome: clampMonetaryAmount(s.personalInfo?.annualIncome ?? 0),
           },
           retirementGoals: {
             ...s.retirementGoals,
+            inflationRate: sanitizeAssumptionRate(
+              s.retirementGoals?.inflationRate,
+              "inflationRate",
+              defaultSettings.retirementGoals.inflationRate,
+            ),
             desiredMonthlyIncome: clampMonetaryAmount(s.retirementGoals?.desiredMonthlyIncome ?? 0),
             legacyAmount: clampMonetaryAmount(s.retirementGoals?.legacyAmount ?? 0),
           },

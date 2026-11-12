@@ -16,6 +16,7 @@ import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { SA_DEFAULTS_DISPLAY } from "@/lib/constants/defaults"
 import { useShallow } from "zustand/react/shallow"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
+import { FieldError } from "@/components/ui/field-error"
 import { cn } from "@/lib/utils"
 import {
   COMPOUNDING_METHOD_DESCRIPTIONS,
@@ -28,24 +29,51 @@ import {
   describeTaxReliefAssumption,
 } from "@/lib/calculations/utils/tax-relief"
 import { useAnimatedIcon } from "@/components/ui/animated-icon"
+import { ASSUMPTION_RATE_BOUNDS } from "@/lib/utils/assumption-rates"
+
+const BOUNDS = ASSUMPTION_RATE_BOUNDS
 
 const schema = z.object({
   equityReturn: z
     .number({ error: "Enter an equity return" })
-    .min(0, "Equity return must be between 0% and 30%")
-    .max(30, "Equity return must be between 0% and 30%"),
+    .min(
+      BOUNDS.equityReturn.min,
+      `Equity return must be between ${BOUNDS.equityReturn.min}% and ${BOUNDS.equityReturn.max}%`,
+    )
+    .max(
+      BOUNDS.equityReturn.max,
+      `Equity return must be between ${BOUNDS.equityReturn.min}% and ${BOUNDS.equityReturn.max}%`,
+    ),
   bondReturn: z
     .number({ error: "Enter a bond return" })
-    .min(0, "Bond return must be between 0% and 20%")
-    .max(20, "Bond return must be between 0% and 20%"),
+    .min(
+      BOUNDS.bondReturn.min,
+      `Bond return must be between ${BOUNDS.bondReturn.min}% and ${BOUNDS.bondReturn.max}%`,
+    )
+    .max(
+      BOUNDS.bondReturn.max,
+      `Bond return must be between ${BOUNDS.bondReturn.min}% and ${BOUNDS.bondReturn.max}%`,
+    ),
   cashReturn: z
     .number({ error: "Enter a cash return" })
-    .min(0, "Cash return must be between 0% and 15%")
-    .max(15, "Cash return must be between 0% and 15%"),
+    .min(
+      BOUNDS.cashReturn.min,
+      `Cash return must be between ${BOUNDS.cashReturn.min}% and ${BOUNDS.cashReturn.max}%`,
+    )
+    .max(
+      BOUNDS.cashReturn.max,
+      `Cash return must be between ${BOUNDS.cashReturn.min}% and ${BOUNDS.cashReturn.max}%`,
+    ),
   inflationRate: z
     .number({ error: "Enter an inflation rate" })
-    .min(0, "Inflation rate must be between 0% and 20%")
-    .max(20, "Inflation rate must be between 0% and 20%"),
+    .min(
+      BOUNDS.inflationRate.min,
+      `Inflation rate must be between ${BOUNDS.inflationRate.min}% and ${BOUNDS.inflationRate.max}%`,
+    )
+    .max(
+      BOUNDS.inflationRate.max,
+      `Inflation rate must be between ${BOUNDS.inflationRate.min}% and ${BOUNDS.inflationRate.max}%`,
+    ),
 })
 
 type FormData = z.infer<typeof schema>
@@ -114,7 +142,13 @@ export function AssumptionsForm() {
     })),
   )
 
-  const { register, watch, reset, getValues } = useForm<FormData>({
+  const {
+    register,
+    watch,
+    reset,
+    getValues,
+    formState: { errors },
+  } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       equityReturn: assumptions.equityReturn,
@@ -145,12 +179,18 @@ export function AssumptionsForm() {
   }, [reset, setAssumptions]) // oxlint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    // RHF's watch() subscription is the documented API; the React Compiler lint
+    // flags it as incompatible with memoization (a known false positive).
+    // oxlint-disable-next-line react-hooks/incompatible-library
     const subscription = watch((value) => {
-      if (value.equityReturn !== undefined) {
-        const { inflationRate, ...assumptionFields } = value as FormData
-        setAssumptions({ ...assumptionFields, inflationRate })
-        setRetirementGoals({ inflationRate })
-      }
+      // Only propagate valid values to the store, as the other Plan forms do. A cleared
+      // field (NaN) or an out-of-range value must never reach the calculations or be
+      // persisted (issue #34 follow-up).
+      const parsed = schema.safeParse(value)
+      if (!parsed.success) return
+      const { inflationRate, ...assumptionFields } = parsed.data
+      setAssumptions({ ...assumptionFields, inflationRate })
+      setRetirementGoals({ inflationRate })
     })
     return () => subscription.unsubscribe()
   }, [watch, setAssumptions, setRetirementGoals])
@@ -254,11 +294,12 @@ export function AssumptionsForm() {
             <Input
               id="equityReturn"
               type="number"
-              min="0"
-              max="30"
+              min={BOUNDS.equityReturn.min}
+              max={BOUNDS.equityReturn.max}
               step="0.5"
               {...register("equityReturn", { valueAsNumber: true })}
             />
+            <FieldError message={errors.equityReturn?.message} />
           </div>
 
           <div className="space-y-2">
@@ -266,11 +307,12 @@ export function AssumptionsForm() {
             <Input
               id="bondReturn"
               type="number"
-              min="0"
-              max="20"
+              min={BOUNDS.bondReturn.min}
+              max={BOUNDS.bondReturn.max}
               step="0.5"
               {...register("bondReturn", { valueAsNumber: true })}
             />
+            <FieldError message={errors.bondReturn?.message} />
           </div>
 
           <div className="space-y-2">
@@ -278,11 +320,12 @@ export function AssumptionsForm() {
             <Input
               id="cashReturn"
               type="number"
-              min="0"
-              max="15"
+              min={BOUNDS.cashReturn.min}
+              max={BOUNDS.cashReturn.max}
               step="0.5"
               {...register("cashReturn", { valueAsNumber: true })}
             />
+            <FieldError message={errors.cashReturn?.message} />
           </div>
         </div>
       </div>
@@ -354,14 +397,15 @@ export function AssumptionsForm() {
             <Input
               id="inflationRate"
               type="number"
-              min="0"
-              max="20"
+              min={BOUNDS.inflationRate.min}
+              max={BOUNDS.inflationRate.max}
               step="0.5"
               className="max-w-[120px]"
               {...register("inflationRate", { valueAsNumber: true })}
             />
             <p className="text-xs text-muted-foreground">SA historical average: 5–6%</p>
           </div>
+          <FieldError message={errors.inflationRate?.message} />
         </div>
       </div>
     </PageCard>
