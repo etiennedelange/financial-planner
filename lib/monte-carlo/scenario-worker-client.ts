@@ -2,7 +2,7 @@ import type {
   ScenarioComparisonParams,
   ScenarioComparisonResult,
 } from "@/lib/calculations/scenario-comparison"
-import type { ScenarioWorkerRequest, ScenarioWorkerResponse } from "./scenario-comparison.worker"
+import type { ScenarioWorkerRequest, ScenarioWorkerResponse } from "./simulation.worker"
 
 /** The part of the Worker API the client uses, so tests can pass a fake */
 export interface ScenarioWorkerLike {
@@ -55,7 +55,7 @@ export function createScenarioWorkerClient(
     run(params) {
       const target = ensureWorker()
       const id = ++latestId
-      target.postMessage({ id, params })
+      target.postMessage({ kind: "scenarios", id, params })
       return id
     },
     dispose() {

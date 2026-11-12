@@ -175,6 +175,10 @@ Design rules:
   routes still re-render on store changes, so it runs on every keystroke on *other* pages
   (issue #34 page freeze). Run it in a worker from an effect: effects are torn down while hidden.
   See `docs/history/2026-11-12-page-freeze-scenario-worker.md`
+- ❌ Don't add a second Web Worker entry file — route new work through `simulation.worker.ts`
+  with a tagged request. Two entries were crossed in the production Turbopack build and the
+  Risk page sat on "Waiting for simulation"; `simulation.worker.test.ts` enforces this. See
+  `docs/history/2026-11-12-single-worker-entry.md`
 - ❌ Don't write raw `<p className="text-[10px] font-mono uppercase...">` — use `<SectionLabel>` or `<PageCard>`
 - ❌ Don't use `Card + CardHeader + CardTitle` for section cards — `CardTitle` renders `text-2xl font-semibold` which violates the design system
 - ⚠️ `calculator-store.ts` branch coverage is ~82% (2026-11-12) and `expenses-store.ts` ~72-76%,

@@ -74,6 +74,7 @@ description: "Phase 1.6: Next.js rendering, bundle size and UX performance work.
 - [x] **Move the Risk-page scenario comparison to a Web Worker** (2026-11-12) ✅
   - `compareScenarios` (3 × 1,000 simulations) ran on the main thread; under `cacheComponents` a hidden Risk page re-ran it on every Plan keystroke and froze tab switches (issue #34)
   - → [history/2026-11-12-page-freeze-scenario-worker.md](../history/2026-11-12-page-freeze-scenario-worker.md)
+  - Follow-up: the separate worker entry was crossed with the range worker in the production build ("Waiting for simulation"); merged into the single `simulation.worker.ts` entry → [history/2026-11-12-single-worker-entry.md](../history/2026-11-12-single-worker-entry.md)
 
 - [x] **Delete duplicate calculation in CalculationsBreakdown** (High Priority) ✅
   - Removed two manual projection loops (~100 lines)
