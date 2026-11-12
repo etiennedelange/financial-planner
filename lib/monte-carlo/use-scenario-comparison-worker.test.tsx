@@ -10,7 +10,7 @@ import {
   scenarioReducer,
   useScenarioComparisonWorker,
 } from "./use-scenario-comparison-worker"
-import type { ScenarioWorkerRequest, ScenarioWorkerResponse } from "./scenario-comparison.worker"
+import type { ScenarioWorkerRequest, ScenarioWorkerResponse } from "./simulation.worker"
 
 const fakeResult = { recommendation: "r" } as unknown as ScenarioComparisonResult
 
@@ -127,7 +127,7 @@ describe("useScenarioComparisonWorker", () => {
     render(params)
     expect(FakeWorker.instances).toHaveLength(1)
     const worker = FakeWorker.instances[0]
-    expect(worker.posted).toEqual([{ id: 1, params }])
+    expect(worker.posted).toEqual([{ kind: "scenarios", id: 1, params }])
     expect(latest().isRunning).toBe(true)
 
     act(() =>

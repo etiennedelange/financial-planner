@@ -1,8 +1,16 @@
 /**
- * Monte Carlo Web Worker
+ * Monte Carlo Web Worker: the app's ONLY worker entry
  *
- * Runs the simulation off the main thread so the UI stays responsive
- * during the 1,000+ iteration computation.
+ * Runs simulations off the main thread so the UI stays responsive. It answers two kinds
+ * of request: the Risk page's success range (`WorkerRequest`) and the investment-scenario
+ * comparison (`ScenarioWorkerRequest`, tagged `kind: "scenarios"`).
+ *
+ * Keep it to one entry file. With two (`simulation.worker.ts` and a separate
+ * `scenario-comparison.worker.ts`), the production Turbopack build crossed them when both
+ * workers started together on the Risk page: the range worker ran the scenario code and
+ * vice versa, so the success rate never arrived ("Waiting for simulation"). With one
+ * entry every worker instance runs the same code, so a crossed load is harmless.
+ * `single-worker-entry.test.ts` fails if a second entry appears.
  */
 
 import type {
@@ -14,6 +22,11 @@ import type {
   SimulationConfig,
   SimulationResult,
 } from "@/types"
+import {
+  compareScenarios,
+  type ScenarioComparisonParams,
+  type ScenarioComparisonResult,
+} from "@/lib/calculations/scenario-comparison"
 import { runMonteCarloSimulation } from "./simulation-engine"
 
 export interface WorkerRequest {
@@ -37,7 +50,26 @@ export interface WorkerResponse {
   results: SimulationResult[]
 }
 
-addEventListener("message", (event: MessageEvent<WorkerRequest>) => {
+/** `compareScenarios` (3 × 1,000 simulations) for the Risk page's scenario cards */
+export interface ScenarioWorkerRequest {
+  kind: "scenarios"
+  id: number
+  params: ScenarioComparisonParams
+}
+
+export interface ScenarioWorkerResponse {
+  id: number
+  result: ScenarioComparisonResult
+}
+
+/** The worker's message handler, exported so tests can drive it without a Worker */
+export function handleWorkerMessage(
+  data: WorkerRequest | ScenarioWorkerRequest,
+): WorkerResponse | ScenarioWorkerResponse {
+  if ("kind" in data && data.kind === "scenarios") {
+    return { id: data.id, result: compareScenarios(data.params) }
+  }
+
   const {
     id,
     accounts,
@@ -46,7 +78,7 @@ addEventListener("message", (event: MessageEvent<WorkerRequest>) => {
     drawdownConfig,
     configs,
     marketAssumptions,
-  } = event.data
+  } = data as WorkerRequest
 
   const results = configs.map((config) =>
     runMonteCarloSimulation(
@@ -58,6 +90,9 @@ addEventListener("message", (event: MessageEvent<WorkerRequest>) => {
       marketAssumptions,
     ),
   )
+  return { id, results }
+}
 
-  postMessage({ id, results } as WorkerResponse)
+addEventListener("message", (event: MessageEvent<WorkerRequest | ScenarioWorkerRequest>) => {
+  postMessage(handleWorkerMessage(event.data))
 })

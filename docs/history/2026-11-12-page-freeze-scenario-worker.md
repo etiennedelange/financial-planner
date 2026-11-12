@@ -42,6 +42,10 @@ Plan or Charts on screen.
 
 ## Fix
 
+> **Superseded detail (same day):** the separate `scenario-comparison.worker.ts` entry below was
+> crossed with `simulation.worker.ts` in the production build and has been merged into it. See
+> [2026-11-12-single-worker-entry.md](2026-11-12-single-worker-entry.md).
+
 - **`compareScenarios` runs in a Web Worker.** New `lib/monte-carlo/scenario-comparison.worker.ts`
   (calls the existing `compareScenarios`, no logic of its own),
   `scenario-worker-client.ts` (same contract as `range-worker-client.ts`: lazy worker,

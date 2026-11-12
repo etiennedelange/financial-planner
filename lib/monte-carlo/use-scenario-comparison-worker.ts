@@ -64,7 +64,8 @@ export function useScenarioComparisonWorker(params: ScenarioComparisonParams | n
   useEffect(() => {
     if (!params) return
     clientRef.current ??= createScenarioWorkerClient(
-      () => new Worker(new URL("./scenario-comparison.worker.ts", import.meta.url)),
+      // The same entry file as useMonteCarloWorker, on purpose: see simulation.worker.ts
+      () => new Worker(new URL("./simulation.worker.ts", import.meta.url)),
       (comparison) => dispatch({ type: "DONE", result: comparison }),
       (error) => {
         console.error("Scenario comparison worker error:", error)

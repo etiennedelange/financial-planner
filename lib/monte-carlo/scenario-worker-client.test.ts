@@ -5,7 +5,7 @@ import {
   type ScenarioComparisonResult,
 } from "@/lib/calculations/scenario-comparison"
 import { createScenarioWorkerClient, type ScenarioWorkerLike } from "./scenario-worker-client"
-import type { ScenarioWorkerRequest, ScenarioWorkerResponse } from "./scenario-comparison.worker"
+import type { ScenarioWorkerRequest, ScenarioWorkerResponse } from "./simulation.worker"
 
 const params: ScenarioComparisonParams = {
   currentSavings: 1_000_000,
@@ -66,6 +66,8 @@ describe("createScenarioWorkerClient", () => {
       expect(create).toHaveBeenCalledTimes(1)
       expect(posted.map((p) => p.id)).toEqual([1, 2])
       expect(posted[0].params).toBe(params)
+      // Tagged so the shared worker entry routes it to compareScenarios
+      expect(posted[0].kind).toBe("scenarios")
     })
 
     it("dispose terminates the worker; the next run creates a new one", () => {
@@ -134,13 +136,13 @@ describe("createScenarioWorkerClient", () => {
   })
 })
 
-describe("scenario-comparison.worker", () => {
+describe("simulation.worker scenario requests", () => {
   afterEach(() => {
     vi.unstubAllGlobals()
     vi.resetModules()
   })
 
-  it("answers a request with compareScenarios for the same params and the request id", async () => {
+  it("answers a scenarios request with compareScenarios for the same params and the request id", async () => {
     let handler: ((event: MessageEvent<ScenarioWorkerRequest>) => void) | undefined
     const postMessage = vi.fn()
     vi.stubGlobal("addEventListener", (type: string, fn: typeof handler) => {
@@ -148,8 +150,8 @@ describe("scenario-comparison.worker", () => {
     })
     vi.stubGlobal("postMessage", postMessage)
 
-    await import("./scenario-comparison.worker")
-    handler!({ data: { id: 42, params } } as MessageEvent<ScenarioWorkerRequest>)
+    await import("./simulation.worker")
+    handler!({ data: { kind: "scenarios", id: 42, params } } as MessageEvent<ScenarioWorkerRequest>)
 
     expect(postMessage).toHaveBeenCalledTimes(1)
     const reply = postMessage.mock.calls[0][0] as ScenarioWorkerResponse
