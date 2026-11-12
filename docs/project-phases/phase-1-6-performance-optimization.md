@@ -71,6 +71,10 @@ description: "Phase 1.6: Next.js rendering, bundle size and UX performance work.
   - **Impact:** Monte Carlo off main thread entirely; no more main-thread blocking
   - **Completed:** 2026-04-11 (Phase 1.6 Phase 2 / Phase 1.7 combined work)
 
+- [x] **Move the Risk-page scenario comparison to a Web Worker** (2026-11-12) ✅
+  - `compareScenarios` (3 × 1,000 simulations) ran on the main thread; under `cacheComponents` a hidden Risk page re-ran it on every Plan keystroke and froze tab switches (issue #34)
+  - → [history/2026-11-12-page-freeze-scenario-worker.md](../history/2026-11-12-page-freeze-scenario-worker.md)
+
 - [x] **Delete duplicate calculation in CalculationsBreakdown** (High Priority) ✅
   - Removed two manual projection loops (~100 lines)
   - Removed internal `calculateProjection()` call (was third computation)

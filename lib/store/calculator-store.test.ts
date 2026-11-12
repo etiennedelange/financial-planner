@@ -6,7 +6,7 @@ import { useCalculatorStore, type CalculatorState } from "./calculator-store"
 import "@/lib/store/expenses-store"
 import * as accountsApi from "@/lib/supabase/accounts"
 import * as scenariosApi from "@/lib/supabase/scenarios"
-import { SA_DEFAULTS } from "@/lib/constants/defaults"
+import { SA_DEFAULTS, SA_DEFAULTS_DISPLAY } from "@/lib/constants/defaults"
 import type { Account } from "@/types"
 
 vi.mock("@/lib/supabase/accounts")
@@ -623,6 +623,90 @@ describe("persist migration v1 → v2 (monetary cap)", () => {
 
     expect(migrated.drawdownConfig.monthlyMedicalAid).toBe(1_000_000_000_000)
     expect(migrated.accounts[0].tfsaContributionsToDate).toBe(1_000_000_000_000)
+  })
+})
+
+describe("persist migration v2 → v3 (invalid Market Assumptions rates, issue #34)", () => {
+  const migrate = useCalculatorStore.persist.getOptions().migrate
+
+  it("stores version 3", () => {
+    expect(useCalculatorStore.persist.getOptions().version).toBe(3)
+  })
+
+  it("resets cleared (null) and out-of-range rates to the defaults", () => {
+    const migrated = migrate!(
+      {
+        assumptions: {
+          equityReturn: 150000,
+          bondReturn: 3000,
+          cashReturn: null,
+          equityVolatility: 16.5,
+          bondVolatility: 6,
+          inflationRate: null,
+          compoundingMethod: "compound",
+          taxThresholdRelief: "none",
+        },
+        retirementGoals: { desiredMonthlyIncome: 30000, inflationRate: null, legacyAmount: 0 },
+      } as unknown,
+      2,
+    ) as CalculatorState
+
+    expect(migrated.assumptions).toEqual({
+      equityReturn: SA_DEFAULTS_DISPLAY.equityReturn,
+      bondReturn: SA_DEFAULTS_DISPLAY.bondReturn,
+      cashReturn: SA_DEFAULTS_DISPLAY.cashReturn,
+      equityVolatility: 16.5,
+      bondVolatility: 6,
+      inflationRate: SA_DEFAULTS_DISPLAY.inflation,
+      // Non-rate settings are left exactly as the user chose them
+      compoundingMethod: "compound",
+      taxThresholdRelief: "none",
+    })
+    expect(migrated.retirementGoals.inflationRate).toBe(SA_DEFAULTS_DISPLAY.inflation)
+  })
+
+  it("keeps valid rates, including the 0% and maximum boundaries", () => {
+    const migrated = migrate!(
+      {
+        assumptions: {
+          equityReturn: 30,
+          bondReturn: 0,
+          cashReturn: 15,
+          equityVolatility: 16.5,
+          bondVolatility: 6,
+          inflationRate: 0,
+          compoundingMethod: "nominal",
+        },
+        retirementGoals: { desiredMonthlyIncome: 30000, inflationRate: 0, legacyAmount: 0 },
+      } as unknown,
+      2,
+    ) as CalculatorState
+
+    expect(migrated.assumptions.equityReturn).toBe(30)
+    expect(migrated.assumptions.bondReturn).toBe(0)
+    expect(migrated.assumptions.cashReturn).toBe(15)
+    expect(migrated.assumptions.inflationRate).toBe(0)
+    expect(migrated.retirementGoals.inflationRate).toBe(0)
+  })
+
+  it("restores default assumptions when none were persisted", () => {
+    const migrated = migrate!({} as unknown, 2) as CalculatorState
+    expect(migrated.assumptions.equityReturn).toBe(SA_DEFAULTS_DISPLAY.equityReturn)
+    expect(migrated.assumptions.inflationRate).toBe(SA_DEFAULTS_DISPLAY.inflation)
+    expect(migrated.assumptions.compoundingMethod).toBe("nominal")
+    expect(migrated.retirementGoals.inflationRate).toBe(SA_DEFAULTS_DISPLAY.inflation)
+  })
+
+  it("a v1 payload gets both the monetary clamp and the rate reset", () => {
+    const migrated = migrate!(
+      {
+        personalInfo: { annualIncome: 8.8e39 },
+        assumptions: { equityReturn: 999 },
+      } as unknown,
+      1,
+    ) as CalculatorState
+    expect(migrated.personalInfo.annualIncome).toBe(1_000_000_000_000)
+    expect(migrated.assumptions.equityReturn).toBe(SA_DEFAULTS_DISPLAY.equityReturn)
   })
 })
 

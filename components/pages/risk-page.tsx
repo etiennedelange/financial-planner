@@ -6,7 +6,7 @@ import { useShallow } from "zustand/react/shallow"
 import { Gauge, Hourglass, TrendingDown, Wallet } from "lucide-react"
 import { useCalculator } from "@/lib/context/calculator-context"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
-import { compareScenarios } from "@/lib/calculations/scenario-comparison"
+import { useScenarioComparisonWorker } from "@/lib/monte-carlo/use-scenario-comparison-worker"
 import { computePortfolioTotals } from "@/lib/calculations/utils/portfolio-totals"
 import { buildPlanVerdict, type PlanVerdictTone } from "@/lib/utils/plan-verdict"
 import { formatSuccessRange, getSuccessRateStyle, successRange } from "@/lib/utils/success-rate"
@@ -56,13 +56,15 @@ export function RiskPage() {
 
   const totals = useMemo(() => computePortfolioTotals(accounts), [accounts])
 
-  // Computed once and shared by the scenario chart and card: each call is 3 × 1,000
-  // simulations on the main thread.
-  const scenarios = useMemo(
+  // Shared by the scenario chart and card. compareScenarios is 3 × 1,000 simulations, so it
+  // runs in a Web Worker: on the main thread it froze the app (issue #34), because Next keeps
+  // this route mounted while hidden and it re-ran on every Plan keystroke. Only the
+  // compounding method is read from assumptions, so volatility edits do not re-run it.
+  const scenarioParams = useMemo(
     () =>
       accounts.length === 0
         ? null
-        : compareScenarios({
+        : {
             currentSavings: totals.totalBalance,
             monthlyContribution: totals.totalContribution,
             personalInfo,
@@ -71,9 +73,7 @@ export function RiskPage() {
             contributionEscalation: totals.avgEscalation,
             fees: totals.weightedFees,
             compoundingMethod: assumptions.compoundingMethod,
-          }),
-    // compareScenarios reads only the compounding method from assumptions. Depending on the
-    // whole object re-ran 3 × 1,000 main-thread simulations on every volatility keystroke.
+          },
     [
       accounts.length,
       totals,
@@ -83,6 +83,7 @@ export function RiskPage() {
       assumptions.compoundingMethod,
     ],
   )
+  const { result: scenarios } = useScenarioComparisonWorker(scenarioParams)
 
   // Deterministic, two projections: cheap enough to compute directly (no worker)
   const stressTest = useMemo(
