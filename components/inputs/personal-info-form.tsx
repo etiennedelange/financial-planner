@@ -1,20 +1,17 @@
 "use client"
 
 import { useEffect } from "react"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { AnimatePresence, motion } from "motion/react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { NumberField } from "@/components/ui/number-field"
+import { SectionLabel } from "@/components/ui/section-label"
 import { PageCard } from "@/components/ui/page-card"
 import { AnimatedValue } from "@/components/ui/animated-value"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useShallow } from "zustand/react/shallow"
-import { InfoTooltip } from "@/components/ui/info-tooltip"
-import { FieldError } from "@/components/ui/field-error"
 import { MAX_MONETARY_AMOUNT, SA_TAX_LIMITS } from "@/lib/constants/limits"
-import { useBoundedMonetary } from "@/lib/hooks/use-bounded-monetary"
 import { formatCurrency } from "@/lib/utils/currency"
 
 const schema = z
@@ -64,7 +61,7 @@ export function PersonalInfoForm() {
   )
 
   const {
-    register,
+    control,
     watch,
     reset,
     getValues,
@@ -77,14 +74,6 @@ export function PersonalInfoForm() {
 
   // Watch all fields and update store on change
   const watchedValues = watch()
-
-  // Physically block monetary input above the cap — the field can never hold it.
-  const { onChange: annualIncomeOnChange, ...annualIncomeRegister } = register("annualIncome", {
-    valueAsNumber: true,
-  })
-  const guardAnnualIncome = useBoundedMonetary(
-    watchedValues.annualIncome ?? personalInfo.annualIncome,
-  )
 
   useEffect(() => {
     // RHF's watch() subscription is the documented API; the React Compiler lint
@@ -115,130 +104,151 @@ export function PersonalInfoForm() {
 
   const yearsToRetirement = watchedValues.retirementAge - watchedValues.currentAge
   const yearsInRetirement = watchedValues.lifeExpectancy - watchedValues.retirementAge
-  const isValidYears = Number.isFinite(yearsToRetirement) && Number.isFinite(yearsInRetirement)
+  const showTimeline = yearsToRetirement > 0 && yearsInRetirement > 0
 
   return (
-    <PageCard label="Personal Information" contentClassName="space-y-4">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="currentAge">Current Age</Label>
-          <Input
-            id="currentAge"
-            type="number"
-            min="18"
-            max="100"
-            {...register("currentAge", { valueAsNumber: true })}
-          />
-          <FieldError message={errors.currentAge?.message} />
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="retirementAge">Retirement Age</Label>
-            <InfoTooltip
-              content="The age at which you plan to stop working and start drawing from your retirement savings. This determines how many years you have to save (accumulation phase) and how many years you'll need income (drawdown phase)."
-              side="right"
-            />
-          </div>
-          <Input
-            id="retirementAge"
-            type="number"
-            min="40"
-            max="100"
-            {...register("retirementAge", { valueAsNumber: true })}
-          />
-          <FieldError message={errors.retirementAge?.message} />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="lifeExpectancy">Life Expectancy</Label>
-            <InfoTooltip
-              content="How long you expect to live. This determines how many years your retirement savings need to last. SA average is ~75 years, but planning for 90-95 provides a safety buffer. Longer life expectancy requires more savings or lower withdrawal rates."
-              side="right"
-            />
-          </div>
-          <Input
-            id="lifeExpectancy"
-            type="number"
-            min="60"
-            max="120"
-            {...register("lifeExpectancy", { valueAsNumber: true })}
-          />
-          <FieldError message={errors.lifeExpectancy?.message} />
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="annualIncome">Annual Income (R)</Label>
-            <InfoTooltip
-              content={`Your current annual gross income before tax. Used to calculate tax deductions for retirement contributions (RAs, Pension Funds). SA allows up to ${(SA_TAX_LIMITS.pensionRaDeductionRate * 100).toFixed(1)}% of income (max R${(SA_TAX_LIMITS.pensionRaMaxDeduction / 1000).toFixed(0)}k/year) as tax-deductible retirement contributions.`}
-              side="right"
-            />
-          </div>
-          <Input
-            id="annualIncome"
-            type="number"
-            min="0"
-            max={MAX_MONETARY_AMOUNT}
-            step="any"
-            {...annualIncomeRegister}
-            onChange={(e) => guardAnnualIncome.onChange(e, annualIncomeOnChange)}
-            onBeforeInput={guardAnnualIncome.onBeforeInput}
-          />
-          <FieldError message={errors.annualIncome?.message} />
-          <AnimatePresence initial={false}>
-            {watchedValues.annualIncome > 0 ? (
-              <motion.p
-                key="income-display"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                className="text-xs text-muted-foreground"
-              >
-                <AnimatedValue value={watchedValues.annualIncome} format={formatCurrency} /> / year
-              </motion.p>
-            ) : (
-              <motion.p
-                key="income-default"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                className="text-xs text-muted-foreground"
-              >
-                R 0 / year — required for RA tax deduction calculations
-              </motion.p>
+    <PageCard label="Personal Information" contentClassName="space-y-7">
+      <div className="space-y-3">
+        <SectionLabel>Your timeline</SectionLabel>
+        <div className="flex flex-wrap gap-x-4 gap-y-5">
+          <Controller
+            control={control}
+            name="currentAge"
+            render={({ field }) => (
+              <NumberField
+                id="currentAge"
+                label="Current age"
+                suffix="yrs"
+                stepper
+                min={18}
+                max={100}
+                value={field.value}
+                onValueChange={field.onChange}
+                onBlur={field.onBlur}
+                name={field.name}
+                inputRef={field.ref}
+                error={errors.currentAge?.message}
+              />
             )}
-          </AnimatePresence>
+          />
+          <Controller
+            control={control}
+            name="retirementAge"
+            render={({ field }) => (
+              <NumberField
+                id="retirementAge"
+                label="Retirement age"
+                tooltip="The age at which you plan to stop working and start drawing from your retirement savings. This determines how many years you have to save (accumulation phase) and how many years you'll need income (drawdown phase)."
+                suffix="yrs"
+                stepper
+                min={40}
+                max={100}
+                value={field.value}
+                onValueChange={field.onChange}
+                onBlur={field.onBlur}
+                name={field.name}
+                inputRef={field.ref}
+                error={errors.retirementAge?.message}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="lifeExpectancy"
+            render={({ field }) => (
+              <NumberField
+                id="lifeExpectancy"
+                label="Life expectancy"
+                tooltip="How long you expect to live. This determines how many years your retirement savings need to last. SA average is ~75 years, but planning for 90-95 provides a safety buffer. Longer life expectancy requires more savings or lower withdrawal rates."
+                suffix="yrs"
+                stepper
+                min={60}
+                max={120}
+                value={field.value}
+                onValueChange={field.onChange}
+                onBlur={field.onBlur}
+                name={field.name}
+                inputRef={field.ref}
+                error={errors.lifeExpectancy?.message}
+              />
+            )}
+          />
         </div>
+
+        <AnimatePresence initial={false}>
+          {showTimeline && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              className="space-y-2 pt-2"
+            >
+              <div className="flex h-2 overflow-hidden rounded-full bg-muted" aria-hidden="true">
+                <div className="bg-primary" style={{ flexGrow: yearsToRetirement }} />
+                <div className="bg-primary/40" style={{ flexGrow: yearsInRetirement }} />
+              </div>
+              <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-[2px] bg-primary" aria-hidden="true" />
+                  <span className="font-medium text-foreground tabular-nums">
+                    <AnimatedValue value={yearsToRetirement} />
+                  </span>{" "}
+                  years until retirement
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-[2px] bg-primary/40" aria-hidden="true" />
+                  <span className="font-medium text-foreground tabular-nums">
+                    <AnimatedValue value={yearsInRetirement} />
+                  </span>{" "}
+                  years in retirement
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      <AnimatePresence initial={false}>
-        {isValidYears && (
-          <motion.div
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="rounded-md bg-muted p-3 text-sm"
-          >
-            <p>
-              <span className="font-medium">
-                <AnimatedValue value={yearsToRetirement} />
-              </span>{" "}
-              years until retirement |{" "}
-              <span className="font-medium">
-                <AnimatedValue value={yearsInRetirement} />
-              </span>{" "}
-              years in retirement
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className="space-y-3">
+        <SectionLabel>Income</SectionLabel>
+        <Controller
+          control={control}
+          name="annualIncome"
+          render={({ field }) => (
+            <NumberField
+              id="annualIncome"
+              label="Annual income"
+              tooltip={`Your current annual gross income before tax. Used to calculate tax deductions for retirement contributions (RAs, Pension Funds). SA allows up to ${(SA_TAX_LIMITS.pensionRaDeductionRate * 100).toFixed(1)}% of income (max R${(SA_TAX_LIMITS.pensionRaMaxDeduction / 1000).toFixed(0)}k/year) as tax-deductible retirement contributions.`}
+              prefix="R"
+              suffix="/ year"
+              width="money"
+              group
+              min={0}
+              step={10_000}
+              hardMax={MAX_MONETARY_AMOUNT}
+              value={field.value}
+              onValueChange={field.onChange}
+              onBlur={field.onBlur}
+              name={field.name}
+              inputRef={field.ref}
+              error={errors.annualIncome?.message}
+              hint={
+                watchedValues.annualIncome > 0 ? (
+                  <>
+                    <AnimatedValue
+                      value={watchedValues.annualIncome / 12}
+                      format={formatCurrency}
+                    />{" "}
+                    / month before tax
+                  </>
+                ) : (
+                  "Required for RA tax deduction calculations"
+                )
+              }
+            />
+          )}
+        />
+      </div>
     </PageCard>
   )
 }

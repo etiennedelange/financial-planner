@@ -54,9 +54,11 @@ export class StateManager {
   /**
    * Seed state with predefined data into the guest scope (the default for
    * signed-out journeys). Merges with existing state to avoid overwriting
-   * unrelated fields. Kept in sync with the stores' current version (2) so
-   * seeded payloads rehydrate via the normal path rather than the migrate
-   * clamp.
+   * unrelated fields. Kept in sync with the calculator store's persist
+   * `version` (lib/store/calculator-store.ts) so seeded payloads rehydrate via
+   * the normal path. An older version runs `migrate`, which rebuilds
+   * personalInfo from the payload alone: a seed without personalInfo then loses
+   * the default ages and the app renders "Retiring at undefined".
    */
   async seedState(state: Partial<CalculatorState>) {
     await this.page.evaluate((stateData) => {
@@ -69,7 +71,7 @@ export class StateManager {
         storageKey,
         JSON.stringify({
           state: { ...parsed.state, ...stateData },
-          version: 2,
+          version: 3,
         }),
       )
     }, state)

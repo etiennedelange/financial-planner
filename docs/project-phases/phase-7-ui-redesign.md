@@ -49,3 +49,7 @@ app/calculator/
 - Sidebar width duplicated in `sidebar.tsx:60` and `app-shell.tsx:37` — extract to `--sidebar-width` CSS variable
 - No mobile collapse/responsive breakpoints yet
 - Hardcoded color classes (`text-green-600`, etc.) remain in some components — see Phase 9.3
+
+## Follow-up: NumberField inputs (2026-11-14)
+
+The Plan page forms moved from full-width `type="number"` boxes to a shared `NumberField` (in-field units, formatted values, widths that fit the data, steppers, stronger focus). See [history/2026-11-14-number-field-inputs.md](../history/2026-11-14-number-field-inputs.md). The same day it was extended to Risk, drawdown, the account dialog and the expense editors, the base `Input` was restyled to match, and account delete lost its confirmation dialog in favour of Undo. Pending: view the auth modal and mobile/dark states of the new forms.

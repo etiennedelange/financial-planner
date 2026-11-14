@@ -1,13 +1,12 @@
 "use client"
 
 import { useEffect, useCallback, useState } from "react"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { motion, useReducedMotion } from "motion/react"
 import Link from "next/link"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { NumberField } from "@/components/ui/number-field"
 import { PageCard } from "@/components/ui/page-card"
 import { SectionLabel } from "@/components/ui/section-label"
 import { Button } from "@/components/ui/button"
@@ -16,7 +15,6 @@ import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { SA_DEFAULTS_DISPLAY } from "@/lib/constants/defaults"
 import { useShallow } from "zustand/react/shallow"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
-import { FieldError } from "@/components/ui/field-error"
 import { cn } from "@/lib/utils"
 import {
   COMPOUNDING_METHOD_DESCRIPTIONS,
@@ -77,6 +75,12 @@ const schema = z.object({
 })
 
 type FormData = z.infer<typeof schema>
+
+const RETURN_FIELDS = [
+  { name: "equityReturn", label: "Equity" },
+  { name: "bondReturn", label: "Bonds" },
+  { name: "cashReturn", label: "Cash" },
+] as const
 
 const TAX_RELIEF_OPTIONS: { value: TaxThresholdRelief; description: string }[] = [
   {
@@ -143,7 +147,7 @@ export function AssumptionsForm() {
   )
 
   const {
-    register,
+    control,
     watch,
     reset,
     getValues,
@@ -288,45 +292,32 @@ export function AssumptionsForm() {
         <p className="text-xs text-muted-foreground">
           Reference only — changing these does not affect your results.
         </p>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="space-y-2">
-            <Label htmlFor="equityReturn">Equity (%)</Label>
-            <Input
-              id="equityReturn"
-              type="number"
-              min={BOUNDS.equityReturn.min}
-              max={BOUNDS.equityReturn.max}
-              step="0.5"
-              {...register("equityReturn", { valueAsNumber: true })}
+        <div className="flex flex-wrap gap-x-4 gap-y-5">
+          {RETURN_FIELDS.map(({ name, label }) => (
+            <Controller
+              key={name}
+              control={control}
+              name={name}
+              render={({ field }) => (
+                <NumberField
+                  id={name}
+                  label={label}
+                  suffix="%"
+                  decimals={2}
+                  stepper
+                  step={0.5}
+                  min={BOUNDS[name].min}
+                  max={BOUNDS[name].max}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  inputRef={field.ref}
+                  error={errors[name]?.message}
+                />
+              )}
             />
-            <FieldError message={errors.equityReturn?.message} />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="bondReturn">Bonds (%)</Label>
-            <Input
-              id="bondReturn"
-              type="number"
-              min={BOUNDS.bondReturn.min}
-              max={BOUNDS.bondReturn.max}
-              step="0.5"
-              {...register("bondReturn", { valueAsNumber: true })}
-            />
-            <FieldError message={errors.bondReturn?.message} />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="cashReturn">Cash (%)</Label>
-            <Input
-              id="cashReturn"
-              type="number"
-              min={BOUNDS.cashReturn.min}
-              max={BOUNDS.cashReturn.max}
-              step="0.5"
-              {...register("cashReturn", { valueAsNumber: true })}
-            />
-            <FieldError message={errors.cashReturn?.message} />
-          </div>
+          ))}
         </div>
       </div>
 
@@ -384,29 +375,33 @@ export function AssumptionsForm() {
         </p>
       </div>
 
-      <div className="pt-2 border-t border-border">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="inflationRate">Expected Inflation (%)</Label>
-            <InfoTooltip
-              content="Expected annual CPI inflation rate. Used to project your income needs at retirement and to adjust withdrawals each year to preserve purchasing power. SA historical average: 5–6%. This rate affects how much you'll need in nominal terms at retirement."
-              side="right"
-            />
-          </div>
-          <div className="flex items-center gap-3">
-            <Input
+      <div className="border-t border-border pt-5">
+        <Controller
+          control={control}
+          name="inflationRate"
+          render={({ field }) => (
+            <NumberField
               id="inflationRate"
-              type="number"
+              label="Expected inflation"
+              tooltip="Expected annual CPI inflation rate. Used to project your income needs at retirement and to adjust withdrawals each year to preserve purchasing power. SA historical average: 5–6%. This rate affects how much you'll need in nominal terms at retirement."
+              suffix="%"
+              decimals={2}
+              stepper
+              step={0.5}
               min={BOUNDS.inflationRate.min}
               max={BOUNDS.inflationRate.max}
-              step="0.5"
-              className="max-w-[120px]"
-              {...register("inflationRate", { valueAsNumber: true })}
+              width="full"
+              controlClassName="w-[9.25rem] max-sm:w-full"
+              value={field.value}
+              onValueChange={field.onChange}
+              onBlur={field.onBlur}
+              name={field.name}
+              inputRef={field.ref}
+              error={errors.inflationRate?.message}
+              hint="SA historical average: 5–6%"
             />
-            <p className="text-xs text-muted-foreground">SA historical average: 5–6%</p>
-          </div>
-          <FieldError message={errors.inflationRate?.message} />
-        </div>
+          )}
+        />
       </div>
     </PageCard>
   )

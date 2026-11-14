@@ -93,12 +93,14 @@ export class ScreenshotHelper {
   }
 
   /**
-   * Wait for Monte Carlo simulation to complete
-   * The simulation is debounced by 300ms
+   * Wait for the Monte Carlo simulation to complete.
+   * It runs only on the Risk page (/calculator/risk), in a worker, so call this there.
+   * The simulation is debounced and 1,000 runs take a moment, hence the longer default.
    */
-  async waitForMonteCarloSimulation(timeoutMs = 5000) {
-    // Wait for success rate indicator
-    await this.page.waitForSelector("text=Success Rate", {
+  async waitForMonteCarloSimulation(timeoutMs = 20000) {
+    // The "Plan Success Rate" card shows a placeholder ("…" / "--") while the worker runs;
+    // its "Likely range ·" description only appears once results exist.
+    await this.page.waitForSelector("text=Likely range", {
       timeout: timeoutMs,
       state: "visible",
     })

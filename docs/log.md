@@ -1,6 +1,11 @@
 # Documentation Update Log
 
 ## 2026-11-14
+* **Update**: [Input size, password-manager opt-out, phone-layout e2e fixes](history/2026-11-14-number-field-inputs.md) - Field values match body text (14px; 16px on phones), number and name fields opt out of 1Password and similar, the display-mode button gets an accessible name on phones, and journeys 1-3 pass on desktop, tablet and phone.
+* **Update**: [E2E journeys 1-3 repaired; wizard Continue no longer saves](history/2026-11-14-number-field-inputs.md) - The journeys now drive the sidebar app and assert stored values; they exposed a bug where one click on Continue in the add-account wizard saved the account and skipped step 2.
+* **Update**: [Account delete without a confirmation dialog](history/2026-11-14-number-field-inputs.md) - One click deletes; the toast's Undo (now 8 s instead of 3 s) is the safety net, so the floating dialog is gone.
+* **Update**: [NumberField on every remaining form](history/2026-11-14-number-field-inputs.md) - Risk volatility, drawdown, account dialog and expense editors use `NumberField`/`NumberInput`, and the base `Input` gets the stronger border and focus ring.
+* **Update**: [NumberField for Plan inputs](history/2026-11-14-number-field-inputs.md) - Plan, Retirement Goals and Market Assumptions fields now show grouped values with the unit inside, widths that fit the data, steppers and a clearer focus ring, from one tested component.
 * **Update**: [AI summaries: Workers AI, your own key, and the fixes that made them work](history/2026-11-14-ai-providers-own-key.md) - Explain My Plan was always 401 with sign-in off and failed on older plans; it now runs on Vercel AI Gateway or Cloudflare Workers AI, accepts the user's own key, and reports real errors.
 * **Update**: [Stale service-worker cache broke the Risk workers](history/2026-11-14-stale-service-worker-cache.md) - Asset cache bumped to v2 and the worker now names the keys of a malformed request.
 * **Update**: [Bug and performance audit](history/2026-11-14-bug-and-performance-audit.md) - Dead Risk worker is replaced and failures are shown, superseded runs are cancelled, store sync races and the shortfall amount are fixed, and render cost is trimmed.
