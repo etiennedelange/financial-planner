@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useReducer } from "react"
-import { DebugWindow } from "@/components/debug/debug-window"
 import { AppShell } from "@/components/layout/app-shell"
 import { useAuth } from "@/components/supabase-provider"
 import { CalculatorProvider, useCalculator } from "@/lib/context/calculator-context"
@@ -34,7 +33,7 @@ function shellReducer(state: ShellState, action: ShellAction): ShellState {
 
 function CalculatorShell({ children }: { children: React.ReactNode }) {
   const { user, isLoaded } = useAuth()
-  const { projection, simulationResult, isDeferred } = useCalculator()
+  const { isDeferred } = useCalculator()
   const accounts = useCalculatorStore((s) => s.accounts)
 
   const [shell, dispatch] = useReducer(shellReducer, shellInitialState)
@@ -66,11 +65,6 @@ function CalculatorShell({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </AppShell>
-      <DebugWindow
-        projection={projection}
-        simulationResult={simulationResult}
-        className="hidden md:flex fixed bottom-4 right-4 z-50"
-      />
     </>
   )
 }

@@ -14,7 +14,7 @@ import {
 import { isAuthEnabled } from "@/lib/config/features"
 import { createClient } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
-import { LogIn, LogOut, Settings, User as UserIcon } from "lucide-react"
+import { Bug, LogIn, LogOut, Settings, User as UserIcon } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 
@@ -59,6 +59,12 @@ export function AccountMenu({ user }: { user: User | null }) {
             <Link href="/calculator/settings">
               <Settings className="mr-2 h-4 w-4" />
               {user ? "Manage Account" : "Settings"}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href="/calculator/debug">
+              <Bug className="mr-2 h-4 w-4" />
+              Debug
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
