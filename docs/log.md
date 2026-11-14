@@ -2,6 +2,7 @@
 
 ## 2026-11-14
 * **Update**: [Bug and performance audit](history/2026-11-14-bug-and-performance-audit.md) - Dead Risk worker is replaced and failures are shown, superseded runs are cancelled, store sync races and the shortfall amount are fixed, and render cost is trimmed.
+* **Update**: [Theme contrast fixes](history/2026-11-14-theme-contrast-fixes.md) - Light-mode warning and success text and input borders in both themes now meet WCAG; a test checks every text and boundary token pair in both themes against `globals.css`.
 
 ## 2026-11-12
 * **Update**: [Risk simulation stuck on 'Waiting for simulation': one worker entry](history/2026-11-12-single-worker-entry.md) - The second worker entry added for #34 was crossed with the first in the production build; both request kinds now go through `simulation.worker.ts`, guarded by a test.
