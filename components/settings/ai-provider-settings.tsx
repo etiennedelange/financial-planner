@@ -42,6 +42,8 @@ export function AiProviderSettings() {
   const keyId = useId()
   const accountId = useId()
   const rememberId = useId()
+  const modeLabelId = useId()
+  const providerLabelId = useId()
 
   const { mode, provider, update } = settings
   const keyValue = provider === "gateway" ? settings.gatewayApiKey : settings.cloudflareApiToken
@@ -56,11 +58,15 @@ export function AiProviderSettings() {
   return (
     <PageCard label="AI Provider" contentClassName="space-y-4">
       <div className="space-y-2">
-        <p className="text-sm font-medium">Explain My Plan uses</p>
-        <div className="flex flex-wrap gap-2">
+        <p id={modeLabelId} className="text-sm font-medium">
+          Explain My Plan uses
+        </p>
+        {/* aria-pressed: the selected option must not be conveyed by colour alone */}
+        <div role="group" aria-labelledby={modeLabelId} className="flex flex-wrap gap-2">
           <Button
             variant={mode === "hosted" ? "default" : "outline"}
             size="sm"
+            aria-pressed={mode === "hosted"}
             onClick={() => update({ mode: "hosted" })}
           >
             App default
@@ -68,6 +74,7 @@ export function AiProviderSettings() {
           <Button
             variant={mode === "own" ? "default" : "outline"}
             size="sm"
+            aria-pressed={mode === "own"}
             onClick={() => update({ mode: "own" })}
           >
             My own API key
@@ -83,13 +90,16 @@ export function AiProviderSettings() {
       {mode === "own" && (
         <>
           <div className="space-y-2">
-            <p className="text-sm font-medium">Provider</p>
-            <div className="flex flex-wrap gap-2">
+            <p id={providerLabelId} className="text-sm font-medium">
+              Provider
+            </p>
+            <div role="group" aria-labelledby={providerLabelId} className="flex flex-wrap gap-2">
               {AI_PROVIDER_IDS.map((id) => (
                 <Button
                   key={id}
                   variant={provider === id ? "default" : "outline"}
                   size="sm"
+                  aria-pressed={provider === id}
                   onClick={() => update({ provider: id })}
                 >
                   {AI_PROVIDER_LABELS[id]}

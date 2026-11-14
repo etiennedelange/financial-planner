@@ -128,6 +128,9 @@ as 0, matching the engine.
     Now the response stream errors (with a generic `NarrativeInterruptedError`) and
     `readNarrativeStream` throws. The hook drops the partial text and shows an
     error, without caching or a cooldown.
+- Third review round: the mode and provider buttons showed the selection only by
+  colour. They now carry `aria-pressed`, and each set is a `role="group"` named by its
+  visible label. `ai-provider-settings.test.tsx` checks this with a client render.
 - Coverage: 100% of statements in the new `lib/ai` files, about 95% in the route; the
   settings store's gaps are the browser-only storage getter and the mount hook (no
   React testing library in the repo).
