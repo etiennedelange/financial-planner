@@ -133,6 +133,27 @@ describe("LocalDataProvider", () => {
     }
   })
 
+  it("reloads when another tab removed a watched key, so stale memory can't be written back", async () => {
+    localStorage.setItem("financial-planner-storage", PLAN(40))
+    const reload = vi.fn()
+    const original = window.location
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { reload } as unknown as Location,
+    })
+    try {
+      const s = await setup()
+      await mount(s)
+      localStorage.removeItem("financial-planner-storage") // clear-all removes keys one by one
+      await act(async () => {
+        window.dispatchEvent(new StorageEvent("storage", { key: "financial-planner-storage" }))
+      })
+      expect(reload).toHaveBeenCalledTimes(1)
+    } finally {
+      Object.defineProperty(window, "location", { configurable: true, value: original })
+    }
+  })
+
   it("asks the browser for persistent storage, and survives browsers without the API", async () => {
     const persist = vi.fn().mockResolvedValue(true)
     Object.defineProperty(navigator, "storage", { configurable: true, value: { persist } })
@@ -145,6 +166,29 @@ describe("LocalDataProvider", () => {
     const s2 = await setup()
     await mount(s2)
     expect(probe()).toBe("true") // no throw without navigator.storage
+  })
+
+  it("still renders when localStorage access throws, instead of hanging on hydration", async () => {
+    const original = Object.getOwnPropertyDescriptor(window, "localStorage")
+    Object.defineProperty(window, "localStorage", {
+      configurable: true,
+      get() {
+        throw new DOMException("blocked", "SecurityError")
+      },
+    })
+    try {
+      const s = await setup()
+      const health = await import("@/lib/store/storage-health")
+      await mount(s)
+      expect(probe()).toBe("true") // the page is not stuck on hydration
+      expect(health.getStorageHealth()).toBe("unavailable") // and the user is told
+      // A storage event arriving while storage is blocked must not throw either.
+      await act(async () => {
+        window.dispatchEvent(new StorageEvent("storage", { key: "financial-planner-storage" }))
+      })
+    } finally {
+      if (original) Object.defineProperty(window, "localStorage", original)
+    }
   })
 
   it("removes its storage listener on unmount", async () => {

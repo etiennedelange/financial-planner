@@ -15,6 +15,37 @@ export function useStoresHydrated(): boolean {
 // Both stores use `skipHydration` (the server renders defaults), so the browser
 // rehydrates them here, exactly once. No account,
 // no network: the data never leaves this browser.
+/**
+ * Rehydrates one store and NEVER rejects. When localStorage is unusable, zustand's
+ * non-persistent fallback has no `persist` API at all, so reading it throws; that is
+ * "nothing to read", not a reason to leave the page blank. The storage-health probe
+ * already tells the user that nothing is being saved.
+ */
+function rehydrateSafely(read: () => unknown): Promise<void> {
+  return new Promise<void>((resolve) => {
+    try {
+      Promise.resolve(read()).then(
+        () => resolve(),
+        () => resolve(),
+      )
+    } catch {
+      resolve()
+    }
+  })
+}
+
+/**
+ * Whether `key` is still present in localStorage. Unreadable storage counts as present,
+ * so a blocked browser never triggers a reload loop; there is nothing to reload into.
+ */
+function storageHas(key: string): boolean {
+  try {
+    return window.localStorage.getItem(key) !== null
+  } catch {
+    return true
+  }
+}
+
 let hydration: Promise<void> | null = null
 function hydrateOnce(): Promise<void> {
   if (!hydration) {
@@ -28,8 +59,8 @@ function hydrateOnce(): Promise<void> {
         // Unsupported — the backup nudge is the fallback.
       }
       await Promise.all([
-        useCalculatorStore.persist.rehydrate(),
-        useExpensesStore.persist.rehydrate(),
+        rehydrateSafely(() => useCalculatorStore.persist.rehydrate()),
+        rehydrateSafely(() => useExpensesStore.persist.rehydrate()),
       ])
     })()
   }
@@ -49,13 +80,18 @@ export function LocalDataProvider({ children }: { children: React.ReactNode }) {
     // tab's stale in-memory copy on the next write. `storage` events fire only in
     // OTHER tabs, so there is no feedback loop.
     const onStorage = (event: StorageEvent) => {
+      // A watched key that is now absent was cleared in another tab (clear-all removes
+      // keys one by one). Rehydrating would keep this tab's stale copy in memory and
+      // write it back on the next edit, so reload and let cleared data stay cleared.
       if (
         (event.key === CALCULATOR_STORAGE_KEY || event.key === EXPENSES_STORAGE_KEY) &&
-        window.localStorage.getItem(event.key) === null
+        !storageHas(event.key)
       ) {
         window.location.reload()
-      } else if (event.key === CALCULATOR_STORAGE_KEY) void useCalculatorStore.persist.rehydrate()
-      else if (event.key === EXPENSES_STORAGE_KEY) void useExpensesStore.persist.rehydrate()
+      } else if (event.key === CALCULATOR_STORAGE_KEY)
+        void rehydrateSafely(() => useCalculatorStore.persist.rehydrate())
+      else if (event.key === EXPENSES_STORAGE_KEY)
+        void rehydrateSafely(() => useExpensesStore.persist.rehydrate())
       else if (event.key === null) {
         // localStorage.clear() in another tab ("Clear all local data"). Rehydrating
         // from an empty store would keep this tab's stale copy in memory and write

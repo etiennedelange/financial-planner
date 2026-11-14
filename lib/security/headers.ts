@@ -21,13 +21,22 @@ const CONNECT_SRC = ["'self'"] as const
  * and there is no nonce hook for them. Inline styles are a materially smaller
  * risk than inline scripts.
  */
-export function buildCsp(nonce: string, isDev: boolean): string {
+export interface CspOptions {
+  /** React Fast Refresh compiles with eval in development only. */
+  allowEval: boolean
+  /**
+   * Forces http:// → https:// upgrades. Off in development (the dev server is plain
+   * http) and whenever the request itself isn't HTTPS (`next start` over http).
+   */
+  upgradeInsecureRequests: boolean
+}
+
+export function buildCsp(nonce: string, options: CspOptions): string {
   const scriptSrc = [
     "'self'",
     `'nonce-${nonce}'`,
     "'strict-dynamic'",
-    // React Fast Refresh compiles with eval in development only.
-    isDev ? "'unsafe-eval'" : "",
+    options.allowEval ? "'unsafe-eval'" : "",
   ]
     .filter(Boolean)
     .join(" ")
@@ -52,7 +61,7 @@ export function buildCsp(nonce: string, isDev: boolean): string {
     // Forcing an http:// → https:// upgrade breaks local dev, which serves
     // plain HTTP — background Next.js route prefetches fail outright
     // (ERR_SSL_PROTOCOL_ERROR) instead of just staying on http.
-    isDev ? "" : `upgrade-insecure-requests`,
+    options.upgradeInsecureRequests ? `upgrade-insecure-requests` : "",
   ]
     .filter(Boolean)
     .join("; ")

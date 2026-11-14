@@ -9,7 +9,8 @@ import { createJSONStorage, type PersistStorage } from "zustand/middleware"
 // structurally impossible rather than timing-dependent.
 //
 // Failures (quota exceeded, storage blocked) are reported through the storage-health
-// channel instead of being swallowed, so the UI can warn that nothing is being saved.
+// channel, keyed by storage key, so a later successful save of a DIFFERENT store
+// cannot hide that this store's latest save never reached storage.
 import { reportStorageFailure, reportStorageSuccess } from "@/lib/store/storage-health"
 
 export type GatedPersistStorage<S> = PersistStorage<S> & {
@@ -27,10 +28,10 @@ export function createGatedPersistStorage<S>(): GatedPersistStorage<S> | undefin
         if (!released) return undefined
         try {
           const result = inner.setItem(name, value)
-          reportStorageSuccess()
+          reportStorageSuccess(name)
           return result
         } catch (error) {
-          reportStorageFailure(error)
+          reportStorageFailure(error, name)
           return undefined
         }
       },

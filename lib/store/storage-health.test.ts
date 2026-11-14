@@ -48,6 +48,22 @@ describe("storage health", () => {
     restore()
   })
 
+  it("a successful save under one key does not clear another key's failure", () => {
+    reportStorageFailure(new DOMException("full", "QuotaExceededError"), "plan")
+    reportStorageSuccess("expenses")
+    expect(getStorageHealth()).toBe("quota")
+    reportStorageSuccess("plan")
+    expect(getStorageHealth()).toBe("ok")
+  })
+
+  it("reports the worst outstanding failure across keys", () => {
+    reportStorageFailure(new DOMException("full", "QuotaExceededError"), "plan")
+    reportStorageFailure(new Error("blocked"), "expenses")
+    expect(getStorageHealth()).toBe("unavailable")
+    reportStorageSuccess("expenses")
+    expect(getStorageHealth()).toBe("quota")
+  })
+
   it("unsubscribe stops notifications", () => {
     const listener = vi.fn()
     const off = subscribeStorageHealth(listener)

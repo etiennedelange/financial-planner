@@ -24,6 +24,7 @@ Full write-up: [2026-11-14-remove-accounts-local-first](../history/2026-11-14-re
 - [x] `proxy.ts` reduced to nonce CSP + headers; `connect-src 'self'`; no third-party scripts
 - [x] "Explain my plan" is **copy-a-prompt** (`copy-prompt`, `CopyPromptPanel`): no key, no request. The server AI route, a short-lived bring-your-own-key mode and an on-device model were all removed
 - [x] `no-outbound-requests` test guards the promise; verified in Chromium against the production build
+- [x] PR #46 review hardening: a throwing `localStorage` no longer blanks the page, `unsafe-eval` is development-only, and storage-health failures are tracked per key ([history](../history/2026-11-14-pr46-review-fixes.md))
 
 ## Pending / follow-ups
 

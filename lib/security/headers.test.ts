@@ -10,26 +10,29 @@ function directive(csp: string, name: string): string {
   return found
 }
 
+const DEV = { allowEval: true, upgradeInsecureRequests: false }
+const PROD = { allowEval: false, upgradeInsecureRequests: true }
+
 describe("buildCsp", () => {
   it("binds script-src to the request nonce", () => {
-    expect(directive(buildCsp("abc123", false), "script-src")).toContain("'nonce-abc123'")
+    expect(directive(buildCsp("abc123", PROD), "script-src")).toContain("'nonce-abc123'")
   })
 
   it("lets same-origin workers load, since strict-dynamic would otherwise block the Monte Carlo worker", () => {
-    const csp = buildCsp("n", false)
+    const csp = buildCsp("n", PROD)
     expect(directive(csp, "script-src")).toContain("'strict-dynamic'")
     expect(directive(csp, "worker-src")).toContain("'self'")
   })
 
   describe("connect-src — the exfiltration guard", () => {
     it("allows this site only: the app makes no outbound requests", () => {
-      for (const isDev of [true, false]) {
-        expect(directive(buildCsp("n", isDev), "connect-src")).toBe("connect-src 'self'")
+      for (const options of [DEV, PROD]) {
+        expect(directive(buildCsp("n", options), "connect-src")).toBe("connect-src 'self'")
       }
     })
 
     it("has no AI provider, telemetry, account-system or CDN origin", () => {
-      const csp = buildCsp("n", false)
+      const csp = buildCsp("n", PROD)
       for (const banned of [
         "anthropic",
         "openai",
@@ -45,37 +48,43 @@ describe("buildCsp", () => {
   })
 
   it("allows no third-party script origins", () => {
-    const scripts = directive(buildCsp("n", false), "script-src")
+    const scripts = directive(buildCsp("n", PROD), "script-src")
     expect(scripts).not.toMatch(/https?:\/\//)
   })
 
   it("blocks all framing — nothing embeds, and nothing may be embedded", () => {
-    const csp = buildCsp("n", false)
+    const csp = buildCsp("n", PROD)
     expect(directive(csp, "frame-src")).toBe("frame-src 'none'")
     expect(directive(csp, "frame-ancestors")).toContain("'none'")
   })
 
   it("restricts form submission, base-uri and plugins", () => {
-    const csp = buildCsp("n", false)
+    const csp = buildCsp("n", PROD)
     expect(directive(csp, "form-action")).toContain("'self'")
     expect(directive(csp, "base-uri")).toContain("'self'")
     expect(directive(csp, "object-src")).toContain("'none'")
   })
 
   it("does not permit unsafe-eval in production", () => {
-    expect(buildCsp("n", false)).not.toContain("'unsafe-eval'")
+    expect(buildCsp("n", PROD)).not.toContain("'unsafe-eval'")
   })
 
   it("permits unsafe-eval in development for React refresh", () => {
-    expect(directive(buildCsp("n", true), "script-src")).toContain("'unsafe-eval'")
+    expect(directive(buildCsp("n", DEV), "script-src")).toContain("'unsafe-eval'")
   })
 
   it("does not force an https upgrade in development, where the dev server is plain http", () => {
-    expect(buildCsp("n", true)).not.toContain("upgrade-insecure-requests")
+    expect(buildCsp("n", DEV)).not.toContain("upgrade-insecure-requests")
   })
 
   it("upgrades insecure requests in production", () => {
-    expect(buildCsp("n", false)).toContain("upgrade-insecure-requests")
+    expect(buildCsp("n", PROD)).toContain("upgrade-insecure-requests")
+  })
+
+  it("a production build served over plain http gets neither eval nor an https upgrade", () => {
+    const csp = buildCsp("n", { allowEval: false, upgradeInsecureRequests: false })
+    expect(csp).not.toContain("'unsafe-eval'")
+    expect(csp).not.toContain("upgrade-insecure-requests")
   })
 })
 

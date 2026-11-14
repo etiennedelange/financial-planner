@@ -57,7 +57,9 @@ describe("no outbound network requests", () => {
 
   it("the CSP allows connecting to this site only", async () => {
     const { buildCsp } = await import("./headers")
-    expect(buildCsp("n", false)).toContain("connect-src 'self';")
+    expect(buildCsp("n", { allowEval: false, upgradeInsecureRequests: true })).toContain(
+      "connect-src 'self';",
+    )
   })
 })
 
