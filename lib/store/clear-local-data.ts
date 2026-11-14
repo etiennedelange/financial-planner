@@ -33,9 +33,13 @@ export function removeLocalDataKeys(storage: Storage): string[] {
  * data would let the persist middleware write it straight back on the next set().
  * The reset itself writes the defaults, so the keys are removed AFTER it.
  */
-export function clearAllLocalData(storage: Storage = window.localStorage): string[] {
+export function clearAllLocalData(storage?: Storage): string[] {
   useCalculatorStore.getState().resetToDefaults()
   useExpensesStore.getState().clearAll()
   useExpensesStore.setState({ monthlyIncome: DEFAULT_MONTHLY_INCOME })
-  return removeLocalDataKeys(storage)
+  try {
+    return removeLocalDataKeys(storage ?? window.localStorage)
+  } catch {
+    return []
+  }
 }
