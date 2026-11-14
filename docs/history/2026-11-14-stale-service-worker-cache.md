@@ -16,12 +16,16 @@ fixed it, so a newer page was talking to an older cached worker script (request 
 
 ## Fix
 - `public/sw.js`: `ASSET_CACHE` `static-assets-v1` → `v2`; the existing `activate` handler deletes every
-  other cache, so affected users recover on their next visit. Bump it again if this recurs.
+  other cache, so affected users recover on their next visit.
+- `service-worker-register.tsx`: when a new worker takes over a page an old one controlled
+  (`controllerchange`), reload once. v1 may already have served the stale worker script before v2
+  activated, and activation does not rerun failed simulations. A first install does not reload; the
+  reloaded page starts on the new controller, so it cannot loop (Copilot review on #41). Bump it again if this recurs.
 - `simulation.worker.ts`: `handleWorkerMessage` throws a descriptive error naming the keys received when a
   request has no `configs` / `params` or is not an object.
 
 ## Verification
-`simulation.worker.test.ts` (3 malformed-request cases) and `sw.test.ts` (v2 name). Root cause confirmed by the
+`simulation.worker.test.ts` (3 malformed-request cases) and `sw.test.ts` (v2 name), `service-worker-register.test.tsx` (reload once on update, not on first install). Root cause confirmed by the
 user: works after unregistering the service worker.
 
 ## Still open
