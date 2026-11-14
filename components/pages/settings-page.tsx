@@ -3,6 +3,7 @@
 import { Button, type ButtonProps } from "@/components/ui/button"
 import { PageCard } from "@/components/ui/page-card"
 import { AccountSettings } from "@/components/auth/account-settings"
+import { AiProviderSettings } from "@/components/settings/ai-provider-settings"
 import { useAuth } from "@/components/supabase-provider"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { exportPlan, parsePlanFile } from "@/lib/utils/plan-io"
@@ -241,6 +242,9 @@ export function SettingsPage({ projection }: SettingsPageProps) {
           </div>
         </div>
       </PageCard>
+
+      {/* AI provider for Explain My Plan: app default or the user's own key */}
+      <AiProviderSettings />
 
       {/* Plan */}
       <PageCard label="Plan" contentClassName="space-y-2">

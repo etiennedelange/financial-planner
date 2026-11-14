@@ -179,6 +179,21 @@ Write-up and main-vs-branch comparison: [history](../history/2026-11-01-audit-fi
 - [ ] Docs: two-pot R240k de minimis test, provident vested-rights wording, cite National Treasury for the LA band
 - [ ] Single source of truth: tax figures duplicated in `tax-relief-history.ts`, "R550k" copy, 0.4 rates
 
+## 9.10 — AI Providers and Own Key (2026-11-14)
+
+Write-up: [history](../history/2026-11-14-ai-providers-own-key.md).
+
+- [x] Explain My Plan works without sign-in when the visitor brings their own key (it was always 401 with auth off)
+- [x] Plans missing `lumpSumPercentage` no longer fail the narrative request schema
+- [x] Cloudflare Workers AI alongside Vercel AI Gateway, chosen by env (`AI_PROVIDER`, auto-detect)
+- [x] Settings → AI Provider: own AI Gateway key or Workers AI token, browser-only storage
+- [x] Real error statuses and messages (bad key, no credit, rate limit); model IDs updated to the 5.5 family
+- [ ] A successful generation against a real Gateway key and a real Workers AI token (only the rejected-key path was run live)
+- [ ] Shared rate-limit store (the in-memory limiter is per instance; matters more now that signed-out callers are allowed)
+- [ ] Optional: the Workers AI `env.AI` binding when deployed on Cloudflare, instead of the REST token
+
+---
+
 ## 9.9 — Theme Contrast (2026-11-14)
 
 - [x] Light-mode warning and success text, status buttons and tinted panels reach 4.5:1; input borders reach 3:1 in both themes — [history](../history/2026-11-14-theme-contrast-fixes.md)

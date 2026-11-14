@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { useShallow } from "zustand/react/shallow"
 import { PageCard } from "@/components/ui/page-card"
 import { Button } from "@/components/ui/button"
@@ -13,9 +14,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { useAiSettingsHydration, useAiSettingsStore } from "@/lib/store/ai-settings-store"
 import { useCalculator } from "@/lib/context/calculator-context"
 import { usePlanNarrative } from "@/lib/hooks/use-plan-narrative"
-import { DEFAULT_MODEL_TIER, type ModelTier } from "@/lib/ai/model-tiers"
+import { AI_PROVIDER_LABELS, DEFAULT_MODEL_TIER, type ModelTier } from "@/lib/ai/model-tiers"
 import { Sparkles } from "lucide-react"
 
 const TIER_LABELS: Record<ModelTier, string> = {
@@ -38,6 +40,10 @@ export function PlanNarrativeCard() {
       retirementGoals: state.retirementGoals,
       drawdownConfig: state.drawdownConfig,
     })),
+  )
+  useAiSettingsHydration()
+  const { mode, provider } = useAiSettingsStore(
+    useShallow((state) => ({ mode: state.mode, provider: state.provider })),
   )
   const { projection } = useCalculator()
 
@@ -71,6 +77,8 @@ export function PlanNarrativeCard() {
 
   if (accounts.length === 0 || !projection) return null
 
+  const ownKey = mode === "own"
+
   const buttonLabel = isStreaming
     ? "Generating…"
     : cooldownRemaining > 0
@@ -87,7 +95,11 @@ export function PlanNarrativeCard() {
     >
       {text && <p className="text-sm leading-relaxed whitespace-pre-wrap">{text}</p>}
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && (
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      )}
 
       <div className="flex flex-wrap items-center gap-2">
         <Button
@@ -105,26 +117,34 @@ export function PlanNarrativeCard() {
           </Button>
         )}
 
-        <Select value={tier} onValueChange={handleTierChange} disabled={isStreaming}>
-          <SelectTrigger className="w-28 h-8 text-xs" aria-label="Model tier">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {(Object.keys(TIER_LABELS) as ModelTier[]).map((value) => (
-                <SelectItem key={value} value={value}>
-                  {TIER_LABELS[value]}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+        {/* Model choice is only real on the user's own key: the hosted provider always runs the default tier. */}
+        {ownKey && (
+          <Select value={tier} onValueChange={handleTierChange} disabled={isStreaming}>
+            <SelectTrigger className="w-28 h-8 text-xs" aria-label="Model tier">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {(Object.keys(TIER_LABELS) as ModelTier[]).map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {TIER_LABELS[value]}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Generating uses AI and sends your plan&apos;s numbers to our AI provider. This is an
-        automated educational summary, not financial advice — consult a licensed financial advisor
-        before making decisions.
+        {ownKey
+          ? `Uses your own ${AI_PROVIDER_LABELS[provider]} key and sends your plan's numbers to that provider.`
+          : "Generating uses AI and sends your plan's numbers to our AI provider."}{" "}
+        <Link href="/calculator/settings" className="underline underline-offset-2">
+          AI settings
+        </Link>
+        . This is an automated educational summary, not financial advice — consult a licensed
+        financial advisor before making decisions.
       </p>
     </PageCard>
   )

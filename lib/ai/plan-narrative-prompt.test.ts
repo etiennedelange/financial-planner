@@ -7,6 +7,7 @@ import type {
   ProjectionResult,
 } from "@/types"
 import { buildPlanNarrativePayload, buildPlanNarrativePrompt } from "./plan-narrative-prompt"
+import { planNarrativeRequestSchema } from "./plan-narrative-schema"
 
 const personalInfo: PersonalInfo = {
   currentAge: 45,
@@ -109,6 +110,30 @@ describe("buildPlanNarrativePayload", () => {
       projection: baseProjection(),
     })
     expect(result).not.toHaveProperty("simulation")
+  })
+
+  it("fills a missing lumpSumPercentage with 0, as the engine does, so the route accepts the payload", () => {
+    const { lumpSumPercentage: _omit, ...legacyDrawdown } = drawdownConfig
+    const result = buildPlanNarrativePayload({
+      accounts: [ra],
+      personalInfo,
+      retirementGoals,
+      drawdownConfig: legacyDrawdown as DrawdownConfig,
+      projection: baseProjection(),
+    })
+    expect(result?.drawdownConfig.lumpSumPercentage).toBe(0)
+    expect(planNarrativeRequestSchema.safeParse(result).success).toBe(true)
+  })
+
+  it("keeps a set lumpSumPercentage unchanged", () => {
+    const result = buildPlanNarrativePayload({
+      accounts: [ra],
+      personalInfo,
+      retirementGoals,
+      drawdownConfig: { ...drawdownConfig, lumpSumPercentage: 25 },
+      projection: baseProjection(),
+    })
+    expect(result?.drawdownConfig.lumpSumPercentage).toBe(25)
   })
 })
 

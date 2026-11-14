@@ -55,7 +55,15 @@ export function buildPlanNarrativePayload(input: BuildPayloadInput): PlanNarrati
     })),
     personalInfo: input.personalInfo,
     retirementGoals: input.retirementGoals,
-    drawdownConfig: input.drawdownConfig,
+    drawdownConfig: {
+      ...input.drawdownConfig,
+      // Plans saved before the lump-sum setting existed (and cloud scenarios,
+      // which load untyped JSON) can lack it. The engine reads a missing value
+      // as 0 (projection-engine.ts), so the narrative sends the same — without
+      // this the request failed the route's schema and the card only ever said
+      // "Couldn't generate a summary".
+      lumpSumPercentage: input.drawdownConfig.lumpSumPercentage ?? 0,
+    },
     projection: {
       portfolioAtRetirement: input.projection.portfolioAtRetirement,
       monthlyIncomeAtRetirement: input.projection.monthlyIncomeAtRetirement,
