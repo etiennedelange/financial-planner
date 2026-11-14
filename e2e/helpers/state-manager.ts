@@ -53,9 +53,11 @@ export class StateManager {
 
   /**
    * Seed state with predefined data. Merges with existing state to avoid
-   * overwriting unrelated fields. Kept in sync with the calculator store's current
-   * persist version (4) so seeded payloads rehydrate via the normal path rather
-   * than the migrate clamp.
+   * overwriting unrelated fields. Kept in sync with the calculator store's persist
+   * `version` (lib/store/calculator-store.ts) so seeded payloads rehydrate via
+   * the normal path. An older version runs `migrate`, which rebuilds
+   * personalInfo from the payload alone: a seed without personalInfo then loses
+   * the default ages and the app renders "Retiring at undefined".
    */
   async seedState(state: Partial<CalculatorState>) {
     await this.page.evaluate((stateData) => {

@@ -6,7 +6,7 @@ This directory contains Playwright tests for documenting the SA Financial Planne
 
 **This is NOT for E2E testing** - it's for:
 - 📸 Documenting user journeys with screenshots
-- 🔍 Identifying UX pain points (tab switching, context loss)
+- 🔍 Identifying UX pain points
 - 📊 Capturing "before" state for future UI improvements
 - 📱 Testing responsive layouts (desktop/tablet/mobile)
 
@@ -50,51 +50,47 @@ e2e/output/screenshots/
 
 ## User Journeys
 
-### Journey 1: First-Time User
+The app is a sidebar of pages (Overview, Accounts, Plan, Expenses, Projections, Risk, Charts), not tabs.
+Journeys 1-3 are written for that layout, pass on desktop, tablet and the phone layout, and assert on real behaviour (stored values, validation, results),
+not just screenshots. Journeys 4-7 are **not yet ported** and still click the old "Personal / Goals /
+Insights / Calculations" tabs, so they fail; port them with `helpers/app-helpers.ts` (see
+[the history entry](../docs/history/2026-11-14-number-field-inputs.md)).
+
+### Journey 1: First-Time User ✅
 - **File:** `journeys/01-first-time-user.spec.ts`
-- **Scenario:** Empty state → Add first account → Explore tabs
-- **Captures:** Tab switching friction, context loss
+- **Scenario:** Empty state → two-step add-account wizard → Overview → Plan → Projections → Risk → display mode → Charts
+- **Checks:** the wizard's Continue does not submit; stored numbers match what was typed; Plan edits persist
 
-### Journey 2: Multi-Account Setup
+### Journey 2: Multi-Account Setup ✅
 - **File:** `journeys/02-multi-account-setup.spec.ts`
-- **Scenario:** Add TFSA + RA + Pension Fund
-- **Captures:** Multiple account management
+- **Scenario:** Add TFSA + RA + Pension Fund, then view Overview, Charts and Risk
+- **Checks:** every account's numbers (including decimals like 10.5) are stored exactly
 
-### Journey 3: Personal & Goals
+### Journey 3: Personal & Goals ✅
 - **File:** `journeys/03-personal-goals.spec.ts`
-- **Scenario:** Adjust age, retirement, income
-- **Captures:** Switching to see impact
+- **Scenario:** Edit ages, income, goals and inflation on Plan; see the effect on Overview and Risk
+- **Checks:** formatted display vs stored numbers; an invalid age is explained and not stored
 
-### Journey 4: Insights Exploration
-- **File:** `journeys/04-insights-exploration.spec.ts`
-- **Scenario:** View recommendations and analysis
-- **Captures:** Context loss when comparing with accounts
+### Journeys 4-7 ⚠️ not yet ported
+- `04-insights-exploration`, `05-display-modes`, `06-calculations-review`, `07-responsive-layouts`
 
-### Journey 5: Display Modes
-- **File:** `journeys/05-display-modes.spec.ts`
-- **Scenario:** Toggle Real vs Nominal
-- **Captures:** Mode visibility across tabs
+## Finding fields
 
-### Journey 6: Calculations Review
-- **File:** `journeys/06-calculations-review.spec.ts`
-- **Scenario:** Detailed formulas and breakdowns
-- **Captures:** Tab switching to verify inputs
+Numeric fields are text boxes that format as you type. Find them with
+`getByRole("textbox", { name })`, not `getByLabel`: fields with a stepper also have
+"Increase <label>" / "Decrease <label>" buttons, so `getByLabel(/retirement age/i)` matches three
+elements and fails in strict mode. Helpers: `field`, `fillNumber`, `goToPage` (works for the sidebar and the phone bottom bar, and hides the
+dev-tools badge that covers the first tab in `next dev`), and the account wizard helpers in
+`helpers/app-helpers.ts`. Seed state with `StateManager.seedState`, which must write the calculator
+store's persist `version` (currently 3) or the payload is migrated and loses default personal info.
 
-### Journey 7: Responsive Layouts
-- **File:** `journeys/07-responsive-layouts.spec.ts`
-- **Scenario:** Same flows on mobile/tablet
-- **Captures:** Tab navigation on small screens
-
-## Known UX Issues Being Documented
-
-🔴 **Critical Pain Point: Excessive Tab Switching**
-- Too many clicks to see related information (adjust assumptions → see insights impact)
-- Loss of context when switching between tabs
-- Cannot compare information across tabs (e.g., see accounts while viewing insights)
-
-The screenshots document these issues for future UI redesign planning.
+The `mobile` project uses WebKit; if it is not installed (`npx playwright install webkit`), run the phone
+layout in Chromium with a temporary config that sets `browserName: "chromium"` and the iPhone 14 Pro viewport.
 
 ## Helpers & Utilities
+
+### App helpers (`helpers/app-helpers.ts`)
+Sidebar/mobile navigation (`goToPage`), numeric field lookup and entry, and the two-step add-account wizard.
 
 ### StateManager (`helpers/state-manager.ts`)
 Manipulates localStorage for test setup:

@@ -1,22 +1,17 @@
 "use client"
 
 import { useEffect } from "react"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { AnimatePresence } from "motion/react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { NumberField } from "@/components/ui/number-field"
 import { PageCard } from "@/components/ui/page-card"
 import { AnimatedValue } from "@/components/ui/animated-value"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useShallow } from "zustand/react/shallow"
 import { formatCurrency } from "@/lib/utils/currency"
 import { escalate, percentToRate } from "@/lib/calculations/utils/money-time"
-import { InfoTooltip } from "@/components/ui/info-tooltip"
-import { FieldError } from "@/components/ui/field-error"
 import { MAX_MONETARY_AMOUNT } from "@/lib/constants/limits"
-import { useBoundedMonetary } from "@/lib/hooks/use-bounded-monetary"
 
 const schema = z.object({
   desiredMonthlyIncome: z
@@ -42,7 +37,7 @@ export function RetirementGoalsForm() {
   )
 
   const {
-    register,
+    control,
     watch,
     reset,
     getValues,
@@ -54,21 +49,6 @@ export function RetirementGoalsForm() {
   })
 
   const watchedValues = watch()
-
-  // Physically block monetary input above the cap — the fields can never hold it.
-  const { onChange: desiredIncomeOnChange, ...desiredIncomeRegister } = register(
-    "desiredMonthlyIncome",
-    { valueAsNumber: true },
-  )
-  const guardDesiredIncome = useBoundedMonetary(
-    watchedValues.desiredMonthlyIncome ?? retirementGoals.desiredMonthlyIncome,
-  )
-  const { onChange: legacyAmountOnChange, ...legacyAmountRegister } = register("legacyAmount", {
-    valueAsNumber: true,
-  })
-  const guardLegacyAmount = useBoundedMonetary(
-    watchedValues.legacyAmount ?? retirementGoals.legacyAmount,
-  )
 
   useEffect(() => {
     // RHF's watch() subscription is the documented API; the React Compiler lint
@@ -112,68 +92,63 @@ export function RetirementGoalsForm() {
       description="Your target income in today's purchasing power and estate goal. Both are inflated to your retirement date."
       contentClassName="space-y-4"
     >
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <Label htmlFor="desiredMonthlyIncome">Desired Monthly Income (today&apos;s Rands)</Label>
-          <InfoTooltip
-            content="How much monthly income you want in retirement, in today's money and before tax. The calculator automatically inflates this to retirement date and shows the after-tax amount in the results. This is your target - the success rate shows the probability of achieving this income goal throughout retirement."
-            side="right"
-          />
-        </div>
-        <Input
-          id="desiredMonthlyIncome"
-          type="number"
-          min="0"
-          max={MAX_MONETARY_AMOUNT}
-          step="any"
-          {...desiredIncomeRegister}
-          onChange={(e) => guardDesiredIncome.onChange(e, desiredIncomeOnChange)}
-          onBeforeInput={guardDesiredIncome.onBeforeInput}
-        />
-        <FieldError message={errors.desiredMonthlyIncome?.message} />
-        <AnimatePresence initial={false}>
-          {watchedValues.desiredMonthlyIncome > 0 && (
-            <div className="space-y-0.5">
-              <p className="text-xs text-muted-foreground">
-                Today:{" "}
-                <AnimatedValue value={watchedValues.desiredMonthlyIncome} format={formatCurrency} />{" "}
-                / month
-              </p>
-              <p className="text-xs text-muted-foreground">
-                At retirement ({yearsToRetirement} yrs):{" "}
-                <AnimatedValue value={inflatedMonthlyIncome} format={formatCurrency} /> / month
-              </p>
-            </div>
+      <div className="flex flex-wrap gap-x-4 gap-y-5">
+        <Controller
+          control={control}
+          name="desiredMonthlyIncome"
+          render={({ field }) => (
+            <NumberField
+              id="desiredMonthlyIncome"
+              label="Desired monthly income"
+              tooltip="How much monthly income you want in retirement, in today's money and before tax. The calculator automatically inflates this to retirement date and shows the after-tax amount in the results. This is your target - the success rate shows the probability of achieving this income goal throughout retirement."
+              prefix="R"
+              suffix="/ month"
+              width="money"
+              group
+              min={0}
+              step={1_000}
+              hardMax={MAX_MONETARY_AMOUNT}
+              value={field.value}
+              onValueChange={field.onChange}
+              onBlur={field.onBlur}
+              name={field.name}
+              inputRef={field.ref}
+              error={errors.desiredMonthlyIncome?.message}
+              hint={
+                watchedValues.desiredMonthlyIncome > 0 ? (
+                  <>
+                    At retirement ({yearsToRetirement} yrs):{" "}
+                    <AnimatedValue value={inflatedMonthlyIncome} format={formatCurrency} /> / month
+                  </>
+                ) : undefined
+              }
+            />
           )}
-        </AnimatePresence>
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <Label htmlFor="legacyAmount">Legacy Goal (R)</Label>
-          <InfoTooltip
-            content="Amount you want to leave behind for heirs or charity. This is in today's money and will be added to your target nest egg. Setting this higher increases the required nest egg and may reduce your success rate if current savings/contributions are insufficient."
-            side="right"
-          />
-        </div>
-        <Input
-          id="legacyAmount"
-          type="number"
-          min="0"
-          max={MAX_MONETARY_AMOUNT}
-          step="any"
-          {...legacyAmountRegister}
-          onChange={(e) => guardLegacyAmount.onChange(e, legacyAmountOnChange)}
-          onBeforeInput={guardLegacyAmount.onBeforeInput}
         />
-        <AnimatePresence initial={false}>
-          {watchedValues.legacyAmount > 0 && (
-            <p className="text-xs text-muted-foreground">
-              <AnimatedValue value={watchedValues.legacyAmount} format={formatCurrency} /> in
-              today&apos;s Rands
-            </p>
+        <Controller
+          control={control}
+          name="legacyAmount"
+          render={({ field }) => (
+            <NumberField
+              id="legacyAmount"
+              label="Legacy goal"
+              tooltip="Amount you want to leave behind for heirs or charity. This is in today's money and will be added to your target nest egg. Setting this higher increases the required nest egg and may reduce your success rate if current savings/contributions are insufficient."
+              prefix="R"
+              width="money"
+              group
+              min={0}
+              step={50_000}
+              hardMax={MAX_MONETARY_AMOUNT}
+              value={field.value}
+              onValueChange={field.onChange}
+              onBlur={field.onBlur}
+              name={field.name}
+              inputRef={field.ref}
+              error={errors.legacyAmount?.message}
+              hint="In today's Rands"
+            />
           )}
-        </AnimatePresence>
+        />
       </div>
     </PageCard>
   )

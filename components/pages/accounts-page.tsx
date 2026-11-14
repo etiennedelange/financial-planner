@@ -13,16 +13,6 @@ import { AlertTriangle } from "lucide-react"
 import { m } from "motion/react"
 import { FloatingActionBar } from "@/components/ui/floating-action-bar"
 import { PageCard } from "@/components/ui/page-card"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 import { AccountFormDialog } from "@/components/accounts/account-form-dialog"
@@ -337,9 +327,11 @@ interface AccountRowProps {
   onDelete: (account: Account) => void
 }
 
+/** How long the "Account deleted" toast, and its Undo, stays on screen. */
+const DELETE_UNDO_MS = 8000
+
 function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
   const [expanded, setExpanded] = useState(false)
-  const [deleteOpen, setDeleteOpen] = useState(false)
 
   const netReturn = account.expectedReturn - account.annualFees
 
@@ -460,7 +452,7 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
                 className="text-muted-foreground hover:text-destructive"
                 onClick={(e) => {
                   e.stopPropagation()
-                  setDeleteOpen(true)
+                  onDelete(account)
                 }}
               />
             </div>
@@ -526,30 +518,6 @@ function AccountRow({ account, onEdit, onDelete }: AccountRowProps) {
           </div>
         </m.div>
       </div>
-
-      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Delete {account.name} — {formatCurrency(account.currentBalance)}?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              This removes the account and its settings from all projections. You can undo this from
-              the confirmation toast right after.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel autoFocus>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => onDelete(account)}
-              aria-label={`Delete account ${account.name}`}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   )
 }
@@ -723,6 +691,9 @@ export function AccountsPage() {
     toast({
       title: "Account deleted",
       description: `${account.name} — ${formatCurrency(account.currentBalance)}`,
+      // Undo is the only safety net now that there is no confirmation, so keep it up long
+      // enough to notice and reach.
+      duration: DELETE_UNDO_MS,
       action: {
         label: "Undo",
         onClick: () => addAccount(account),

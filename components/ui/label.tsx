@@ -10,6 +10,9 @@ const labelVariants = cva(
   "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
 )
 
+/** Quiet label used above every form field, so text, number and select fields line up. */
+const FIELD_LABEL_CLASS = "text-[0.8125rem] text-muted-foreground"
+
 function Label({
   className,
   ref,
@@ -19,4 +22,4 @@ function Label({
 }
 Label.displayName = LabelPrimitive.Root.displayName
 
-export { Label }
+export { Label, FIELD_LABEL_CLASS }

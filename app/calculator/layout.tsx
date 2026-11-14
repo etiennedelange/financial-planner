@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useReducer } from "react"
-import { DebugWindow } from "@/components/debug/debug-window"
 import { AppShell } from "@/components/layout/app-shell"
 import { useStoresHydrated } from "@/components/local-data-provider"
 import { CalculatorProvider, useCalculator } from "@/lib/context/calculator-context"
@@ -34,7 +33,7 @@ function shellReducer(state: ShellState, action: ShellAction): ShellState {
 
 function CalculatorShell({ children }: { children: React.ReactNode }) {
   const isLoaded = useStoresHydrated()
-  const { projection, simulationResult, isDeferred } = useCalculator()
+  const { isDeferred } = useCalculator()
   const accounts = useCalculatorStore((s) => s.accounts)
 
   const [shell, dispatch] = useReducer(shellReducer, shellInitialState)
@@ -54,22 +53,15 @@ function CalculatorShell({ children }: { children: React.ReactNode }) {
   }, [shell.storeReady, isDeferred])
 
   return (
-    <>
-      <AppShell accountCount={accounts.length} isLoaded={isLoaded}>
-        <div
-          style={{
-            opacity: shell.showContent ? 1 : 0,
-            transition: shell.showContent ? "opacity 0.15s ease" : "none",
-          }}
-        >
-          {children}
-        </div>
-      </AppShell>
-      <DebugWindow
-        projection={projection}
-        simulationResult={simulationResult}
-        className="hidden md:flex fixed bottom-4 right-4 z-50"
-      />
-    </>
+    <AppShell accountCount={accounts.length} isLoaded={isLoaded}>
+      <div
+        style={{
+          opacity: shell.showContent ? 1 : 0,
+          transition: shell.showContent ? "opacity 0.15s ease" : "none",
+        }}
+      >
+        {children}
+      </div>
+    </AppShell>
   )
 }

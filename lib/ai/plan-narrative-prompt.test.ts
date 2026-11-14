@@ -110,6 +110,29 @@ describe("buildPlanNarrativePayload", () => {
     })
     expect(result).not.toHaveProperty("simulation")
   })
+
+  it("fills a missing lumpSumPercentage with 0, as the engine does", () => {
+    const { lumpSumPercentage: _omit, ...legacyDrawdown } = drawdownConfig
+    const result = buildPlanNarrativePayload({
+      accounts: [ra],
+      personalInfo,
+      retirementGoals,
+      drawdownConfig: legacyDrawdown as DrawdownConfig,
+      projection: baseProjection(),
+    })
+    expect(result?.drawdownConfig.lumpSumPercentage).toBe(0)
+  })
+
+  it("keeps a set lumpSumPercentage unchanged", () => {
+    const result = buildPlanNarrativePayload({
+      accounts: [ra],
+      personalInfo,
+      retirementGoals,
+      drawdownConfig: { ...drawdownConfig, lumpSumPercentage: 25 },
+      projection: baseProjection(),
+    })
+    expect(result?.drawdownConfig.lumpSumPercentage).toBe(25)
+  })
 })
 
 describe("buildPlanNarrativePrompt", () => {

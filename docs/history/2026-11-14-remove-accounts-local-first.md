@@ -74,8 +74,15 @@ third-party apps. What exists now (`lib/ai/copy-prompt.ts`, `components/ai/copy-
   EventSource/beacon in app source, no provider/analytics client, `connect-src 'self'`, no
   Supabase, no API routes.
 
+### Merge with main (same day)
+While this was in review, `main` gained #42 (server-side AI with Workers AI / your own key), #43 (NumberField
+inputs, account delete with Undo) and #44 (debug reconciliation page). #43 and #44 were kept. #42's AI feature
+was removed in the merge to match the no-outbound-requests decision (its history entry is marked superseded);
+only its `lumpSumPercentage ?? 0` payload fix survives. The debug page lost its account-menu shortcut and is now
+reached from ⌘K.
+
 ## Verification
-- 71 test files / 1280 tests pass; `tsc --noEmit` clean; `vp check` 0 errors; `pnpm build` clean
+- 84 test files / 1451 tests pass (after merging main); `tsc --noEmit` clean; `vp check` 0 errors; `pnpm build` clean
   with no environment variables; shadscan 91/100 (A); `docs:check` ok.
 - Tests cover: stores (persist, write gate, migrate, rehydrate), `LocalDataProvider` hydration and
   cross-tab sync, storage health and the failure banner, backup v2 + import sanitising, clear-all,
