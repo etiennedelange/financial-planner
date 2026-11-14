@@ -1,6 +1,7 @@
 # Documentation Update Log
 
 ## 2026-11-14
+* **Update**: [AI summaries: Workers AI, your own key, and the fixes that made them work](history/2026-11-14-ai-providers-own-key.md) - Explain My Plan was always 401 with sign-in off and failed on older plans; it now runs on Vercel AI Gateway or Cloudflare Workers AI, accepts the user's own key, and reports real errors.
 * **Update**: [Stale service-worker cache broke the Risk workers](history/2026-11-14-stale-service-worker-cache.md) - Asset cache bumped to v2 and the worker now names the keys of a malformed request.
 * **Update**: [Bug and performance audit](history/2026-11-14-bug-and-performance-audit.md) - Dead Risk worker is replaced and failures are shown, superseded runs are cancelled, store sync races and the shortfall amount are fixed, and render cost is trimmed.
 * **Update**: [Theme contrast fixes](history/2026-11-14-theme-contrast-fixes.md) - Light-mode warning and success text and input borders in both themes now meet WCAG; a test checks every text and boundary token pair in both themes against `globals.css`.

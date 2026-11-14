@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useRef, useState } from "react"
+import { useShallow } from "zustand/react/shallow"
 import type {
   Account,
   PersonalInfo,
@@ -10,7 +11,10 @@ import type {
 } from "@/types"
 import { buildPlanNarrativePayload } from "@/lib/ai/plan-narrative-prompt"
 import { usePlanNarrativeStore } from "@/lib/store/plan-narrative-store"
+import { selectAiKeySettings, useAiSettingsStore } from "@/lib/store/ai-settings-store"
 import type { ModelTier } from "@/lib/ai/model-tiers"
+import { buildNarrativeRequest } from "@/lib/ai/own-key"
+import { GENERIC_NARRATIVE_ERROR, readNarrativeError } from "@/lib/ai/narrative-response"
 
 interface UsePlanNarrativeInput {
   accounts: Account[]
@@ -28,6 +32,7 @@ export function usePlanNarrative(input: UsePlanNarrativeInput) {
   // survive navigating away from and back to the page that renders the card —
   // only clear()/a fresh generation replaces them, never an unmount.
   const { text, cache, setText, setCache, clear } = usePlanNarrativeStore()
+  const aiSettings = useAiSettingsStore(useShallow(selectAiKeySettings))
   const [isStreaming, setIsStreaming] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [cooldownRemaining, setCooldownRemaining] = useState(0)
@@ -52,9 +57,14 @@ export function usePlanNarrative(input: UsePlanNarrativeInput) {
     const payload = buildPlanNarrativePayload(input)
     if (!payload) return
 
-    const payloadJson = JSON.stringify({ ...payload, tier: input.tier })
+    const request = buildNarrativeRequest(payload, input.tier, aiSettings)
+    if (!request.ok) {
+      setError(request.error)
+      return
+    }
+    const { body, headers, cacheKey } = request
 
-    if (cache && cache.payloadJson === payloadJson) {
+    if (cache && cache.payloadJson === cacheKey) {
       setText(cache.text)
       setError(null)
       return
@@ -67,12 +77,13 @@ export function usePlanNarrative(input: UsePlanNarrativeInput) {
     try {
       const response = await fetch("/api/plan-narrative", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: payloadJson,
+        headers: { "Content-Type": "application/json", ...headers },
+        body,
       })
 
       if (!response.ok || !response.body) {
-        throw new Error("Request failed")
+        setError(response.ok ? GENERIC_NARRATIVE_ERROR : await readNarrativeError(response))
+        return
       }
 
       const reader = response.body.getReader()
@@ -87,17 +98,17 @@ export function usePlanNarrative(input: UsePlanNarrativeInput) {
       }
 
       if (fullText.length === 0) {
-        setError("Couldn't generate a summary right now. Please try again.")
+        setError(GENERIC_NARRATIVE_ERROR)
       } else {
-        setCache({ payloadJson, text: fullText })
+        setCache({ payloadJson: cacheKey, text: fullText })
         startCooldown()
       }
     } catch {
-      setError("Couldn't generate a summary right now. Please try again.")
+      setError(GENERIC_NARRATIVE_ERROR)
     } finally {
       setIsStreaming(false)
     }
-  }, [input, cache, setText, setCache, startCooldown])
+  }, [input, aiSettings, cache, setText, setCache, startCooldown])
 
   return { text, isStreaming, error, cooldownRemaining, generate, clear }
 }
