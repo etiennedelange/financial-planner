@@ -23,3 +23,26 @@ export async function readNarrativeError(response: Response): Promise<string> {
     return GENERIC_NARRATIVE_ERROR
   }
 }
+
+/**
+ * Reads a streamed narrative to the end, reporting the text so far after each
+ * chunk. Throws if the stream breaks: the route aborts the response when the
+ * model fails part-way, and a partial summary must never be treated as a
+ * finished one (cached, cooled down, shown without an error).
+ */
+export async function readNarrativeStream(
+  body: ReadableStream<Uint8Array>,
+  onText: (textSoFar: string) => void,
+): Promise<string> {
+  const reader = body.getReader()
+  const decoder = new TextDecoder()
+  let text = ""
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    text += decoder.decode(value, { stream: true })
+    onText(text)
+  }
+  text += decoder.decode()
+  return text
+}

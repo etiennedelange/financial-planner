@@ -150,16 +150,6 @@ export const AI_NOT_CONFIGURED_MESSAGE =
 export const AI_SIGN_IN_REQUIRED_MESSAGE =
   "Sign in to use AI summaries, or add your own API key in Settings."
 
-/**
- * Whether signed-out visitors may spend the app's own AI credit. Off unless
- * AI_HOSTED_GUEST_ACCESS=true: a public deployment without sign-in would
- * otherwise let anyone run up the operator's bill, limited only by the
- * best-effort per-IP rate limit.
- */
-export function hostedGuestAccessAllowed(env: Record<string, string | undefined>): boolean {
-  return env.AI_HOSTED_GUEST_ACCESS?.trim().toLowerCase() === "true"
-}
-
 export interface AiFailure {
   status: number
   message: string

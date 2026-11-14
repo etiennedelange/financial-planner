@@ -7,7 +7,6 @@ import {
   createLanguageModel,
   describeAiFailure,
   hostedConfigProblem,
-  hostedGuestAccessAllowed,
   parseUserCredentials,
   resolveHostedCredentials,
   resolveTier,
@@ -51,9 +50,10 @@ export async function POST(request: Request) {
 
   // Sign-in ships disabled by default (NEXT_PUBLIC_AUTH_ENABLED), so requiring
   // a session for everything made the feature unusable on such deployments.
-  // A signed-out visitor may use their own key (they pay); the app's key stays
-  // behind sign-in unless the operator opts in.
-  if (!user && !userCredentials.credentials && !hostedGuestAccessAllowed(process.env)) {
+  // A signed-out visitor may use their own key (they pay). The app's key always
+  // needs sign-in: the in-memory rate limiter is per instance, so it is no cost
+  // boundary for anonymous callers.
+  if (!user && !userCredentials.credentials) {
     return NextResponse.json(
       { error: AI_SIGN_IN_REQUIRED_MESSAGE, code: "sign_in_required" },
       { status: 401 },

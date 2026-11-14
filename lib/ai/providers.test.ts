@@ -4,7 +4,6 @@ import {
   createLanguageModel,
   describeAiFailure,
   hostedConfigProblem,
-  hostedGuestAccessAllowed,
   modelIdFor,
   parseUserCredentials,
   resolveHostedCredentials,
@@ -238,15 +237,6 @@ describe("hostedConfigProblem", () => {
     })
     expect(cf).toMatch(/CLOUDFLARE_AI_ACCOUNT_ID/)
     expect(cf).not.toContain("cf-secret-token")
-  })
-})
-
-describe("hostedGuestAccessAllowed", () => {
-  it("is off unless explicitly set to true", () => {
-    expect(hostedGuestAccessAllowed({})).toBe(false)
-    expect(hostedGuestAccessAllowed({ AI_HOSTED_GUEST_ACCESS: "1" })).toBe(false)
-    expect(hostedGuestAccessAllowed({ AI_HOSTED_GUEST_ACCESS: "false" })).toBe(false)
-    expect(hostedGuestAccessAllowed({ AI_HOSTED_GUEST_ACCESS: " TRUE " })).toBe(true)
   })
 })
 

@@ -14,7 +14,11 @@ import { usePlanNarrativeStore } from "@/lib/store/plan-narrative-store"
 import { selectAiKeySettings, useAiSettingsStore } from "@/lib/store/ai-settings-store"
 import type { ModelTier } from "@/lib/ai/model-tiers"
 import { buildNarrativeRequest } from "@/lib/ai/own-key"
-import { GENERIC_NARRATIVE_ERROR, readNarrativeError } from "@/lib/ai/narrative-response"
+import {
+  GENERIC_NARRATIVE_ERROR,
+  readNarrativeError,
+  readNarrativeStream,
+} from "@/lib/ai/narrative-response"
 
 interface UsePlanNarrativeInput {
   accounts: Account[]
@@ -86,24 +90,19 @@ export function usePlanNarrative(input: UsePlanNarrativeInput) {
         return
       }
 
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-      let fullText = ""
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        fullText += decoder.decode(value, { stream: true })
-        setText(fullText)
-      }
+      const fullText = await readNarrativeStream(response.body, setText)
 
       if (fullText.length === 0) {
         setError(GENERIC_NARRATIVE_ERROR)
       } else {
+        // Only a stream that finished cleanly is cached and starts the cooldown.
         setCache({ payloadJson: cacheKey, text: fullText })
         startCooldown()
       }
     } catch {
+      // Network failure or a stream aborted part-way: drop the partial text
+      // rather than leave half a summary on screen looking complete.
+      setText("")
       setError(GENERIC_NARRATIVE_ERROR)
     } finally {
       setIsStreaming(false)

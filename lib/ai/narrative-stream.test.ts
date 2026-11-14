@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vite-plus/test"
 import {
   EmptyNarrativeError,
+  NarrativeInterruptedError,
   startNarrativeStream,
   type NarrativeStreamPart,
 } from "./narrative-stream"
@@ -51,9 +52,10 @@ describe("startNarrativeStream", () => {
     if (!started.ok) expect(started.error).toBeInstanceOf(EmptyNarrativeError)
   })
 
-  it("ends the stream early on a late error and reports it", async () => {
+  it("regression: a late error errors the stream instead of closing it cleanly", async () => {
+    // A clean close let the browser cache half a summary as a finished one.
     const onLateError = vi.fn()
-    const late = new Error("dropped")
+    const late = new Error("dropped: provider detail")
     const started = await startNarrativeStream(
       parts(
         { type: "text-delta", text: "Partial" },
@@ -63,8 +65,37 @@ describe("startNarrativeStream", () => {
       onLateError,
     )
     if (!started.ok) throw new Error("expected ok")
-    expect(await readAll(started.stream)).toBe("Partial")
+    const reader = started.stream.getReader()
+    expect((await reader.read()).value).toBe("Partial")
+    const failure = await reader.read().then(
+      () => null,
+      (error: unknown) => error,
+    )
+    expect(failure).toBeInstanceOf(NarrativeInterruptedError)
+    // The provider's message stays server-side.
+    expect(String(failure)).not.toContain("provider detail")
     expect(onLateError).toHaveBeenCalledWith(late)
+  })
+
+  it("errors the stream when the upstream iterator throws after text has started", async () => {
+    const onLateError = vi.fn()
+    async function* throwsLate(): AsyncGenerator<NarrativeStreamPart> {
+      yield { type: "text-delta", text: "Partial" }
+      throw new Error("socket reset")
+    }
+    const started = await startNarrativeStream(throwsLate(), onLateError)
+    if (!started.ok) throw new Error("expected ok")
+    await expect(readAll(started.stream)).rejects.toBeInstanceOf(NarrativeInterruptedError)
+    expect(onLateError).toHaveBeenCalledTimes(1)
+  })
+
+  it("reports an upstream iterator that throws before any text as a failure, not a crash", async () => {
+    const boom = new Error("connect failed")
+    async function* throwsEarly(): AsyncGenerator<NarrativeStreamPart> {
+      yield { type: "start" }
+      throw boom
+    }
+    expect(await startNarrativeStream(throwsEarly())).toEqual({ ok: false, error: boom })
   })
 
   it("stops the upstream iterator when the client cancels", async () => {

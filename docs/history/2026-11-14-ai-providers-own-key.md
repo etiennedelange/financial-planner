@@ -80,10 +80,10 @@ There was also only one way to run the model: Vercel AI Gateway.
   server and client render the same markup.
 
 **Access and rate limiting** (route, `lib/security/client-ip.ts`)
-- Signed-out visitors may use their own key. The app's key stays behind sign-in
-  unless the operator sets `AI_HOSTED_GUEST_ACCESS=true`. Without it, a public
-  deployment with sign-in off would let anyone spend the operator's credit, held back
-  only by the in-memory limiter.
+- Signed-out visitors may use their own key. The app's key always needs sign-in. An
+  opt-in `AI_HOSTED_GUEST_ACCESS` flag existed briefly. It was removed after PR review,
+  because the in-memory limiter is per instance and so can't cap what anonymous
+  callers spend. A shared limiter would be needed to bring it back.
 - Signed-out callers are rate-limited per IP (20 an hour, same as signed-in users per
   account), using only a header the platform overwrites: `x-real-ip` on Vercel,
   `cf-connecting-ip` inside the Cloudflare Workers runtime, or whatever the operator
@@ -121,6 +121,13 @@ as 0, matching the engine.
   - a stale cache after a key change;
   - a typo in `AI_PROVIDER` falling through to another provider;
   - a blocked localStorage hiding the session key.
+- Second review round:
+  - Removed the guest opt-in for the app's key (see Access above).
+  - Fixed a failure after text had started. The server closed the stream cleanly,
+    so the browser cached half a summary as finished and started the cooldown.
+    Now the response stream errors (with a generic `NarrativeInterruptedError`) and
+    `readNarrativeStream` throws. The hook drops the partial text and shows an
+    error, without caching or a cooldown.
 - Coverage: 100% of statements in the new `lib/ai` files, about 95% in the route; the
   settings store's gaps are the browser-only storage getter and the mount hook (no
   React testing library in the repo).

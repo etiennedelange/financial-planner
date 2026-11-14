@@ -22,9 +22,9 @@ const AI_ENV = [
   "VERCEL_OIDC_TOKEN",
   "CLOUDFLARE_AI_ACCOUNT_ID",
   "CLOUDFLARE_AI_API_TOKEN",
-  "AI_HOSTED_GUEST_ACCESS",
   "VERCEL",
   "TRUSTED_CLIENT_IP_HEADER",
+  "AI_HOSTED_GUEST_ACCESS",
 ] as const
 
 function validBody(extra: Record<string, unknown> = {}) {
@@ -133,29 +133,34 @@ describe("POST /api/plan-narrative", () => {
       expect(lastModel().modelId).toBe(MODEL_TIERS.gateway.best)
     })
 
-    it("may use the app's key when the operator sets AI_HOSTED_GUEST_ACCESS=true", async () => {
+    it("can never spend the app's key, whatever the environment says", async () => {
+      // The removed AI_HOSTED_GUEST_ACCESS opt-in must stay without effect.
       process.env.AI_HOSTED_GUEST_ACCESS = "true"
-      const response = await POST(request(validBody({ tier: "best" })))
-      expect(response.status).toBe(200)
-      // Still the default tier: guests never pick the dearer hosted models.
-      expect(lastModel().modelId).toBe(MODEL_TIERS.gateway.balanced)
+      const response = await POST(request(validBody()))
+      expect(response.status).toBe(401)
+      expect(streamText).not.toHaveBeenCalled()
     })
 
     it("are rate-limited per IP on a platform with a trusted IP header", async () => {
-      process.env.AI_HOSTED_GUEST_ACCESS = "true"
       process.env.VERCEL = "1"
-      const from = (ip: string) => request(validBody(), { "x-real-ip": ip })
+      const from = (ip: string) =>
+        request(validBody(), {
+          "x-ai-provider": "gateway",
+          "x-ai-api-key": "vck_guest_key_1",
+          "x-real-ip": ip,
+        })
       for (let i = 0; i < 20; i++) expect((await POST(from("198.51.100.1"))).status).toBe(200)
       expect((await POST(from("198.51.100.1"))).status).toBe(429)
       expect((await POST(from("198.51.100.2"))).status).toBe(200)
     })
 
     it("regression: can't dodge the limit with a spoofed IP header on an unknown host", async () => {
-      process.env.AI_HOSTED_GUEST_ACCESS = "true"
       // Other guest tests share this deployment's single bucket; start a fresh window.
       vi.spyOn(Date, "now").mockReturnValue(Date.UTC(2099, 0, 1))
       const spoofed = (n: number) =>
         request(validBody(), {
+          "x-ai-provider": "gateway",
+          "x-ai-api-key": "vck_guest_key_1",
           "cf-connecting-ip": `203.0.113.${n}`,
           "x-forwarded-for": `203.0.113.${n}`,
           "x-real-ip": `203.0.113.${n}`,
@@ -270,6 +275,18 @@ describe("POST /api/plan-narrative", () => {
     expect(logged).toContain("401")
     expect(logged).not.toContain("vck_secret_value")
     expect(logged).not.toContain("secret")
+  })
+
+  it("aborts the response when the provider fails after text has started", async () => {
+    process.env.AI_GATEWAY_API_KEY = "gw-hosted-key"
+    async function* failsLate() {
+      yield { type: "text-delta", id: "t", text: "Your plan " }
+      yield { type: "error", error: Object.assign(new Error("overloaded"), { statusCode: 529 }) }
+    }
+    streamText.mockImplementation(() => ({ stream: failsLate() }))
+    const response = await POST(request(validBody()))
+    expect(response.status).toBe(200)
+    await expect(response.text()).rejects.toThrow()
   })
 
   it("returns 502 when the model produces no text", async () => {
