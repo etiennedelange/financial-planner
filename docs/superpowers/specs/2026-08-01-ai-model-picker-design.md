@@ -7,6 +7,8 @@ date: 2026-08-01
 
 # AI Narrative Model Picker — Design Spec
 
+> **Partly superseded 2026-11-14.** The server-side `/api/plan-narrative` route and the Vercel AI Gateway were removed; the summary now runs browser → provider with the user's own key. See [BYOK LLM key handling](../../security/byok-llm-key-handling.md).
+
 Date: 2026-08-01
 Status: Approved, pending implementation plan
 

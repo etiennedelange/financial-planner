@@ -50,16 +50,7 @@ export default defineConfig({
     printWidth: 100,
     // Tool-owned (vendored agent skills, Claude Code config, design-tool state) or
     // generated; Markdown is left as written.
-    ignorePatterns: [
-      ".agents/**",
-      ".claude/**",
-      ".impeccable/**",
-      "types/supabase.ts",
-      // Email templates: hand-laid-out HTML that GoTrue sends as written.
-      "supabase/templates/**",
-      "pnpm-lock.yaml",
-      "*.md",
-    ],
+    ignorePatterns: [".agents/**", ".claude/**", ".impeccable/**", "pnpm-lock.yaml", "*.md"],
   },
   lint: {
     plugins: ["oxc", "typescript", "unicorn", "nextjs"],

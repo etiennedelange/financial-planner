@@ -6,6 +6,8 @@ description: "Phase 3: authentication and profiles so plans sync across devices.
 
 # Phase 3: User Accounts ✅ Security risk register resolved
 
+> **Superseded 2026-11-14.** The app no longer has accounts or a database; plan data lives only in the browser. This phase is kept as a historical record of what was built. See [Phase 12](phase-12-local-first-byok.md) and [the removal write-up](../history/2026-11-14-remove-accounts-local-first-byok.md).
+
 **Goal:** Implement user authentication and profile management so users can sync their retirement plan across devices, with hardened security including mandatory login and optional 2FA.
 
 ## Completed
@@ -65,4 +67,4 @@ description: "Phase 3: authentication and profiles so plans sync across devices.
 
 ## High-Priority Post-Completion Follow-up
 
-- [x] **Bootstrap and data ownership hardening** (2026-08-15) — auth/bootstrap ordering centralized in one XState coordinator, pre-MFA protected sync prevented, guest/user local state isolated with explicit persistence scopes. Tracked in Phase 9.4: [implementation plan](../superpowers/plans/2026-08-15-bootstrap-data-ownership-hardening.md) · [planning record](../history/2026-08-15-bootstrap-data-ownership-hardening-plan.md) · [implementation record](../history/2026-08-15-bootstrap-data-ownership-hardening.md)
+- [x] **Bootstrap and data ownership hardening** (2026-08-15) — auth/bootstrap ordering centralized in one XState coordinator, pre-MFA protected sync prevented, guest/user local state isolated with explicit persistence scopes. Tracked in Phase 9.4: implementation plan (plan removed 2026-11-14 with the auth system) · [planning record](../history/2026-08-15-bootstrap-data-ownership-hardening-plan.md) · [implementation record](../history/2026-08-15-bootstrap-data-ownership-hardening.md)

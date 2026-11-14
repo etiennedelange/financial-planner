@@ -1,148 +1,84 @@
 # Security Checklist
 
-Read when the diff touches `app/api/`, `app/auth/`, `lib/auth/`, `lib/supabase/`,
-`lib/security/`, `supabase/migrations/`, or `proxy.ts`.
+Read when the diff touches `lib/ai/`, `components/ai/`, `lib/security/`, `proxy.ts`,
+`lib/store/` persistence code, `lib/utils/plan-io.ts`, or `package.json` / `pnpm-lock.yaml`.
 
-Primary source: `docs/security/auth-2fa-risk-register.md` (reviewed and remediated
-2026-08-10, nine risks AUTH-001…AUTH-009). Each check below guards a risk that was found
-*in this codebase* — these are regressions waiting to happen, not hypotheticals.
+The app has **no accounts and no server-side secrets** (decided 2026-11-14). Data lives only in
+the browser; the optional AI summary calls the user's chosen provider directly with the
+user's own API key. The threats that matter are therefore about that key, the CSP that protects
+it, and untrusted data entering the stores. Primary source:
+`docs/security/byok-llm-key-handling.md`. Context:
+`docs/history/2026-11-14-remove-accounts-local-first-byok.md`.
 
-Supporting: `docs/history/2026-08-10-auth-2fa-security-audit.md`,
-`docs/history/2026-08-15-bootstrap-data-ownership-hardening.md`,
-`docs/history/2026-08-08-mfa-challenge-dev-proxy-redirect-loop-fix.md`
-
----
-
-## SEC1 — Redirects (AUTH-001, High)
-
-**The incident:** `app/auth/callback/route.ts` concatenated an untrusted `next` parameter
-into `NextResponse.redirect()`. `next=@evil.com` produced
-`https://app.example.com@evil.com/` — origin `evil.com`. Usable in phishing and redirect
-chains from auth and recovery links.
-
-**Check:** every redirect built from user-controlled input goes through
-`lib/auth/safe-redirect.ts`. The contract: resolve against `origin`, require same-origin,
-fall back to `/calculator`.
-
-**Check:** new redirect paths have tests for the documented attack shapes — `@evil.com`,
-absolute URLs, protocol-relative (`//evil.com`), backslashes, and encoded separators.
+The previous auth/RLS/MFA checklist guarded code that no longer exists; its record is
+`docs/security/auth-2fa-risk-register.md` (retired).
 
 ---
 
-## SEC2 — API routes must authenticate, validate, and throttle (AUTH-003, High)
+## SEC1 — The API key never leaves the vault's lane
 
-**The incident:** `app/api/plan-narrative/route.ts` had no authentication, no rate limit, no
-request-size limit, and no schema validation. An unauthenticated POST returned 200, and a
-client-controlled `tier` could select the most expensive configured model — an unmetered
-public AI service billed to this project.
+**Check:** the user's LLM key is not persisted, logged, exported, placed in a URL, or held in a
+Zustand store, React context or the DOM. The only homes are `lib/ai/key-vault.ts` (memory or a
+passphrase-encrypted blob) and, transiently, a request's headers.
 
-**Check every new or modified route handler for all five:**
+**Check:** `lib/ai/key-vault.ts` is imported only by `lib/ai/stream-narrative.ts`,
+`lib/hooks/use-llm-key.ts` and `components/ai/*`. Never by stores, calculations or utils.
+`lib/ai/key-isolation.test.ts` enforces this — if it needed editing, ask why.
 
-1. **Auth** — a valid session is required, unless the route is deliberately public and says so
-2. **Zod validation** of the *complete* body, not just the fields the handler reads
-3. **Body and collection caps** — max payload size, max account count
-4. **Rate limiting** via `lib/security/rate-limit.ts`, per-user and per-IP
-5. **Server-side entitlement** — model/tier selection is never trusted from the client
+**Check:** no plaintext key or passphrase is ever written to storage. Only the
+`rc-llm-key-v1:<provider>` ciphertext blob (AES-GCM, PBKDF2 600 k, fresh IV/salt each save,
+provider bound as additional data).
 
-**Check:** a route that consumes a paid resource (AI, email, storage) without a quota. Cost
-abuse is a documented High severity here, not a theoretical concern.
+## SEC2 — Provider calls go through `providerFetch`
 
-**Check:** RPC endpoints. AUTH-005 was exactly this — `redeem_recovery_code()` had no
-application-level throttle, because Supabase's configured Auth limits cover Auth endpoints
-and MFA challenge/verify, **not** arbitrary PostgREST RPCs. Do not assume platform limits
-cover a custom RPC.
+**Check:** any request carrying a key uses `lib/ai/providers/http.ts` (`credentials:"omit"`,
+`redirect:"error"`, `referrerPolicy:"no-referrer"`, `cache:"no-store"`, pinned origin, timeout).
+A bare `fetch` with a key is a finding.
 
----
+**Check:** keys travel in **headers**, never query strings (Gemini: `x-goog-api-key`).
 
-## SEC3 — AAL2 / MFA gating (AUTH-002, High)
+**Check:** user-visible errors are fixed `ProviderError` messages. Never render a provider's
+response body or a caught `error.message` — providers echo masked keys in 401 text.
 
-**The incident:** a 2FA-enrolled user could not delete their account. `ReauthenticateDialog`
-called `signInWithPassword`, which *replaced* the elevated browser session with a
-password-only AAL1 session. `lib/supabase/proxy.ts` then redirected the AAL1 request to
-`/auth/mfa`; a `DELETE` fetch preserves its method through a 307, hit the page route instead
-of the API route, and the client tried to parse a non-JSON error. Route-level unit tests
-passed in isolation — only an end-to-end test catches this.
+**Check:** every generation has a hard output-token cap; the user's money is on the line.
 
-**Check:** re-authentication never downgrades an already-elevated session. Elevate with the
-TOTP dialog rather than re-running `signInWithPassword`.
+## SEC3 — CSP is the exfiltration guard
 
-**Check:** sensitive routes assert AAL2 server-side *and* are reachable — a route that
-correctly rejects non-AAL2 requests is still broken if the proxy redirects the request away
-before it arrives.
+**Check:** `connect-src` stays an exact allowlist: `'self'`, the origins in `PROVIDER_ORIGINS`,
+Vercel vitals. No wildcards, no bare schemes. A new provider updates `PROVIDER_ORIGINS` **and**
+the exact-set assertion in `lib/security/headers.test.ts`.
 
-**Check:** new sensitive operations have an **end-to-end** test with an enrolled 2FA user.
-Unit tests passing in isolation is the exact false signal this incident produced.
+**Check:** no third-party script origin is added to `script-src`; `frame-src` stays `'none'`.
+A new analytics/widget script is a security change, not a UI one.
 
----
+**Check:** the nonce is still minted per request in `lib/security/apply-headers.ts` and
+`app/layout.tsx` still reads `x-nonce`. Do not move to a static export — it loses the nonce CSP.
 
-## SEC4 — Service-role key handling
+## SEC4 — Untrusted data entering the stores
 
-`SUPABASE_SERVICE_ROLE_KEY` bypasses RLS entirely. It is currently read in exactly two
-places: `app/api/auth/recover/route.ts` and `app/api/account/delete/route.ts`.
+**Check:** anything loaded from a file or an old persisted payload goes through the shared
+`sanitizePlan` / `sanitizeExpenses` (the same functions `migrate` uses). A second copy of the
+clamping logic will drift. Backup import also rejects oversized files before parsing.
 
-**Check:** any new read of `SUPABASE_SERVICE_ROLE_KEY`. A third call site needs
-justification in the review — it is not a routine addition.
+**Check:** storage failures are reported through `lib/store/storage-health.ts`, never swallowed —
+with no server copy, silent failure is silent data loss.
 
-**Check:** the key never reaches a client component, a `NEXT_PUBLIC_*` variable, or a
-response body. This is Critical if violated.
+**Check:** "Clear all local data" resets the in-memory stores **before** removing keys.
 
-**Check:** service-role clients are constructed per-request inside the handler, never at
-module scope where they could leak across requests.
+## SEC5 — Dependencies
 
-**Check:** a service-role call path that bypasses the RLS-based 2FA enforcement gate.
-Two-factor enforcement lives in RLS, in `public.mfa_satisfied()` (see
-`20260802000100_mfa_rls.sql`) — it is the project's **single** enforcement point. A
-service-role client routes around it entirely, so a new service-role call site is also
-a new hole in the 2FA gate, not just in row ownership. Evaluate every new service-role
-path against the gate, even when the code does not touch `app/auth/`.
+**Check:** if `package.json` or `pnpm-lock.yaml` changed, run `pnpm audit`. With a key in the
+browser the npm supply chain is the main attack surface, so new runtime dependencies need a
+reason. `next` and `@next/bundle-analyzer` move together.
 
----
-
-## SEC5 — RLS and migrations
-
-**Check:** a new table without RLS enabled and policies defined. Existing migrations
-establish the pattern — `20260802000100_mfa_rls.sql`,
-`20260802000400_recovery_codes_require_mfa.sql`.
-
-**Check:** a policy widened (e.g. `USING (true)`) without explicit justification.
-
-**Check:** ownership. Rows are scoped per user; `20260802000005_scenario_claim_tracking.sql`
-and the bootstrap hardening work exist to keep guest and user data from crossing. New
-queries must filter by the owning user, not rely on the client to ask nicely.
-
-**Check:** operations that must be atomic actually are. AUTH-006 was recovery codes not
-being atomically single-use; the fix is `20260810000000_atomic_recovery_code_redemption.sql`.
-A check-then-write pair across two statements is a race.
-
----
-
-## SEC6 — Dependencies (AUTH-004, High)
-
-**The incident:** `pnpm audit` exited non-zero with 16 advisories (8 high, 8 moderate). The
-middleware/proxy advisory applied because this is an App Router app using middleware and
-Turbopack. Resolved by upgrading `next`, `@next/bundle-analyzer`, and `eslint-config-next`
-together to 16.3.0.
-
-**Check:** if `package.json` or `pnpm-lock.yaml` changed, run `pnpm audit`.
-
-**Check:** `next` and `@next/bundle-analyzer` moved **together** (`eslint-config-next` was
-the third until lint moved to Oxlint on 2026-10-31).
-Splitting them is what produced the mismatched tree.
-
-The project also has a dedicated `security-audit` skill for devcontainer, pnpm, and semgrep
+The project also has a dedicated `security-audit` skill for devcontainer, pnpm and semgrep
 checks — recommend it rather than reproducing it here.
 
----
-
-## SEC7 — Injection and rendering
+## SEC6 — Injection and rendering
 
 **Check:** new `dangerouslySetInnerHTML`. Exactly one exists, in `components/ui/chart.tsx`
-for generated CSS custom properties. Any new instance carrying user-derived content is a
-finding.
+for generated CSS custom properties. Any new instance carrying user- or model-derived content
+is a finding. Model output is rendered as plain text (`whitespace-pre-wrap`), never as HTML.
 
-**Check:** raw SQL built by string concatenation in a migration or RPC. Use parameters.
-
-**Check:** secrets or user PII in `console.log`. An earlier incident had a captcha failure
-silently reported to the console instead of surfaced
-(`docs/history/2026-08-08-account-settings-page-migration.md`) — logs are neither a UI nor
-a safe place for user data.
+**Check:** secrets or user financial data in `console.*`. Logs are neither a UI nor a safe
+place for user data.

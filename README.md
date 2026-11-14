@@ -20,7 +20,8 @@ SA-specific tax treatment.
 - **Monte Carlo simulation** that runs in a Web Worker, alongside a
   deterministic projection engine. Both engines share their calculation
   utilities, so they model the same plan
-- **Scenarios**: model and compare alternative plans
+- **Private by design**: no accounts and no database. Everything is stored in your
+  browser; download a backup file to keep or move it
 - **Expense tracking**: models current spending as the baseline for
   retirement income needs
 - **Installable PWA** with an offline fallback, plus print/PDF and CSV export
@@ -28,30 +29,28 @@ SA-specific tax treatment.
 ## Stack
 
 Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · shadcn/ui ·
-Zustand · Supabase (Postgres + Auth with row-level security) · Vercel AI SDK ·
+Zustand (persisted to localStorage) · bring-your-own-key AI (browser → provider) ·
 Vite+ (Vitest, Oxlint, Oxfmt) · Playwright. Hosted on Vercel.
 
 ## Project layout
 
 ```
-app/                     Routes (calculator/*, auth, API route handlers)
+app/                     Routes (calculator/*, print)
 components/              UI, including layout/ and debug/
 lib/calculations/        Deterministic projection engine and shared utilities
 lib/monte-carlo/         Monte Carlo simulation engine
 lib/constants/           Tax-year config (single source of truth)
-lib/store/               Zustand stores (scenario state, global expenses)
-supabase/                Migrations, RLS tests, local config
+lib/store/               Zustand stores (plan, expenses) + local persistence
+lib/ai/                  Bring-your-own-key AI: key vault, provider clients
 docs/                    Phase plans and dated change history
 ```
 
 ## Running locally
 
-Requires Node 24, pnpm, and Docker (for local Supabase).
+Requires Node 24 and pnpm. No database, accounts or environment variables are needed.
 
 ```bash
 pnpm install
-cp .env.example .env.local   # local-only demo/test values; no real secrets
-npx supabase start
 pnpm dev                     # http://localhost:3000
 ```
 

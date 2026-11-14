@@ -118,7 +118,7 @@ A retirement planning calculator specifically designed for South African investo
 - **Frontend Framework**: Next.js (React-based)
 - **UI Library**: React
 - **Component Library**: shadcn/ui (with Radix UI primitives and Tailwind CSS)
-- **Database & Backend**: Supabase (PostgreSQL with built-in authentication and real-time capabilities)
+- **Storage**: browser localStorage only — no database, backend or user accounts (decided 2026-11-14)
 - **Language**: TypeScript (recommended for type safety)
 
 ### User Interface
@@ -129,14 +129,12 @@ A retirement planning calculator specifically designed for South African investo
 - Server-side rendering (SSR) with Next.js for optimal performance
 
 ### Data Persistence
-- PostgreSQL database hosted on Supabase
-- Supabase Authentication for user accounts
-- Row Level Security (RLS) for data protection
-- Save user profiles and scenarios
-- Store multiple retirement accounts per user
-- Historical calculation results
-- Import/export functionality
-- Real-time data synchronization capabilities
+- All data stored in the browser (localStorage); no accounts, no server-side storage
+- Plan and expenses persist across reloads and stay in sync between tabs
+- Multiple retirement accounts per plan
+- Full backup/restore as a downloadable file (plan + expenses)
+- "Clear all local data" for the user to wipe everything
+- Optional AI summary using the user's own provider API key (never sent to us)
 
 ### Performance
 - Calculations complete within 2-3 seconds

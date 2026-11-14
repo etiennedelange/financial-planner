@@ -14,7 +14,6 @@
     "claude-code-setup@claude-plugins-official": false,
     "vercel@claude-plugins-official": true,
     "commit-commands@claude-plugins-official": false,
-    "supabase@claude-plugins-official": true,
     "chrome-devtools-mcp@claude-plugins-official": true,
     "linear@claude-plugins-official": false,
     "remember@claude-plugins-official": true,

@@ -1,0 +1,76 @@
+"use client"
+
+import { createContext, useContext, useEffect, useState } from "react"
+import { useCalculatorStore, CALCULATOR_STORAGE_KEY } from "@/lib/store/calculator-store"
+import { useExpensesStore, EXPENSES_STORAGE_KEY } from "@/lib/store/expenses-store"
+import { probeStorage } from "@/lib/store/storage-health"
+import { migrateToLocalOnlyStorage, purgeLegacyAuthCookies } from "@/lib/store/storage-migration"
+
+const HydratedContext = createContext(false)
+
+/** True once both stores have been read back from localStorage. */
+export function useStoresHydrated(): boolean {
+  return useContext(HydratedContext)
+}
+
+// Both stores use `skipHydration` (the server renders defaults), so the browser
+// rehydrates them here, exactly once, after the one-time migration. No account,
+// no network: the data never leaves this browser.
+let hydration: Promise<void> | null = null
+function hydrateOnce(): Promise<void> {
+  if (!hydration) {
+    hydration = (async () => {
+      try {
+        migrateToLocalOnlyStorage(window.localStorage)
+        purgeLegacyAuthCookies(document)
+      } catch {
+        // Storage blocked — probeStorage() below reports it; stores stay on defaults.
+      }
+      probeStorage()
+      // Ask the browser not to evict this data under storage pressure. With no server
+      // copy, eviction is data loss. Best-effort: the browser may decline silently.
+      try {
+        void navigator.storage?.persist?.()
+      } catch {
+        // Unsupported — the backup nudge is the fallback.
+      }
+      await Promise.all([
+        useCalculatorStore.persist.rehydrate(),
+        useExpensesStore.persist.rehydrate(),
+      ])
+    })()
+  }
+  return hydration
+}
+
+export function LocalDataProvider({ children }: { children: React.ReactNode }) {
+  const [hydrated, setHydrated] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    void hydrateOnce().then(() => {
+      if (!cancelled) setHydrated(true)
+    })
+
+    // Another tab saved: pull its data in instead of clobbering it with this
+    // tab's stale in-memory copy on the next write. `storage` events fire only in
+    // OTHER tabs, so there is no feedback loop.
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === CALCULATOR_STORAGE_KEY) void useCalculatorStore.persist.rehydrate()
+      else if (event.key === EXPENSES_STORAGE_KEY) void useExpensesStore.persist.rehydrate()
+      else if (event.key === null) {
+        // localStorage.clear() in another tab ("Clear all local data"). Rehydrating
+        // from an empty store would keep this tab's stale copy in memory and write
+        // it straight back on the next edit — reload so cleared data stays cleared.
+        window.location.reload()
+      }
+    }
+    window.addEventListener("storage", onStorage)
+    return () => {
+      cancelled = true
+      window.removeEventListener("storage", onStorage)
+    }
+  }, [])
+
+  return <HydratedContext.Provider value={hydrated}>{children}</HydratedContext.Provider>
+}

@@ -1,3 +1,5 @@
+import { PROVIDER_ORIGINS } from "@/lib/ai/providers/origins"
+
 export const SECURITY_HEADERS: Record<string, string> = {
   "X-Frame-Options": "DENY",
   "X-Content-Type-Options": "nosniff",
@@ -5,6 +7,13 @@ export const SECURITY_HEADERS: Record<string, string> = {
   "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
   "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
 }
+
+/** Every origin `fetch` may reach (the test pins the exact set). */
+const CONNECT_SRC = [
+  "'self'",
+  ...Object.values(PROVIDER_ORIGINS),
+  "https://vitals.vercel-insights.com",
+] as const
 
 /**
  * Per-request CSP. The nonce must be generated per request and threaded into
@@ -14,20 +23,11 @@ export const SECURITY_HEADERS: Record<string, string> = {
  * and there is no nonce hook for them. Inline styles are a materially smaller
  * risk than inline scripts.
  */
-export function buildCsp(nonce: string, supabaseUrl: string, isDev: boolean): string {
-  // CSP path matching in a source expression is a directory prefix only when
-  // the path ends in "/" — without it, "/supabase" matches just that exact
-  // path, not "/supabase/auth/v1/user". This was masked whenever the app and
-  // Supabase proxy shared an origin (connect-src 'self' covered everything
-  // regardless of path); it only bites once they're on different ports/hosts.
-  const connectSupabaseUrl =
-    supabaseUrl && !supabaseUrl.endsWith("/") ? `${supabaseUrl}/` : supabaseUrl
-
+export function buildCsp(nonce: string, isDev: boolean): string {
   const scriptSrc = [
     "'self'",
     `'nonce-${nonce}'`,
     "'strict-dynamic'",
-    "https://challenges.cloudflare.com",
     // React Fast Refresh compiles with eval in development only.
     isDev ? "'unsafe-eval'" : "",
   ]
@@ -38,15 +38,17 @@ export function buildCsp(nonce: string, supabaseUrl: string, isDev: boolean): st
     `default-src 'self'`,
     `script-src ${scriptSrc}`,
     `style-src 'self' 'unsafe-inline'`,
-    // data: covers the TOTP enrolment QR code, which is an inline SVG data URI.
     `img-src 'self' data: blob:`,
     `font-src 'self' data:`,
-    `connect-src 'self' ${connectSupabaseUrl} https://vitals.vercel-insights.com`,
+    // The exfiltration guard for the user's LLM API key: the page may only talk to
+    // itself, Vercel's vitals beacon and the three provider APIs the user can pick
+    // (bring-your-own-key calls go straight from the browser). No wildcards.
+    `connect-src ${CONNECT_SRC.join(" ")}`,
     // Without this, workers fall back to script-src, where 'strict-dynamic' makes browsers
     // ignore 'self' and a worker cannot carry a nonce: the Monte Carlo worker could be
     // refused. blob: covers bundlers that start workers from a blob URL.
     `worker-src 'self' blob:`,
-    `frame-src https://challenges.cloudflare.com`,
+    `frame-src 'none'`,
     `frame-ancestors 'none'`,
     `form-action 'self'`,
     `base-uri 'self'`,

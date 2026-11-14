@@ -15,7 +15,10 @@ import {
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useCalculator } from "@/lib/context/calculator-context"
 import { usePlanNarrative } from "@/lib/hooks/use-plan-narrative"
-import { DEFAULT_MODEL_TIER, type ModelTier } from "@/lib/ai/model-tiers"
+import { DEFAULT_MODEL_TIER, PROVIDER_LABELS, type ModelTier } from "@/lib/ai/model-tiers"
+import { UnlockForm } from "@/components/ai/unlock-form"
+import { useKeyStatus, useProviderChoice } from "@/lib/hooks/use-llm-key"
+import Link from "next/link"
 import { Sparkles } from "lucide-react"
 
 const TIER_LABELS: Record<ModelTier, string> = {
@@ -60,14 +63,21 @@ export function PlanNarrativeCard() {
     localStorage.setItem(TIER_STORAGE_KEY, value)
   }
 
-  const { text, isStreaming, error, cooldownRemaining, generate, clear } = usePlanNarrative({
-    accounts,
-    personalInfo,
-    retirementGoals,
-    drawdownConfig,
-    projection,
-    tier,
-  })
+  const [provider] = useProviderChoice()
+  const keyStatus = useKeyStatus(provider)
+  const hasKey = keyStatus === "unlocked" || keyStatus === "session"
+
+  const { text, isStreaming, error, cooldownRemaining, generate, cancel, clear } = usePlanNarrative(
+    {
+      accounts,
+      personalInfo,
+      retirementGoals,
+      drawdownConfig,
+      projection,
+      tier,
+      provider,
+    },
+  )
 
   if (accounts.length === 0 || !projection) return null
 
@@ -89,7 +99,26 @@ export function PlanNarrativeCard() {
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <div className="flex flex-wrap items-center gap-2">
+      {!hasKey && keyStatus === "locked" && (
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Enter your passphrase to unlock your saved {PROVIDER_LABELS[provider]} key.
+          </p>
+          <UnlockForm provider={provider} />
+        </div>
+      )}
+
+      {!hasKey && keyStatus === "none" && (
+        <p className="text-sm text-muted-foreground">
+          Get a plain-English summary of your plan using your own AI key.{" "}
+          <Link href="/calculator/settings" className="text-primary underline underline-offset-2">
+            Add an API key in Settings
+          </Link>
+          .
+        </p>
+      )}
+
+      <div className={hasKey ? "flex flex-wrap items-center gap-2" : "hidden"}>
         <Button
           variant={text ? "outline" : "default"}
           size="sm"
@@ -98,6 +127,12 @@ export function PlanNarrativeCard() {
         >
           {buttonLabel}
         </Button>
+
+        {isStreaming && (
+          <Button variant="ghost" size="sm" onClick={cancel}>
+            Stop
+          </Button>
+        )}
 
         {text && (
           <Button variant="ghost" size="sm" onClick={clear} disabled={isStreaming}>
@@ -122,9 +157,10 @@ export function PlanNarrativeCard() {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Generating uses AI and sends your plan&apos;s numbers to our AI provider. This is an
-        automated educational summary, not financial advice — consult a licensed financial advisor
-        before making decisions.
+        Generating sends your plan&apos;s numbers (balances, contributions, ages, goals) straight
+        from your browser to {PROVIDER_LABELS[provider]}, using your own key — never to us, and
+        under that provider&apos;s terms. This is an automated educational summary, not financial
+        advice — consult a licensed financial advisor before making decisions.
       </p>
     </PageCard>
   )

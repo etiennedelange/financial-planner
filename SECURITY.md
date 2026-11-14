@@ -12,13 +12,14 @@ and the impact you observed.
 ## Scope
 
 In scope: this repository's code and the production deployment built from it,
-especially authentication, row-level security, and anything that could expose
-one user's data to another.
+especially the handling of the user's own AI provider API key in the browser
+(see `docs/security/byok-llm-key-handling.md`), the Content Security Policy, and
+anything that could expose a user's locally stored plan data.
 
-Out of scope: the local-development credentials in `.env.example` and
-`.github/workflows/ci.yml`. These are Supabase's published local demo keys and
-Cloudflare's published Turnstile test keys. They are public by design and do
-not grant access to any real system.
+The app has no accounts and no server-side database: plan data is stored only in
+the user's browser, and the optional AI feature calls the user's chosen provider
+directly with a key the user supplies. There are no maintainer-held credentials in
+this repository.
 
 Please do not run automated scanners, load tests, or denial-of-service
 attempts against the production site.

@@ -9,7 +9,7 @@
 
 ## Project
 
-SA retirement planning calculator — Monte Carlo simulations, multi-account portfolio, SA tax treatment. Stack: Next.js, TypeScript, shadcn/ui, Supabase.
+SA retirement planning calculator — Monte Carlo simulations, multi-account portfolio, SA tax treatment. Stack: Next.js, TypeScript, shadcn/ui. **No accounts, no database**: all data is in the browser (localStorage); AI is bring-your-own-key, called browser → provider.
 
 ## Dev Commands
 
@@ -34,7 +34,7 @@ npm run docs:check       # validate docs/ (frontmatter title+description, doc li
 container reload, so the audit works offline and can never drift versions.
 
 **Run `npm run shadscan` before committing** (or `shadscan:gate` for a
-hard-fail at <90/100). Baseline: 90/100 (A). Known non-passing findings
+hard-fail at <90/100). Baseline: 91/100 (A). Known non-passing findings
 (the only three that reduce the score; the "Worth checking" items do not):
 - `mobile-nav-present` — waived (mobile bottom tab bar is the pattern); see
   [docs/history/2026-08-16-shadscan-accessibility-audit.md](docs/history/2026-08-16-shadscan-accessibility-audit.md).
@@ -98,8 +98,9 @@ describe('functionName', () => {
 - **Monte Carlo lives only on Risk** (`components/pages/risk-page.tsx`): volatility inputs, success
   rate, fan chart, investment scenarios. The worker runs only on `/calculator/risk`
   (`lib/context/calculator-context.tsx`); every other page shows deterministic results
-- `lib/store/calculator-store.ts` — scenario state (per-scenario)
-- `lib/store/expenses-store.ts` — **global** (not scenario-tied); reflects real current spending
+- `lib/store/calculator-store.ts` — the single plan (persist v4, fixed key, no sync)
+- `lib/store/expenses-store.ts` — real current spending; persisted separately from the plan
+- `lib/ai/key-vault.ts` — the user's LLM API key; see the key rules under Common Pitfalls
 
 ## Key Calculation Files
 
@@ -167,7 +168,10 @@ Design rules:
 - ❌ Don't omit `assumptions` from useMemo deps
 - ❌ Don't use local formatCurrency — import from `lib/utils/currency`
 - ❌ Don't hardcode colors (`bg-blue-500`) — use semantic tokens (`bg-primary`, `text-foreground`)
-- ❌ Don't tie expenses to a scenario — `expenses-store.ts` is intentionally global
+- ❌ Don't add accounts, a database or any server-held secret — the product promise is that data never leaves the browser. Decided 2026-11-14; see `docs/history/2026-11-14-remove-accounts-local-first-byok.md`
+- ❌ **Never persist, log, export, URL-encode or store the user's LLM API key** anywhere but `lib/ai/key-vault.ts` (memory or passphrase-encrypted blob). Provider clients get it as an argument and go through `providerFetch`; error text shown to users must be a fixed `ProviderError` message. `lib/ai/key-isolation.test.ts` enforces it; see `docs/security/byok-llm-key-handling.md`
+- ❌ Don't add a `connect-src` origin, a third-party script origin, or a new provider without updating `PROVIDER_ORIGINS` and the exact-set assertion in `lib/security/headers.test.ts` — the CSP is what stops a script from exfiltrating the key
+- ❌ Don't import plan data from a file without `sanitizePlan` / `sanitizeExpenses` (shared with the persist `migrate`)
 - ❌ Don't show Monte Carlo results (success rate, percentiles) outside the Risk page — Overview
   links to it instead. Decided 2026-10-31; see `docs/history/2026-10-31-risk-page.md`
 - ❌ Don't run expensive work (Monte Carlo, many projections) during render — not even in a
@@ -181,8 +185,6 @@ Design rules:
   `docs/history/2026-11-12-single-worker-entry.md`
 - ❌ Don't write raw `<p className="text-[10px] font-mono uppercase...">` — use `<SectionLabel>` or `<PageCard>`
 - ❌ Don't use `Card + CardHeader + CardTitle` for section cards — `CardTitle` renders `text-2xl font-semibold` which violates the design system
-- ⚠️ `calculator-store.ts` branch coverage is ~82% (2026-11-12) and `expenses-store.ts` ~72-76%,
-  both below the 85% threshold (they DO have tests; the old "zero tests" note here was stale)
 
 ## Theming
 

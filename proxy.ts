@@ -1,8 +1,10 @@
 import { type NextRequest } from "next/server"
-import { updateSession } from "@/lib/supabase/proxy"
+import { withSecurityHeaders } from "@/lib/security/apply-headers"
 
-export async function proxy(request: NextRequest) {
-  return updateSession(request)
+// Nonce-based CSP + security headers on every request. See
+// lib/security/apply-headers.ts. (No session handling: the app has no accounts.)
+export function proxy(request: NextRequest) {
+  return withSecurityHeaders(request)
 }
 
 export const config = {

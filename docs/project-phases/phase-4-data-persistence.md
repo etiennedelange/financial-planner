@@ -6,6 +6,8 @@ description: "Phase 4: saving and loading user data, with named scenarios."
 
 # Phase 4: Data Persistence ✅ Complete
 
+> **Partly superseded 2026-11-14.** Database storage, named scenarios and auto-sync to Supabase were removed. What remains: browser persistence of one plan, and JSON import/export (now a v2 backup that includes expenses). See [Phase 12](phase-12-local-first-byok.md).
+
 **Goal:** Save and load user data from database, support named scenarios.
 
 ## Completed
@@ -31,4 +33,4 @@ description: "Phase 4: saving and loading user data, with named scenarios."
 
 ## High-Priority Post-Completion Follow-up
 
-- [x] **Bootstrap and data ownership hardening** (2026-08-15) — hydration is single-owner (one XState coordinator, once per scope), stale or signed-out remote writes are rejected by identity+generation guards, and guest/user persistence scopes are explicit. Tracked in Phase 9.4: [implementation plan](../superpowers/plans/2026-08-15-bootstrap-data-ownership-hardening.md) · [planning record](../history/2026-08-15-bootstrap-data-ownership-hardening-plan.md) · [implementation record](../history/2026-08-15-bootstrap-data-ownership-hardening.md)
+- [x] **Bootstrap and data ownership hardening** (2026-08-15) — hydration is single-owner (one XState coordinator, once per scope), stale or signed-out remote writes are rejected by identity+generation guards, and guest/user persistence scopes are explicit. Tracked in Phase 9.4: implementation plan (plan removed 2026-11-14 with the auth system) · [planning record](../history/2026-08-15-bootstrap-data-ownership-hardening-plan.md) · [implementation record](../history/2026-08-15-bootstrap-data-ownership-hardening.md)

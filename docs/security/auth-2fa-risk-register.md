@@ -7,6 +7,8 @@ tags: [security]
 
 # Auth and 2FA Risk Register
 
+> **Retired 2026-11-14.** Every risk here (AUTH-001…AUTH-009) concerned the Supabase auth system, which has been removed. Kept as a record. The live threat model is [BYOK LLM key handling](byok-llm-key-handling.md).
+
 **Review date:** 2026-08-10
 **Remediation date:** 2026-08-10
 **Branch reviewed:** `feature/auth-hardening-2fa`

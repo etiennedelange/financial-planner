@@ -19,7 +19,6 @@
         // Oxc (through Vite+) lints and formats; its extension is the editor's formatter.
         "oxc.oxc-vscode",
         "bradlc.vscode-tailwindcss",
-        "supabase.supabase-vscode",
         "ms-vscode.vscode-typescript-next",
         "formulahendry.auto-rename-tag",
         "christian-kohler.path-intellisense",

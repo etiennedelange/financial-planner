@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vite-plus/test"
+import { PROVIDER_ORIGINS } from "@/lib/ai/providers/origins"
 import { buildCsp, SECURITY_HEADERS } from "./headers"
-
-const SUPABASE = "https://abc.supabase.co"
 
 function directive(csp: string, name: string): string {
   const found = csp
@@ -14,49 +13,81 @@ function directive(csp: string, name: string): string {
 
 describe("buildCsp", () => {
   it("binds script-src to the request nonce", () => {
-    expect(directive(buildCsp("abc123", SUPABASE, false), "script-src")).toContain("'nonce-abc123'")
+    expect(directive(buildCsp("abc123", false), "script-src")).toContain("'nonce-abc123'")
   })
 
   it("lets same-origin workers load, since strict-dynamic would otherwise block the Monte Carlo worker", () => {
-    const csp = buildCsp("n", SUPABASE, false)
+    const csp = buildCsp("n", false)
     expect(directive(csp, "script-src")).toContain("'strict-dynamic'")
     expect(directive(csp, "worker-src")).toContain("'self'")
   })
 
-  it("allows the Supabase origin to be contacted", () => {
-    expect(directive(buildCsp("n", SUPABASE, false), "connect-src")).toContain(SUPABASE)
+  describe("connect-src — the exfiltration guard for the user's API key", () => {
+    it("allows exactly self, the three LLM providers and Vercel vitals — nothing else", () => {
+      const sources = directive(buildCsp("n", false), "connect-src").split(" ").slice(1)
+      expect([...sources].sort()).toEqual(
+        [
+          "'self'",
+          "https://api.anthropic.com",
+          "https://api.openai.com",
+          "https://generativelanguage.googleapis.com",
+          "https://vitals.vercel-insights.com",
+        ].sort(),
+      )
+    })
+
+    it("never uses a wildcard or a bare scheme", () => {
+      for (const isDev of [true, false]) {
+        const connect = directive(buildCsp("n", isDev), "connect-src")
+        expect(connect).not.toMatch(/\*/)
+        expect(connect).not.toMatch(/(^|\s)https?:(\s|$)/)
+      }
+    })
+
+    it("has no origin left over from the removed account system", () => {
+      const csp = buildCsp("n", false)
+      expect(csp).not.toContain("supabase")
+      expect(csp).not.toContain("cloudflare")
+    })
+
+    it("derives every provider origin from the shared PROVIDER_ORIGINS list", () => {
+      const connect = directive(buildCsp("n", false), "connect-src")
+      for (const origin of Object.values(PROVIDER_ORIGINS)) expect(connect).toContain(origin)
+    })
   })
 
-  it("treats a Supabase URL with a path as a directory prefix, not an exact match", () => {
-    // Without a trailing "/", CSP matches only the literal path "/supabase" —
-    // not "/supabase/auth/v1/user" — per the CSP source-expression path rules.
-    const proxied = "http://localhost:3000/supabase"
-    const connectSrc = directive(buildCsp("n", proxied, true), "connect-src")
-    expect(connectSrc).toContain(`${proxied}/`)
+  it("allows no third-party script origins", () => {
+    const scripts = directive(buildCsp("n", false), "script-src")
+    expect(scripts).not.toMatch(/https?:\/\//)
   })
 
-  it("blocks framing entirely", () => {
-    expect(directive(buildCsp("n", SUPABASE, false), "frame-ancestors")).toContain("'none'")
+  it("blocks all framing — nothing embeds, and nothing may be embedded", () => {
+    const csp = buildCsp("n", false)
+    expect(directive(csp, "frame-src")).toBe("frame-src 'none'")
+    expect(directive(csp, "frame-ancestors")).toContain("'none'")
   })
 
-  it("restricts form submission to the same origin", () => {
-    expect(directive(buildCsp("n", SUPABASE, false), "form-action")).toContain("'self'")
+  it("restricts form submission, base-uri and plugins", () => {
+    const csp = buildCsp("n", false)
+    expect(directive(csp, "form-action")).toContain("'self'")
+    expect(directive(csp, "base-uri")).toContain("'self'")
+    expect(directive(csp, "object-src")).toContain("'none'")
   })
 
   it("does not permit unsafe-eval in production", () => {
-    expect(buildCsp("n", SUPABASE, false)).not.toContain("'unsafe-eval'")
+    expect(buildCsp("n", false)).not.toContain("'unsafe-eval'")
   })
 
   it("permits unsafe-eval in development for React refresh", () => {
-    expect(directive(buildCsp("n", SUPABASE, true), "script-src")).toContain("'unsafe-eval'")
-  })
-
-  it("allows the data: URIs used by TOTP QR codes", () => {
-    expect(directive(buildCsp("n", SUPABASE, false), "img-src")).toContain("data:")
+    expect(directive(buildCsp("n", true), "script-src")).toContain("'unsafe-eval'")
   })
 
   it("does not force an https upgrade in development, where the dev server is plain http", () => {
-    expect(buildCsp("n", SUPABASE, true)).not.toContain("upgrade-insecure-requests")
+    expect(buildCsp("n", true)).not.toContain("upgrade-insecure-requests")
+  })
+
+  it("upgrades insecure requests in production", () => {
+    expect(buildCsp("n", false)).toContain("upgrade-insecure-requests")
   })
 })
 

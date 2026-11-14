@@ -5,82 +5,161 @@ import type {
   PersonalInfo,
   RetirementGoals,
 } from "@/types"
+import type { Expense, ExpenseGroup } from "@/types/expenses"
 import { isInvestmentType } from "@/types"
+import { sanitizePlan } from "@/lib/store/calculator-store"
+import { sanitizeExpenses } from "@/lib/store/expenses-store"
 
-const PLAN_VERSION = 1
+// v1: plan only. v2: plan + expenses. With no server copy this file is the user's
+// ONLY backup, so it must cover everything they entered. v1 files still import.
+export const PLAN_VERSION = 2
+const SUPPORTED_VERSIONS = [1, 2]
+
+/** Largest backup we will even try to parse — a real one is a few KB. */
+const MAX_BACKUP_BYTES = 5 * 1024 * 1024
+
+export const LAST_BACKUP_KEY = "rc-last-backup-at"
+
+export interface PlanData {
+  personalInfo: PersonalInfo
+  retirementGoals: RetirementGoals
+  assumptions: MarketAssumptions
+  drawdownConfig: DrawdownConfig
+  displayMode: "nominal" | "real"
+  accounts: Account[]
+}
+
+export interface ExpensesData {
+  groups: ExpenseGroup[]
+  expenses: Expense[]
+  monthlyIncome: number
+}
 
 export interface PlanExport {
   version: number
   exportedAt: string
-  plan: {
-    personalInfo: PersonalInfo
-    retirementGoals: RetirementGoals
-    assumptions: MarketAssumptions
-    drawdownConfig: DrawdownConfig
-    displayMode: "nominal" | "real"
-    accounts: Account[]
-  }
+  plan: PlanData
+  /** Absent in v1 files. */
+  expenses?: ExpensesData
 }
 
-export function exportPlan(
-  personalInfo: PersonalInfo,
-  retirementGoals: RetirementGoals,
-  assumptions: MarketAssumptions,
-  drawdownConfig: DrawdownConfig,
-  displayMode: "nominal" | "real",
-  accounts: Account[],
-): void {
-  const payload: PlanExport = {
-    version: PLAN_VERSION,
-    exportedAt: new Date().toISOString(),
-    plan: { personalInfo, retirementGoals, assumptions, drawdownConfig, displayMode, accounts },
+/** Pure: assembles the backup document. */
+export function buildBackup(plan: PlanData, expenses: ExpensesData, now = new Date()): PlanExport {
+  return { version: PLAN_VERSION, exportedAt: now.toISOString(), plan, expenses }
+}
+
+/**
+ * Pure: parses and SANITISES backup text. Throws a user-facing Error on bad input.
+ * Imported numbers go through the same clamps as persisted data (sanitizePlan /
+ * sanitizeExpenses) — a hand-edited file must not be able to smuggle in values the
+ * input forms would reject.
+ */
+export function parseBackupText(text: string): PlanExport {
+  if (text.length > MAX_BACKUP_BYTES) throw new Error("That file is too large to be a plan backup.")
+  let raw: unknown
+  try {
+    raw = JSON.parse(text)
+  } catch {
+    throw new Error("Could not parse file — make sure it's a valid JSON plan.")
   }
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" })
+  const doc = raw as Partial<PlanExport> | null
+  if (!doc?.version || !doc?.plan) {
+    throw new Error("Invalid plan file — missing version or plan data.")
+  }
+  if (!SUPPORTED_VERSIONS.includes(doc.version)) {
+    throw new Error(`Unsupported plan version ${doc.version}.`)
+  }
+  const plan = doc.plan as Partial<PlanData>
+  if (
+    !plan.personalInfo ||
+    !plan.retirementGoals ||
+    !plan.assumptions ||
+    !plan.drawdownConfig ||
+    !Array.isArray(plan.accounts)
+  ) {
+    throw new Error("Plan file is missing required fields.")
+  }
+
+  // investmentType is optional (older files lack it); an unrecognised value is
+  // dropped so the account imports as untyped rather than carrying a bad string
+  const accounts = plan.accounts.map((acc: Account) =>
+    acc.investmentType === undefined || isInvestmentType(acc.investmentType)
+      ? acc
+      : { ...acc, investmentType: undefined },
+  )
+  const cleaned = sanitizePlan({ ...plan, accounts } as PlanData)
+
+  const result: PlanExport = {
+    version: doc.version,
+    exportedAt: doc.exportedAt ?? new Date().toISOString(),
+    plan: { ...cleaned, displayMode: plan.displayMode === "real" ? "real" : "nominal" },
+  }
+
+  if (doc.version >= 2) {
+    const exp = doc.expenses
+    if (!exp || !Array.isArray(exp.groups) || !Array.isArray(exp.expenses)) {
+      throw new Error("Backup is missing its expenses section.")
+    }
+    result.expenses = sanitizeExpenses({
+      groups: exp.groups,
+      expenses: exp.expenses,
+      monthlyIncome: exp.monthlyIncome,
+    }) as ExpensesData
+  }
+  return result
+}
+
+function download(filename: string, json: string): void {
+  const blob = new Blob([json], { type: "application/json" })
   const url = URL.createObjectURL(blob)
   const a = document.createElement("a")
   a.href = url
-  a.download = `retirement-plan-${new Date().toISOString().split("T")[0]}.json`
+  a.download = filename
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
 }
 
+/** Downloads a full backup (plan + expenses) and records when, for the backup nudge. */
+export function exportPlan(plan: PlanData, expenses: ExpensesData): void {
+  const now = new Date()
+  const payload = buildBackup(plan, expenses, now)
+  download(
+    `retirement-plan-${now.toISOString().split("T")[0]}.json`,
+    JSON.stringify(payload, null, 2),
+  )
+  try {
+    window.localStorage.setItem(LAST_BACKUP_KEY, now.toISOString())
+  } catch {
+    // Non-essential — the nudge just keeps showing.
+  }
+}
+
+export function readLastBackupAt(): Date | null {
+  try {
+    const value = window.localStorage.getItem(LAST_BACKUP_KEY)
+    if (!value) return null
+    const date = new Date(value)
+    return Number.isNaN(date.getTime()) ? null : date
+  } catch {
+    return null
+  }
+}
+
 export function parsePlanFile(file: File): Promise<PlanExport> {
   return new Promise((resolve, reject) => {
+    if (file.size > MAX_BACKUP_BYTES) {
+      reject(new Error("That file is too large to be a plan backup."))
+      return
+    }
     const reader = new FileReader()
     reader.onload = (e) => {
       try {
-        const raw = JSON.parse(e.target?.result as string)
-        if (!raw?.version || !raw?.plan) {
-          reject(new Error("Invalid plan file — missing version or plan data."))
-          return
-        }
-        if (raw.version !== PLAN_VERSION) {
-          reject(new Error(`Unsupported plan version ${raw.version}.`))
-          return
-        }
-        const { plan } = raw as PlanExport
-        if (
-          !plan.personalInfo ||
-          !plan.retirementGoals ||
-          !plan.assumptions ||
-          !plan.drawdownConfig ||
-          !Array.isArray(plan.accounts)
-        ) {
-          reject(new Error("Plan file is missing required fields."))
-          return
-        }
-        // investmentType is optional (older files lack it); an unrecognised value is
-        // dropped so the account imports as untyped rather than carrying a bad string
-        const accounts = plan.accounts.map((acc: Account) =>
-          acc.investmentType === undefined || isInvestmentType(acc.investmentType)
-            ? acc
-            : { ...acc, investmentType: undefined },
-        )
-        resolve({ ...(raw as PlanExport), plan: { ...plan, accounts } })
-      } catch {
-        reject(new Error("Could not parse file — make sure it's a valid JSON plan."))
+        const result = e.target?.result
+        resolve(parseBackupText(typeof result === "string" ? result : ""))
+      } catch (error) {
+        reject(error)
       }
     }
     reader.onerror = () => reject(new Error("Failed to read file."))
