@@ -59,3 +59,50 @@ describe("clearAllLocalData", () => {
     expect(localStorage.getItem(CALCULATOR_STORAGE_KEY)).toBeNull()
   })
 })
+
+describe("scoped and legacy keys", () => {
+  beforeEach(() => localStorage.clear())
+
+  it("removes the scoped variants account-era builds wrote, and the pre-rename key", () => {
+    for (const key of [
+      "financial-planner-storage:guest",
+      "expenses-store-v2:user:abc123",
+      "retirement-calculator-storage:guest",
+      "retirement-calculator-storage",
+    ]) {
+      localStorage.setItem(key, "x")
+    }
+    removeLocalDataKeys(localStorage)
+    expect(localStorage.length).toBe(0)
+  })
+
+  it("does not touch keys that merely start with the same text, or the theme", () => {
+    localStorage.setItem("financial-planner-storage-notes", "keep")
+    localStorage.setItem("expenses-store-v2-archive", "keep")
+    localStorage.setItem("theme", "dark")
+    removeLocalDataKeys(localStorage)
+    expect(localStorage.getItem("financial-planner-storage-notes")).toBe("keep")
+    expect(localStorage.getItem("expenses-store-v2-archive")).toBe("keep")
+    expect(localStorage.getItem("theme")).toBe("dark")
+  })
+})
+
+describe("clearAllLocalData when browser storage is blocked", () => {
+  it("still resets the in-memory plan, and does not throw", async () => {
+    await useCalculatorStore.persist.rehydrate()
+    useCalculatorStore.getState().setPersonalInfo({ currentAge: 62 })
+    const original = Object.getOwnPropertyDescriptor(window, "localStorage")
+    Object.defineProperty(window, "localStorage", {
+      configurable: true,
+      get() {
+        throw new DOMException("blocked", "SecurityError")
+      },
+    })
+    try {
+      expect(clearAllLocalData()).toEqual([])
+      expect(useCalculatorStore.getState().personalInfo.currentAge).not.toBe(62)
+    } finally {
+      if (original) Object.defineProperty(window, "localStorage", original)
+    }
+  })
+})

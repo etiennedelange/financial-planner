@@ -340,3 +340,53 @@ describe("backup bookkeeping", () => {
     expect(readLastBackupAt()).toBeNull()
   })
 })
+
+describe("runtime validation of backup records", () => {
+  const withAccounts = (list: unknown[]) =>
+    JSON.stringify({ version: 2, plan: { ...plan, accounts: list }, expenses: expensesData })
+
+  it("rejects a null account with a readable message, not a TypeError", () => {
+    expect(() => parseBackupText(withAccounts([null]))).toThrow(/invalid account record/)
+  })
+
+  it("rejects an account of an unknown type rather than importing it", () => {
+    expect(() =>
+      parseBackupText(withAccounts([{ ...accounts[0], type: "crypto_wallet" }])),
+    ).toThrow(/invalid account record/)
+  })
+
+  it("rejects a non-numeric balance", () => {
+    expect(() =>
+      parseBackupText(withAccounts([{ ...accounts[0], currentBalance: "lots" }])),
+    ).toThrow(/invalid account record/)
+  })
+
+  it("defaults a missing provider to an empty string", () => {
+    const { provider: _provider, ...noProvider } = accounts[0]
+    const parsed = parseBackupText(withAccounts([noProvider]))
+    expect(parsed.plan.accounts[0].provider).toBe("")
+  })
+
+  it("still imports numeric extremes (the clamps, not the schema, bound them)", () => {
+    const parsed = parseBackupText(withAccounts([{ ...accounts[0], currentBalance: 5e15 }]))
+    expect(parsed.plan.accounts[0].currentBalance).toBeLessThanOrEqual(1e12)
+  })
+
+  it("rejects a malformed expense record", () => {
+    const text = JSON.stringify({
+      version: 2,
+      plan,
+      expenses: { ...expensesData, expenses: [null] },
+    })
+    expect(() => parseBackupText(text)).toThrow(/invalid expense or group record/)
+  })
+
+  it("rejects a malformed group record", () => {
+    const text = JSON.stringify({
+      version: 2,
+      plan,
+      expenses: { ...expensesData, groups: [{ id: "g", name: 1 }] },
+    })
+    expect(() => parseBackupText(text)).toThrow(/invalid expense or group record/)
+  })
+})

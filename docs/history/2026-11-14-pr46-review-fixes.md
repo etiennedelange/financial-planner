@@ -33,12 +33,26 @@ Three open review threads on PR #46 (browser-only storage) were valid and are fi
 - `lib/store/persist-gate.ts`: reports failures and successes under the storage key being written.
 - Tests: `lib/store/storage-health.test.ts` (other keys' failures survive, worst state wins) and new `lib/store/persist-gate.test.ts` reproducing the review scenario with a fake `localStorage`.
 
+## 4. Clear-all missed scoped keys and could not reset in memory when storage was blocked
+
+`clearAllLocalData` removed only the three exact keys, so `financial-planner-storage:guest`, `expenses-store-v2:user:<id>` and the pre-rename `retirement-calculator-storage` (with its scoped variants) survived a "clear all" that reported success. Its `storage` parameter defaulted to `window.localStorage`, which is evaluated before the body runs, so blocked storage threw before the in-memory reset.
+
+- `lib/store/clear-local-data.ts`: keys match a prefix plus its scoped variants (`<prefix>` or `<prefix>:...`), so a key that merely starts with the same text is kept. Storage is read inside the function through `browserStorage()`, and the in-memory reset runs first regardless.
+- Tests: scoped and legacy keys removed, look-alike keys and the theme kept, and clear-all resets the plan with storage blocked.
+
+## 5. Backup import did not validate its records
+
+`parseBackupText` cast accounts straight through: an unknown `type` entered the store, and a `null` account crashed with a raw `TypeError`. Expense and group records had the same gap.
+
+- `lib/utils/plan-io.ts`: zod schemas check field presence and types for every account, group and expense. A bad record fails with a readable message. Numeric ranges are still left to `sanitizePlan` / `sanitizeExpenses`, so extreme but finite values import clamped, as before. An unrecognised `investmentType` still imports as untyped.
+- Tests: null account, unknown type, non-numeric balance, malformed expense and group, missing provider defaults to `""`, and numeric extremes still clamp.
+
 ## Test-suite hygiene
 
 `components/pages/expenses-page.groups.test.tsx` produced unhandled `AbortError`s from `@animateicons`, which calls `Element.animate` directly, outside Motion's `skipAnimations`. The file now swaps `Element.prototype.animate` for an inert animation for its duration and restores the original descriptor afterwards. The full suite runs without unhandled errors.
 
 ## Verification
 
-- `npm run test`: 90 files, 1511 tests passing, no unhandled errors.
+- `npm run test`: 90 files, 1522 tests passing, no unhandled errors.
 - `npm run typecheck`: clean.
 - `vp check` on all changed files: formatted, no lint warnings.

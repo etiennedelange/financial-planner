@@ -6,8 +6,20 @@ import {
 } from "@/lib/store/expenses-store"
 import { LAST_BACKUP_KEY } from "@/lib/utils/plan-io"
 
-/** Exact keys that hold user data. The theme preference is deliberately kept. */
-const LOCAL_DATA_KEYS = [CALCULATOR_STORAGE_KEY, EXPENSES_STORAGE_KEY, LAST_BACKUP_KEY] as const
+/**
+ * Prefixes of keys that hold user data. A prefix matches the key itself and its scoped
+ * variants (`<prefix>:guest`, `<prefix>:user:<id>`) that account-era builds wrote; those
+ * variants hold the same financial data, so "clear all" must remove them too. The
+ * pre-rename calculator key is listed for the same reason.
+ * The theme preference is deliberately not listed.
+ */
+const LEGACY_CALCULATOR_KEY = "retirement-calculator-storage"
+const USER_DATA_PREFIXES = [CALCULATOR_STORAGE_KEY, EXPENSES_STORAGE_KEY, LEGACY_CALCULATOR_KEY]
+
+function isUserDataKey(key: string): boolean {
+  if (key === LAST_BACKUP_KEY) return true
+  return USER_DATA_PREFIXES.some((prefix) => key === prefix || key.startsWith(`${prefix}:`))
+}
 
 /** Removes every user-data key from `storage`. Returns the keys it removed. */
 export function removeLocalDataKeys(storage: Storage): string[] {
@@ -18,11 +30,24 @@ export function removeLocalDataKeys(storage: Storage): string[] {
     if (key !== null) all.push(key)
   }
   for (const key of all) {
-    if (!(LOCAL_DATA_KEYS as readonly string[]).includes(key)) continue
+    if (!isUserDataKey(key)) continue
     storage.removeItem(key)
     removed.push(key)
   }
   return removed
+}
+
+/**
+ * The browser's localStorage, or null when access throws (blocked site data). Read at
+ * call time, never as a default parameter: a default that throws would stop the
+ * in-memory reset below from ever running.
+ */
+function browserStorage(): Storage | null {
+  try {
+    return window.localStorage
+  } catch {
+    return null
+  }
 }
 
 /**
@@ -37,8 +62,13 @@ export function clearAllLocalData(storage?: Storage): string[] {
   useCalculatorStore.getState().resetToDefaults()
   useExpensesStore.getState().clearAll()
   useExpensesStore.setState({ monthlyIncome: DEFAULT_MONTHLY_INCOME })
+  const target = storage ?? browserStorage()
+  // With storage unreadable nothing could have been saved, so there is nothing to remove.
+  // The in-memory reset above has already happened; a failed removal must not throw
+  // out of the Settings click handler either.
+  if (!target) return []
   try {
-    return removeLocalDataKeys(storage ?? window.localStorage)
+    return removeLocalDataKeys(target)
   } catch {
     return []
   }
