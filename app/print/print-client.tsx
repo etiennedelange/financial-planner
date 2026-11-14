@@ -2,7 +2,7 @@
 
 import { calculateProjection } from "@/lib/calculations/projection-engine"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
-import { useAuth } from "@/components/supabase-provider"
+import { useStoresHydrated } from "@/components/local-data-provider"
 import { formatCurrency } from "@/lib/utils/currency"
 import { yearsFromNowAtRowEnd, yearsFromNowAtRowStart } from "@/lib/utils/chart-series"
 import type { ProjectionResult } from "@/types"
@@ -12,7 +12,6 @@ import {
   describeTaxReliefAssumption,
 } from "@/lib/calculations/utils/tax-relief"
 import { useEffect, useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
 import { useShallow } from "zustand/react/shallow"
 
 function pct(n: number) {
@@ -20,13 +19,11 @@ function pct(n: number) {
 }
 
 export function PrintClient() {
-  const { isLoaded: authLoaded, phase, error } = useAuth()
-  const router = useRouter()
+  const hydrated = useStoresHydrated()
 
   // /print is a standalone route outside the /calculator layout. The root
-  // SupabaseProvider is the single bootstrap owner: it hydrates the stores
-  // (guest scope, then user scope once identity resolves) and syncs server
-  // data before `isLoaded` flips true — no store rehydrate() is called here.
+  // LocalDataProvider hydrates both stores from localStorage before `hydrated`
+  // flips true — no store rehydrate() is called here.
   const storeState = useCalculatorStore(
     useShallow((s) => ({
       accounts: s.accounts,
@@ -66,39 +63,10 @@ export function PrintClient() {
     return () => clearTimeout(t)
   }, [projection])
 
-  if (!authLoaded) {
-    // Distinct failure states so a broken bootstrap cannot silently hang the
-    // print route behind an infinite spinner.
-    if (phase === "error") {
-      return (
-        <div className="flex min-h-screen flex-col items-center justify-center gap-2 text-muted-foreground">
-          <p>Bootstrap failed and your plan could not be loaded.</p>
-          <p className="text-sm">{error?.message ?? "Unknown error"}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-2 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
-          >
-            Reload
-          </button>
-        </div>
-      )
-    }
-    if (phase === "mfa-required") {
-      return (
-        <div className="flex min-h-screen flex-col items-center justify-center gap-2 text-muted-foreground">
-          <p>Two-factor verification is required before this plan can be printed.</p>
-          <button
-            onClick={() => router.push("/auth/mfa")}
-            className="mt-2 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
-          >
-            Verify now
-          </button>
-        </div>
-      )
-    }
+  if (!hydrated) {
     return (
       // data-bootstrap-phase mirrors the app-shell signal so e2e journeys can
-      // wait for the /print bootstrap without a blind sleep.
+      // wait for hydration without a blind sleep.
       <div
         data-bootstrap-phase="loading"
         className="flex min-h-screen items-center justify-center text-muted-foreground"

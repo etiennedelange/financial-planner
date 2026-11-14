@@ -55,12 +55,6 @@ export PNPM_HOME="$HOME/.local/share/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 echo "    pnpm $(pnpm --version 2>/dev/null || echo 'installed — reload shell to use')"
 
-# ─── Supabase CLI ──────────────────────────────────────────────────────────────
-echo "--> Installing Supabase CLI..."
-# Install via npm globally so `supabase` is available in PATH
-npm install -g supabase --prefer-offline 2>/dev/null || npm install -g supabase
-echo "    supabase $(supabase --version 2>/dev/null || echo 'installed')"
-
 # ─── Project dependencies ──────────────────────────────────────────────────────
 if [ -f "package.json" ]; then
   echo "--> Installing project dependencies..."
@@ -124,4 +118,3 @@ sudo chown node:node /home/node/.config/opencode /home/node/.local/share/opencod
 echo ""
 echo "==> Post-create complete!"
 echo "    Run 'pnpm dev' to start the dev server."
-echo "    Run 'pnpm supabase start' to start the local Supabase stack."

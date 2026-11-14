@@ -12,7 +12,7 @@ import {
   Trash2Icon,
   XIcon,
 } from "@animateicons/react/lucide"
-import { Button } from "@/components/ui/button"
+import { Button, type ButtonProps } from "@/components/ui/button"
 import { PageCard } from "@/components/ui/page-card"
 import { Input } from "@/components/ui/input"
 import { NO_AUTOFILL_PROPS } from "@/lib/utils/no-autofill"
@@ -818,12 +818,16 @@ function SummaryPanel({
 
 // ─── page-level action buttons ────────────────────────────────────────────────
 
-function ClearAllTrigger() {
+// Rendered inside <AlertDialogTrigger asChild>, which hands this element its onClick, ref and
+// aria/data-state props. They must reach the Button or the dialog never opens (it did not,
+// until this forwarded `props`; found by expenses-page.groups.test.tsx).
+function ClearAllTrigger(props: ButtonProps) {
   const { iconProps, controlProps } = useAnimatedIcon()
 
   return (
     <Button
       {...controlProps}
+      {...props}
       size="sm"
       variant="ghost"
       className="text-muted-foreground hover:text-destructive"

@@ -9,7 +9,7 @@
 
 ## Project
 
-SA retirement planning calculator — Monte Carlo simulations, multi-account portfolio, SA tax treatment. Stack: Next.js, TypeScript, shadcn/ui, Supabase.
+SA retirement planning calculator — Monte Carlo simulations, multi-account portfolio, SA tax treatment. Stack: Next.js, TypeScript, shadcn/ui. **No accounts, no database, no outbound requests**: all data is in the browser (localStorage). "Explain my plan" is copy-a-prompt — the app makes no AI calls.
 
 ## Dev Commands
 
@@ -34,7 +34,7 @@ npm run docs:check       # validate docs/ (frontmatter title+description, doc li
 container reload, so the audit works offline and can never drift versions.
 
 **Run `npm run shadscan` before committing** (or `shadscan:gate` for a
-hard-fail at <90/100). Baseline: 90/100 (A). Known non-passing findings
+hard-fail at <90/100). Baseline: 91/100 (A). Known non-passing findings
 (the only three that reduce the score; the "Worth checking" items do not):
 - `mobile-nav-present` — waived (mobile bottom tab bar is the pattern); see
   [docs/history/2026-08-16-shadscan-accessibility-audit.md](docs/history/2026-08-16-shadscan-accessibility-audit.md).
@@ -94,12 +94,13 @@ describe('functionName', () => {
 ## App Structure (post-redesign)
 
 - Layout: fixed left sidebar (220px) + sticky top bar + scrollable page content area
-- Routes: `app/calculator/{overview,accounts,plan,expenses,projections,risk,charts,settings,debug}/page.tsx` (debug is reached from ⌘K and the account menu, not the sidebar)
+- Routes: `app/calculator/{overview,accounts,plan,expenses,projections,risk,charts,settings,debug}/page.tsx` (debug is reached from ⌘K, not the sidebar; there is no account menu any more)
 - **Monte Carlo lives only on Risk** (`components/pages/risk-page.tsx`): volatility inputs, success
   rate, fan chart, investment scenarios. The worker runs only on `/calculator/risk`
   (`lib/context/calculator-context.tsx`); every other page shows deterministic results
-- `lib/store/calculator-store.ts` — scenario state (per-scenario)
-- `lib/store/expenses-store.ts` — **global** (not scenario-tied); reflects real current spending
+- `lib/store/calculator-store.ts` — the single plan (persist v4, fixed key, no sync)
+- `lib/store/expenses-store.ts` — real current spending; persisted separately from the plan
+- `lib/ai/copy-prompt.ts` — builds the prompt the user copies into their own chat; the app never sends it anywhere
 
 ## Key Calculation Files
 
@@ -186,7 +187,9 @@ Design rules:
 - ❌ Don't omit `assumptions` from useMemo deps
 - ❌ Don't use local formatCurrency — import from `lib/utils/currency`
 - ❌ Don't hardcode colors (`bg-blue-500`) — use semantic tokens (`bg-primary`, `text-foreground`)
-- ❌ Don't tie expenses to a scenario — `expenses-store.ts` is intentionally global
+- ❌ Don't add accounts, a database, analytics, an AI call, or ANY outbound request — the product promise is that data never leaves the browser. Decided 2026-11-14; see `docs/history/2026-11-14-remove-accounts-local-first.md`. `lib/security/no-outbound-requests.test.ts` enforces it and the CSP is `connect-src 'self'`; widening either is a product decision, not a refactor
+- ❌ Don't put plan data in a URL (e.g. a `?q=` prefill on a chat link) — links to chat apps are plain URLs; the user pastes the copied prompt
+- ❌ Don't import plan data from a file without `sanitizePlan` / `sanitizeExpenses` (shared with the persist `migrate`)
 - ❌ Don't show Monte Carlo results (success rate, percentiles) outside the Risk page — Overview
   links to it instead. Decided 2026-10-31; see `docs/history/2026-10-31-risk-page.md`
 - ❌ Don't run expensive work (Monte Carlo, many projections) during render — not even in a
@@ -200,8 +203,6 @@ Design rules:
   `docs/history/2026-11-12-single-worker-entry.md`
 - ❌ Don't write raw `<p className="text-[10px] font-mono uppercase...">` — use `<SectionLabel>` or `<PageCard>`
 - ❌ Don't use `Card + CardHeader + CardTitle` for section cards — `CardTitle` renders `text-2xl font-semibold` which violates the design system
-- ⚠️ `calculator-store.ts` branch coverage is ~82% (2026-11-12) and `expenses-store.ts` ~72-76%,
-  both below the 85% threshold (they DO have tests; the old "zero tests" note here was stale)
 
 ## Theming
 

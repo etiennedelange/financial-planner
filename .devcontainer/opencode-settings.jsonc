@@ -20,16 +20,6 @@
       "type": "local",
       "command": ["npx", "shadcn@latest", "mcp"],
     },
-    "supabase": {
-      "type": "remote",
-      "url": "https://mcp.supabase.com/mcp",
-      "enabled": true,
-    },
-    "supabase-local": {
-      "type": "remote",
-      "url": "http://127.0.0.1:54321/mcp",
-      "enabled": true,
-    },
     "filesystem": {
       "type": "local",
       "command": [

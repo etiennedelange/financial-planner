@@ -7,6 +7,8 @@ date: 2026-08-01
 
 # AI Plan Narrative Implementation Plan
 
+> **Superseded 2026-11-14.** The server-side `/api/plan-narrative` route, the Vercel AI Gateway and the model picker were removed; the app makes no AI calls. "Explain my plan" now builds a prompt the user copies into their own chat app. See [the removal write-up](../../history/2026-11-14-remove-accounts-local-first.md).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add an "Explain my plan" button on `/calculator/overview` that streams a plain-English narrative of the user's projection and success probability, framed as general education (never personalized directives), via a new API route backed by the Vercel AI Gateway.

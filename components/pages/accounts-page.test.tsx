@@ -53,7 +53,7 @@ describe("AccountsPage delete", () => {
   })
   beforeEach(async () => {
     vi.mocked(toast).mockClear()
-    useCalculatorStore.setState({ accounts: [ra, tfsa], identity: { kind: "guest" } })
+    useCalculatorStore.setState({ accounts: [ra, tfsa] })
     container = document.createElement("div")
     document.body.appendChild(container)
     root = createRoot(container)

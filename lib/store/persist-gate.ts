@@ -1,23 +1,20 @@
 import { createJSONStorage, type PersistStorage } from "zustand/middleware"
-import { keyForActiveScope, registerGateReCloser } from "./persistence-scope"
 
-// Zustand's persist middleware writes to storage on EVERY set() — including
-// auth-driven calls such as setSessionId() that SupabaseProvider fires while
-// the layout's manual rehydrate() (skipHydration: true) is still reading.
-// Those writes persist the store's pre-hydration DEFAULT state and clobber the
-// user's saved data before rehydrate ever reads it back, so a reload wipes the
-// plan. This wrapper drops all writes until the first rehydrate has settled
+// Zustand's persist middleware writes to storage on EVERY set(). Both stores use
+// `skipHydration: true` and are rehydrated manually by <StoreHydrator>, so any
+// set() that lands BEFORE that first rehydrate settles would persist the store's
+// pre-hydration DEFAULT state and clobber the user's saved data before it is ever
+// read back. This wrapper drops every write until the first rehydrate has settled
 // (released via onRehydrateStorage in each store), which makes the clobbering
 // structurally impossible rather than timing-dependent.
 //
-// Scoping: the wrapper computes the actual storage key from the module-level
-// active scope (persistence-scope.ts) + the base name zustand passes in. When
-// the coordinator switches scope (setScope) it re-closes the gate on every
-// registered instance, so a write in the window between setScope(user) and the
-// user-scoped rehydrate settling cannot leak guest state into the user's key.
+// Failures (quota exceeded, storage blocked) are reported through the storage-health
+// channel, keyed by storage key, so a later successful save of a DIFFERENT store
+// cannot hide that this store's latest save never reached storage.
+import { reportStorageFailure, reportStorageSuccess } from "@/lib/store/storage-health"
+
 export type GatedPersistStorage<S> = PersistStorage<S> & {
   release: () => void
-  destroy: () => void
 }
 
 export function createGatedPersistStorage<S>(): GatedPersistStorage<S> | undefined {
@@ -25,26 +22,27 @@ export function createGatedPersistStorage<S>(): GatedPersistStorage<S> | undefin
     let released = false
     const inner = createJSONStorage<S>(() => window.localStorage)
     if (!inner) return undefined
-    const unregister = registerGateReCloser(() => {
-      released = false
-    })
     return {
-      getItem: (name) => inner.getItem(keyForActiveScope(name)),
+      getItem: (name) => inner.getItem(name),
       setItem: (name, value) => {
         if (!released) return undefined
-        return inner.setItem(keyForActiveScope(name), value)
+        try {
+          const result = inner.setItem(name, value)
+          reportStorageSuccess(name)
+          return result
+        } catch (error) {
+          reportStorageFailure(error, name)
+          return undefined
+        }
       },
-      removeItem: (name) => inner.removeItem(keyForActiveScope(name)),
+      removeItem: (name) => inner.removeItem(name),
       release: () => {
         released = true
       },
-      // The registry holds a reference to this instance's closure; drop it so a
-      // re-created store (tests, HMR) cannot re-gate a dead instance.
-      destroy: unregister,
     }
   } catch {
-    // No window.localStorage (e.g. SSR) — mirror zustand's own behaviour of
-    // degrading to a non-persistent store.
+    // No window.localStorage (SSR, or access throws when storage is blocked) —
+    // mirror zustand's own behaviour of degrading to a non-persistent store.
     return undefined
   }
 }

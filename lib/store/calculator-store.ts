@@ -1,16 +1,6 @@
 "use client"
 
 import { SA_DEFAULTS, SA_DEFAULTS_DISPLAY } from "@/lib/constants/defaults"
-import { cloneAccounts, deleteAccount, fetchAccounts, upsertAccount } from "@/lib/supabase/accounts"
-import {
-  createScenario,
-  deleteScenario as deleteScenarioFromDb,
-  fetchScenario,
-  listScenarios,
-  renameScenario as renameScenarioInDb,
-  updateScenario,
-  type ScenarioMeta,
-} from "@/lib/supabase/scenarios"
 import type {
   Account,
   DrawdownConfig,
@@ -21,25 +11,14 @@ import type {
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import { createGatedPersistStorage } from "@/lib/store/persist-gate"
-import {
-  evictUserScopedKeys,
-  registerStorageBaseName,
-  setScope,
-  type PersistenceScope,
-} from "@/lib/store/persistence-scope"
 import { clampMonetaryAmount } from "@/lib/utils/monetary"
 import { sanitizeAssumptionRate } from "@/lib/utils/assumption-rates"
 
-// Sign-out must be able to evict this store's user-scoped keys.
-registerStorageBaseName("financial-planner-storage")
+export const CALCULATOR_STORAGE_KEY = "financial-planner-storage"
 
 // See persist-gate.ts: writes are held back until the first rehydrate() settles,
-// so auth-driven set() calls that race the layout's manual rehydrate can never
-// clobber the user's persisted plan with the pre-hydration defaults.
-// NOTE: `identity` is deliberately NOT persisted — the storage key encodes the
-// scope (see persistence-scope.ts), so the payload needs no owner marker.
+// so an early set() can never clobber the user's saved plan with the defaults.
 type PersistedCalculatorState = {
-  activeScenarioId: string | null
   personalInfo: PersonalInfo
   assumptions: MarketAssumptions
   retirementGoals: RetirementGoals
@@ -49,49 +28,14 @@ type PersistedCalculatorState = {
 }
 const storage = createGatedPersistStorage<PersistedCalculatorState>()
 
-let scenarioSyncTimer: ReturnType<typeof setTimeout> | null = null
-// Per-(userId, generation) in-flight sync map: a re-run for the same identity
-// does not duplicate fetches; a newer generation supersedes an older one.
-const dbSyncInFlight = new Map<string, Promise<void>>()
-let latestGeneration = 0
-// Bumped by every switchScenario call; only the latest call may commit its result
-let latestSwitchToken = 0
-
-function scheduleScenarioSync() {
-  if (scenarioSyncTimer) clearTimeout(scenarioSyncTimer)
-  // Capture the owner + scenario at schedule time; re-check both at fire time
-  // so a debounced write can never land under a different user or scenario.
-  const { identity, activeScenarioId } = useCalculatorStore.getState()
-  const userId = identity.kind === "user" ? identity.userId : null
-  scenarioSyncTimer = setTimeout(() => {
-    scenarioSyncTimer = null
-    const current = useCalculatorStore.getState()
-    const currentUserId = current.identity.kind === "user" ? current.identity.userId : null
-    if (currentUserId !== userId || current.activeScenarioId !== activeScenarioId) return
-    if (!activeScenarioId) return
-    updateScenario(activeScenarioId, {
-      personalInfo: current.personalInfo,
-      retirementGoals: current.retirementGoals,
-      assumptions: current.assumptions,
-      drawdownConfig: current.drawdownConfig,
-      displayMode: current.displayMode,
-    }).catch(console.error)
-  }, 800)
-}
-
 export interface CalculatorState {
   accounts: Account[]
   personalInfo: PersonalInfo
   retirementGoals: RetirementGoals
   assumptions: MarketAssumptions
   drawdownConfig: DrawdownConfig
-  identity: PersistenceScope
-  activeScenarioId: string | null
-  scenarioList: ScenarioMeta[]
   displayMode: "nominal" | "real"
 
-  setIdentity: (scope: PersistenceScope) => void
-  syncFromDb: (userId: string, generation?: number) => Promise<void>
   addAccount: (account: Account) => void
   seedAccounts: (accounts: Omit<Account, "id">[]) => void
   updateAccount: (id: string, account: Partial<Account>) => void
@@ -110,10 +54,6 @@ export interface CalculatorState {
     displayMode: "nominal" | "real"
     accounts: Account[]
   }) => void
-  switchScenario: (id: string) => Promise<void>
-  createNewScenario: (name: string) => Promise<void>
-  renameScenario: (id: string, name: string) => Promise<void>
-  deleteScenario: (id: string) => Promise<void>
 }
 
 const defaultSettings = {
@@ -151,11 +91,75 @@ const defaultSettings = {
   displayMode: "nominal" as const,
 }
 
+type PlanShape = Pick<
+  CalculatorState,
+  "personalInfo" | "retirementGoals" | "assumptions" | "drawdownConfig" | "accounts"
+> &
+  Partial<Pick<CalculatorState, "displayMode">>
+
+/**
+ * Clamps/sanitises a plan loaded from anywhere untrusted — an older persisted
+ * payload (migrate) or an imported backup file (plan-io). Idempotent. Exported so
+ * both callers share ONE implementation instead of drifting apart.
+ */
+export function sanitizePlan<T extends Partial<PlanShape>>(s: T) {
+  const defaults = defaultSettings.assumptions
+  const assumptions = s.assumptions ?? defaults
+  return {
+    ...s,
+    displayMode: s.displayMode === "real" ? ("real" as const) : ("nominal" as const),
+    assumptions: {
+      ...assumptions,
+      equityReturn: sanitizeAssumptionRate(
+        assumptions.equityReturn,
+        "equityReturn",
+        defaults.equityReturn,
+      ),
+      bondReturn: sanitizeAssumptionRate(assumptions.bondReturn, "bondReturn", defaults.bondReturn),
+      cashReturn: sanitizeAssumptionRate(assumptions.cashReturn, "cashReturn", defaults.cashReturn),
+      inflationRate: sanitizeAssumptionRate(
+        assumptions.inflationRate,
+        "inflationRate",
+        defaults.inflationRate,
+      ),
+    },
+    personalInfo: {
+      ...s.personalInfo,
+      annualIncome: clampMonetaryAmount(s.personalInfo?.annualIncome ?? 0),
+    },
+    retirementGoals: {
+      ...s.retirementGoals,
+      inflationRate: sanitizeAssumptionRate(
+        s.retirementGoals?.inflationRate,
+        "inflationRate",
+        defaultSettings.retirementGoals.inflationRate,
+      ),
+      desiredMonthlyIncome: clampMonetaryAmount(s.retirementGoals?.desiredMonthlyIncome ?? 0),
+      legacyAmount: clampMonetaryAmount(s.retirementGoals?.legacyAmount ?? 0),
+    },
+    drawdownConfig: {
+      ...s.drawdownConfig,
+      minimumWithdrawal: clampMonetaryAmount(s.drawdownConfig?.minimumWithdrawal ?? 0),
+      maximumWithdrawal: clampMonetaryAmount(s.drawdownConfig?.maximumWithdrawal ?? 0),
+      monthlyMedicalAid:
+        s.drawdownConfig?.monthlyMedicalAid == null
+          ? undefined
+          : clampMonetaryAmount(s.drawdownConfig.monthlyMedicalAid),
+    },
+    accounts: (s.accounts ?? []).map((a) => ({
+      ...a,
+      currentBalance: clampMonetaryAmount(a.currentBalance ?? 0),
+      monthlyContribution: clampMonetaryAmount(a.monthlyContribution ?? 0),
+      tfsaContributionsToDate:
+        a.tfsaContributionsToDate == null
+          ? undefined
+          : clampMonetaryAmount(a.tfsaContributionsToDate),
+    })),
+  }
+}
+
 const initialState = {
   accounts: [] as Account[],
-  identity: { kind: "guest" } as PersistenceScope,
-  activeScenarioId: null as string | null,
-  scenarioList: [] as ScenarioMeta[],
   ...defaultSettings,
 }
 
@@ -164,212 +168,36 @@ export const useCalculatorStore = create<CalculatorState>()(
     (set) => ({
       ...initialState,
 
-      setIdentity: (scope) => {
-        const prev = useCalculatorStore.getState().identity
-        set({ identity: scope })
-        // Sign-out transition: clear scenario metadata, cancel pending timers,
-        // switch persistence back to the guest scope, and evict the signed-out
-        // user's scoped keys so a shared device does not accumulate every past
-        // account's plan. Sign-in sets the user scope before loading server data
-        // (handled by the coordinator's hydrateUserScope), so only the guest
-        // transition needs the scope switch here.
-        if (scope.kind === "guest" && prev.kind === "user") {
-          if (scenarioSyncTimer) {
-            clearTimeout(scenarioSyncTimer)
-            scenarioSyncTimer = null
-          }
-          set({ activeScenarioId: null, scenarioList: [] })
-          setScope({ kind: "guest" })
-          evictUserScopedKeys(prev.userId)
-        }
-      },
+      addAccount: (account) => set((state) => ({ accounts: [...state.accounts, account] })),
 
-      // userId + generation are explicit: the coordinator passes the transition
-      // generation so a late response (a fetch already in flight when the
-      // transition was superseded) can be dropped at the store, not just by
-      // actor cancellation. The in-flight entry is registered BEFORE the async
-      // body runs so a synchronous early-return (guest identity) cannot leave a
-      // stale completed promise behind.
-      syncFromDb: (userId: string, generation = 0) => {
-        const key = `${userId}:${generation}`
-        const existing = dbSyncInFlight.get(key)
-        if (existing) return existing
+      seedAccounts: (accounts) =>
+        set({ accounts: accounts.map((account) => ({ ...account, id: crypto.randomUUID() })) }),
 
-        latestGeneration = Math.max(latestGeneration, generation)
-
-        const promise = Promise.resolve().then(async () => {
-          try {
-            // The requested user must still own the store — a guest or another
-            // user must never read under this identity.
-            const before = useCalculatorStore.getState()
-            if (before.identity.kind !== "user" || before.identity.userId !== userId) return
-
-            const scenarios = await listScenarios(userId)
-
-            // Stale check before committing: the same user must still own the
-            // store, and no newer generation may have superseded this one.
-            const current = useCalculatorStore.getState()
-            const currentUserId = current.identity.kind === "user" ? current.identity.userId : null
-            if (currentUserId !== userId || generation < latestGeneration) return
-
-            if (scenarios.length === 0) {
-              // Claiming is owned by claimLocalData(), called from SupabaseProvider on
-              // sign-in. syncFromDb must not create scenarios — two code paths creating
-              // "My Plan" is how duplicate plans appear.
-              set({ activeScenarioId: null, scenarioList: [] })
-              return
-            }
-
-            // Pick previously active scenario if still exists, else most recent
-            const targetId =
-              current.activeScenarioId && scenarios.find((s) => s.id === current.activeScenarioId)
-                ? current.activeScenarioId
-                : scenarios[0].id
-
-            // If the remembered scenario has no data, fall back to the most recent one and
-            // load ITS data, so the active id and the loaded plan always agree
-            const candidates =
-              targetId === scenarios[0].id ? [targetId] : [targetId, scenarios[0].id]
-            for (const candidate of candidates) {
-              const [data, accounts] = await Promise.all([
-                fetchScenario(candidate),
-                fetchAccounts(candidate),
-              ])
-              if (!data) continue
-              const latest = useCalculatorStore.getState()
-              const latestUserId = latest.identity.kind === "user" ? latest.identity.userId : null
-              if (latestUserId !== userId || generation < latestGeneration) return
-              set({ ...data, accounts, activeScenarioId: candidate, scenarioList: scenarios })
-              return
-            }
-            set({ accounts: [], activeScenarioId: scenarios[0].id, scenarioList: scenarios })
-          } finally {
-            dbSyncInFlight.delete(key)
-          }
-        })
-        dbSyncInFlight.set(key, promise)
-        return promise
-      },
-
-      addAccount: (account) => {
-        const { identity, activeScenarioId } = useCalculatorStore.getState()
-        const userId = identity.kind === "user" ? identity.userId : null
-        set((state) => ({ accounts: [...state.accounts, account] }))
-        // Re-check owner + scenario immediately before the request.
-        const current = useCalculatorStore.getState()
-        const currentUserId = current.identity.kind === "user" ? current.identity.userId : null
-        if (
-          activeScenarioId &&
-          currentUserId === userId &&
-          current.activeScenarioId === activeScenarioId
-        ) {
-          upsertAccount(account, activeScenarioId).catch(console.error)
-        }
-      },
-
-      seedAccounts: (accounts) => {
-        const seeded = accounts.map((account) => ({ ...account, id: crypto.randomUUID() }))
-        const {
-          identity,
-          activeScenarioId,
-          accounts: existingAccounts,
-        } = useCalculatorStore.getState()
-        const userId = identity.kind === "user" ? identity.userId : null
-
-        set({ accounts: seeded })
-
-        // Capture owner + scenario before scheduling; the async chain re-checks
-        // before any request so a sign-out mid-chain cannot delete/insert under
-        // a previous user's identity.
-        if (activeScenarioId) {
-          Promise.all(existingAccounts.map((account) => deleteAccount(account.id)))
-            .then(() => {
-              const current = useCalculatorStore.getState()
-              const currentUserId =
-                current.identity.kind === "user" ? current.identity.userId : null
-              if (currentUserId !== userId || current.activeScenarioId !== activeScenarioId)
-                return []
-              return Promise.all(seeded.map((account) => upsertAccount(account, activeScenarioId)))
-            })
-            .catch(console.error)
-        }
-      },
-
-      updateAccount: (id, updates) => {
-        const { identity, activeScenarioId } = useCalculatorStore.getState()
-        const userId = identity.kind === "user" ? identity.userId : null
+      updateAccount: (id, updates) =>
         set((state) => ({
           accounts: state.accounts.map((acc) => (acc.id === id ? { ...acc, ...updates } : acc)),
-        }))
-        const current = useCalculatorStore.getState()
-        const currentUserId = current.identity.kind === "user" ? current.identity.userId : null
-        if (
-          activeScenarioId &&
-          currentUserId === userId &&
-          current.activeScenarioId === activeScenarioId
-        ) {
-          const updated = current.accounts.find((a) => a.id === id)
-          if (updated) upsertAccount(updated, activeScenarioId).catch(console.error)
-        }
-      },
+        })),
 
-      removeAccount: (id) => {
-        const { identity } = useCalculatorStore.getState()
-        const userId = identity.kind === "user" ? identity.userId : null
-        set((state) => ({ accounts: state.accounts.filter((acc) => acc.id !== id) }))
-        // Only delete remotely while the account still belongs to the current user.
-        const current = useCalculatorStore.getState()
-        const currentUserId = current.identity.kind === "user" ? current.identity.userId : null
-        if (currentUserId === userId && userId != null) {
-          deleteAccount(id).catch(console.error)
-        }
-      },
+      removeAccount: (id) =>
+        set((state) => ({ accounts: state.accounts.filter((acc) => acc.id !== id) })),
 
-      setPersonalInfo: (info) => {
-        set((state) => ({ personalInfo: { ...state.personalInfo, ...info } }))
-        scheduleScenarioSync()
-      },
+      setPersonalInfo: (info) =>
+        set((state) => ({ personalInfo: { ...state.personalInfo, ...info } })),
 
-      setRetirementGoals: (goals) => {
-        set((state) => ({ retirementGoals: { ...state.retirementGoals, ...goals } }))
-        scheduleScenarioSync()
-      },
+      setRetirementGoals: (goals) =>
+        set((state) => ({ retirementGoals: { ...state.retirementGoals, ...goals } })),
 
-      setAssumptions: (assumptions) => {
-        set((state) => ({ assumptions: { ...state.assumptions, ...assumptions } }))
-        scheduleScenarioSync()
-      },
+      setAssumptions: (assumptions) =>
+        set((state) => ({ assumptions: { ...state.assumptions, ...assumptions } })),
 
-      setDrawdownConfig: (config) => {
-        set((state) => ({ drawdownConfig: { ...state.drawdownConfig, ...config } }))
-        scheduleScenarioSync()
-      },
+      setDrawdownConfig: (config) =>
+        set((state) => ({ drawdownConfig: { ...state.drawdownConfig, ...config } })),
 
-      setDisplayMode: (mode) => {
-        set({ displayMode: mode })
-        scheduleScenarioSync()
-      },
+      setDisplayMode: (mode) => set({ displayMode: mode }),
 
-      resetToDefaults: () => {
-        // Reset the PLAN, not who owns it: wiping identity / activeScenarioId (as
-        // `set(initialState)` did) silently turned a signed-in user into a guest, so every
-        // later edit stayed local until reload.
-        const { identity, activeScenarioId, scenarioList, accounts } = useCalculatorStore.getState()
-        const userId = identity.kind === "user" ? identity.userId : null
-        set({ ...initialState, identity, activeScenarioId, scenarioList })
-        const current = useCalculatorStore.getState()
-        const currentUserId = current.identity.kind === "user" ? current.identity.userId : null
-        if (userId && currentUserId === userId && activeScenarioId) {
-          // Delete the cleared accounts remotely too, or the next sync brings them back
-          accounts.forEach((acc) => deleteAccount(acc.id).catch(console.error))
-          scheduleScenarioSync()
-        }
-      },
+      resetToDefaults: () => set({ ...initialState }),
 
-      loadPlan: (plan) => {
-        const { identity, activeScenarioId } = useCalculatorStore.getState()
-        const userId = identity.kind === "user" ? identity.userId : null
-
+      loadPlan: (plan) =>
         set({
           personalInfo: plan.personalInfo,
           retirementGoals: plan.retirementGoals,
@@ -377,120 +205,16 @@ export const useCalculatorStore = create<CalculatorState>()(
           drawdownConfig: plan.drawdownConfig,
           displayMode: plan.displayMode,
           accounts: plan.accounts,
-        })
-        // Re-check owner + scenario before any remote write.
-        const current = useCalculatorStore.getState()
-        const currentUserId = current.identity.kind === "user" ? current.identity.userId : null
-        if (
-          activeScenarioId &&
-          currentUserId === userId &&
-          current.activeScenarioId === activeScenarioId
-        ) {
-          plan.accounts.forEach((acc) => upsertAccount(acc, activeScenarioId).catch(console.error))
-          updateScenario(activeScenarioId, plan).catch(console.error)
-        }
-      },
-
-      switchScenario: async (id) => {
-        const owner = useCalculatorStore.getState().identity
-        const ownerId = owner.kind === "user" ? owner.userId : null
-        const token = ++latestSwitchToken
-        const [data, accounts] = await Promise.all([fetchScenario(id), fetchAccounts(id)])
-        // A slower earlier switch must not overwrite a later selection, and a sign-out
-        // or user change during the fetch must not load the previous user's scenario
-        if (token !== latestSwitchToken) return
-        const current = useCalculatorStore.getState().identity
-        const currentId = current.kind === "user" ? current.userId : null
-        if (currentId !== ownerId) return
-        if (data) set({ ...data, accounts, activeScenarioId: id })
-      },
-
-      createNewScenario: async (name) => {
-        const {
-          identity,
-          personalInfo,
-          retirementGoals,
-          assumptions,
-          drawdownConfig,
-          displayMode,
-        } = useCalculatorStore.getState()
-        const sessionId = identity.kind === "user" ? identity.userId : null
-        if (!sessionId) return
-        // Re-check the owner before the request (sign-out between the capture
-        // and the await would otherwise create a scenario for a stale identity).
-        const current = useCalculatorStore.getState()
-        const currentUserId = current.identity.kind === "user" ? current.identity.userId : null
-        if (currentUserId !== sessionId) return
-        const scenarioId = await createScenario(sessionId, name, {
-          personalInfo,
-          retirementGoals,
-          assumptions,
-          drawdownConfig,
-          displayMode,
-        })
-        // Clone the CURRENT accounts (not the ones captured before the first await) so edits
-        // made while the scenario was being created are not lost
-        const cloned = await cloneAccounts(useCalculatorStore.getState().accounts, scenarioId)
-        const after = useCalculatorStore.getState().identity
-        if ((after.kind === "user" ? after.userId : null) !== sessionId) return
-        const meta: ScenarioMeta = {
-          id: scenarioId,
-          name,
-          updatedAt: new Date().toISOString(),
-          claimComplete: true,
-        }
-        set((state) => ({
-          activeScenarioId: scenarioId,
-          scenarioList: [meta, ...state.scenarioList],
-          accounts: cloned,
-        }))
-      },
-
-      renameScenario: async (id, name) => {
-        const { identity } = useCalculatorStore.getState()
-        const userId = identity.kind === "user" ? identity.userId : null
-        if (!userId) return
-        await renameScenarioInDb(id, name)
-        // Only mutate local list while the same user still owns the store.
-        const current = useCalculatorStore.getState()
-        const currentUserId = current.identity.kind === "user" ? current.identity.userId : null
-        if (currentUserId !== userId) return
-        set((state) => ({
-          scenarioList: state.scenarioList.map((s) => (s.id === id ? { ...s, name } : s)),
-        }))
-      },
-
-      deleteScenario: async (id) => {
-        const { scenarioList, activeScenarioId, identity } = useCalculatorStore.getState()
-        const userId = identity.kind === "user" ? identity.userId : null
-        if (scenarioList.length <= 1) return
-        const current = useCalculatorStore.getState()
-        const currentUserId = current.identity.kind === "user" ? current.identity.userId : null
-        if (currentUserId !== userId) return
-        await deleteScenarioFromDb(id) // CASCADE deletes accounts for this scenario too
-        // Re-check after the await: a sign-out or user switch mid-delete must
-        // not mutate local state owned by the previous identity.
-        const after = useCalculatorStore.getState()
-        const afterUserId = after.identity.kind === "user" ? after.identity.userId : null
-        if (afterUserId !== userId) return
-        const remaining = scenarioList.filter((s) => s.id !== id)
-        set({ scenarioList: remaining })
-        if (id === activeScenarioId) {
-          const next = remaining[0]
-          const [data, accounts] = await Promise.all([
-            fetchScenario(next.id),
-            fetchAccounts(next.id),
-          ])
-          if (data) set({ ...data, accounts, activeScenarioId: next.id })
-        }
-      },
+        }),
     }),
     {
-      name: "financial-planner-storage",
+      name: CALCULATOR_STORAGE_KEY,
       storage,
       skipHydration: true,
-      version: 3,
-      onRehydrateStorage: () => () => storage?.release(),
+      // v4: the scenario machinery is gone. A v3 payload still carries
+      // `activeScenarioId`; zustand's default merge would resurrect it as a stray
+      // key on the live state, so migrate drops it.
+      version: 4,
       // Sanitize monetary fields persisted before the input bounds fix (R1 trillion
       // cap): stale absurd values are clamped on rehydrate so they can neither break
       // layout nor poison calculations. Version 1 data predates the cap.
@@ -498,73 +222,15 @@ export const useCalculatorStore = create<CalculatorState>()(
       // validated (issue #34) a cleared field persisted as null and any typed value was
       // stored. Those are reset to the defaults. Every step is idempotent, so the whole
       // function runs for any older version.
+      onRehydrateStorage: () => () => storage?.release(),
       migrate: (persistedState) => {
-        const s = persistedState as CalculatorState
-        const defaults = defaultSettings.assumptions
-        const assumptions = s.assumptions ?? defaults
-        return {
-          ...s,
-          assumptions: {
-            ...assumptions,
-            equityReturn: sanitizeAssumptionRate(
-              assumptions.equityReturn,
-              "equityReturn",
-              defaults.equityReturn,
-            ),
-            bondReturn: sanitizeAssumptionRate(
-              assumptions.bondReturn,
-              "bondReturn",
-              defaults.bondReturn,
-            ),
-            cashReturn: sanitizeAssumptionRate(
-              assumptions.cashReturn,
-              "cashReturn",
-              defaults.cashReturn,
-            ),
-            inflationRate: sanitizeAssumptionRate(
-              assumptions.inflationRate,
-              "inflationRate",
-              defaults.inflationRate,
-            ),
-          },
-          personalInfo: {
-            ...s.personalInfo,
-            annualIncome: clampMonetaryAmount(s.personalInfo?.annualIncome ?? 0),
-          },
-          retirementGoals: {
-            ...s.retirementGoals,
-            inflationRate: sanitizeAssumptionRate(
-              s.retirementGoals?.inflationRate,
-              "inflationRate",
-              defaultSettings.retirementGoals.inflationRate,
-            ),
-            desiredMonthlyIncome: clampMonetaryAmount(s.retirementGoals?.desiredMonthlyIncome ?? 0),
-            legacyAmount: clampMonetaryAmount(s.retirementGoals?.legacyAmount ?? 0),
-          },
-          drawdownConfig: {
-            ...s.drawdownConfig,
-            minimumWithdrawal: clampMonetaryAmount(s.drawdownConfig?.minimumWithdrawal ?? 0),
-            maximumWithdrawal: clampMonetaryAmount(s.drawdownConfig?.maximumWithdrawal ?? 0),
-            monthlyMedicalAid:
-              s.drawdownConfig?.monthlyMedicalAid == null
-                ? undefined
-                : clampMonetaryAmount(s.drawdownConfig.monthlyMedicalAid),
-          },
-          accounts: (s.accounts ?? []).map((a) => ({
-            ...a,
-            currentBalance: clampMonetaryAmount(a.currentBalance ?? 0),
-            monthlyContribution: clampMonetaryAmount(a.monthlyContribution ?? 0),
-            tfsaContributionsToDate:
-              a.tfsaContributionsToDate == null
-                ? undefined
-                : clampMonetaryAmount(a.tfsaContributionsToDate),
-          })),
-        }
+        const { activeScenarioId: _legacyScenarioId, ...s } =
+          persistedState as Partial<PlanShape> & {
+            activeScenarioId?: unknown
+          }
+        return sanitizePlan(s) as PersistedCalculatorState
       },
-      partialize: (state) => ({
-        // NOTE: identity is deliberately NOT persisted — the storage key
-        // encodes the scope, so the payload needs no owner marker.
-        activeScenarioId: state.activeScenarioId,
+      partialize: (state): PersistedCalculatorState => ({
         personalInfo: state.personalInfo,
         assumptions: state.assumptions,
         retirementGoals: state.retirementGoals,

@@ -1,6 +1,8 @@
 # Documentation Update Log
 
 ## 2026-11-14
+* **Update**: [PR #46 review fixes: storage fallback, CSP eval scope, per-key save health](history/2026-11-14-pr46-review-fixes.md) - A throwing localStorage no longer blanks the page, production over HTTP no longer gets `unsafe-eval`, and a successful save of one store no longer hides another store's failed save.
+* **Update**: [Accounts removed: local-first storage, no outbound requests](history/2026-11-14-remove-accounts-local-first.md) - No sign-in, database, analytics or AI calls: plan data lives only in the browser and "Explain my plan" is a copy-a-prompt feature under a `connect-src 'self'` CSP.
 * **Update**: [E2E journey and input follow-ups logged as TODO](project-phases/future-enhancements.md) - Journeys 4-7, the unrun auth journeys, WebKit, seed-version drift and the PR #43 follow-ups are listed under Pending in future-enhancements.
 * **Update**: [Input size, password-manager opt-out, phone-layout e2e fixes](history/2026-11-14-number-field-inputs.md) - Field values match body text (14px; 16px on phones), number and name fields opt out of 1Password and similar, the display-mode button gets an accessible name on phones, and journeys 1-3 pass on desktop, tablet and phone.
 * **Update**: [E2E journeys 1-3 repaired; wizard Continue no longer saves](history/2026-11-14-number-field-inputs.md) - The journeys now drive the sidebar app and assert stored values; they exposed a bug where one click on Continue in the add-account wizard saved the account and skipped step 2.

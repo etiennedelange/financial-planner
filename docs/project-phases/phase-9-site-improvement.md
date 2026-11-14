@@ -111,7 +111,7 @@ _Identified 2026-06-07 via parallel agent audit (UI/UX, calculations, test cover
 
 ### High Priority
 
-- [x] **Centralize bootstrap and data ownership** (2026-08-15) — one serialized XState coordinator now owns hydration (once per guest/user scope, never concurrent), verified auth, MFA gating, claim, and sync; the auth listener is a pure event forwarder. Guest/user persistence scopes with one-time legacy-key migration, sign-out eviction, stale-transition cancellation, generation-checked sync, explicit claim sources, and reload/account-switch/MFA/print e2e regressions. [Implementation plan](../superpowers/plans/2026-08-15-bootstrap-data-ownership-hardening.md) · [planning record](../history/2026-08-15-bootstrap-data-ownership-hardening-plan.md) · [implementation record](../history/2026-08-15-bootstrap-data-ownership-hardening.md)
+- [x] **Centralize bootstrap and data ownership** (2026-08-15) — one serialized XState coordinator now owns hydration (once per guest/user scope, never concurrent), verified auth, MFA gating, claim, and sync; the auth listener is a pure event forwarder. Guest/user persistence scopes with one-time legacy-key migration, sign-out eviction, stale-transition cancellation, generation-checked sync, explicit claim sources, and reload/account-switch/MFA/print e2e regressions. Implementation plan (plan removed 2026-11-14 with the auth system) · [planning record](../history/2026-08-15-bootstrap-data-ownership-hardening-plan.md) · [implementation record](../history/2026-08-15-bootstrap-data-ownership-hardening.md)
 
 ---
 

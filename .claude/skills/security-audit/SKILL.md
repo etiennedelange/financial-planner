@@ -151,7 +151,7 @@ print(f'Total: {len(findings)} findings')
 | WARNING  | Review — may be a false positive |
 | INFO     | Usually false positive, note it |
 
-**Common false positive:** `SameSite: None` flagged on cookies that are passed through from `@supabase/ssr` — the cookie options come from the auth library, not your code.
+**Common false positive:** cookie-attribute findings (e.g. `SameSite: None`) on cookies set by a third-party library — check whether the options come from the library rather than your code. (This app sets no cookies of its own.)
 
 ---
 
@@ -165,7 +165,7 @@ pnpm: official installer, download-then-execute ✓
 packageManager field: pnpm@11.1.2 ✓
 blockExoticSubdeps: true ✓
 allowBuilds: sharp ✓, unrs-resolver ✓ (both verified legitimate)
-Semgrep: 1 INFO finding — false positive (Supabase cookie passthrough)
+Semgrep: 1 INFO finding — false positive (library-set cookie options)
 ```
 
 Only flag items that need action. Don't pad with "all good" lines for things that passed cleanly.

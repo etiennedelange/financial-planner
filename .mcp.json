@@ -9,14 +9,6 @@
       "command": "npx",
       "args": ["shadcn@latest", "mcp"]
     },
-    "supabase": {
-      "type": "http",
-      "url": "https://mcp.supabase.com/mcp"
-    },
-    "supabase-local": {
-      "type": "http",
-      "url": "http://127.0.0.1:54321/mcp"
-    },
     "filesystem": {
       "command": "sh",
       "args": ["-c", "npx -y @modelcontextprotocol/server-filesystem \"$CLAUDE_PROJECT_DIR\""]

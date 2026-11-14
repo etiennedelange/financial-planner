@@ -11,7 +11,7 @@ date: 2026-08-15
 
 The persisted-plan write gate fixed a real pre-hydration `localStorage` race, but the investigation found a larger lifecycle problem: `SupabaseProvider`, the calculator layout, the print route, auth callbacks, and both Zustand stores can independently coordinate hydration, identity changes, and database sync.
 
-The project will treat this as a high-priority Phase 9.4 architecture hardening item rather than adding another timing guard. The implementation plan is [Bootstrap and Data Ownership Hardening](../superpowers/plans/2026-08-15-bootstrap-data-ownership-hardening.md).
+The project will treat this as a high-priority Phase 9.4 architecture hardening item rather than adding another timing guard. The implementation plan is Bootstrap and Data Ownership Hardening (plan removed 2026-11-14 with the auth system).
 
 ## Scope
 

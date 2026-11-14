@@ -2,7 +2,7 @@
 
 import { useEffect, useReducer } from "react"
 import { AppShell } from "@/components/layout/app-shell"
-import { useAuth } from "@/components/supabase-provider"
+import { useStoresHydrated } from "@/components/local-data-provider"
 import { CalculatorProvider, useCalculator } from "@/lib/context/calculator-context"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 
@@ -32,15 +32,14 @@ function shellReducer(state: ShellState, action: ShellAction): ShellState {
 }
 
 function CalculatorShell({ children }: { children: React.ReactNode }) {
-  const { user, isLoaded } = useAuth()
+  const isLoaded = useStoresHydrated()
   const { isDeferred } = useCalculator()
   const accounts = useCalculatorStore((s) => s.accounts)
 
   const [shell, dispatch] = useReducer(shellReducer, shellInitialState)
 
-  // SupabaseProvider is the single bootstrap owner: hydration (guest scope,
-  // and user scope after identity resolves) and server sync all settle before
-  // `isLoaded` flips true. No store rehydrate() is called from the layout.
+  // LocalDataProvider owns hydration: both stores are read back from localStorage
+  // before `isLoaded` flips true. No store rehydrate() is called from the layout.
   useEffect(() => {
     if (isLoaded) dispatch({ type: "STORES_READY" })
   }, [isLoaded])
@@ -54,17 +53,15 @@ function CalculatorShell({ children }: { children: React.ReactNode }) {
   }, [shell.storeReady, isDeferred])
 
   return (
-    <>
-      <AppShell accountCount={accounts.length} user={user} isLoaded={isLoaded}>
-        <div
-          style={{
-            opacity: shell.showContent ? 1 : 0,
-            transition: shell.showContent ? "opacity 0.15s ease" : "none",
-          }}
-        >
-          {children}
-        </div>
-      </AppShell>
-    </>
+    <AppShell accountCount={accounts.length} isLoaded={isLoaded}>
+      <div
+        style={{
+          opacity: shell.showContent ? 1 : 0,
+          transition: shell.showContent ? "opacity 0.15s ease" : "none",
+        }}
+      >
+        {children}
+      </div>
+    </AppShell>
   )
 }

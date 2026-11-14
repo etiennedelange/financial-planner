@@ -30,7 +30,6 @@ describe("ExpensesPage inline amount editors", () => {
   })
   beforeEach(async () => {
     useExpensesStore.setState({
-      identity: { kind: "guest" },
       groups: [{ id: "g1", name: "Home", color: "#f87171", sortOrder: 0 }],
       expenses: [
         { id: "e1", groupId: "g1", name: "Rent", amount: 12_000, inRetirement: true, sortOrder: 0 },

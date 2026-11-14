@@ -1,22 +1,16 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vite-plus/test"
-import { useCalculatorStore, type CalculatorState } from "./calculator-store"
-// Bare side-effect import: the expenses store registers its base name with the
-// scope registry at module load, which evictUserScopedKeys iterates on sign-out.
-// (A named import would be tree-shaken since the test never uses its bindings.)
-import "@/lib/store/expenses-store"
-import * as accountsApi from "@/lib/supabase/accounts"
-import * as scenariosApi from "@/lib/supabase/scenarios"
+import { describe, it, expect, beforeEach, vi } from "vite-plus/test"
+import {
+  CALCULATOR_STORAGE_KEY,
+  sanitizePlan,
+  useCalculatorStore,
+  type CalculatorState,
+} from "./calculator-store"
 import { SA_DEFAULTS, SA_DEFAULTS_DISPLAY } from "@/lib/constants/defaults"
 import type { Account } from "@/types"
+import { installFailingSetItem } from "@/lib/test-utils/failing-storage"
 
-vi.mock("@/lib/supabase/accounts")
-vi.mock("@/lib/supabase/scenarios")
-
-// Must satisfy the real `Account` type. The previous fixture used `balance` (the field
-// is `currentBalance`), `type: "TFSA"` (the union is lowercase `'tfsa'`), and omitted
-// provider/expectedReturn/annualFees entirely — so these tests were exercising a shape
-// that cannot occur in production. Notably any code branching on `acc.type === 'tfsa'`
-// would have taken the wrong path. Typed explicitly so drift fails the build, not silently.
+// Must satisfy the real `Account` type (typed explicitly so fixture drift fails the
+// build, not silently — an earlier fixture used a shape that cannot occur in production).
 const mockAccount: Account = {
   id: "acc-1",
   name: "My TFSA",
@@ -29,25 +23,9 @@ const mockAccount: Account = {
   contributionEscalation: 0,
 }
 
-const mockScenarioMeta = {
-  id: "scenario-1",
-  name: "My Plan",
-  updatedAt: new Date().toISOString(),
-  claimComplete: true,
-}
-
 const mockScenarioData = {
-  personalInfo: {
-    currentAge: 45,
-    retirementAge: 65,
-    lifeExpectancy: 90,
-    annualIncome: 600000,
-  },
-  retirementGoals: {
-    desiredMonthlyIncome: 30000,
-    inflationRate: 5.5,
-    legacyAmount: 0,
-  },
+  personalInfo: { currentAge: 45, retirementAge: 65, lifeExpectancy: 90, annualIncome: 600000 },
+  retirementGoals: { desiredMonthlyIncome: 30000, inflationRate: 5.5, legacyAmount: 0 },
   assumptions: {
     equityReturn: 10.5,
     bondReturn: 8,
@@ -69,499 +47,136 @@ const mockScenarioData = {
 
 describe("useCalculatorStore", () => {
   beforeEach(() => {
-    useCalculatorStore.setState({
-      accounts: [],
-      personalInfo: {
-        currentAge: SA_DEFAULTS.defaultCurrentAge,
-        retirementAge: SA_DEFAULTS.defaultRetirementAge,
-        lifeExpectancy: SA_DEFAULTS.lifeExpectancy,
-        annualIncome: 600000,
-      },
-      retirementGoals: { desiredMonthlyIncome: 30000, inflationRate: 5.5, legacyAmount: 0 },
-      assumptions: {
-        equityReturn: 10.5,
-        bondReturn: 8,
-        cashReturn: 3,
-        equityVolatility: 16,
-        bondVolatility: 8,
-        inflationRate: 5.5,
-        compoundingMethod: "nominal",
-      },
-      drawdownConfig: {
-        strategy: "fixed_percentage",
-        initialWithdrawalRate: 4,
-        minimumWithdrawal: 15000,
-        maximumWithdrawal: 60000,
-        lumpSumPercentage: 0,
-      },
-      identity: { kind: "guest" },
-      activeScenarioId: null,
-      scenarioList: [],
-      displayMode: "nominal",
-    })
-    vi.clearAllMocks()
-  })
-
-  afterEach(() => {
-    vi.useRealTimers()
+    useCalculatorStore.getState().resetToDefaults()
   })
 
   describe("Initialization", () => {
-    it("should initialize with default values", () => {
+    it("starts from the SA defaults with no accounts", () => {
       const state = useCalculatorStore.getState()
-      expect(state.identity).toEqual({ kind: "guest" })
-      expect(state.activeScenarioId).toBe(null)
       expect(state.accounts).toEqual([])
-      expect(state.scenarioList).toEqual([])
       expect(state.displayMode).toBe("nominal")
       expect(state.personalInfo.annualIncome).toBe(600000)
+      expect(state.personalInfo.currentAge).toBe(SA_DEFAULTS.defaultCurrentAge)
     })
-  })
 
-  describe("Session & ID management", () => {
-    it("should set session ID", () => {
-      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-123" })
-      expect(useCalculatorStore.getState().identity).toEqual({
-        kind: "user",
-        userId: "session-123",
-      })
+    it("has no account, identity or scenario machinery left", () => {
+      const state = useCalculatorStore.getState() as unknown as Record<string, unknown>
+      for (const gone of [
+        "identity",
+        "setIdentity",
+        "syncFromDb",
+        "scenarioList",
+        "activeScenarioId",
+      ]) {
+        expect(state[gone]).toBeUndefined()
+      }
     })
   })
 
   describe("Account operations", () => {
-    it("should add account to state and DB", () => {
-      vi.spyOn(accountsApi, "upsertAccount").mockResolvedValue(undefined)
-      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
+    it("adds an account", () => {
       useCalculatorStore.getState().addAccount(mockAccount)
-
-      const state = useCalculatorStore.getState()
-      expect(state.accounts).toHaveLength(1)
-      expect(state.accounts[0]).toEqual(mockAccount)
+      expect(useCalculatorStore.getState().accounts).toEqual([mockAccount])
     })
 
-    it("should not call DB when no active scenario", () => {
-      vi.spyOn(accountsApi, "upsertAccount").mockResolvedValue(undefined)
-      useCalculatorStore.getState().addAccount(mockAccount)
-
-      const state = useCalculatorStore.getState()
-      expect(state.accounts).toHaveLength(1)
-      expect(accountsApi.upsertAccount).not.toHaveBeenCalled()
-    })
-
-    it("should update account in state and DB", () => {
-      vi.spyOn(accountsApi, "upsertAccount").mockResolvedValue(undefined)
-      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
-      useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
-      useCalculatorStore.getState().addAccount(mockAccount)
-
+    it("updates only the matching account", () => {
+      useCalculatorStore.setState({ accounts: [mockAccount, { ...mockAccount, id: "acc-2" }] })
       useCalculatorStore.getState().updateAccount("acc-1", { currentBalance: 150000 })
-
-      const state = useCalculatorStore.getState()
-      expect(state.accounts[0].currentBalance).toBe(150000)
+      const [a, b] = useCalculatorStore.getState().accounts
+      expect(a.currentBalance).toBe(150000)
+      expect(b.currentBalance).toBe(100000)
     })
 
-    it("should remove account from state and DB", () => {
-      vi.spyOn(accountsApi, "deleteAccount").mockResolvedValue(undefined)
-      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
+    it("ignores an update for an unknown id", () => {
       useCalculatorStore.setState({ accounts: [mockAccount] })
-
-      useCalculatorStore.getState().removeAccount("acc-1")
-
-      const state = useCalculatorStore.getState()
-      expect(state.accounts).toHaveLength(0)
-      expect(accountsApi.deleteAccount).toHaveBeenCalledWith("acc-1")
+      useCalculatorStore.getState().updateAccount("nope", { currentBalance: 1 })
+      expect(useCalculatorStore.getState().accounts).toEqual([mockAccount])
     })
 
-    it("should seed accounts with new IDs", () => {
-      vi.spyOn(accountsApi, "upsertAccount").mockResolvedValue(undefined)
-      vi.spyOn(accountsApi, "deleteAccount").mockResolvedValue(undefined)
-      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
-      useCalculatorStore.setState({ activeScenarioId: "scenario-1", accounts: [] })
+    it("removes an account", () => {
+      useCalculatorStore.setState({ accounts: [mockAccount] })
+      useCalculatorStore.getState().removeAccount("acc-1")
+      expect(useCalculatorStore.getState().accounts).toHaveLength(0)
+    })
 
-      const seedData = [{ ...mockAccount, id: undefined as any }]
-      useCalculatorStore.getState().seedAccounts(seedData)
-
-      const state = useCalculatorStore.getState()
-      expect(state.accounts).toHaveLength(1)
-      expect(state.accounts[0].id).toBeDefined()
-      expect(state.accounts[0].name).toBe(mockAccount.name)
+    it("seeds accounts with fresh ids, replacing existing ones", () => {
+      useCalculatorStore.setState({ accounts: [mockAccount] })
+      const { id: _id, ...withoutId } = mockAccount
+      useCalculatorStore.getState().seedAccounts([withoutId, withoutId])
+      const accounts = useCalculatorStore.getState().accounts
+      expect(accounts).toHaveLength(2)
+      expect(accounts[0].id).toBeDefined()
+      expect(accounts[0].id).not.toBe(accounts[1].id)
+      expect(accounts[0].id).not.toBe("acc-1")
     })
   })
 
-  describe("Personal settings updates", () => {
-    it("should update personal info and schedule sync", () => {
-      vi.useFakeTimers()
-      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
-      useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
-      vi.spyOn(scenariosApi, "updateScenario").mockResolvedValue(undefined)
-
+  describe("Plan settings", () => {
+    it("merges personal info", () => {
       useCalculatorStore.getState().setPersonalInfo({ currentAge: 50 })
-
-      expect(useCalculatorStore.getState().personalInfo.currentAge).toBe(50)
-
-      vi.advanceTimersByTime(800)
-      expect(scenariosApi.updateScenario).toHaveBeenCalled()
+      const { personalInfo } = useCalculatorStore.getState()
+      expect(personalInfo.currentAge).toBe(50)
+      expect(personalInfo.annualIncome).toBe(600000)
     })
 
-    it("should update retirement goals and schedule sync", () => {
-      vi.useFakeTimers()
-      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
-      useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
-      vi.spyOn(scenariosApi, "updateScenario").mockResolvedValue(undefined)
-
+    it("merges retirement goals", () => {
       useCalculatorStore.getState().setRetirementGoals({ desiredMonthlyIncome: 40000 })
-
       expect(useCalculatorStore.getState().retirementGoals.desiredMonthlyIncome).toBe(40000)
-
-      vi.advanceTimersByTime(800)
-      expect(scenariosApi.updateScenario).toHaveBeenCalled()
     })
 
-    it("should update assumptions and schedule sync", () => {
-      vi.useFakeTimers()
-      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
-      useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
-      vi.spyOn(scenariosApi, "updateScenario").mockResolvedValue(undefined)
-
+    it("merges assumptions, keeping the compounding method", () => {
       useCalculatorStore.getState().setAssumptions({ equityReturn: 12 })
-
-      expect(useCalculatorStore.getState().assumptions.equityReturn).toBe(12)
-
-      vi.advanceTimersByTime(800)
-      expect(scenariosApi.updateScenario).toHaveBeenCalled()
+      const { assumptions } = useCalculatorStore.getState()
+      expect(assumptions.equityReturn).toBe(12)
+      expect(assumptions.compoundingMethod).toBe("nominal")
     })
 
-    it("should update drawdown config and schedule sync", () => {
-      vi.useFakeTimers()
-      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
-      useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
-      vi.spyOn(scenariosApi, "updateScenario").mockResolvedValue(undefined)
-
+    it("merges drawdown config", () => {
       useCalculatorStore.getState().setDrawdownConfig({ initialWithdrawalRate: 3.5 })
-
       expect(useCalculatorStore.getState().drawdownConfig.initialWithdrawalRate).toBe(3.5)
-
-      vi.advanceTimersByTime(800)
-      expect(scenariosApi.updateScenario).toHaveBeenCalled()
     })
 
-    it("should update display mode and schedule sync", () => {
-      vi.useFakeTimers()
-      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
-      useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
-      vi.spyOn(scenariosApi, "updateScenario").mockResolvedValue(undefined)
-
+    it("sets the display mode", () => {
       useCalculatorStore.getState().setDisplayMode("real")
-
       expect(useCalculatorStore.getState().displayMode).toBe("real")
-
-      vi.advanceTimersByTime(800)
-      expect(scenariosApi.updateScenario).toHaveBeenCalled()
     })
   })
 
   describe("loadPlan", () => {
-    it("should load complete plan into state", () => {
-      useCalculatorStore.getState().loadPlan({
-        ...mockScenarioData,
-        accounts: [mockAccount],
-      })
-
+    it("loads a complete plan", () => {
+      useCalculatorStore.getState().loadPlan({ ...mockScenarioData, accounts: [mockAccount] })
       const state = useCalculatorStore.getState()
       expect(state.personalInfo.currentAge).toBe(45)
-      expect(state.retirementGoals.desiredMonthlyIncome).toBe(30000)
       expect(state.assumptions.equityReturn).toBe(10.5)
       expect(state.accounts).toHaveLength(1)
-    })
-
-    it("should persist accounts to DB when scenario is active", () => {
-      vi.spyOn(accountsApi, "upsertAccount").mockResolvedValue(undefined)
-      vi.spyOn(scenariosApi, "updateScenario").mockResolvedValue(undefined)
-      useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
-
-      useCalculatorStore.getState().loadPlan({
-        ...mockScenarioData,
-        accounts: [mockAccount],
-      })
-
-      expect(accountsApi.upsertAccount).toHaveBeenCalledWith(mockAccount, "scenario-1")
-      expect(scenariosApi.updateScenario).toHaveBeenCalled()
     })
   })
 
   describe("resetToDefaults", () => {
-    it("should reset all state to initial defaults", () => {
+    it("resets every part of the plan", () => {
       useCalculatorStore.setState({
         personalInfo: { ...useCalculatorStore.getState().personalInfo, currentAge: 55 },
         accounts: [mockAccount],
-        identity: { kind: "user", userId: "session-123" },
+        displayMode: "real",
       })
-
       useCalculatorStore.getState().resetToDefaults()
-
       const state = useCalculatorStore.getState()
       expect(state.personalInfo.currentAge).toBe(SA_DEFAULTS.defaultCurrentAge)
       expect(state.accounts).toHaveLength(0)
-    })
-
-    it("keeps a signed-in user signed in, on the same scenario, and syncs the reset", async () => {
-      vi.useFakeTimers()
-      vi.clearAllMocks()
-      vi.spyOn(accountsApi, "deleteAccount").mockResolvedValue(undefined)
-      vi.spyOn(scenariosApi, "updateScenario").mockResolvedValue(undefined)
-      useCalculatorStore.setState({
-        identity: { kind: "user", userId: "u1" },
-        activeScenarioId: "s1",
-        scenarioList: [mockScenarioMeta],
-        accounts: [mockAccount],
-      })
-
-      useCalculatorStore.getState().resetToDefaults()
-
-      const state = useCalculatorStore.getState()
-      expect(state.identity).toEqual({ kind: "user", userId: "u1" })
-      expect(state.activeScenarioId).toBe("s1")
-      expect(state.scenarioList).toEqual([mockScenarioMeta])
-      expect(accountsApi.deleteAccount).toHaveBeenCalledWith(mockAccount.id)
-      // Later edits still reach the cloud
-      useCalculatorStore.getState().setPersonalInfo({ currentAge: 41 })
-      await vi.advanceTimersByTimeAsync(1000)
-      expect(scenariosApi.updateScenario).toHaveBeenCalledWith("s1", expect.anything())
-      vi.useRealTimers()
-    })
-
-    it("a guest reset makes no remote calls", () => {
-      vi.clearAllMocks()
-      useCalculatorStore.setState({
-        identity: { kind: "guest" },
-        activeScenarioId: null,
-        accounts: [mockAccount],
-      })
-      useCalculatorStore.getState().resetToDefaults()
-      expect(accountsApi.deleteAccount).not.toHaveBeenCalled()
-    })
-  })
-
-  describe("Scenario operations", () => {
-    beforeEach(() => {
-      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
-    })
-
-    it("should switch to existing scenario", async () => {
-      vi.spyOn(scenariosApi, "fetchScenario").mockResolvedValue(mockScenarioData)
-      vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([mockAccount])
-
-      await useCalculatorStore.getState().switchScenario("scenario-1")
-
-      const state = useCalculatorStore.getState()
-      expect(state.activeScenarioId).toBe("scenario-1")
-      expect(state.accounts).toEqual([mockAccount])
-      expect(state.personalInfo.currentAge).toBe(45)
-    })
-
-    it("should create new scenario from current state", async () => {
-      useCalculatorStore.setState({
-        personalInfo: mockScenarioData.personalInfo,
-        retirementGoals: mockScenarioData.retirementGoals,
-        assumptions: mockScenarioData.assumptions,
-        drawdownConfig: mockScenarioData.drawdownConfig,
-        displayMode: mockScenarioData.displayMode,
-        accounts: [mockAccount],
-      })
-
-      vi.spyOn(scenariosApi, "createScenario").mockResolvedValue("new-scenario-id")
-      vi.spyOn(accountsApi, "cloneAccounts").mockResolvedValue([
-        { ...mockAccount, id: "cloned-acc-1" },
-      ])
-
-      await useCalculatorStore.getState().createNewScenario("My Copy")
-
-      const state = useCalculatorStore.getState()
-      expect(state.activeScenarioId).toBe("new-scenario-id")
-      expect(scenariosApi.createScenario).toHaveBeenCalledWith(
-        "session-1",
-        "My Copy",
-        expect.any(Object),
-      )
-    })
-
-    it("should rename scenario", async () => {
-      useCalculatorStore.setState({
-        scenarioList: [mockScenarioMeta],
-      })
-
-      vi.spyOn(scenariosApi, "renameScenario").mockResolvedValue(undefined)
-
-      await useCalculatorStore.getState().renameScenario("scenario-1", "Updated Name")
-
-      const state = useCalculatorStore.getState()
-      expect(state.scenarioList[0].name).toBe("Updated Name")
-    })
-
-    it("should delete scenario and switch to next", async () => {
-      const scenario2 = {
-        id: "scenario-2",
-        name: "Second Plan",
-        updatedAt: new Date().toISOString(),
-        claimComplete: true,
-      }
-      useCalculatorStore.setState({
-        scenarioList: [mockScenarioMeta, scenario2],
-        activeScenarioId: "scenario-1",
-      })
-
-      vi.spyOn(scenariosApi, "deleteScenario").mockResolvedValue(undefined)
-      vi.spyOn(scenariosApi, "fetchScenario").mockResolvedValue(mockScenarioData)
-      vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([])
-
-      await useCalculatorStore.getState().deleteScenario("scenario-1")
-
-      const state = useCalculatorStore.getState()
-      expect(state.scenarioList).toHaveLength(1)
-      expect(state.scenarioList[0].id).toBe("scenario-2")
-      expect(state.activeScenarioId).toBe("scenario-2")
-    })
-
-    it("should not delete last scenario", async () => {
-      useCalculatorStore.setState({
-        scenarioList: [mockScenarioMeta],
-      })
-
-      vi.spyOn(scenariosApi, "deleteScenario").mockResolvedValue(undefined)
-
-      await useCalculatorStore.getState().deleteScenario("scenario-1")
-
-      const state = useCalculatorStore.getState()
-      expect(state.scenarioList).toHaveLength(1)
-      expect(scenariosApi.deleteScenario).not.toHaveBeenCalled()
-    })
-  })
-
-  describe("syncFromDb", () => {
-    beforeEach(() => {
-      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
-    })
-
-    it("should sync existing scenarios list", async () => {
-      vi.spyOn(scenariosApi, "listScenarios").mockResolvedValue([mockScenarioMeta])
-      vi.spyOn(scenariosApi, "fetchScenario").mockResolvedValue(mockScenarioData)
-      vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([mockAccount])
-
-      await useCalculatorStore.getState().syncFromDb("session-1")
-
-      const state = useCalculatorStore.getState()
-      expect(state.scenarioList).toHaveLength(1)
-      expect(state.activeScenarioId).toBe("scenario-1")
-      expect(state.accounts).toHaveLength(1)
-    })
-
-    it("should clear scenario state without creating one when the account has zero scenarios", async () => {
-      const createScenario = vi.spyOn(scenariosApi, "createScenario")
-      vi.spyOn(scenariosApi, "listScenarios").mockResolvedValue([])
-
-      await useCalculatorStore.getState().syncFromDb("session-1")
-
-      const state = useCalculatorStore.getState()
-      expect(state.activeScenarioId).toBeNull()
-      expect(state.scenarioList).toHaveLength(0)
-      expect(createScenario).not.toHaveBeenCalled()
-    })
-
-    it("should restore previously active scenario if available", async () => {
-      const scenario2 = {
-        id: "scenario-2",
-        name: "Second",
-        updatedAt: new Date().toISOString(),
-        claimComplete: true,
-      }
-      useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
-
-      vi.spyOn(scenariosApi, "listScenarios").mockResolvedValue([scenario2, mockScenarioMeta])
-      vi.spyOn(scenariosApi, "fetchScenario").mockResolvedValue(mockScenarioData)
-      vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([])
-
-      await useCalculatorStore.getState().syncFromDb("session-1")
-
-      const state = useCalculatorStore.getState()
-      expect(state.activeScenarioId).toBe("scenario-1")
-    })
-
-    it("should load most recent scenario if previous is gone", async () => {
-      vi.spyOn(scenariosApi, "listScenarios").mockResolvedValue([mockScenarioMeta])
-      vi.spyOn(scenariosApi, "fetchScenario").mockResolvedValue(mockScenarioData)
-      vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([])
-
-      await useCalculatorStore.getState().syncFromDb("session-1")
-
-      const state = useCalculatorStore.getState()
-      expect(state.activeScenarioId).toBe("scenario-1")
-    })
-
-    it("should not sync if already in progress", async () => {
-      vi.spyOn(scenariosApi, "listScenarios").mockImplementation(async () => {
-        // Simulate slow operation
-        await new Promise((resolve) => setTimeout(resolve, 100))
-        return []
-      })
-
-      const promise1 = useCalculatorStore.getState().syncFromDb("session-1")
-      const promise2 = useCalculatorStore.getState().syncFromDb("session-1")
-
-      await Promise.all([promise1, promise2])
-
-      expect(scenariosApi.listScenarios).toHaveBeenCalledTimes(1)
-    })
-
-    it("should not sync if identity does not match the requested user", async () => {
-      useCalculatorStore.setState({ identity: { kind: "guest" } })
-      vi.spyOn(scenariosApi, "listScenarios").mockResolvedValue([])
-
-      await useCalculatorStore.getState().syncFromDb("session-1")
-
-      expect(scenariosApi.listScenarios).not.toHaveBeenCalled()
-    })
-  })
-
-  describe("Sync timing", () => {
-    it("should debounce multiple updates", () => {
-      vi.useFakeTimers()
-      useCalculatorStore.getState().setIdentity({ kind: "user", userId: "session-1" })
-      useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
-      vi.spyOn(scenariosApi, "updateScenario").mockResolvedValue(undefined)
-
-      useCalculatorStore.getState().setPersonalInfo({ currentAge: 50 })
-      useCalculatorStore.getState().setRetirementGoals({ desiredMonthlyIncome: 35000 })
-
-      vi.advanceTimersByTime(400)
-      expect(scenariosApi.updateScenario).not.toHaveBeenCalled()
-
-      vi.advanceTimersByTime(400)
-      expect(scenariosApi.updateScenario).toHaveBeenCalledTimes(1)
+      expect(state.displayMode).toBe("nominal")
     })
   })
 })
 
-describe("local-only mode (no session)", () => {
-  it("does not attempt a DB read when identity is guest", async () => {
-    useCalculatorStore.setState({ identity: { kind: "guest" }, activeScenarioId: null })
-    await useCalculatorStore.getState().syncFromDb("session-1")
-    expect(useCalculatorStore.getState().activeScenarioId).toBeNull()
+describe("sanitizePlan (shared by migrate and backup import)", () => {
+  it("is idempotent", () => {
+    const once = sanitizePlan({ ...mockScenarioData, accounts: [mockAccount] })
+    expect(sanitizePlan(once)).toEqual(once)
   })
 
-  it("keeps account edits in memory when signed out", () => {
-    useCalculatorStore.setState({ identity: { kind: "guest" }, accounts: [] })
-    useCalculatorStore.getState().addAccount({
-      id: "acc-local-1",
-      name: "Local RA",
-      provider: "Test Provider",
-      type: "retirement_annuity",
-      currentBalance: 100000,
-      monthlyContribution: 5000,
-      contributionEscalation: 6,
-      expectedReturn: 11,
-      annualFees: 0.75,
-    })
-    expect(useCalculatorStore.getState().accounts).toHaveLength(1)
+  it("defaults an unknown display mode to nominal", () => {
+    expect(sanitizePlan({ displayMode: "weird" as never }).displayMode).toBe("nominal")
+    expect(sanitizePlan({ displayMode: "real" }).displayMode).toBe("real")
   })
 })
 
@@ -665,10 +280,6 @@ describe("persist migration v1 → v2 (monetary cap)", () => {
 describe("persist migration v2 → v3 (invalid Market Assumptions rates, issue #34)", () => {
   const migrate = useCalculatorStore.persist.getOptions().migrate
 
-  it("stores version 3", () => {
-    expect(useCalculatorStore.persist.getOptions().version).toBe(3)
-  })
-
   it("resets cleared (null) and out-of-range rates to the defaults", () => {
     const migrated = migrate!(
       {
@@ -746,38 +357,38 @@ describe("persist migration v2 → v3 (invalid Market Assumptions rates, issue #
   })
 })
 
-describe("persist write-gate (auth-before-rehydrate clobber regression)", () => {
-  // A fresh module gives a fresh store whose gate is still closed — mirroring
-  // the first page load where SupabaseProvider's setSessionId races the
-  // layout's manual rehydrate().
+describe("persist migration v3 → v4 (scenarios removed)", () => {
+  const migrate = useCalculatorStore.persist.getOptions().migrate
+
+  it("drops the legacy activeScenarioId so it cannot resurrect as a stray key", () => {
+    const migrated = migrate!(
+      { ...mockScenarioData, accounts: [mockAccount], activeScenarioId: "old-scenario" } as unknown,
+      3,
+    ) as unknown as Record<string, unknown>
+    expect(migrated.activeScenarioId).toBeUndefined()
+    expect((migrated.accounts as Account[])[0].name).toBe("My TFSA")
+  })
+
+  it("persists at version 4 under the plain (un-scoped) storage key", () => {
+    expect(useCalculatorStore.persist.getOptions().version).toBe(4)
+    expect(useCalculatorStore.persist.getOptions().name).toBe(CALCULATOR_STORAGE_KEY)
+    expect(CALCULATOR_STORAGE_KEY).toBe("financial-planner-storage")
+  })
+})
+
+describe("persist write-gate (write-before-rehydrate clobber regression)", () => {
+  // A fresh module gives a fresh store whose gate is still closed — mirroring the
+  // first page load, where a set() can land before <LocalDataProvider> has read storage.
   beforeEach(() => {
     localStorage.clear()
     vi.resetModules()
   })
 
   const persistedSnapshot = {
-    identity: { kind: "guest" },
-    activeScenarioId: null,
     personalInfo: { currentAge: 45, retirementAge: 65, lifeExpectancy: 90, annualIncome: 600000 },
     retirementGoals: { desiredMonthlyIncome: 30000, inflationRate: 5.5, legacyAmount: 0 },
-    assumptions: {
-      equityReturn: 10.5,
-      bondReturn: 8,
-      cashReturn: 3,
-      equityVolatility: 16,
-      bondVolatility: 8,
-      inflationRate: 5.5,
-      compoundingMethod: "nominal",
-    },
-    drawdownConfig: {
-      strategy: "fixed_percentage",
-      initialWithdrawalRate: 4,
-      minimumWithdrawal: 15000,
-      maximumWithdrawal: 60000,
-      lumpSumPercentage: 0,
-      upperGuardrail: 20,
-      lowerGuardrail: 20,
-    },
+    assumptions: mockScenarioData.assumptions,
+    drawdownConfig: { ...mockScenarioData.drawdownConfig, upperGuardrail: 20, lowerGuardrail: 20 },
     displayMode: "nominal",
     accounts: [
       {
@@ -794,350 +405,65 @@ describe("persist write-gate (auth-before-rehydrate clobber regression)", () => 
     ],
   }
 
-  it("survives a setSessionId fired before the layout rehydrate reads storage", async () => {
+  it("a set() fired before the first rehydrate cannot overwrite the saved plan", async () => {
     localStorage.setItem(
-      "financial-planner-storage:guest",
-      JSON.stringify({ state: persistedSnapshot, version: 2 }),
+      CALCULATOR_STORAGE_KEY,
+      JSON.stringify({ state: persistedSnapshot, version: 4 }),
     )
-
     const { useCalculatorStore: freshStore } = await import("./calculator-store")
 
-    // SupabaseProvider races the layout: auth-driven setSessionId fires first
-    // while the store is still holding its pre-hydration defaults.
-    freshStore.getState().setIdentity({ kind: "guest" })
-
+    // Pre-hydration write while the store still holds its defaults.
+    freshStore.getState().setDisplayMode("nominal")
     await freshStore.persist.rehydrate()
 
-    // The persisted plan must have survived the setSessionId write.
     expect(freshStore.getState().personalInfo.currentAge).toBe(45)
-    expect(freshStore.getState().accounts).toHaveLength(1)
     expect(freshStore.getState().accounts[0].name).toBe("Persisted RA")
-
-    // And localStorage must still hold the plan, not the pre-hydration defaults.
-    const stored = JSON.parse(localStorage.getItem("financial-planner-storage:guest")!)
+    const stored = JSON.parse(localStorage.getItem(CALCULATOR_STORAGE_KEY)!)
     expect(stored.state.personalInfo.currentAge).toBe(45)
     expect(stored.state.accounts).toHaveLength(1)
   })
 
   it("persists subsequent writes once rehydrate has settled", async () => {
     localStorage.setItem(
-      "financial-planner-storage:guest",
-      JSON.stringify({ state: { ...persistedSnapshot, accounts: [] }, version: 2 }),
+      CALCULATOR_STORAGE_KEY,
+      JSON.stringify({ state: { ...persistedSnapshot, accounts: [] }, version: 4 }),
     )
-
     const { useCalculatorStore: freshStore } = await import("./calculator-store")
-
     await freshStore.persist.rehydrate()
     freshStore.getState().setPersonalInfo({ currentAge: 52 })
-
-    const stored = JSON.parse(localStorage.getItem("financial-planner-storage:guest")!)
+    const stored = JSON.parse(localStorage.getItem(CALCULATOR_STORAGE_KEY)!)
     expect(stored.state.personalInfo.currentAge).toBe(52)
   })
-})
 
-describe("identity transitions and stale-write guards", () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-    vi.clearAllMocks()
-    useCalculatorStore.setState({
-      accounts: [],
-      identity: { kind: "guest" },
-      activeScenarioId: null,
-      scenarioList: [],
-    })
+  it("persists only plan data — no identity, scenario or key material", async () => {
+    const { useCalculatorStore: freshStore } = await import("./calculator-store")
+    await freshStore.persist.rehydrate()
+    freshStore.getState().addAccount(mockAccount)
+    const stored = JSON.parse(localStorage.getItem(CALCULATOR_STORAGE_KEY)!)
+    expect(Object.keys(stored.state).sort()).toEqual([
+      "accounts",
+      "assumptions",
+      "displayMode",
+      "drawdownConfig",
+      "personalInfo",
+      "retirementGoals",
+    ])
   })
 
-  it("clears active scenario metadata on sign-out", () => {
-    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-a" })
-    useCalculatorStore.setState({
-      activeScenarioId: "scenario-1",
-      scenarioList: [mockScenarioMeta],
-    })
-
-    useCalculatorStore.getState().setIdentity({ kind: "guest" })
-
-    expect(useCalculatorStore.getState()).toEqual(
-      expect.objectContaining({
-        identity: { kind: "guest" },
-        activeScenarioId: null,
-        scenarioList: [],
-      }),
-    )
-  })
-
-  it("does not update the previous user's scenario after sign-out", async () => {
-    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-a" })
-    useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
-    useCalculatorStore.getState().setDrawdownConfig({ initialWithdrawalRate: 4.5 })
-    useCalculatorStore.getState().setIdentity({ kind: "guest" })
-    await vi.advanceTimersByTimeAsync(1000)
-
-    expect(scenariosApi.updateScenario).not.toHaveBeenCalled()
-  })
-
-  it("does not delete a previous user's account from a signed-out store", () => {
-    useCalculatorStore.getState().setIdentity({ kind: "guest" })
-    useCalculatorStore.getState().removeAccount("user-a-account")
-
-    expect(accountsApi.deleteAccount).not.toHaveBeenCalled()
-  })
-
-  it("evicts the signed-out user's scoped storage keys", () => {
-    localStorage.setItem("financial-planner-storage:user:user-a", JSON.stringify({ state: {} }))
-    localStorage.setItem("expenses-store-v2:user:user-a", JSON.stringify({ state: {} }))
-    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-a" })
-
-    useCalculatorStore.getState().setIdentity({ kind: "guest" })
-
-    expect(localStorage.getItem("financial-planner-storage:user:user-a")).toBeNull()
-    expect(localStorage.getItem("expenses-store-v2:user:user-a")).toBeNull()
-  })
-
-  it("does not commit user A's sync after switching to user B", async () => {
-    let resolveFetch!: (value: typeof mockScenarioData | null) => void
-    vi.spyOn(scenariosApi, "listScenarios").mockResolvedValue([mockScenarioMeta])
-    vi.spyOn(scenariosApi, "fetchScenario").mockReturnValue(
-      new Promise<typeof mockScenarioData | null>((resolve) => {
-        resolveFetch = resolve
-      }),
-    )
-    vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([])
-
-    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-a" })
-    const sync = useCalculatorStore.getState().syncFromDb("user-a")
-    // User B supersedes user A while A's fetch is still pending.
-    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-b" })
-    resolveFetch(mockScenarioData)
-    await sync
-
-    // A's late response must not have been committed under user B.
-    expect(useCalculatorStore.getState().identity).toEqual({ kind: "user", userId: "user-b" })
-    expect(useCalculatorStore.getState().activeScenarioId).toBeNull()
-  })
-})
-
-describe("sync null-data path", () => {
-  it("uses the first scenario when fetchScenario returns null", async () => {
-    vi.clearAllMocks()
-    vi.useRealTimers()
-    useCalculatorStore.setState({
-      identity: { kind: "user", userId: "session-1" },
-      activeScenarioId: null,
-    })
-    vi.spyOn(scenariosApi, "listScenarios").mockResolvedValue([mockScenarioMeta])
-    vi.spyOn(scenariosApi, "fetchScenario").mockResolvedValue(null)
-    vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([])
-
-    await useCalculatorStore.getState().syncFromDb("session-1")
-
-    expect(useCalculatorStore.getState().activeScenarioId).toBe("scenario-1")
-  })
-})
-
-describe("write-guard abort paths", () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-    vi.clearAllMocks()
-    useCalculatorStore.setState({
-      accounts: [],
-      identity: { kind: "guest" },
-      activeScenarioId: null,
-      scenarioList: [],
-    })
-  })
-
-  it("drops a debounced scenario sync when the user switched (no cancel)", async () => {
-    // Unlike sign-out (which cancels the timer), a user switch must rely on the
-    // fire-time re-check: user A schedules, user B takes over, the timer fires.
-    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-a" })
-    useCalculatorStore.setState({ activeScenarioId: "scenario-1" })
-    useCalculatorStore.getState().setDrawdownConfig({ initialWithdrawalRate: 4.5 })
-    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-b" })
-
-    await vi.advanceTimersByTimeAsync(1000)
-
-    expect(scenariosApi.updateScenario).not.toHaveBeenCalled()
-  })
-
-  it("rejects a stale generation's late sync response", async () => {
-    const gen1Deferred = {
-      resolve: null as null | ((v: (typeof mockScenarioMeta)[]) => void),
+  it("reports a quota failure instead of swallowing it", async () => {
+    const restore = installFailingSetItem(new DOMException("full", "QuotaExceededError"))
+    try {
+      const health = await import("@/lib/store/storage-health")
+      health.resetStorageHealth()
+      // Imported AFTER the stub so zustand's storage captures it.
+      const { useCalculatorStore: freshStore } = await import("./calculator-store")
+      await freshStore.persist.rehydrate()
+      freshStore.getState().setPersonalInfo({ currentAge: 41 })
+      expect(health.getStorageHealth()).toBe("quota")
+      // The in-memory edit is not lost just because persisting failed.
+      expect(freshStore.getState().personalInfo.currentAge).toBe(41)
+    } finally {
+      restore()
     }
-    vi.spyOn(scenariosApi, "listScenarios")
-      .mockReturnValueOnce(
-        new Promise<(typeof mockScenarioMeta)[]>((resolve) => {
-          gen1Deferred.resolve = resolve
-        }),
-      )
-      .mockResolvedValueOnce([mockScenarioMeta])
-    vi.spyOn(scenariosApi, "fetchScenario").mockResolvedValue(mockScenarioData)
-    vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([])
-
-    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-a" })
-    const sync1 = useCalculatorStore.getState().syncFromDb("user-a", 1)
-    // A newer generation for the same user supersedes generation 1.
-    const sync2 = useCalculatorStore.getState().syncFromDb("user-a", 2)
-    await sync2
-    gen1Deferred.resolve!([mockScenarioMeta])
-    await sync1
-
-    // Generation 2's result is committed; generation 1's late response dropped.
-    expect(useCalculatorStore.getState().activeScenarioId).toBe("scenario-1")
-  })
-
-  it("skips the seed's DB chain when the user changed mid-flight", async () => {
-    vi.spyOn(accountsApi, "deleteAccount").mockResolvedValue(undefined)
-    vi.spyOn(accountsApi, "upsertAccount").mockResolvedValue(undefined)
-    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-a" })
-    useCalculatorStore.setState({ activeScenarioId: "scenario-1", accounts: [mockAccount] })
-
-    useCalculatorStore.getState().seedAccounts([mockAccount])
-    // User B takes over before the delete chain resolves.
-    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-b" })
-    await Promise.resolve()
-    await Promise.resolve()
-
-    // The user's own delete chain may start (cleanup of their own accounts);
-    // the guard prevents INSERTING the new accounts under the stale identity.
-    expect(accountsApi.upsertAccount).not.toHaveBeenCalled()
-  })
-
-  it("refuses to create a scenario from a signed-out store", async () => {
-    vi.spyOn(scenariosApi, "createScenario").mockResolvedValue("scenario-new")
-    useCalculatorStore.getState().setIdentity({ kind: "guest" })
-
-    useCalculatorStore.getState().createNewScenario("My Plan")
-
-    expect(scenariosApi.createScenario).not.toHaveBeenCalled()
-  })
-
-  it("refuses to rename a scenario from a signed-out store", async () => {
-    vi.spyOn(scenariosApi, "renameScenario").mockResolvedValue(undefined)
-    useCalculatorStore.setState({ scenarioList: [mockScenarioMeta] })
-
-    useCalculatorStore.getState().renameScenario("scenario-1", "New Name")
-
-    expect(scenariosApi.renameScenario).not.toHaveBeenCalled()
-  })
-
-  it("refuses to delete a scenario from a signed-out store", async () => {
-    vi.spyOn(scenariosApi, "deleteScenario").mockResolvedValue(undefined)
-    useCalculatorStore.setState({ scenarioList: [mockScenarioMeta] })
-
-    useCalculatorStore.getState().deleteScenario("scenario-1")
-
-    expect(scenariosApi.deleteScenario).not.toHaveBeenCalled()
-  })
-
-  it("refuses to delete a scenario once the user changed mid-await", async () => {
-    vi.spyOn(scenariosApi, "deleteScenario").mockResolvedValue(undefined)
-    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-a" })
-    useCalculatorStore.setState({
-      scenarioList: [mockScenarioMeta, { ...mockScenarioMeta, id: "scenario-2" }],
-    })
-
-    const pending = useCalculatorStore.getState().deleteScenario("scenario-1")
-    // User B takes over while the delete is in flight.
-    useCalculatorStore.getState().setIdentity({ kind: "user", userId: "user-b" })
-    await pending
-
-    expect(useCalculatorStore.getState().scenarioList).toHaveLength(2)
-  })
-})
-
-describe("scenario switching races", () => {
-  const deferred = <T>() => {
-    let resolve!: (v: T) => void
-    const promise = new Promise<T>((r) => (resolve = r))
-    return { promise, resolve }
-  }
-
-  beforeEach(() => {
-    vi.useRealTimers()
-    vi.clearAllMocks()
-    useCalculatorStore.setState({
-      identity: { kind: "user", userId: "u1" },
-      activeScenarioId: null,
-      scenarioList: [],
-      accounts: [],
-    })
-  })
-
-  it("the last selection wins even when an earlier request resolves later", async () => {
-    const a = deferred<typeof mockScenarioData>()
-    const b = deferred<typeof mockScenarioData>()
-    vi.spyOn(scenariosApi, "fetchScenario").mockImplementation((id) =>
-      id === "A" ? a.promise : b.promise,
-    )
-    vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([])
-
-    const first = useCalculatorStore.getState().switchScenario("A")
-    const second = useCalculatorStore.getState().switchScenario("B")
-    b.resolve(mockScenarioData)
-    await second
-    a.resolve(mockScenarioData)
-    await first
-
-    expect(useCalculatorStore.getState().activeScenarioId).toBe("B")
-  })
-
-  it("does not load a scenario into the store after the user signed out mid-fetch", async () => {
-    const pending = deferred<typeof mockScenarioData>()
-    vi.spyOn(scenariosApi, "fetchScenario").mockReturnValue(pending.promise)
-    vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([mockAccount])
-
-    const switching = useCalculatorStore.getState().switchScenario("A")
-    useCalculatorStore.setState({ identity: { kind: "guest" }, accounts: [] })
-    pending.resolve(mockScenarioData)
-    await switching
-
-    expect(useCalculatorStore.getState().activeScenarioId).toBeNull()
-    expect(useCalculatorStore.getState().accounts).toEqual([])
-  })
-
-  it("createNewScenario clones the accounts as they are after the scenario row is created", async () => {
-    const created = deferred<string>()
-    vi.spyOn(scenariosApi, "createScenario").mockReturnValue(created.promise)
-    const clone = vi.spyOn(accountsApi, "cloneAccounts").mockResolvedValue([])
-    useCalculatorStore.setState({ accounts: [mockAccount] })
-
-    const creating = useCalculatorStore.getState().createNewScenario("Copy")
-    const edited = { ...mockAccount, currentBalance: 999 }
-    useCalculatorStore.setState({ accounts: [edited] })
-    created.resolve("new-id")
-    await creating
-
-    expect(clone).toHaveBeenCalledWith([edited], "new-id")
-  })
-
-  it("createNewScenario does not touch the store if the user signed out while it ran", async () => {
-    const created = deferred<string>()
-    vi.spyOn(scenariosApi, "createScenario").mockReturnValue(created.promise)
-    vi.spyOn(accountsApi, "cloneAccounts").mockResolvedValue([mockAccount])
-
-    const creating = useCalculatorStore.getState().createNewScenario("Copy")
-    useCalculatorStore.setState({ identity: { kind: "guest" } })
-    created.resolve("new-id")
-    await creating
-
-    expect(useCalculatorStore.getState().activeScenarioId).toBeNull()
-    expect(useCalculatorStore.getState().scenarioList).toEqual([])
-  })
-
-  it("syncFromDb falls back to the first scenario's own data when the remembered one has none", async () => {
-    const other = { ...mockScenarioMeta, id: "scenario-2" }
-    vi.spyOn(scenariosApi, "listScenarios").mockResolvedValue([mockScenarioMeta, other])
-    vi.spyOn(scenariosApi, "fetchScenario").mockImplementation(async (id) =>
-      id === "scenario-1" ? mockScenarioData : null,
-    )
-    vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([mockAccount])
-    useCalculatorStore.setState({ activeScenarioId: "scenario-2" })
-
-    await useCalculatorStore.getState().syncFromDb("u1", 1_000_000)
-
-    const state = useCalculatorStore.getState()
-    expect(state.activeScenarioId).toBe("scenario-1")
-    expect(state.accounts).toEqual([mockAccount])
-    expect(state.personalInfo.currentAge).toBe(45)
   })
 })

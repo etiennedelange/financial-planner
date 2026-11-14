@@ -1,7 +1,5 @@
 "use client"
 
-import { AccountMenu } from "@/components/layout/account-menu"
-import { ScenarioSwitcher } from "@/components/scenarios/scenario-switcher"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,7 +11,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
-import type { User } from "@supabase/supabase-js"
 import { SearchIcon, TrendingDownIcon } from "@animateicons/react/lucide"
 import { usePathname } from "next/navigation"
 import { useAnimatedIcon } from "@/components/ui/animated-icon"
@@ -30,19 +27,10 @@ const PAGE_TITLES: Record<string, string> = {
   debug: "Debug",
 }
 
-interface TopBarProps {
-  user: User | null
-}
-
-export function TopBar({ user }: TopBarProps) {
+export function TopBar() {
   const pathname = usePathname()
   const section = pathname.split("/").pop() ?? ""
   const title = PAGE_TITLES[section] ?? ""
-
-  const displayMode = useCalculatorStore((s) => s.displayMode)
-  const setDisplayMode = useCalculatorStore((s) => s.setDisplayMode)
-
-  const isSignedIn = user !== null
 
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-card/80 backdrop-blur-md">
@@ -61,21 +49,13 @@ export function TopBar({ user }: TopBarProps) {
           {title}
         </h1>
 
-        {/* Scenario switcher — desktop only */}
-        <div className="flex-1 hidden md:flex justify-center">
-          {isSignedIn && <ScenarioSwitcher />}
-        </div>
-
-        {/* Spacer on mobile */}
-        <div className="flex-1 md:hidden" />
+        <div className="flex-1" />
 
         {/* Right controls */}
         <div className="flex items-center gap-1">
           <CommandPaletteTrigger />
           <DisplayModeDropdown />
           <ThemeToggle />
-          <div aria-hidden className="mx-1 h-5 w-px bg-border" />
-          <AccountMenu user={user} />
         </div>
       </div>
     </header>

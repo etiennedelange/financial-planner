@@ -8,8 +8,6 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/calculator/plan",
   useRouter: () => ({ push: () => {}, replace: () => {}, refresh: () => {} }),
 }))
-vi.mock("@/components/layout/account-menu", () => ({ AccountMenu: () => null }))
-vi.mock("@/components/scenarios/scenario-switcher", () => ({ ScenarioSwitcher: () => null }))
 vi.mock("@/components/theme-toggle", () => ({ ThemeToggle: () => null }))
 
 describe("TopBar display-mode button", () => {
@@ -28,7 +26,7 @@ describe("TopBar display-mode button", () => {
 
   const render = async (mode: "nominal" | "real") => {
     useCalculatorStore.setState({ displayMode: mode })
-    await act(async () => root.render(<TopBar user={null} />))
+    await act(async () => root.render(<TopBar />))
   }
   const trigger = () =>
     [...container.querySelectorAll<HTMLButtonElement>("button")].find((b) =>

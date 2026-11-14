@@ -12,13 +12,12 @@ and the impact you observed.
 ## Scope
 
 In scope: this repository's code and the production deployment built from it,
-especially authentication, row-level security, and anything that could expose
-one user's data to another.
+especially the Content Security Policy (which must keep the app from contacting any other
+origin) and anything that could expose a user's locally stored plan data.
 
-Out of scope: the local-development credentials in `.env.example` and
-`.github/workflows/ci.yml`. These are Supabase's published local demo keys and
-Cloudflare's published Turnstile test keys. They are public by design and do
-not grant access to any real system.
+The app has no accounts, no server-side database, no analytics and makes no outbound requests:
+plan data is stored only in the user's browser, and "Explain my plan" only builds a prompt for the
+user to copy. There are no maintainer-held credentials in this repository.
 
 Please do not run automated scanners, load tests, or denial-of-service
 attempts against the production site.

@@ -1,6 +1,6 @@
 ---
 name: house-rules
-description: On-demand code review of the current changes against the rules this project has already written down — regressions, styling/design-system violations, security issues, and documented best practices. Use whenever the user asks to review, check, or sanity-check their code, work, changes, or diff; asks "did I break anything", "is this safe to commit", "does this follow our conventions", "review before I commit/push/merge"; or finishes a chunk of work and wants a second pass. Also use before committing calculation, auth, store, or UI changes even if the user does not say the word "review".
+description: On-demand code review of the current changes against the rules this project has already written down — regressions, styling/design-system violations, security issues, and documented best practices. Use whenever the user asks to review, check, or sanity-check their code, work, changes, or diff; asks "did I break anything", "is this safe to commit", "does this follow our conventions", "review before I commit/push/merge"; or finishes a chunk of work and wants a second pass. Also use before committing calculation, store, security, or UI changes even if the user does not say the word "review".
 ---
 
 # House Rules Review
@@ -56,7 +56,7 @@ reading all four on a CSS-only change wastes context and produces off-lane noise
 |---|---|
 | `lib/calculations/`, `lib/monte-carlo/`, `lib/constants/`, `lib/store/`, any `*.test.ts` | `references/regression.md` |
 | `components/`, `app/**/*.tsx`, `app/globals.css` | `references/styling.md` |
-| `app/api/`, `app/auth/`, `lib/auth/`, `lib/supabase/`, `lib/security/`, `supabase/migrations/`, `proxy.ts` | `references/security.md` |
+| `lib/security/`, `proxy.ts`, `lib/store/`, `lib/utils/plan-io.ts`, `lib/ai/`, `components/ai/`, `package.json` | `references/security.md` |
 | Anything at all | `references/best-practices.md` |
 
 `references/best-practices.md` always applies — it carries the testing bar, the

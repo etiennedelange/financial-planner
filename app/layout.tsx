@@ -1,11 +1,9 @@
-import { SupabaseProvider } from "@/components/supabase-provider"
+import { LocalDataProvider } from "@/components/local-data-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ThemeShortcut } from "@/components/theme-shortcut"
 import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register"
 import { CommandPalette } from "@/components/command-palette/command-palette"
 import { Toaster } from "@/components/ui/toaster"
-import { Analytics } from "@vercel/analytics/next"
-import { SpeedInsights } from "@vercel/speed-insights/next"
 import type { Metadata, Viewport } from "next"
 import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google"
 import { connection } from "next/server"
@@ -58,7 +56,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // dynamically rendered pages — statically prerendered routes have no request
   // at build time, so the nonce silently doesn't get applied and every
   // framework script trips the CSP. connection() forces dynamic rendering
-  // app-wide so the nonce set in lib/supabase/proxy.ts always reaches them.
+  // app-wide so the nonce set in lib/security/apply-headers.ts always reaches them.
   await connection()
 
   // next-themes injects its own inline script (to set the theme class before
@@ -81,9 +79,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           disableTransitionOnChange
           nonce={nonce}
         >
-          <SupabaseProvider>
+          <LocalDataProvider>
             <main className="bg-background h-full">{children}</main>
-          </SupabaseProvider>
+          </LocalDataProvider>
           {/* App-wide shell affordances: the `d` theme shortcut, the Cmd+K
               command palette, and the Radix toast channel all live at the root
               so they work on every route, not just the calculator section. */}
@@ -92,8 +90,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ServiceWorkerRegister />
           <Toaster />
         </ThemeProvider>
-        <Analytics />
-        <SpeedInsights />
       </body>
     </html>
   )

@@ -2,11 +2,10 @@
 
 import { Button, type ButtonProps } from "@/components/ui/button"
 import { PageCard } from "@/components/ui/page-card"
-import { AccountSettings } from "@/components/auth/account-settings"
-import { AiProviderSettings } from "@/components/settings/ai-provider-settings"
-import { useAuth } from "@/components/supabase-provider"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
-import { exportPlan, parsePlanFile } from "@/lib/utils/plan-io"
+import { useExpensesStore } from "@/lib/store/expenses-store"
+import { clearAllLocalData } from "@/lib/store/clear-local-data"
+import { exportPlan, parsePlanFile, readLastBackupAt } from "@/lib/utils/plan-io"
 import { exportProjectionCsv } from "@/lib/utils/export-csv"
 import { useTheme } from "next-themes"
 import {
@@ -83,15 +82,32 @@ export function SettingsPage({ projection }: SettingsPageProps) {
   )
 
   const { theme, setTheme } = useTheme()
-  const { user } = useAuth()
   const importInputRef = useRef<HTMLInputElement>(null)
   const [importError, setImportError] = useState<string | null>(null)
   const [importing, setImporting] = useState(false)
   const [resetPending, setResetPending] = useState(false)
 
+  const [lastBackupAt, setLastBackupAt] = useState<Date | null>(() => readLastBackupAt())
+  const [clearPending, setClearPending] = useState(false)
+
   const handleExportPlan = () => {
-    exportPlan(personalInfo, retirementGoals, assumptions, drawdownConfig, displayMode, accounts)
-    toast({ title: "Plan exported" })
+    const { groups, expenses, monthlyIncome } = useExpensesStore.getState()
+    exportPlan(
+      { personalInfo, retirementGoals, assumptions, drawdownConfig, displayMode, accounts },
+      { groups, expenses, monthlyIncome },
+    )
+    setLastBackupAt(new Date())
+    toast({ title: "Backup downloaded" })
+  }
+
+  const handleClearAll = () => {
+    if (!clearPending) {
+      setClearPending(true)
+      return
+    }
+    clearAllLocalData()
+    // Hard reload: every tab/store starts from a clean slate.
+    window.location.assign("/calculator")
   }
 
   const handleImportPlan = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,8 +117,10 @@ export function SettingsPage({ projection }: SettingsPageProps) {
     setImportError(null)
     setImporting(true)
     try {
-      const { plan } = await parsePlanFile(file)
+      const { plan, expenses } = await parsePlanFile(file)
       loadPlan(plan)
+      if (expenses) useExpensesStore.getState().loadExpenses(expenses)
+      toast({ title: expenses ? "Plan and expenses restored" : "Plan restored" })
     } catch (err) {
       setImportError(err instanceof Error ? err.message : "Import failed.")
     } finally {
@@ -132,7 +150,7 @@ export function SettingsPage({ projection }: SettingsPageProps) {
         type="file"
         accept=".json"
         className="sr-only"
-        aria-label="Import plan file"
+        aria-label="Restore backup file"
         onChange={handleImportPlan}
       />
       {/* Display */}
@@ -243,9 +261,6 @@ export function SettingsPage({ projection }: SettingsPageProps) {
         </div>
       </PageCard>
 
-      {/* AI provider for Explain My Plan: app default or the user's own key */}
-      <AiProviderSettings />
-
       {/* Plan */}
       <PageCard label="Plan" contentClassName="space-y-2">
         <div className="flex flex-wrap gap-2">
@@ -272,7 +287,7 @@ export function SettingsPage({ projection }: SettingsPageProps) {
             size="sm"
             onClick={handleExportPlan}
           >
-            Export Plan
+            Download Backup
           </IconLabelButton>
           <IconLabelButton
             icon={UploadIcon}
@@ -281,13 +296,13 @@ export function SettingsPage({ projection }: SettingsPageProps) {
             onClick={() => importInputRef.current?.click()}
             disabled={importing}
           >
-            {importing ? "Importing…" : "Import Plan"}
+            {importing ? "Importing…" : "Restore Backup"}
           </IconLabelButton>
         </div>
         {importError && <p className="text-sm text-destructive">{importError}</p>}
       </PageCard>
 
-      {/* Reset Plan Data: local plan state (distinct from account deletion below) */}
+      {/* Reset Plan Data: plan state only (expenses and the AI key are kept) */}
       <PageCard
         label="Reset Plan Data"
         labelVariant="destructive"
@@ -322,8 +337,45 @@ export function SettingsPage({ projection }: SettingsPageProps) {
         )}
       </PageCard>
 
-      {/* Account (signed-in users only) */}
-      {user && <AccountSettings user={user} />}
+      {/* Data & privacy: everything lives in this browser only */}
+      <PageCard label="Data & Privacy" contentClassName="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          There are no accounts. Your plan and expenses are stored only in this browser — they are
+          never uploaded to us. That also means nobody else can restore them: clearing site data,
+          switching browser or device, or Safari&apos;s 7-day storage cleanup will erase them.
+          Download a backup regularly.
+        </p>
+        <p className="text-xs text-muted-foreground" data-testid="last-backup">
+          {lastBackupAt
+            ? `Last backup downloaded ${lastBackupAt.toLocaleDateString("en-ZA", { year: "numeric", month: "long", day: "numeric" })}.`
+            : "You haven't downloaded a backup yet."}
+        </p>
+        {clearPending ? (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              This permanently deletes your plan, expenses and any saved AI key from this browser.
+              Download a backup first if you may want it back.
+            </p>
+            <div className="flex gap-2">
+              <Button variant="destructive" size="sm" onClick={handleClearAll}>
+                Yes, delete everything
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setClearPending(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleClearAll}
+            className="border-destructive/40 text-destructive hover:bg-destructive/10"
+          >
+            Clear all local data
+          </Button>
+        )}
+      </PageCard>
     </div>
   )
 }

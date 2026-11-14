@@ -8,6 +8,8 @@ tags: [ai, security, bug-fix]
 
 # 2026-11-14 — AI summaries: Workers AI, your own key, and the fixes that made them work
 
+> **Superseded 2026-11-14.** This server-side AI feature (Gateway / Workers AI / own key) was removed by [the local-first change](2026-11-14-remove-accounts-local-first.md): the app now makes no AI calls and no outbound requests, and "Explain my plan" only builds a prompt the user copies into their own chat. One fix survives: the narrative payload still defaults a missing `lumpSumPercentage` to 0, as the engine does.
+
 ## What was wrong
 
 The "Explain My Plan" card (`components/dashboard/plan-narrative-card.tsx` →
