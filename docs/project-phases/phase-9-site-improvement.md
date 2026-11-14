@@ -181,6 +181,18 @@ Write-up and main-vs-branch comparison: [history](../history/2026-11-01-audit-fi
 
 ---
 
+## 9.8 — Bug and Performance Audit (2026-11-14)
+
+- [x] Risk worker recovers from a dead worker, cancels superseded runs, reports failure; CSP `worker-src`
+- [x] Expenses/calculator store sync races (resurrected deletes, reset while signed in, scenario switching)
+- [x] Shortfall amount applies the spending-phase multiplier (golden file regenerated)
+- [x] Render cost: cached `Intl.NumberFormat`, store selectors, memoized context, nested `<main>`
+- [ ] Decide whether the breakdown/debug window/`computePortfolioTotals` should share one zero-balance weighting rule
+
+Details: [history/2026-11-14-bug-and-performance-audit.md](../history/2026-11-14-bug-and-performance-audit.md)
+
+---
+
 ## Suggested Work Order
 
 1. **9.2 Critical** — store tests first; they block meaningful coverage numbers

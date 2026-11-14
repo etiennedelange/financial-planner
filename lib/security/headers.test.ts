@@ -17,6 +17,12 @@ describe("buildCsp", () => {
     expect(directive(buildCsp("abc123", SUPABASE, false), "script-src")).toContain("'nonce-abc123'")
   })
 
+  it("lets same-origin workers load, since strict-dynamic would otherwise block the Monte Carlo worker", () => {
+    const csp = buildCsp("n", SUPABASE, false)
+    expect(directive(csp, "script-src")).toContain("'strict-dynamic'")
+    expect(directive(csp, "worker-src")).toContain("'self'")
+  })
+
   it("allows the Supabase origin to be contacted", () => {
     expect(directive(buildCsp("n", SUPABASE, false), "connect-src")).toContain(SUPABASE)
   })

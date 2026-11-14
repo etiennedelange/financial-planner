@@ -22,7 +22,7 @@ export function ProjectionSummary({
   lifeExpectancy,
   inflationRate,
 }: ProjectionSummaryProps) {
-  const { displayMode } = useCalculatorStore()
+  const displayMode = useCalculatorStore((state) => state.displayMode)
 
   if (!projection) {
     return null

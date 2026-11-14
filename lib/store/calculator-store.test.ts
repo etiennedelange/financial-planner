@@ -302,7 +302,43 @@ describe("useCalculatorStore", () => {
       const state = useCalculatorStore.getState()
       expect(state.personalInfo.currentAge).toBe(SA_DEFAULTS.defaultCurrentAge)
       expect(state.accounts).toHaveLength(0)
-      expect(state.identity).toEqual({ kind: "guest" })
+    })
+
+    it("keeps a signed-in user signed in, on the same scenario, and syncs the reset", async () => {
+      vi.useFakeTimers()
+      vi.clearAllMocks()
+      vi.spyOn(accountsApi, "deleteAccount").mockResolvedValue(undefined)
+      vi.spyOn(scenariosApi, "updateScenario").mockResolvedValue(undefined)
+      useCalculatorStore.setState({
+        identity: { kind: "user", userId: "u1" },
+        activeScenarioId: "s1",
+        scenarioList: [mockScenarioMeta],
+        accounts: [mockAccount],
+      })
+
+      useCalculatorStore.getState().resetToDefaults()
+
+      const state = useCalculatorStore.getState()
+      expect(state.identity).toEqual({ kind: "user", userId: "u1" })
+      expect(state.activeScenarioId).toBe("s1")
+      expect(state.scenarioList).toEqual([mockScenarioMeta])
+      expect(accountsApi.deleteAccount).toHaveBeenCalledWith(mockAccount.id)
+      // Later edits still reach the cloud
+      useCalculatorStore.getState().setPersonalInfo({ currentAge: 41 })
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(scenariosApi.updateScenario).toHaveBeenCalledWith("s1", expect.anything())
+      vi.useRealTimers()
+    })
+
+    it("a guest reset makes no remote calls", () => {
+      vi.clearAllMocks()
+      useCalculatorStore.setState({
+        identity: { kind: "guest" },
+        activeScenarioId: null,
+        accounts: [mockAccount],
+      })
+      useCalculatorStore.getState().resetToDefaults()
+      expect(accountsApi.deleteAccount).not.toHaveBeenCalled()
     })
   })
 
@@ -1006,5 +1042,102 @@ describe("write-guard abort paths", () => {
     await pending
 
     expect(useCalculatorStore.getState().scenarioList).toHaveLength(2)
+  })
+})
+
+describe("scenario switching races", () => {
+  const deferred = <T>() => {
+    let resolve!: (v: T) => void
+    const promise = new Promise<T>((r) => (resolve = r))
+    return { promise, resolve }
+  }
+
+  beforeEach(() => {
+    vi.useRealTimers()
+    vi.clearAllMocks()
+    useCalculatorStore.setState({
+      identity: { kind: "user", userId: "u1" },
+      activeScenarioId: null,
+      scenarioList: [],
+      accounts: [],
+    })
+  })
+
+  it("the last selection wins even when an earlier request resolves later", async () => {
+    const a = deferred<typeof mockScenarioData>()
+    const b = deferred<typeof mockScenarioData>()
+    vi.spyOn(scenariosApi, "fetchScenario").mockImplementation((id) =>
+      id === "A" ? a.promise : b.promise,
+    )
+    vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([])
+
+    const first = useCalculatorStore.getState().switchScenario("A")
+    const second = useCalculatorStore.getState().switchScenario("B")
+    b.resolve(mockScenarioData)
+    await second
+    a.resolve(mockScenarioData)
+    await first
+
+    expect(useCalculatorStore.getState().activeScenarioId).toBe("B")
+  })
+
+  it("does not load a scenario into the store after the user signed out mid-fetch", async () => {
+    const pending = deferred<typeof mockScenarioData>()
+    vi.spyOn(scenariosApi, "fetchScenario").mockReturnValue(pending.promise)
+    vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([mockAccount])
+
+    const switching = useCalculatorStore.getState().switchScenario("A")
+    useCalculatorStore.setState({ identity: { kind: "guest" }, accounts: [] })
+    pending.resolve(mockScenarioData)
+    await switching
+
+    expect(useCalculatorStore.getState().activeScenarioId).toBeNull()
+    expect(useCalculatorStore.getState().accounts).toEqual([])
+  })
+
+  it("createNewScenario clones the accounts as they are after the scenario row is created", async () => {
+    const created = deferred<string>()
+    vi.spyOn(scenariosApi, "createScenario").mockReturnValue(created.promise)
+    const clone = vi.spyOn(accountsApi, "cloneAccounts").mockResolvedValue([])
+    useCalculatorStore.setState({ accounts: [mockAccount] })
+
+    const creating = useCalculatorStore.getState().createNewScenario("Copy")
+    const edited = { ...mockAccount, currentBalance: 999 }
+    useCalculatorStore.setState({ accounts: [edited] })
+    created.resolve("new-id")
+    await creating
+
+    expect(clone).toHaveBeenCalledWith([edited], "new-id")
+  })
+
+  it("createNewScenario does not touch the store if the user signed out while it ran", async () => {
+    const created = deferred<string>()
+    vi.spyOn(scenariosApi, "createScenario").mockReturnValue(created.promise)
+    vi.spyOn(accountsApi, "cloneAccounts").mockResolvedValue([mockAccount])
+
+    const creating = useCalculatorStore.getState().createNewScenario("Copy")
+    useCalculatorStore.setState({ identity: { kind: "guest" } })
+    created.resolve("new-id")
+    await creating
+
+    expect(useCalculatorStore.getState().activeScenarioId).toBeNull()
+    expect(useCalculatorStore.getState().scenarioList).toEqual([])
+  })
+
+  it("syncFromDb falls back to the first scenario's own data when the remembered one has none", async () => {
+    const other = { ...mockScenarioMeta, id: "scenario-2" }
+    vi.spyOn(scenariosApi, "listScenarios").mockResolvedValue([mockScenarioMeta, other])
+    vi.spyOn(scenariosApi, "fetchScenario").mockImplementation(async (id) =>
+      id === "scenario-1" ? mockScenarioData : null,
+    )
+    vi.spyOn(accountsApi, "fetchAccounts").mockResolvedValue([mockAccount])
+    useCalculatorStore.setState({ activeScenarioId: "scenario-2" })
+
+    await useCalculatorStore.getState().syncFromDb("u1", 1_000_000)
+
+    const state = useCalculatorStore.getState()
+    expect(state.activeScenarioId).toBe("scenario-1")
+    expect(state.accounts).toEqual([mockAccount])
+    expect(state.personalInfo.currentAge).toBe(45)
   })
 })

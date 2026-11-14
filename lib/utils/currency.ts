@@ -88,12 +88,26 @@ export function formatCurrency(
     if (abs >= 999.5) return `${sign}R${(abs / 1_000).toFixed(0)}K`
   }
 
-  return new Intl.NumberFormat("en-ZA", {
-    style: "currency",
-    currency: "ZAR",
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  }).format(displayValue)
+  return zarFormatter(decimals).format(displayValue)
+}
+
+// Constructing an Intl.NumberFormat costs ~20µs; the breakdown tables format hundreds of
+// values per render, so build one formatter per decimals value and reuse it.
+const zarFormatters = new Map<number, Intl.NumberFormat>()
+
+/** @internal exported for tests */
+export function zarFormatter(decimals: number): Intl.NumberFormat {
+  let formatter = zarFormatters.get(decimals)
+  if (!formatter) {
+    formatter = new Intl.NumberFormat("en-ZA", {
+      style: "currency",
+      currency: "ZAR",
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    })
+    zarFormatters.set(decimals, formatter)
+  }
+  return formatter
 }
 
 /** Shown in place of an amount that is not a finite number */

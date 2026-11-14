@@ -13,6 +13,7 @@ import {
   selectMonthlyGrossIncomeAtRetirement,
   selectMonthlyNetIncomeAtRetirement,
   selectRawIncomeGap,
+  incomeGoalForDrawdownYear,
   selectShortfallAmount,
   selectSurplusAmount,
 } from "../projection-engine"
@@ -97,6 +98,36 @@ describe("selectRawIncomeGap", () => {
     const rows = [row({ withdrawals: 120_000 }), row({ withdrawals: 120_000 })]
     const gap = selectRawIncomeGap(rows, 0, 10_000, INFLATION)
     expect(gap).toBeCloseTo(120_000 * 1.055 - 120_000, 6)
+  })
+})
+
+describe("selectRawIncomeGap spending phases", () => {
+  it("measures each year against the same goal as the shortfall age, slow-go reduction included", () => {
+    // Zero inflation, R10 000/month. Drawdown year 16 is a slow-go year (goal x0.8 = R96 000).
+    const rows = Array.from({ length: 17 }, (_, i) =>
+      row({ withdrawals: i === 16 ? 96_000 : 120_000 }),
+    )
+    // Withdrawing exactly the (reduced) goal in the slow-go year is NOT a shortfall.
+    expect(selectRawIncomeGap(rows, 0, 10_000, 0)).toBeCloseTo(0, 6)
+  })
+
+  it("counts only the shortfall below the reduced goal in a slow-go year", () => {
+    const rows = Array.from({ length: 17 }, (_, i) =>
+      row({ withdrawals: i === 16 ? 90_000 : 120_000 }),
+    )
+    expect(selectRawIncomeGap(rows, 0, 10_000, 0)).toBeCloseTo(6_000, 6)
+  })
+
+  it("agrees with incomeGoalForDrawdownYear for every drawdown year, with inflation", () => {
+    const yearsToRetirement = 3
+    const rows = Array.from({ length: 3 + 30 }, () => row({ withdrawals: 0 }))
+    const expected = rows
+      .slice(yearsToRetirement)
+      .reduce(
+        (sum, _r, y) => sum + incomeGoalForDrawdownYear(10_000, yearsToRetirement, y, 0.055),
+        0,
+      )
+    expect(selectRawIncomeGap(rows, yearsToRetirement, 10_000, 0.055)).toBeCloseTo(expected, 4)
   })
 })
 

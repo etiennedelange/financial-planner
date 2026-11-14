@@ -119,6 +119,23 @@ describe("persistence scopes", () => {
       expect(ambiguous).toEqual([])
     })
 
+    it("never overwrites an existing scoped plan with the legacy copy, and keeps the legacy payload as a backup", () => {
+      const newer = JSON.stringify({ state: { accounts: ["NEWER-PLAN"] }, version: 3 })
+      localStorage.setItem("financial-planner-storage:user:u1", newer)
+      localStorage.setItem(
+        "financial-planner-storage",
+        JSON.stringify({ state: { sessionId: "u1", accounts: ["OLD-PLAN"] }, version: 2 }),
+      )
+
+      migrateLegacyKeys()
+
+      expect(localStorage.getItem("financial-planner-storage:user:u1")).toBe(newer)
+      expect(localStorage.getItem("financial-planner-storage")).toBeNull()
+      expect(localStorage.getItem("financial-planner-storage:legacy-backup:u1")).toContain(
+        "OLD-PLAN",
+      )
+    })
+
     it("routes a sessionId:null legacy payload to the ambiguous holding area, never auto-claimed", () => {
       localStorage.setItem(
         "financial-planner-storage",
