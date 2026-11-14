@@ -100,12 +100,12 @@
     --accent-foreground: 222 40% 10%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --warning: 38 90% 40%;
+    --warning: 38 90% 30%;
     --warning-foreground: 0 0% 100%;
-    --success: 133 61% 36%;
+    --success: 133 61% 28%;
     --success-foreground: 0 0% 98%;
     --border: 214 20% 88%;
-    --input: 214 20% 88%;
+    --input: 214 20% 55%;
     --ring: 162 70% 30%;
     --radius: 0.5rem;
     --chart-1: 162 70% 30%;
@@ -143,7 +143,7 @@
     --success: 133 61% 62%;
     --success-foreground: 222 47% 5%;
     --border: 222 25% 18%;
-    --input: 222 30% 13%;
+    --input: 222 20% 45%;
     --ring: 162 70% 55%;
     --chart-1: 162 70% 55%;
     --chart-2: 195 65% 42%;

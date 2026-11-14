@@ -179,6 +179,13 @@ Write-up and main-vs-branch comparison: [history](../history/2026-11-01-audit-fi
 - [ ] Docs: two-pot R240k de minimis test, provident vested-rights wording, cite National Treasury for the LA band
 - [ ] Single source of truth: tax figures duplicated in `tax-relief-history.ts`, "R550k" copy, 0.4 rates
 
+## 9.9 — Theme Contrast (2026-11-14)
+
+- [x] Light-mode warning and success text, status buttons and tinted panels reach 4.5:1; input borders reach 3:1 in both themes — [history](../history/2026-11-14-theme-contrast-fixes.md)
+- [x] Token contrast regression test covers every text and boundary pair in both themes (`lib/utils/contrast.test.ts`)
+- [ ] Rendered visual pass in light and dark mode at 320px and 1280px (tokens verified; the darker light-mode status colours have not been seen on the real pages)
+- [ ] `--chart-3` fails 3:1 on card in light mode (1.77:1); unused today, fix before it is used for a series
+
 ---
 
 ## 9.8 — Bug and Performance Audit (2026-11-14)
