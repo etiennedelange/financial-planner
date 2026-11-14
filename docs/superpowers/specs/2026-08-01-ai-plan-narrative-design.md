@@ -7,7 +7,7 @@ date: 2026-08-01
 
 # Plain-English AI Plan Narrative — Design Spec
 
-> **Partly superseded 2026-11-14.** The server-side `/api/plan-narrative` route and the Vercel AI Gateway were removed; the summary now runs browser → provider with the user's own key. See [BYOK LLM key handling](../../security/byok-llm-key-handling.md).
+> **Superseded 2026-11-14.** The server-side `/api/plan-narrative` route, the Vercel AI Gateway and the model picker were removed; the app makes no AI calls. "Explain my plan" now builds a prompt the user copies into their own chat app. See [the removal write-up](../../history/2026-11-14-remove-accounts-local-first.md).
 
 Date: 2026-08-01
 Status: Approved, pending implementation plan

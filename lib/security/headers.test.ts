@@ -1,5 +1,4 @@
 import { describe, it, expect } from "vite-plus/test"
-import { PROVIDER_ORIGINS } from "@/lib/ai/providers/origins"
 import { buildCsp, SECURITY_HEADERS } from "./headers"
 
 function directive(csp: string, name: string): string {
@@ -22,37 +21,26 @@ describe("buildCsp", () => {
     expect(directive(csp, "worker-src")).toContain("'self'")
   })
 
-  describe("connect-src — the exfiltration guard for the user's API key", () => {
-    it("allows exactly self and the three LLM providers — nothing else", () => {
-      const sources = directive(buildCsp("n", false), "connect-src").split(" ").slice(1)
-      expect([...sources].sort()).toEqual(
-        [
-          "'self'",
-          "https://api.anthropic.com",
-          "https://api.openai.com",
-          "https://generativelanguage.googleapis.com",
-        ].sort(),
-      )
-    })
-
-    it("never uses a wildcard or a bare scheme", () => {
+  describe("connect-src — the exfiltration guard", () => {
+    it("allows this site only: the app makes no outbound requests", () => {
       for (const isDev of [true, false]) {
-        const connect = directive(buildCsp("n", isDev), "connect-src")
-        expect(connect).not.toMatch(/\*/)
-        expect(connect).not.toMatch(/(^|\s)https?:(\s|$)/)
+        expect(directive(buildCsp("n", isDev), "connect-src")).toBe("connect-src 'self'")
       }
     })
 
-    it("has no origin left over from the removed account system", () => {
+    it("has no AI provider, telemetry, account-system or CDN origin", () => {
       const csp = buildCsp("n", false)
-      expect(csp).not.toContain("supabase")
-      expect(csp).not.toContain("cloudflare")
-      expect(csp).not.toContain("vercel")
-    })
-
-    it("derives every provider origin from the shared PROVIDER_ORIGINS list", () => {
-      const connect = directive(buildCsp("n", false), "connect-src")
-      for (const origin of Object.values(PROVIDER_ORIGINS)) expect(connect).toContain(origin)
+      for (const banned of [
+        "anthropic",
+        "openai",
+        "googleapis",
+        "huggingface",
+        "supabase",
+        "cloudflare",
+        "vercel",
+      ]) {
+        expect(csp).not.toContain(banned)
+      }
     })
   })
 

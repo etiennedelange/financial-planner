@@ -7,17 +7,7 @@ import {
 import { LAST_BACKUP_KEY } from "@/lib/utils/plan-io"
 
 /** Exact keys that hold user data. The theme preference is deliberately kept. */
-const LOCAL_DATA_KEYS = [
-  CALCULATOR_STORAGE_KEY,
-  EXPENSES_STORAGE_KEY,
-  LAST_BACKUP_KEY,
-  "plan-narrative-model-tier",
-  "plan-narrative-provider",
-  "plan-narrative-mode",
-] as const
-
-/** Key prefixes that hold user data (encrypted API-key vault entries). */
-const LOCAL_DATA_PREFIXES = ["rc-llm-key-v1:"] as const
+const LOCAL_DATA_KEYS = [CALCULATOR_STORAGE_KEY, EXPENSES_STORAGE_KEY, LAST_BACKUP_KEY] as const
 
 /** Removes every user-data key from `storage`. Returns the keys it removed. */
 export function removeLocalDataKeys(storage: Storage): string[] {
@@ -28,10 +18,7 @@ export function removeLocalDataKeys(storage: Storage): string[] {
     if (key !== null) all.push(key)
   }
   for (const key of all) {
-    const isData =
-      (LOCAL_DATA_KEYS as readonly string[]).includes(key) ||
-      LOCAL_DATA_PREFIXES.some((prefix) => key.startsWith(prefix))
-    if (!isData) continue
+    if (!(LOCAL_DATA_KEYS as readonly string[]).includes(key)) continue
     storage.removeItem(key)
     removed.push(key)
   }

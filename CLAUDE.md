@@ -9,7 +9,7 @@
 
 ## Project
 
-SA retirement planning calculator — Monte Carlo simulations, multi-account portfolio, SA tax treatment. Stack: Next.js, TypeScript, shadcn/ui. **No accounts, no database**: all data is in the browser (localStorage); AI is bring-your-own-key, called browser → provider.
+SA retirement planning calculator — Monte Carlo simulations, multi-account portfolio, SA tax treatment. Stack: Next.js, TypeScript, shadcn/ui. **No accounts, no database, no outbound requests**: all data is in the browser (localStorage). "Explain my plan" is copy-a-prompt — the app makes no AI calls.
 
 ## Dev Commands
 
@@ -100,7 +100,7 @@ describe('functionName', () => {
   (`lib/context/calculator-context.tsx`); every other page shows deterministic results
 - `lib/store/calculator-store.ts` — the single plan (persist v4, fixed key, no sync)
 - `lib/store/expenses-store.ts` — real current spending; persisted separately from the plan
-- `lib/ai/key-vault.ts` — the user's LLM API key; see the key rules under Common Pitfalls
+- `lib/ai/copy-prompt.ts` — builds the prompt the user copies into their own chat; the app never sends it anywhere
 
 ## Key Calculation Files
 
@@ -168,9 +168,8 @@ Design rules:
 - ❌ Don't omit `assumptions` from useMemo deps
 - ❌ Don't use local formatCurrency — import from `lib/utils/currency`
 - ❌ Don't hardcode colors (`bg-blue-500`) — use semantic tokens (`bg-primary`, `text-foreground`)
-- ❌ Don't add accounts, a database or any server-held secret — the product promise is that data never leaves the browser. Decided 2026-11-14; see `docs/history/2026-11-14-remove-accounts-local-first-byok.md`
-- ❌ **Never persist, log, export, URL-encode or store the user's LLM API key** anywhere but `lib/ai/key-vault.ts` (memory or passphrase-encrypted blob). Provider clients get it as an argument and go through `providerFetch`; error text shown to users must be a fixed `ProviderError` message. `lib/ai/key-isolation.test.ts` enforces it; see `docs/security/byok-llm-key-handling.md`
-- ❌ Don't add a `connect-src` origin, a third-party script origin, or a new provider without updating `PROVIDER_ORIGINS` and the exact-set assertion in `lib/security/headers.test.ts` — the CSP is what stops a script from exfiltrating the key
+- ❌ Don't add accounts, a database, analytics, an AI call, or ANY outbound request — the product promise is that data never leaves the browser. Decided 2026-11-14; see `docs/history/2026-11-14-remove-accounts-local-first.md`. `lib/security/no-outbound-requests.test.ts` enforces it and the CSP is `connect-src 'self'`; widening either is a product decision, not a refactor
+- ❌ Don't put plan data in a URL (e.g. a `?q=` prefill on a chat link) — links to chat apps are plain URLs; the user pastes the copied prompt
 - ❌ Don't import plan data from a file without `sanitizePlan` / `sanitizeExpenses` (shared with the persist `migrate`)
 - ❌ Don't show Monte Carlo results (success rate, percentiles) outside the Risk page — Overview
   links to it instead. Decided 2026-10-31; see `docs/history/2026-10-31-risk-page.md`

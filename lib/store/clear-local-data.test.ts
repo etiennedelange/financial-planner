@@ -6,25 +6,18 @@ import { EXPENSES_STORAGE_KEY, useExpensesStore, DEFAULT_MONTHLY_INCOME } from "
 describe("removeLocalDataKeys", () => {
   beforeEach(() => localStorage.clear())
 
-  it("removes plan, expenses, backup marker, AI prefs and every vault entry — but not the theme", () => {
-    for (const key of [
-      CALCULATOR_STORAGE_KEY,
-      EXPENSES_STORAGE_KEY,
-      "rc-last-backup-at",
-      "plan-narrative-model-tier",
-      "plan-narrative-provider",
-      "plan-narrative-mode",
-      "rc-llm-key-v1:anthropic",
-      "rc-llm-key-v1:openai",
-      "rc-llm-key-v1:gemini",
-    ]) {
+  it("removes the plan, expenses and backup marker — but not the theme or unrelated keys", () => {
+    for (const key of [CALCULATOR_STORAGE_KEY, EXPENSES_STORAGE_KEY, "rc-last-backup-at"]) {
       localStorage.setItem(key, "x")
     }
     localStorage.setItem("theme", "dark")
+    localStorage.setItem("something-else", "keep")
     const removed = removeLocalDataKeys(localStorage)
-    expect(removed).toHaveLength(9)
-    expect(localStorage.length).toBe(1)
+    expect(removed.sort()).toEqual(
+      [CALCULATOR_STORAGE_KEY, EXPENSES_STORAGE_KEY, "rc-last-backup-at"].sort(),
+    )
     expect(localStorage.getItem("theme")).toBe("dark")
+    expect(localStorage.getItem("something-else")).toBe("keep")
   })
 })
 
@@ -37,14 +30,12 @@ describe("clearAllLocalData", () => {
     useCalculatorStore.getState().setPersonalInfo({ currentAge: 61 })
     useExpensesStore.getState().addGroup("Housing", "#fff")
     useExpensesStore.getState().setMonthlyIncome(99999)
-    localStorage.setItem("rc-llm-key-v1:anthropic", "{}")
     expect(localStorage.getItem(CALCULATOR_STORAGE_KEY)).not.toBeNull()
 
     clearAllLocalData(localStorage)
 
     expect(localStorage.getItem(CALCULATOR_STORAGE_KEY)).toBeNull()
     expect(localStorage.getItem(EXPENSES_STORAGE_KEY)).toBeNull()
-    expect(localStorage.getItem("rc-llm-key-v1:anthropic")).toBeNull()
     expect(useCalculatorStore.getState().personalInfo.currentAge).not.toBe(61)
     expect(useExpensesStore.getState().groups).toEqual([])
     expect(useExpensesStore.getState().monthlyIncome).toBe(DEFAULT_MONTHLY_INCOME)

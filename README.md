@@ -29,7 +29,7 @@ SA-specific tax treatment.
 ## Stack
 
 Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · shadcn/ui ·
-Zustand (persisted to localStorage) · bring-your-own-key AI (browser → provider) ·
+Zustand (persisted to localStorage) ·
 Vite+ (Vitest, Oxlint, Oxfmt) · Playwright. Hosted on Vercel.
 
 ## Project layout
@@ -41,7 +41,7 @@ lib/calculations/        Deterministic projection engine and shared utilities
 lib/monte-carlo/         Monte Carlo simulation engine
 lib/constants/           Tax-year config (single source of truth)
 lib/store/               Zustand stores (plan, expenses) + local persistence
-lib/ai/                  Bring-your-own-key AI: key vault, provider clients
+lib/ai/                  Prompt builder for "Explain my plan" (copy a prompt)
 docs/                    Phase plans and dated change history
 ```
 

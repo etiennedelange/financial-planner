@@ -6,7 +6,7 @@ description: "Phase 4: saving and loading user data, with named scenarios."
 
 # Phase 4: Data Persistence ✅ Complete
 
-> **Partly superseded 2026-11-14.** Database storage, named scenarios and auto-sync to Supabase were removed. What remains: browser persistence of one plan, and JSON import/export (now a v2 backup that includes expenses). See [Phase 12](phase-12-local-first-byok.md).
+> **Partly superseded 2026-11-14.** Database storage, named scenarios and auto-sync to Supabase were removed. What remains: browser persistence of one plan, and JSON import/export (now a v2 backup that includes expenses). See [Phase 12](phase-12-local-first.md).
 
 **Goal:** Save and load user data from database, support named scenarios.
 

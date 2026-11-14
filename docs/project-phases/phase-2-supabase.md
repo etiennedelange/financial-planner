@@ -6,7 +6,7 @@ description: "Phase 2: Supabase database infrastructure for persistent data."
 
 # Phase 2: Supabase Integration ✅ Complete
 
-> **Superseded 2026-11-14.** The app no longer has accounts or a database; plan data lives only in the browser. This phase is kept as a historical record of what was built. See [Phase 12](phase-12-local-first-byok.md) and [the removal write-up](../history/2026-11-14-remove-accounts-local-first-byok.md).
+> **Superseded 2026-11-14.** The app no longer has accounts or a database; plan data lives only in the browser. This phase is kept as a historical record of what was built. See [Phase 12](phase-12-local-first.md) and [the removal write-up](../history/2026-11-14-remove-accounts-local-first.md).
 
 **Goal:** Set up database infrastructure for persistent data storage.
 

@@ -1,5 +1,3 @@
-import { PROVIDER_ORIGINS } from "@/lib/ai/providers/origins"
-
 export const SECURITY_HEADERS: Record<string, string> = {
   "X-Frame-Options": "DENY",
   "X-Content-Type-Options": "nosniff",
@@ -8,8 +6,12 @@ export const SECURITY_HEADERS: Record<string, string> = {
   "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
 }
 
-/** Every origin `fetch` may reach (the test pins the exact set). No telemetry origins. */
-const CONNECT_SRC = ["'self'", ...Object.values(PROVIDER_ORIGINS)] as const
+/**
+ * Where `fetch`/XHR/WebSocket may connect: this site only. The app makes no outbound
+ * requests at all (no analytics, no AI provider calls) — the user's data stays in the
+ * browser — and the CSP enforces that even if a script were ever injected.
+ */
+const CONNECT_SRC = ["'self'"] as const
 
 /**
  * Per-request CSP. The nonce must be generated per request and threaded into
@@ -36,9 +38,7 @@ export function buildCsp(nonce: string, isDev: boolean): string {
     `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' data: blob:`,
     `font-src 'self' data:`,
-    // The exfiltration guard for the user's LLM API key: the page may only talk to
-    // itself and the three provider APIs the user can pick
-    // (bring-your-own-key calls go straight from the browser). No wildcards.
+    // Exfiltration guard: nothing can be sent to another origin.
     `connect-src ${CONNECT_SRC.join(" ")}`,
     // Without this, workers fall back to script-src, where 'strict-dynamic' makes browsers
     // ignore 'self' and a worker cannot carry a nonce: the Monte Carlo worker could be

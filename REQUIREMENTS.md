@@ -134,7 +134,7 @@ A retirement planning calculator specifically designed for South African investo
 - Multiple retirement accounts per plan
 - Full backup/restore as a downloadable file (plan + expenses)
 - "Clear all local data" for the user to wipe everything
-- Optional AI summary using the user's own provider API key (never sent to us)
+- "Explain my plan": a ready-made prompt the user copies into their own chat app; the app makes no AI calls
 
 ### Performance
 - Calculations complete within 2-3 seconds

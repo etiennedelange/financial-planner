@@ -6,7 +6,7 @@ description: "Phase 3: authentication and profiles so plans sync across devices.
 
 # Phase 3: User Accounts ✅ Security risk register resolved
 
-> **Superseded 2026-11-14.** The app no longer has accounts or a database; plan data lives only in the browser. This phase is kept as a historical record of what was built. See [Phase 12](phase-12-local-first-byok.md) and [the removal write-up](../history/2026-11-14-remove-accounts-local-first-byok.md).
+> **Superseded 2026-11-14.** The app no longer has accounts or a database; plan data lives only in the browser. This phase is kept as a historical record of what was built. See [Phase 12](phase-12-local-first.md) and [the removal write-up](../history/2026-11-14-remove-accounts-local-first.md).
 
 **Goal:** Implement user authentication and profile management so users can sync their retirement plan across devices, with hardened security including mandatory login and optional 2FA.
 

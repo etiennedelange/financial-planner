@@ -28,7 +28,7 @@ Based on REQUIREMENTS.md, the project is being developed in the following phases
 | **Phase 9** | 🔄 In Progress | [Site-Wide Improvement](project-phases/phase-9-site-improvement.md) |
 | **Phase 10** | ✅ Complete | [Calculation Simplification](project-phases/phase-10-calculation-simplification.md) — all steps done; engine deduplicated, money units type-safe, MC seeded |
 | **Phase 11** | 📋 Planned | [Dead Code Cleanup](project-phases/phase-11-dead-code-cleanup.md) — knip-verified unused files/deps/exports |
-| **Phase 12** | ✅ Complete | [Local-first storage and bring-your-own-key AI](project-phases/phase-12-local-first-byok.md) — no accounts, browser-only data, user-supplied AI key |
+| **Phase 12** | ✅ Complete | [Local-first storage, no outbound requests](project-phases/phase-12-local-first.md) — no accounts, browser-only data, no analytics, 'Explain my plan' is copy-a-prompt |
 | **Future** | 📋 Planned | [Future Enhancements](project-phases/future-enhancements.md) |
 
 ## Recent Activity

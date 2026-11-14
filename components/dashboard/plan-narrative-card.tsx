@@ -1,40 +1,17 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
 import { useShallow } from "zustand/react/shallow"
 import { PageCard } from "@/components/ui/page-card"
-import { Button } from "@/components/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { CopyPromptPanel } from "@/components/ai/copy-prompt-panel"
-import { UnlockForm } from "@/components/ai/unlock-form"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useCalculator } from "@/lib/context/calculator-context"
-import { usePlanNarrative } from "@/lib/hooks/use-plan-narrative"
-import { useKeyStatus, useNarrativeMode, useProviderChoice } from "@/lib/hooks/use-llm-key"
-import { DEFAULT_MODEL_TIER, PROVIDER_LABELS, type ModelTier } from "@/lib/ai/model-tiers"
 import { buildPlanNarrativePayload } from "@/lib/ai/plan-narrative-prompt"
 import { Sparkles } from "lucide-react"
 
-const TIER_LABELS: Record<ModelTier, string> = {
-  fast: "Fast",
-  balanced: "Balanced",
-  best: "Best",
-}
-
-const TIER_STORAGE_KEY = "plan-narrative-model-tier"
-
-function isModelTier(value: string): value is ModelTier {
-  return value in TIER_LABELS
-}
-
+/**
+ * "Explain my plan": the app makes no AI calls. It builds a ready-made prompt and the user
+ * pastes it into the chat app they already use (a subscription works). Nothing is sent from here.
+ */
 export function PlanNarrativeCard() {
   const { accounts, personalInfo, retirementGoals, drawdownConfig } = useCalculatorStore(
     useShallow((state) => ({
@@ -46,42 +23,6 @@ export function PlanNarrativeCard() {
   )
   const { projection } = useCalculator()
 
-  const [tier, setTier] = useState<ModelTier>(DEFAULT_MODEL_TIER)
-
-  useEffect(() => {
-    const stored = localStorage.getItem(TIER_STORAGE_KEY)
-    if (stored && isModelTier(stored)) {
-      // Deferred out of the effect's synchronous body — localStorage can't be
-      // read during render (SSR), and applying the stored tier async avoids a
-      // hydration mismatch while still hydrating the saved preference.
-      const id = requestAnimationFrame(() => setTier(stored))
-      return () => cancelAnimationFrame(id)
-    }
-  }, [])
-
-  const handleTierChange = (value: string) => {
-    if (!isModelTier(value)) return
-    setTier(value)
-    localStorage.setItem(TIER_STORAGE_KEY, value)
-  }
-
-  const [mode] = useNarrativeMode()
-  const [provider] = useProviderChoice()
-  const keyStatus = useKeyStatus(provider)
-  const hasKey = keyStatus === "unlocked" || keyStatus === "session"
-
-  const { text, isStreaming, error, cooldownRemaining, generate, cancel, clear } = usePlanNarrative(
-    {
-      accounts,
-      personalInfo,
-      retirementGoals,
-      drawdownConfig,
-      projection,
-      tier,
-      provider,
-    },
-  )
-
   if (accounts.length === 0 || !projection) return null
 
   const payload = buildPlanNarrativePayload({
@@ -91,16 +32,7 @@ export function PlanNarrativeCard() {
     drawdownConfig,
     projection,
   })
-
-  // Only "key" mode generates in-app, and only with an unlocked key.
-  const canGenerate = mode === "key" && hasKey
-  const buttonLabel = isStreaming
-    ? "Generating…"
-    : cooldownRemaining > 0
-      ? `Try again in ${cooldownRemaining}s`
-      : text
-        ? "Regenerate"
-        : "Explain my plan"
+  if (!payload) return null
 
   return (
     <PageCard
@@ -108,85 +40,7 @@ export function PlanNarrativeCard() {
       leading={<Sparkles className="h-4 w-4 text-primary" />}
       contentClassName="space-y-3"
     >
-      {mode === "copy" && payload && <CopyPromptPanel payload={payload} />}
-
-      {mode !== "copy" && (
-        <>
-          {text && <p className="text-sm leading-relaxed whitespace-pre-wrap">{text}</p>}
-
-          {error && (
-            <p role="alert" className="text-sm text-destructive">
-              {error}
-            </p>
-          )}
-
-          {mode === "key" && !hasKey && keyStatus === "locked" && (
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Enter your passphrase to unlock your saved {PROVIDER_LABELS[provider]} key.
-              </p>
-              <UnlockForm provider={provider} />
-            </div>
-          )}
-
-          {mode === "key" && !hasKey && keyStatus === "none" && (
-            <p className="text-sm text-muted-foreground">
-              Add your API key in{" "}
-              <Link
-                href="/calculator/settings"
-                className="text-primary underline underline-offset-2"
-              >
-                Settings
-              </Link>{" "}
-              to get a summary, or switch to copying a prompt there.
-            </p>
-          )}
-
-          <div className={canGenerate ? "flex flex-wrap items-center gap-2" : "hidden"}>
-            <Button
-              variant={text ? "outline" : "default"}
-              size="sm"
-              onClick={generate}
-              disabled={isStreaming || cooldownRemaining > 0}
-            >
-              {buttonLabel}
-            </Button>
-
-            {isStreaming && (
-              <Button variant="ghost" size="sm" onClick={cancel}>
-                Stop
-              </Button>
-            )}
-
-            {text && (
-              <Button variant="ghost" size="sm" onClick={clear} disabled={isStreaming}>
-                Clear
-              </Button>
-            )}
-
-            <Select value={tier} onValueChange={handleTierChange} disabled={isStreaming}>
-              <SelectTrigger className="w-28 h-8 text-xs" aria-label="Model tier">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {(Object.keys(TIER_LABELS) as ModelTier[]).map((value) => (
-                    <SelectItem key={value} value={value}>
-                      {TIER_LABELS[value]}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <p className="text-xs text-muted-foreground">
-            {`Generating sends your plan's numbers (balances, contributions, ages, goals) straight from your browser to ${PROVIDER_LABELS[provider]}, using your own key — never to us, and under that provider's terms. `}
-            This is an automated educational summary, not financial advice — consult a licensed
-            financial advisor before making decisions.
-          </p>
-        </>
-      )}
+      <CopyPromptPanel payload={payload} />
     </PageCard>
   )
 }
