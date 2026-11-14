@@ -49,7 +49,12 @@ export function LocalDataProvider({ children }: { children: React.ReactNode }) {
     // tab's stale in-memory copy on the next write. `storage` events fire only in
     // OTHER tabs, so there is no feedback loop.
     const onStorage = (event: StorageEvent) => {
-      if (event.key === CALCULATOR_STORAGE_KEY) void useCalculatorStore.persist.rehydrate()
+      if (
+        (event.key === CALCULATOR_STORAGE_KEY || event.key === EXPENSES_STORAGE_KEY) &&
+        window.localStorage.getItem(event.key) === null
+      ) {
+        window.location.reload()
+      } else if (event.key === CALCULATOR_STORAGE_KEY) void useCalculatorStore.persist.rehydrate()
       else if (event.key === EXPENSES_STORAGE_KEY) void useExpensesStore.persist.rehydrate()
       else if (event.key === null) {
         // localStorage.clear() in another tab ("Clear all local data"). Rehydrating
