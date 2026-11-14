@@ -103,20 +103,27 @@ function DisplayModeDropdown() {
   const displayMode = useCalculatorStore((s) => s.displayMode)
   const setDisplayMode = useCalculatorStore((s) => s.setDisplayMode)
   const { iconProps, controlProps } = useAnimatedIcon()
+  const modeLabel = displayMode === "real" ? "Today's Value" : "Future Value"
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button {...controlProps} variant="ghost" size="sm" className="h-8 px-2 text-xs gap-1.5">
+        {/* The text is hidden below md, which would leave the button with no accessible name
+            on phones. Starts with the visible words so the name still contains the label. */}
+        <Button
+          {...controlProps}
+          variant="ghost"
+          size="sm"
+          className="h-8 px-2 text-xs gap-1.5"
+          aria-label={`${modeLabel}, change display mode`}
+        >
           <TrendingDownIcon
             {...iconProps}
             size={14}
             className="shrink-0"
             data-icon="inline-start"
           />
-          <span className="hidden md:inline">
-            {displayMode === "real" ? "Today's Value" : "Future Value"}
-          </span>
+          <span className="hidden md:inline">{modeLabel}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">

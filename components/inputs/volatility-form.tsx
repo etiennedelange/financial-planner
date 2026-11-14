@@ -1,12 +1,11 @@
 "use client"
 
 import { useEffect } from "react"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useShallow } from "zustand/react/shallow"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { NumberField } from "@/components/ui/number-field"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -17,8 +16,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { PageCard } from "@/components/ui/page-card"
-import { InfoTooltip } from "@/components/ui/info-tooltip"
-import { FieldError } from "@/components/ui/field-error"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { SA_DEFAULTS_DISPLAY } from "@/lib/constants/defaults"
 import { INVESTMENT_TYPE_RISK } from "@/lib/constants/investment-types"
@@ -57,7 +54,7 @@ export function VolatilityForm() {
   const typesInUse = new Set(accounts.map((a) => a.investmentType).filter(Boolean))
 
   const {
-    register,
+    control,
     watch,
     reset,
     getValues,
@@ -152,29 +149,39 @@ export function VolatilityForm() {
         figure; a 12-month fall could be deeper. Types in bold are used by your accounts.
       </p>
 
-      <div className="space-y-2 border-t border-border/50 pt-4">
-        <div className="flex items-center gap-2">
-          <Label htmlFor="equityVolatility">Volatility for accounts without a type (%)</Label>
-          <InfoTooltip
-            content="Accounts with no investment type use this figure and move in lockstep with the market, as all accounts did before types existed. A 0% expected return still means no volatility. Typical SA equity: 15–18%."
-            side="right"
-          />
-        </div>
-        <Input
-          id="equityVolatility"
-          type="number"
-          min="0"
-          max="40"
-          step="0.5"
-          className="sm:max-w-[200px]"
-          {...register("equityVolatility", { valueAsNumber: true })}
+      <div className="border-t border-border/50 pt-4">
+        <Controller
+          control={control}
+          name="equityVolatility"
+          render={({ field }) => (
+            <NumberField
+              id="equityVolatility"
+              label="Volatility for accounts without a type"
+              tooltip="Accounts with no investment type use this figure and move in lockstep with the market, as all accounts did before types existed. A 0% expected return still means no volatility. Typical SA equity: 15–18%."
+              suffix="%"
+              decimals={2}
+              stepper
+              step={0.5}
+              min={0}
+              max={40}
+              width="full"
+              controlClassName="w-[9.25rem] max-sm:w-full"
+              value={field.value}
+              onValueChange={field.onChange}
+              onBlur={field.onBlur}
+              name={field.name}
+              inputRef={field.ref}
+              error={errors.equityVolatility?.message}
+              hint={
+                <span className={untypedCount > 0 ? "text-warning" : undefined}>
+                  {untypedCount > 0
+                    ? `${untypedCount} account${untypedCount === 1 ? "" : "s"} without a type. Set what each is invested in on the Accounts page for a more accurate simulation.`
+                    : "All your accounts have an investment type, so this figure is not used."}
+                </span>
+              }
+            />
+          )}
         />
-        <FieldError message={errors.equityVolatility?.message} />
-        <p className={untypedCount > 0 ? "text-xs text-warning" : "text-xs text-muted-foreground"}>
-          {untypedCount > 0
-            ? `${untypedCount} account${untypedCount === 1 ? "" : "s"} without a type. Set what each is invested in on the Accounts page for a more accurate simulation.`
-            : "All your accounts have an investment type, so this figure is not used."}
-        </p>
       </div>
     </PageCard>
   )

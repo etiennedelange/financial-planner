@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/drawer"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { NO_AUTOFILL_PROPS } from "@/lib/utils/no-autofill"
+import { Label, FIELD_LABEL_CLASS } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -30,7 +31,7 @@ import {
 import { SA_DEFAULTS } from "@/lib/constants/defaults"
 import { INVESTMENT_TYPE_RISK } from "@/lib/constants/investment-types"
 import { MAX_MONETARY_AMOUNT, SA_TAX_LIMITS } from "@/lib/constants/limits"
-import { useBoundedMonetary } from "@/lib/hooks/use-bounded-monetary"
+import { NumberField } from "@/components/ui/number-field"
 import type { Account } from "@/types"
 import { ACCOUNT_TYPE_LABELS, INVESTMENT_TYPES } from "@/types"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -138,37 +139,42 @@ function StepHeader({ step }: { step: 1 | 2 }) {
 type FormRef = ReturnType<typeof useForm<AccountFormData>>
 
 function EssentialFields({ form }: { form: FormRef }) {
-  const { register, control, watch } = form
+  const { register, control } = form
   const { errors } = useFormState({ control })
-
-  // Physically block monetary input above the cap.
-  const { onChange: balanceOnChange, ...balanceRegister } = register("currentBalance", {
-    valueAsNumber: true,
-  })
-  const guardBalance = useBoundedMonetary(watch("currentBalance") ?? 0)
-  const { onChange: contributionOnChange, ...contributionRegister } = register(
-    "monthlyContribution",
-    { valueAsNumber: true },
-  )
-  const guardContribution = useBoundedMonetary(watch("monthlyContribution") ?? 0)
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="af-name">Account Name</Label>
-          <Input id="af-name" placeholder="e.g. My RA" {...register("name")} />
+          <Label htmlFor="af-name" className={FIELD_LABEL_CLASS}>
+            Account name
+          </Label>
+          <Input
+            id="af-name"
+            placeholder="e.g. My RA"
+            {...NO_AUTOFILL_PROPS}
+            {...register("name")}
+          />
           {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="af-provider">Provider</Label>
-          <Input id="af-provider" placeholder="e.g. Allan Gray" {...register("provider")} />
+          <Label htmlFor="af-provider" className={FIELD_LABEL_CLASS}>
+            Provider
+          </Label>
+          <Input
+            id="af-provider"
+            placeholder="e.g. Allan Gray"
+            {...NO_AUTOFILL_PROPS}
+            {...register("provider")}
+          />
           {errors.provider && <p className="text-xs text-destructive">{errors.provider.message}</p>}
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="af-type">Account Type</Label>
+        <Label htmlFor="af-type" className={FIELD_LABEL_CLASS}>
+          Account type
+        </Label>
         <Controller
           name="type"
           control={control}
@@ -193,39 +199,52 @@ function EssentialFields({ form }: { form: FormRef }) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="af-balance">Current Balance (R)</Label>
-          <Input
-            id="af-balance"
-            type="number"
-            min="0"
-            max={MAX_MONETARY_AMOUNT}
-            step="any"
-            {...balanceRegister}
-            onChange={(e) => guardBalance.onChange(e, balanceOnChange)}
-            onBeforeInput={guardBalance.onBeforeInput}
-          />
-          {errors.currentBalance && (
-            <p className="text-xs text-destructive">{errors.currentBalance.message}</p>
+      <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+        <Controller
+          name="currentBalance"
+          control={control}
+          render={({ field }) => (
+            <NumberField
+              id="af-balance"
+              label="Current balance"
+              prefix="R"
+              width="full"
+              group
+              min={0}
+              step={10_000}
+              hardMax={MAX_MONETARY_AMOUNT}
+              value={field.value}
+              onValueChange={field.onChange}
+              onBlur={field.onBlur}
+              name={field.name}
+              inputRef={field.ref}
+              error={errors.currentBalance?.message}
+            />
           )}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="af-monthly">Monthly Contribution (R)</Label>
-          <Input
-            id="af-monthly"
-            type="number"
-            min="0"
-            max={MAX_MONETARY_AMOUNT}
-            step="any"
-            {...contributionRegister}
-            onChange={(e) => guardContribution.onChange(e, contributionOnChange)}
-            onBeforeInput={guardContribution.onBeforeInput}
-          />
-          {errors.monthlyContribution && (
-            <p className="text-xs text-destructive">{errors.monthlyContribution.message}</p>
+        />
+        <Controller
+          name="monthlyContribution"
+          control={control}
+          render={({ field }) => (
+            <NumberField
+              id="af-monthly"
+              label="Monthly contribution"
+              prefix="R"
+              suffix="/ month"
+              width="full"
+              group
+              min={0}
+              step={500}
+              hardMax={MAX_MONETARY_AMOUNT}
+              value={field.value}
+              onValueChange={field.onChange}
+              onBlur={field.onBlur}
+              name={field.name}
+              inputRef={field.ref}
+              error={errors.monthlyContribution?.message}
+            />
           )}
-        </div>
+        />
       </div>
     </div>
   )
@@ -238,20 +257,13 @@ function PerformanceFields({ form }: { form: FormRef }) {
   const investmentType = watch("investmentType")
   const typeRisk = investmentType ? INVESTMENT_TYPE_RISK[investmentType] : null
 
-  // Physically block TFSA contribution input above the lifetime limit.
-  const { onChange: tfsaOnChange, ...tfsaRegister } = register("tfsaContributionsToDate", {
-    valueAsNumber: true,
-  })
-  const guardTfsa = useBoundedMonetary(
-    watch("tfsaContributionsToDate") ?? "",
-    SA_TAX_LIMITS.tfsaLifetimeLimit,
-  )
-
   return (
     <div className="space-y-4">
       <div className="space-y-2">
         <div className="flex items-center gap-1.5">
-          <Label htmlFor="af-investment-type">Invested In</Label>
+          <Label htmlFor="af-investment-type" className={FIELD_LABEL_CLASS}>
+            Invested in
+          </Label>
           <InfoTooltip
             content="Sets how much this account's value swings in the Risk page simulation, and how it moves with your other accounts. It does not change the projection."
             side="top"
@@ -284,67 +296,79 @@ function PerformanceFields({ form }: { form: FormRef }) {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <div className="flex items-center gap-1.5">
-            <Label htmlFor="af-return">Expected Return (%)</Label>
-            <InfoTooltip
-              content="A long-run compound (CAGR) return, as fund factsheets quote it. SA equity: 10–12% | Balanced: 9–10% | Bonds: 8–9% | Cash: 6–7%"
-              side="top"
+      <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-3">
+        <Controller
+          name="expectedReturn"
+          control={control}
+          render={({ field }) => (
+            <NumberField
+              id="af-return"
+              label="Expected return"
+              tooltip="A long-run compound (CAGR) return, as fund factsheets quote it. SA equity: 10–12% | Balanced: 9–10% | Bonds: 8–9% | Cash: 6–7%"
+              suffix="%"
+              width="full"
+              decimals={2}
+              stepper
+              step={0.5}
+              min={0}
+              max={30}
+              value={field.value}
+              onValueChange={field.onChange}
+              onBlur={field.onBlur}
+              name={field.name}
+              inputRef={field.ref}
+              error={errors.expectedReturn?.message}
             />
-          </div>
-          <Input
-            id="af-return"
-            type="number"
-            min="0"
-            max="30"
-            step="0.5"
-            {...register("expectedReturn", { valueAsNumber: true })}
-          />
-          {errors.expectedReturn && (
-            <p className="text-xs text-destructive">{errors.expectedReturn.message}</p>
           )}
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center gap-1.5">
-            <Label htmlFor="af-fees">Annual Fees (%)</Label>
-            <InfoTooltip
-              content="Index fund: 0.2–0.5% | Active fund: 1–2% | Wrap account: 2–3%"
-              side="top"
+        />
+        <Controller
+          name="annualFees"
+          control={control}
+          render={({ field }) => (
+            <NumberField
+              id="af-fees"
+              label="Annual fees"
+              tooltip="Index fund: 0.2–0.5% | Active fund: 1–2% | Wrap account: 2–3%"
+              suffix="%"
+              width="full"
+              decimals={2}
+              stepper
+              step={0.1}
+              min={0}
+              max={5}
+              value={field.value}
+              onValueChange={field.onChange}
+              onBlur={field.onBlur}
+              name={field.name}
+              inputRef={field.ref}
+              error={errors.annualFees?.message}
             />
-          </div>
-          <Input
-            id="af-fees"
-            type="number"
-            min="0"
-            max="5"
-            step="0.1"
-            {...register("annualFees", { valueAsNumber: true })}
-          />
-          {errors.annualFees && (
-            <p className="text-xs text-destructive">{errors.annualFees.message}</p>
           )}
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center gap-1.5">
-            <Label htmlFor="af-escalation">Escalation (%)</Label>
-            <InfoTooltip
-              content="CPI-linked: 5–5.5% recommended. Use 0% if your contribution is a fixed rand amount."
-              side="top"
+        />
+        <Controller
+          name="contributionEscalation"
+          control={control}
+          render={({ field }) => (
+            <NumberField
+              id="af-escalation"
+              label="Escalation"
+              tooltip="CPI-linked: 5–5.5% recommended. Use 0% if your contribution is a fixed rand amount."
+              suffix="%"
+              width="full"
+              decimals={2}
+              stepper
+              step={0.5}
+              min={0}
+              max={20}
+              value={field.value}
+              onValueChange={field.onChange}
+              onBlur={field.onBlur}
+              name={field.name}
+              inputRef={field.ref}
+              error={errors.contributionEscalation?.message}
             />
-          </div>
-          <Input
-            id="af-escalation"
-            type="number"
-            min="0"
-            max="20"
-            step="0.5"
-            {...register("contributionEscalation", { valueAsNumber: true })}
-          />
-          {errors.contributionEscalation && (
-            <p className="text-xs text-destructive">{errors.contributionEscalation.message}</p>
           )}
-        </div>
+        />
       </div>
 
       <p className="text-xs text-muted-foreground">
@@ -355,26 +379,31 @@ function PerformanceFields({ form }: { form: FormRef }) {
       </p>
 
       {selectedType === "tfsa" && (
-        <div className="space-y-2 rounded-md border border-border bg-muted/40 p-3">
-          <Label htmlFor="af-tfsa">Total contributions to date (R)</Label>
-          <Input
-            id="af-tfsa"
-            type="number"
-            min="0"
-            max={SA_TAX_LIMITS.tfsaLifetimeLimit}
-            step="1000"
-            placeholder="e.g. 180000"
-            {...tfsaRegister}
-            onChange={(e) => guardTfsa.onChange(e, tfsaOnChange)}
-            onBeforeInput={guardTfsa.onBeforeInput}
+        <div className="rounded-md border border-border bg-muted/40 p-3">
+          <Controller
+            name="tfsaContributionsToDate"
+            control={control}
+            render={({ field }) => (
+              <NumberField
+                id="af-tfsa"
+                label="Total contributions to date"
+                prefix="R"
+                width="full"
+                group
+                min={0}
+                step={1_000}
+                hardMax={SA_TAX_LIMITS.tfsaLifetimeLimit}
+                placeholder="e.g. 180 000"
+                value={field.value ?? NaN}
+                onValueChange={field.onChange}
+                onBlur={field.onBlur}
+                name={field.name}
+                inputRef={field.ref}
+                error={errors.tfsaContributionsToDate?.message}
+                hint="Cumulative amount contributed to all TFSAs since 2015 (not current balance). Used to enforce the R500 000 lifetime limit."
+              />
+            )}
           />
-          <p className="text-xs text-muted-foreground">
-            Cumulative amount contributed to all TFSAs since 2015 (not current balance). Used to
-            enforce the R500 000 lifetime limit.
-          </p>
-          {errors.tfsaContributionsToDate && (
-            <p className="text-xs text-destructive">{errors.tfsaContributionsToDate.message}</p>
-          )}
         </div>
       )}
     </div>
@@ -507,7 +536,11 @@ function FormBody({ account, onSave, onClose }: FormBodyProps) {
                 <Button type="button" variant="ghost" size="sm" onClick={onClose}>
                   Cancel
                 </Button>
-                <Button type="button" onClick={handleContinue}>
+                {/* Distinct keys matter: Continue and Add Account sit in the same spot, and if
+                    React reused one DOM button and flipped its type to "submit", the click that
+                    triggered Continue would go on to submit the form (the async handler's
+                    re-render lands before the browser's default action). */}
+                <Button key="continue" type="button" onClick={handleContinue}>
                   Continue →
                 </Button>
               </div>
@@ -519,7 +552,7 @@ function FormBody({ account, onSave, onClose }: FormBodyProps) {
                 <Button type="button" variant="ghost" size="sm" onClick={() => setStep(1)}>
                   ← Back
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button key="add-account" type="submit" disabled={isSubmitting}>
                   {isSubmitting ? "Adding…" : "Add Account"}
                 </Button>
               </div>

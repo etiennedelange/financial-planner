@@ -145,6 +145,25 @@ Every new card section must use these two components (never write the raw Tailwi
 </Card>
 ```
 
+### Numeric fields
+
+Use **`components/ui/number-field.tsx`** (`<NumberField>`) for any labelled numeric form field, wired through
+react-hook-form's `<Controller>`. It holds a `number` (NaN = empty), shows formatted text, puts the unit inside the
+field (`prefix`/`suffix`), sizes by data (`width`, or `controlClassName` when the label/hint is long), and brings its
+own label, tooltip, hint and error. For inline editors with no visible label (table rows, lists) use
+**`components/ui/number-input.tsx`** (`<NumberInput size="sm" aria-label=...>`) directly. Parsing and formatting
+rules live in `lib/utils/number-field.ts` (tested), never inline. Use `hardMax` only for the absurd-value cap
+(`MAX_MONETARY_AMOUNT`, `tfsaLifetimeLimit`); range rules belong in the zod schema so the user is told why. Keep
+`outline-hidden` on the inner input (not `outline-none`) so forced-colors mode still shows focus. Never use
+`type="number"`. Text fields use the shared `Input` and `FIELD_LABEL_CLASS` from `components/ui/label.tsx`.
+
+### Destructive actions
+
+Prefer **act now, Undo in the toast** over a confirmation dialog when the action is reversible and the thing is
+restorable (account delete does this; `DELETE_UNDO_MS` = 8 s). Floating dialogs move the user away from what they
+clicked and cost a second click. Keep a confirmation only for actions that cannot be undone (e.g. Clear all
+expenses).
+
 Design rules:
 - `shadow-none` on all cards (PageCard applies it automatically; add it manually to chart Cards)
 - Default label variant is a plain muted mono label (`text-muted-foreground`, no border) — teal is reserved for primary actions, not section headers

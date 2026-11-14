@@ -2,8 +2,8 @@
 
 import { useState, type Dispatch, type SetStateAction } from "react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Label, FIELD_LABEL_CLASS } from "@/components/ui/label"
+import { NumberField } from "@/components/ui/number-field"
 import { PageCard } from "@/components/ui/page-card"
 import { SectionLabel } from "@/components/ui/section-label"
 import { Slider } from "@/components/ui/slider"
@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/select"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { formatCurrency } from "@/lib/utils/currency"
-import { useBoundedMonetary } from "@/lib/hooks/use-bounded-monetary"
 import { MAX_MONETARY_AMOUNT } from "@/lib/constants/limits"
 import { useShallow } from "zustand/react/shallow"
 import { DRAWDOWN_STRATEGY_LABELS } from "@/types"
@@ -70,11 +69,6 @@ export function DrawdownStrategyForm({
     drawdownConfig.lowerGuardrail ?? 20,
   )
 
-  // Physically block monetary input above the cap.
-  const guardMinimumWithdrawal = useBoundedMonetary(drawdownConfig.minimumWithdrawal)
-  const guardMaximumWithdrawal = useBoundedMonetary(drawdownConfig.maximumWithdrawal)
-  const guardMedicalAid = useBoundedMonetary(drawdownConfig.monthlyMedicalAid ?? "")
-
   const showMinMax =
     drawdownConfig.strategy === "variable_percentage" || drawdownConfig.strategy === "guardrails"
   const showGuardrailBands = drawdownConfig.strategy === "guardrails"
@@ -94,7 +88,9 @@ export function DrawdownStrategyForm({
       <div className="space-y-4">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Label htmlFor="drawdown-strategy-select">Strategy</Label>
+            <Label htmlFor="drawdown-strategy-select" className={FIELD_LABEL_CLASS}>
+              Strategy
+            </Label>
             <InfoTooltip
               content="Determines how you withdraw money during retirement. Fixed Percentage: withdraw a % of remaining balance each year (safer but variable income). Fixed Amount: withdraw a fixed amount adjusted for inflation (predictable income but higher risk). Variable strategies adjust based on portfolio performance."
               side="right"
@@ -122,7 +118,7 @@ export function DrawdownStrategyForm({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Label>Initial Withdrawal Rate</Label>
+              <Label className={FIELD_LABEL_CLASS}>Initial Withdrawal Rate</Label>
               <InfoTooltip
                 content="The % of your retirement nest egg you plan to withdraw in the first year. Lower rates (3-4%) require a larger nest egg but are safer. Higher rates (5-6%) allow a smaller nest egg but increase the risk of running out of money. Example: 4% of R10M = R400k/year. To get R500k/year at 4%, you'd need R12.5M (hence why lower rates need bigger nest eggs)."
                 side="left"
@@ -147,7 +143,7 @@ export function DrawdownStrategyForm({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Label>Lump Sum at Retirement</Label>
+              <Label className={FIELD_LABEL_CLASS}>Lump Sum at Retirement</Label>
               <InfoTooltip
                 content="SA pension/RA rules allow you to take up to one-third of your fund as a lump sum at retirement. The first R550,000 is tax-free (lifetime); amounts above are taxed at 18–36%. The remaining two-thirds must be used to purchase an annuity."
                 side="left"
@@ -205,58 +201,41 @@ export function DrawdownStrategyForm({
           >
             <div className="space-y-4 pb-0.5">
               <SectionLabel>Withdrawal Floor &amp; Ceiling</SectionLabel>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="minimumWithdrawal">
-                      Minimum Withdrawal (R/month, today&apos;s value)
-                    </Label>
-                    <InfoTooltip
-                      content="The lowest monthly amount you'll withdraw, even if your portfolio percentage falls below it. Escalated with inflation each year."
-                      side="left"
-                    />
-                  </div>
-                  <Input
-                    id="minimumWithdrawal"
-                    type="number"
-                    min="0"
-                    max={MAX_MONETARY_AMOUNT}
-                    step="any"
-                    value={drawdownConfig.minimumWithdrawal}
-                    onChange={(e) =>
-                      guardMinimumWithdrawal.onChange(e, (ev) =>
-                        setDrawdownConfig({ minimumWithdrawal: Number(ev.target.value) }),
-                      )
-                    }
-                    onBeforeInput={guardMinimumWithdrawal.onBeforeInput}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="maximumWithdrawal">
-                      Maximum Withdrawal (R/month, today&apos;s value)
-                    </Label>
-                    <InfoTooltip
-                      content="The highest monthly amount you'll withdraw, even if your portfolio percentage rises above it. Escalated with inflation each year."
-                      side="left"
-                    />
-                  </div>
-                  <Input
-                    id="maximumWithdrawal"
-                    type="number"
-                    min="0"
-                    max={MAX_MONETARY_AMOUNT}
-                    step="any"
-                    value={drawdownConfig.maximumWithdrawal}
-                    onChange={(e) =>
-                      guardMaximumWithdrawal.onChange(e, (ev) =>
-                        setDrawdownConfig({ maximumWithdrawal: Number(ev.target.value) }),
-                      )
-                    }
-                    onBeforeInput={guardMaximumWithdrawal.onBeforeInput}
-                  />
-                </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-5">
+                <NumberField
+                  id="minimumWithdrawal"
+                  label="Minimum withdrawal"
+                  tooltip="The lowest monthly amount you'll withdraw, even if your portfolio percentage falls below it. Escalated with inflation each year."
+                  prefix="R"
+                  suffix="/ month"
+                  width="money"
+                  group
+                  min={0}
+                  step={1_000}
+                  hardMax={MAX_MONETARY_AMOUNT}
+                  value={drawdownConfig.minimumWithdrawal}
+                  onValueChange={(n) =>
+                    setDrawdownConfig({ minimumWithdrawal: Number.isNaN(n) ? 0 : n })
+                  }
+                  hint="In today's value"
+                />
+                <NumberField
+                  id="maximumWithdrawal"
+                  label="Maximum withdrawal"
+                  tooltip="The highest monthly amount you'll withdraw, even if your portfolio percentage rises above it. Escalated with inflation each year."
+                  prefix="R"
+                  suffix="/ month"
+                  width="money"
+                  group
+                  min={0}
+                  step={1_000}
+                  hardMax={MAX_MONETARY_AMOUNT}
+                  value={drawdownConfig.maximumWithdrawal}
+                  onValueChange={(n) =>
+                    setDrawdownConfig({ maximumWithdrawal: Number.isNaN(n) ? 0 : n })
+                  }
+                  hint="In today's value"
+                />
               </div>
             </div>
           </motion.div>
@@ -279,7 +258,7 @@ export function DrawdownStrategyForm({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Label>Upper Guardrail</Label>
+                      <Label className={FIELD_LABEL_CLASS}>Upper Guardrail</Label>
                       <InfoTooltip
                         content="If your withdrawal rate rises this far above your target rate (portfolio underperforming), withdrawals are cut by 10% (capital preservation rule)."
                         side="left"
@@ -301,7 +280,7 @@ export function DrawdownStrategyForm({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Label>Lower Guardrail</Label>
+                      <Label className={FIELD_LABEL_CLASS}>Lower Guardrail</Label>
                       <InfoTooltip
                         content="If your withdrawal rate falls this far below your target rate (portfolio outperforming), withdrawals are raised by 10% (prosperity rule)."
                         side="left"
@@ -327,62 +306,43 @@ export function DrawdownStrategyForm({
 
       <div className="space-y-4">
         <SectionLabel>Medical Aid &amp; Tax Credits</SectionLabel>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="monthlyMedicalAid">Medical Aid (R/month, today&apos;s value)</Label>
-              <InfoTooltip
-                content="Enter your current monthly medical aid contribution in today's Rands. The projection escalates this with inflation each year. It reduces net retirement income but generates an s6A tax credit (R364/month for principal member + first dependant, R246/month per additional dependant) that directly reduces income tax."
-                side="left"
-              />
-            </div>
-            <Input
-              id="monthlyMedicalAid"
-              type="number"
-              min="0"
-              max={MAX_MONETARY_AMOUNT}
-              step="100"
-              placeholder="0"
-              value={drawdownConfig.monthlyMedicalAid ?? ""}
-              onChange={(e) =>
-                guardMedicalAid.onChange(e, (ev) => {
-                  const v = ev.target.value
-                  setDrawdownConfig({
-                    monthlyMedicalAid: v === "" ? undefined : Number(v),
-                  })
-                })
-              }
-              onBeforeInput={guardMedicalAid.onBeforeInput}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="medicalAidDependants">Dependants</Label>
-              <InfoTooltip
-                content="Number of additional beneficiaries on your medical aid (excluding yourself). Each additional dependant adds a s6A credit of R364/month (first) or R246/month (subsequent) to reduce your tax."
-                side="left"
-              />
-            </div>
-            <Input
-              id="medicalAidDependants"
-              type="number"
-              min="0"
-              max="10"
-              step="1"
-              placeholder="0"
-              value={drawdownConfig.medicalAidDependants ?? ""}
-              onChange={(e) =>
-                setDrawdownConfig({
-                  medicalAidDependants: e.target.value === "" ? undefined : Number(e.target.value),
-                })
-              }
-            />
-            <p className="text-xs text-muted-foreground">
-              Tax credits: R364/month (member), R364 (1st dependant), R246 each thereafter.
-            </p>
-          </div>
+        <div className="flex flex-wrap gap-x-4 gap-y-5">
+          <NumberField
+            id="monthlyMedicalAid"
+            label="Medical aid"
+            tooltip="Enter your current monthly medical aid contribution in today's Rands. The projection escalates this with inflation each year. It reduces net retirement income but generates an s6A tax credit (R364/month for principal member + first dependant, R246/month per additional dependant) that directly reduces income tax."
+            prefix="R"
+            suffix="/ month"
+            width="money"
+            group
+            min={0}
+            step={100}
+            hardMax={MAX_MONETARY_AMOUNT}
+            placeholder="0"
+            value={drawdownConfig.monthlyMedicalAid ?? NaN}
+            onValueChange={(n) =>
+              setDrawdownConfig({ monthlyMedicalAid: Number.isNaN(n) ? undefined : n })
+            }
+            hint="In today's value"
+          />
+          <NumberField
+            id="medicalAidDependants"
+            label="Dependants"
+            tooltip="Number of additional beneficiaries on your medical aid (excluding yourself). Each additional dependant adds a s6A credit of R364/month (first) or R246/month (subsequent) to reduce your tax."
+            stepper
+            min={0}
+            max={10}
+            hardMax={10}
+            placeholder="0"
+            value={drawdownConfig.medicalAidDependants ?? NaN}
+            onValueChange={(n) =>
+              setDrawdownConfig({ medicalAidDependants: Number.isNaN(n) ? undefined : n })
+            }
+          />
         </div>
+        <p className="text-xs text-muted-foreground">
+          Tax credits: R364/month (member), R364 (1st dependant), R246 each thereafter.
+        </p>
       </div>
     </PageCard>
   )

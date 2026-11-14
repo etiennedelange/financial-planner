@@ -1,21 +1,43 @@
 import { test, expect } from "@playwright/test"
 import { StateManager } from "../helpers/state-manager"
 import { ScreenshotHelper } from "../helpers/screenshot-helper"
+import {
+  accountDialog,
+  continueToPerformance,
+  field,
+  fillAccountEssentials,
+  fillAccountPerformance,
+  fillNumber,
+  goToPage,
+  submitAccount,
+  type AccountInput,
+} from "../helpers/app-helpers"
 import { EMPTY_STATE } from "../fixtures/state-seeds"
 
 /**
  * Journey 1: First-Time User Experience
  *
- * This test documents the journey of a user visiting the calculator for the first time.
- * It captures key UX pain points around tab switching and context loss.
+ * A signed-out user opens the app with nothing saved, adds their first account through the
+ * two-step wizard, then walks the sidebar pages to set up their plan and see the results.
  *
  * Key areas documented:
- * - Empty state messaging
- * - First account creation flow
- * - Tab navigation and switching
- * - Chart rendering and updates
- * - Context loss when switching between tabs
+ * - Empty state and the first-account call to action
+ * - The two-step add-account wizard (essentials, then performance)
+ * - Sidebar navigation: Overview, Plan, Projections, Risk, Charts
+ * - Plan edits persist to the store and show formatted values
+ * - Monte Carlo runs only on the Risk page
  */
+const TFSA: AccountInput = {
+  name: "My First TFSA",
+  provider: "Allan Gray",
+  type: /tax.*free.*savings/i,
+  balance: "50000",
+  contribution: "2000",
+  expectedReturn: "11",
+  fees: "0.5",
+  escalation: "6",
+}
+
 test.describe("Journey 1: First-Time User Experience", () => {
   let screenshots: ScreenshotHelper
   let stateManager: StateManager
@@ -24,15 +46,15 @@ test.describe("Journey 1: First-Time User Experience", () => {
     screenshots = new ScreenshotHelper(page, "journey-01-first-time-user")
     stateManager = new StateManager(page)
 
-    // Start with empty state
-    await page.goto("/calculator")
+    // Start with empty state, on the Accounts page where a first-time user lands to add one
+    await page.goto("/calculator/accounts")
     await stateManager.clearState()
     await stateManager.seedState(EMPTY_STATE)
     await page.reload()
     await stateManager.waitForHydration()
   })
 
-  test("should document first-time user flow and tab switching friction", async ({ page }) => {
+  test("should document first-time user flow across the sidebar pages", async ({ page }) => {
     // ========================================
     // Step 1: Empty State
     // ========================================
@@ -42,189 +64,138 @@ test.describe("Journey 1: First-Time User Experience", () => {
     })
 
     // ========================================
-    // Step 2: Add First Account - Open Dialog
+    // Step 2: Add First Account - Step 1 of 2 (Essentials)
     // ========================================
     const addAccountButton = page.getByRole("button", { name: /add.*first.*account/i })
     await expect(addAccountButton).toBeVisible()
-
     await addAccountButton.click()
-    await screenshots.waitForDialogAnimation()
+    await expect(accountDialog(page)).toBeVisible()
     await screenshots.capture("add-account-dialog-open", {
-      description: "Account creation dialog opened",
+      description: "Account wizard opened on the Essentials step",
+    })
+
+    await fillAccountEssentials(page, TFSA)
+    await screenshots.capture("account-essentials-filled", {
+      description: "Step 1 of 2 complete: name, provider, type, balance and contribution",
     })
 
     // ========================================
-    // Step 3: Fill Account Form
+    // Step 3: Add First Account - Step 2 of 2 (Performance)
     // ========================================
-    await page.getByLabel(/account name/i).fill("My First TFSA")
-    await page.getByLabel(/provider/i).fill("Allan Gray")
-
-    // Select account type (dropdown) - Find the Select trigger button
-    // The default value is "Retirement Annuity (RA)", we need to click to open dropdown
-    const accountTypeSelect = page
-      .locator('button[role="combobox"]')
-      .filter({ hasText: /retirement annuity|select account type/i })
-    await accountTypeSelect.click()
-    await screenshots.waitForDialogAnimation()
-    await screenshots.capture("account-type-dropdown-open")
-
-    // Select TFSA from dropdown
-    await page.getByRole("option", { name: /tax.*free.*savings/i }).click()
-    await screenshots.capture("account-type-selected")
-
-    // Fill financial details
-    await page.getByLabel(/current balance/i).fill("50000")
-    await page.getByLabel(/monthly contribution/i).fill("2000")
-    await page.getByLabel(/expected return/i).fill("11")
-    await page.getByLabel(/annual fees/i).fill("0.5")
-    await page.getByLabel(/^escalation/i).fill("6")
-
-    await screenshots.capture("account-form-filled", {
-      description: "Account form completed with TFSA details",
+    await continueToPerformance(page)
+    await fillAccountPerformance(page, TFSA)
+    await screenshots.capture("account-performance-filled", {
+      description: "Step 2 of 2 complete: expected return, fees and escalation",
     })
 
     // ========================================
-    // Step 4: Submit and View Results
+    // Step 4: Submit and See the Account
     // ========================================
-    await page.getByRole("button", { name: /add account/i }).click()
-    await page.waitForTimeout(500) // State update
+    await submitAccount(page)
+    await expect(page.getByText(TFSA.name).first()).toBeVisible()
+    await expect.poll(() => stateManager.getAccountCount()).toBe(1)
+
+    // The stored account has the numbers that were typed, not their formatted text
+    const state = await stateManager.getState()
+    expect(state?.accounts[0]).toMatchObject({
+      name: TFSA.name,
+      type: "tfsa",
+      currentBalance: 50000,
+      monthlyContribution: 2000,
+      expectedReturn: 11,
+      annualFees: 0.5,
+      contributionEscalation: 6,
+    })
 
     await screenshots.capture("first-account-added", {
       fullPage: true,
-      description: "First account successfully added - charts now visible",
-    })
-
-    // Verify account appears
-    await expect(page.getByText("My First TFSA")).toBeVisible()
-
-    // ========================================
-    // Step 5: Charts Render
-    // ========================================
-    await screenshots.waitForCharts()
-    await screenshots.capture("portfolio-growth-chart-rendered", {
-      description: "Portfolio growth chart showing projections",
-    })
-
-    // Wait for Monte Carlo simulation
-    await screenshots.waitForMonteCarloSimulation()
-    await screenshots.capture("monte-carlo-simulation-complete", {
-      description: "Monte Carlo simulation completed",
+      description: "First account added and listed",
     })
 
     // ========================================
-    // Step 6: Tab Switching - Personal
+    // Step 5: Overview
     // ========================================
-    // UX PAIN POINT: User must switch tabs to adjust personal info
-    await page.getByRole("tab", { name: "Personal" }).click()
-    await screenshots.waitForTabTransition()
-    await screenshots.capture("personal-tab-clicked", {
+    await goToPage(page, "Overview")
+    // Overview is a verdict plus metric cards; its charts live on the Charts and Risk pages
+    await expect(page.getByText(/retirement verdict/i)).toBeVisible()
+    await expect(page.getByText(/across 1 account/i)).toBeVisible()
+    await screenshots.capture("overview-with-first-account", {
       fullPage: true,
-      description: "Personal tab - CONTEXT LOST: cannot see account details or charts",
+      description: "Overview with the first account's verdict and metrics",
     })
 
-    // User adjusts age
-    await page.getByLabel(/current age/i).fill("35")
-    await screenshots.capture("personal-info-updated")
+    // ========================================
+    // Step 6: Plan - Personal Information and Goals
+    // ========================================
+    await goToPage(page, "Plan")
+    await fillNumber(page, /current age/i, "35")
+    await screenshots.capture("plan-personal-info-updated", {
+      description: "Current age set on the Plan page",
+    })
 
-    // ========================================
-    // Step 7: Tab Switching - Goals
-    // ========================================
-    // UX PAIN POINT: User must switch to another tab to set goals
-    await page.getByRole("tab", { name: "Goals" }).click()
-    await screenshots.waitForTabTransition()
-    await screenshots.capture("goals-tab-clicked", {
+    await fillNumber(page, /desired monthly income/i, "30000")
+    // Shown grouped, stored as a plain number
+    await expect(field(page, /desired monthly income/i)).toHaveValue(/^30\s000$/)
+    await screenshots.capture("plan-goals-updated", {
       fullPage: true,
-      description: "Goals tab - CONTEXT LOST: still cannot see accounts or projections",
+      description: "Desired monthly income set; the field shows 30 000",
     })
 
-    // User sets retirement goal
-    await page.getByLabel(/desired monthly income/i).fill("30000")
-    await screenshots.capture("goals-updated")
-
-    // ========================================
-    // Step 8: Tab Switching Back to View Impact
-    // ========================================
-    // UX PAIN POINT: Must switch back to Accounts to see projection updates
-    await page.getByRole("tab", { name: "Accounts" }).click()
-    await screenshots.waitForTabTransition()
-    await screenshots.capture("back-to-accounts-after-changes", {
-      fullPage: true,
-      description: "Switched back to Accounts tab to see updated projections",
-    })
-
-    // Wait for charts to update
-    await screenshots.waitForCharts()
-    await screenshots.capture("charts-updated-after-changes", {
-      description: "Charts reflect personal info and goals changes",
-    })
-
-    // ========================================
-    // Step 9: Explore Insights Tab
-    // ========================================
-    await page.getByRole("tab", { name: "Insights" }).click()
-    await screenshots.waitForTabTransition()
-    await page.waitForTimeout(500) // Insights calculation
-
-    await screenshots.capture("insights-tab-first-view", {
-      fullPage: true,
-      description: "Insights tab - recommendations and analysis",
-    })
-
-    // Scroll through insights
-    await page.evaluate(() => window.scrollTo(0, 500))
-    await screenshots.capture("insights-tab-scrolled", {
-      fullPage: false,
-      description: "Insights tab - additional recommendations",
-    })
-
-    // ========================================
-    // Step 10: Tab Switching - Can't Compare
-    // ========================================
-    // UX PAIN POINT: User wants to see account details while viewing insights
-    // but must switch tabs, losing insights context
-
-    await page.getByRole("tab", { name: "Accounts" }).click()
-    await screenshots.waitForTabTransition()
-    await screenshots.capture("accounts-tab-after-viewing-insights", {
-      fullPage: true,
-      description: "UX FRICTION: Had to leave Insights to see account details",
-    })
-
-    // ========================================
-    // Step 11: Display Mode Toggle
-    // ========================================
-    // Check if display mode toggle is visible
-    const displayModeButton = page.getByRole("button", { name: /today.*value|future.*value/i })
-    if (await displayModeButton.isVisible()) {
-      await displayModeButton.click()
-      await page.waitForTimeout(300)
-      await screenshots.capture("display-mode-toggled", {
-        description: "Display mode toggled (Real vs Nominal)",
+    await expect
+      .poll(async () => {
+        const s = await stateManager.getState()
+        return [s?.personalInfo.currentAge, s?.retirementGoals.desiredMonthlyIncome]
       })
-
-      // Close the popover by pressing Escape or clicking elsewhere
-      await page.keyboard.press("Escape")
-      await page.waitForTimeout(200)
-    }
+      .toEqual([35, 30000])
 
     // ========================================
-    // Step 12: Calculations Tab
+    // Step 7: Projections
     // ========================================
-    await page.getByRole("tab", { name: "Calculations" }).click()
-    await screenshots.waitForTabTransition()
-    await screenshots.capture("calculations-tab", {
+    await goToPage(page, "Projections")
+    await page.waitForLoadState("networkidle")
+    await screenshots.capture("projections-after-plan-changes", {
       fullPage: true,
-      description: "Calculations tab - detailed breakdown",
+      description: "Projections reflect the new age and income goal",
     })
 
     // ========================================
-    // Summary Screenshot
+    // Step 8: Risk - Monte Carlo
     // ========================================
-    await page.getByRole("tab", { name: "Accounts" }).click()
-    await screenshots.waitForTabTransition()
+    await goToPage(page, "Risk")
+    await screenshots.waitForMonteCarloSimulation()
+    await screenshots.capture("risk-simulation-complete", {
+      fullPage: true,
+      description: "Monte Carlo simulation completed on the Risk page",
+    })
+
+    // ========================================
+    // Step 9: Display Mode Toggle
+    // ========================================
+    const displayModeButton = page.getByRole("button", { name: /today.*value|future.*value/i })
+    await expect(displayModeButton).toBeVisible()
+    await displayModeButton.click()
+    await page.getByText(/today's value \(real\)/i).click()
+    await expect(page.getByRole("button", { name: /today's value/i })).toBeVisible()
+    await screenshots.capture("display-mode-toggled", {
+      description: "Display mode switched to Today's Value (Real)",
+    })
+
+    // ========================================
+    // Step 10: Charts, Then Back to Plan
+    // ========================================
+    await goToPage(page, "Charts")
+    await screenshots.waitForCharts()
+    await screenshots.capture("charts-page", {
+      fullPage: true,
+      description: "Charts page",
+    })
+
+    // The plan edits are still there after visiting other pages
+    await goToPage(page, "Plan")
+    await expect(field(page, /current age/i)).toHaveValue("35")
     await screenshots.capture("journey-complete", {
       fullPage: true,
-      description: "Journey complete - back to main view",
+      description: "Journey complete - plan values persisted across navigation",
     })
 
     // Log captured screenshots

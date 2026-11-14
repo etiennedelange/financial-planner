@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
 import { Circle, CircleCheck, FolderPlus } from "lucide-react"
 import {
@@ -15,6 +15,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { PageCard } from "@/components/ui/page-card"
 import { Input } from "@/components/ui/input"
+import { NO_AUTOFILL_PROPS } from "@/lib/utils/no-autofill"
+import { NumberInput } from "@/components/ui/number-input"
+import { MAX_MONETARY_AMOUNT } from "@/lib/constants/limits"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 import { FloatingActionBar } from "@/components/ui/floating-action-bar"
 import {
@@ -31,7 +34,6 @@ import {
 import { useExpensesStore } from "@/lib/store/expenses-store"
 import { formatCurrency } from "@/lib/utils/currency"
 import { clampMonetaryAmount } from "@/lib/utils/monetary"
-import { useBoundedMonetary } from "@/lib/hooks/use-bounded-monetary"
 import { GROUP_COLOR_OPTIONS, type Expense, type ExpenseGroup } from "@/types/expenses"
 import { cn } from "@/lib/utils"
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button"
@@ -51,15 +53,12 @@ function EditRow({
   onDelete: () => void
 }) {
   const [name, setName] = useState(expense.name)
-  const [amount, setAmount] = useState(String(expense.amount))
-
-  const guardAmount = useBoundedMonetary(amount)
+  const [amount, setAmount] = useState(expense.amount)
 
   const commit = () => {
-    const parsed = parseFloat(amount.replace(/\s/g, ""))
     onSave(
       name.trim() || expense.name,
-      isNaN(parsed) ? expense.amount : clampMonetaryAmount(parsed),
+      Number.isNaN(amount) ? expense.amount : clampMonetaryAmount(amount),
     )
   }
 
@@ -71,6 +70,7 @@ function EditRow({
   return (
     <div className="flex items-center gap-1.5 px-3 py-1.5 bg-accent/60 rounded-sm border border-border">
       <Input
+        {...NO_AUTOFILL_PROPS}
         value={name}
         onChange={(e) => setName(e.target.value)}
         onKeyDown={onKey}
@@ -78,12 +78,17 @@ function EditRow({
         autoFocus
         aria-label="Expense name"
       />
-      <Input
+      <NumberInput
+        size="sm"
+        alignEnd
+        prefix="R"
+        group
+        decimals={2}
+        hardMax={MAX_MONETARY_AMOUNT}
         value={amount}
-        onChange={(e) => guardAmount.onChange(e, (ev) => setAmount(ev.target.value))}
+        onValueChange={setAmount}
         onKeyDown={onKey}
-        onBeforeInput={guardAmount.onBeforeInput}
-        className="h-7 text-sm w-28 text-right font-mono"
+        className="w-36"
         placeholder="0"
         aria-label="Expense amount"
       />
@@ -147,17 +152,14 @@ function AddExpenseRow({
   onCancel: () => void
 }) {
   const [name, setName] = useState("")
-  const [amount, setAmount] = useState("")
-
-  const guardAmount = useBoundedMonetary(amount)
+  const [amount, setAmount] = useState(NaN)
 
   const commit = () => {
     if (!name.trim()) {
       onCancel()
       return
     }
-    const parsed = parseFloat(amount.replace(/\s/g, ""))
-    onSave(name.trim(), isNaN(parsed) ? 0 : clampMonetaryAmount(parsed))
+    onSave(name.trim(), Number.isNaN(amount) ? 0 : clampMonetaryAmount(amount))
   }
 
   const onKey = (e: React.KeyboardEvent) => {
@@ -168,6 +170,7 @@ function AddExpenseRow({
   return (
     <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 rounded-sm border border-primary/25">
       <Input
+        {...NO_AUTOFILL_PROPS}
         value={name}
         onChange={(e) => setName(e.target.value)}
         onKeyDown={onKey}
@@ -176,12 +179,17 @@ function AddExpenseRow({
         autoFocus
         aria-label="New expense name"
       />
-      <Input
+      <NumberInput
+        size="sm"
+        alignEnd
+        prefix="R"
+        group
+        decimals={2}
+        hardMax={MAX_MONETARY_AMOUNT}
         value={amount}
-        onChange={(e) => guardAmount.onChange(e, (ev) => setAmount(ev.target.value))}
+        onValueChange={setAmount}
         onKeyDown={onKey}
-        onBeforeInput={guardAmount.onBeforeInput}
-        className="h-7 text-sm w-28 text-right font-mono"
+        className="w-36"
         placeholder="0"
         aria-label="New expense amount"
       />
@@ -229,6 +237,7 @@ function AddGroupRow({
   return (
     <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 rounded-sm border border-primary/25">
       <Input
+        {...NO_AUTOFILL_PROPS}
         value={name}
         onChange={(e) => setName(e.target.value)}
         onKeyDown={(e) => {
@@ -605,9 +614,13 @@ function SummaryPanel({
   onSetIncome: (v: number) => void
 }) {
   const [editIncome, setEditIncome] = useState(false)
-  const [incomeInput, setIncomeInput] = useState(String(monthlyIncome))
+  const [incomeInput, setIncomeInput] = useState(monthlyIncome)
+  const incomeRef = useRef<HTMLInputElement>(null)
 
-  const guardIncome = useBoundedMonetary(incomeInput)
+  // The editor opens on demand, so move focus into it (autoFocus would trip a11y lint).
+  useEffect(() => {
+    if (editIncome) incomeRef.current?.focus()
+  }, [editIncome])
 
   const total = expenses.reduce((s, e) => s + e.amount, 0)
   const retirementTotal = expenses.filter((e) => e.inRetirement).reduce((s, e) => s + e.amount, 0)
@@ -626,9 +639,11 @@ function SummaryPanel({
   const maxGroupTotal = groupTotals[0]?.total ?? 1
 
   const saveIncome = () => {
-    const parsed = parseFloat(incomeInput.replace(/[\s,]/g, ""))
-    if (!isNaN(parsed) && parsed > 0) onSetIncome(clampMonetaryAmount(parsed))
-    else setIncomeInput(String(monthlyIncome))
+    if (Number.isFinite(incomeInput) && incomeInput > 0) {
+      onSetIncome(clampMonetaryAmount(incomeInput))
+    } else {
+      setIncomeInput(monthlyIncome)
+    }
     setEditIncome(false)
   }
 
@@ -645,16 +660,21 @@ function SummaryPanel({
           </div>
           {editIncome ? (
             <div className="flex items-center gap-1">
-              <Input
+              <NumberInput
+                size="sm"
+                alignEnd
+                prefix="R"
+                group
+                decimals={2}
+                hardMax={MAX_MONETARY_AMOUNT}
                 value={incomeInput}
-                onChange={(e) => guardIncome.onChange(e, (ev) => setIncomeInput(ev.target.value))}
+                onValueChange={setIncomeInput}
+                inputRef={incomeRef}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") saveIncome()
                   if (e.key === "Escape") setEditIncome(false)
                 }}
-                onBeforeInput={guardIncome.onBeforeInput}
-                className="h-6 w-28 text-right text-sm font-mono"
-                autoFocus
+                className="w-36"
                 aria-label="Monthly income"
               />
               <AnimatedIconButton
@@ -671,7 +691,7 @@ function SummaryPanel({
             <IncomeEditButton
               income={monthlyIncome}
               onEdit={() => {
-                setIncomeInput(String(monthlyIncome))
+                setIncomeInput(monthlyIncome)
                 setEditIncome(true)
               }}
             />

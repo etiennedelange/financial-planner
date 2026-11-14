@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { NO_AUTOFILL_PROPS } from "@/lib/utils/no-autofill"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { toast } from "@/lib/hooks/use-toast"
 import { ChevronDownIcon, PencilIcon, PlusIcon, Trash2Icon } from "@animateicons/react/lucide"
@@ -142,6 +143,7 @@ export function ScenarioSwitcher() {
           >
             {renamingId === s.id ? (
               <Input
+                {...NO_AUTOFILL_PROPS}
                 ref={renameInputRef}
                 value={renameValue}
                 onChange={(e) => setRenameValue(e.target.value)}
@@ -196,6 +198,7 @@ export function ScenarioSwitcher() {
         {creatingNew ? (
           <div className="flex gap-1 px-1 py-1">
             <Input
+              {...NO_AUTOFILL_PROPS}
               autoFocus
               placeholder="Scenario name"
               aria-label="New scenario name"
