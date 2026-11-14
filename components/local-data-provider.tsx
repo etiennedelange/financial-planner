@@ -4,7 +4,6 @@ import { createContext, useContext, useEffect, useState } from "react"
 import { useCalculatorStore, CALCULATOR_STORAGE_KEY } from "@/lib/store/calculator-store"
 import { useExpensesStore, EXPENSES_STORAGE_KEY } from "@/lib/store/expenses-store"
 import { probeStorage } from "@/lib/store/storage-health"
-import { migrateToLocalOnlyStorage, purgeLegacyAuthCookies } from "@/lib/store/storage-migration"
 
 const HydratedContext = createContext(false)
 
@@ -14,18 +13,12 @@ export function useStoresHydrated(): boolean {
 }
 
 // Both stores use `skipHydration` (the server renders defaults), so the browser
-// rehydrates them here, exactly once, after the one-time migration. No account,
+// rehydrates them here, exactly once. No account,
 // no network: the data never leaves this browser.
 let hydration: Promise<void> | null = null
 function hydrateOnce(): Promise<void> {
   if (!hydration) {
     hydration = (async () => {
-      try {
-        migrateToLocalOnlyStorage(window.localStorage)
-        purgeLegacyAuthCookies(document)
-      } catch {
-        // Storage blocked — probeStorage() below reports it; stores stay on defaults.
-      }
       probeStorage()
       // Ask the browser not to evict this data under storage pressure. With no server
       // copy, eviction is data loss. Best-effort: the browser may decline silently.

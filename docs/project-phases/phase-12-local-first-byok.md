@@ -16,7 +16,6 @@ Threat model: [BYOK LLM key handling](../security/byok-llm-key-handling.md).
 
 - [x] Stores persisted to localStorage only (fixed keys, persist v4); cloud sync, identity and scenarios removed
 - [x] `LocalDataProvider` hydration, cross-tab sync via `storage` events, write gate kept
-- [x] One-time migration of `:guest` keys; purge of account caches and Supabase tokens/cookies
 - [x] Storage failures surfaced (`storage-health` + `StorageHealthBanner`); `navigator.storage.persist()` requested; backup nudge and Data & Privacy settings
 - [x] Backup v2 (plan + expenses), import sanitised with the same clamps as persisted data
 - [x] Clear all local data

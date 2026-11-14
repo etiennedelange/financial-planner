@@ -69,18 +69,6 @@ describe("LocalDataProvider", () => {
     expect(s.calc.useCalculatorStore.getState().personalInfo.currentAge).toBe(51)
   })
 
-  it("migrates data saved under the old :guest key and purges account leftovers first", async () => {
-    localStorage.setItem("financial-planner-storage:guest", PLAN(47))
-    localStorage.setItem("financial-planner-storage:user:abc", PLAN(30))
-    localStorage.setItem("sb-x-auth-token", "t")
-    const s = await setup()
-    await mount(s)
-    expect(s.calc.useCalculatorStore.getState().personalInfo.currentAge).toBe(47)
-    expect(localStorage.getItem("financial-planner-storage:guest")).toBeNull()
-    expect(localStorage.getItem("financial-planner-storage:user:abc")).toBeNull()
-    expect(localStorage.getItem("sb-x-auth-token")).toBeNull()
-  })
-
   it("starts cleanly when there is nothing saved", async () => {
     const s = await setup()
     await mount(s)

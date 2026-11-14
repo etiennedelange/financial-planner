@@ -24,16 +24,13 @@ maintainer neither pays for nor can see anything a user enters.
 - localStorage was kept over IndexedDB: the payload is ~5–40 KB against a 5 MB quota and
   IndexedDB would force async hydration for no gain.
 - `<LocalDataProvider>` (`components/local-data-provider.tsx`) replaced `SupabaseProvider`:
-  runs the one-time migration, rehydrates both stores, exposes `useStoresHydrated()`, and
+  rehydrates both stores, exposes `useStoresHydrated()`, and
   re-hydrates on `storage` events so a second tab no longer clobbers the first.
 - **Write gate kept** (`lib/store/persist-gate.ts`, scope logic removed): with `skipHydration`,
   a `set()` before the first rehydrate would otherwise overwrite saved data with defaults.
 - **Storage failure is surfaced, not swallowed** (`lib/store/storage-health.ts`): quota errors
   and blocked storage show a `StorageHealthBanner` with a link to download a backup; the app
   also asks the browser for persistent storage to reduce eviction.
-- **One-time migration** (`lib/store/storage-migration.ts`): `<base>:guest` → `<base>`;
-  purges `…:user:<id>` caches, claim/legacy markers and Supabase `sb-*` tokens and cookies
-  (on a shared computer those held someone's financial data).
 - `migrate` sanitisation was extracted to shared `sanitizePlan` / `sanitizeExpenses` so the
   backup **import** now applies the same clamps as persisted data (it previously bypassed them).
 - **Backups** (`lib/utils/plan-io.ts`) are now v2: plan **and expenses**; v1 files still import.
@@ -71,10 +68,10 @@ selector is now real (the old server ignored it), and every request has a hard t
 - 75 test files / 1363 tests pass (coverage 96.6% overall); `tsc --noEmit` clean; `vp check` 0 errors; `pnpm build` clean.
 - New tests: key vault (round-trip, tamper, wrong passphrase, provider binding, idle lock,
   bfcache lock), provider clients (headers, key-not-in-URL, SSE parsing, error scrubbing),
-  `providerFetch` hardening, storage migration/health/clear, provider hydration + cross-tab sync,
+  `providerFetch` hardening, storage health/clear, provider hydration + cross-tab sync,
   backup v2 + import sanitising, CSP exact-set, and `key-isolation.test.ts` (no Supabase import,
   vault importable only by the AI layer, key never in storage/backups).
-- Real browser (Chromium vs the production build): migration + purge, CSP blocks
+- Real browser (Chromium vs the production build): CSP blocks
   `example.com`/attacker fetches (with violations logged), session-only key in no storage,
   mocked-provider streaming with the right headers and no cookies, encrypted blob at rest,
   locked after reload / wrong passphrase rejected / right passphrase unlocks, cross-tab sync,
@@ -95,5 +92,5 @@ selector is now real (the old server ignored it), and every request has a hard t
   in the UI.
 - Safari can evict script-written storage after ~7 days without a visit; clearing site data
   erases everything. Mitigated by the backup nudge and by telling users plainly.
-- Existing signed-in users' cloud data was dropped by decision (pre-launch).
+- Existing data was dropped by decision (pre-launch, no users): no migration of old `:guest` keys or cloud data, and no purge of old account caches.
 - Vercel Analytics / Speed Insights remain (no plan data is sent).
