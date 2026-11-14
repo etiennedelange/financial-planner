@@ -43,9 +43,9 @@ export function createKeyStorage(
       return fallback
     }
   }
-  return {
     getItem: (name) =>
-      safe(() => getLocal()?.getItem(name) ?? getSession()?.getItem(name) ?? null, null),
+      safe(() => getLocal()?.getItem(name) ?? null, null) ??
+      safe(() => getSession()?.getItem(name) ?? null, null),
     setItem: (name, value) => {
       const remember = rememberFlag(value)
       const [keep, drop] = remember ? [getLocal, getSession] : [getSession, getLocal]
