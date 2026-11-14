@@ -3,6 +3,7 @@ import {
   cloudflareBaseUrl,
   createLanguageModel,
   describeAiFailure,
+  hostedConfigProblem,
   hostedGuestAccessAllowed,
   modelIdFor,
   parseUserCredentials,
@@ -114,6 +115,23 @@ describe("resolveHostedCredentials", () => {
     ).toBeNull()
   })
 
+  it("regression: a misspelled AI_PROVIDER fails closed instead of billing another provider", () => {
+    expect(
+      resolveHostedCredentials({
+        AI_PROVIDER: "cloudflrae",
+        AI_GATEWAY_API_KEY: "gw-key-123",
+        CLOUDFLARE_AI_ACCOUNT_ID: ACCOUNT,
+        CLOUDFLARE_AI_API_TOKEN: "cf-token-123",
+      }),
+    ).toBeNull()
+  })
+
+  it("treats a whitespace-only AI_PROVIDER as unset (auto-detect)", () => {
+    expect(
+      resolveHostedCredentials({ AI_PROVIDER: "  ", AI_GATEWAY_API_KEY: "gw-key-123" })?.provider,
+    ).toBe("gateway")
+  })
+
   it("treats whitespace-only values as unset", () => {
     expect(resolveHostedCredentials({ AI_GATEWAY_API_KEY: "   " })).toBeNull()
   })
@@ -188,6 +206,38 @@ describe("parseUserCredentials", () => {
       )
       expect(result.ok).toBe(false)
     }
+  })
+})
+
+describe("hostedConfigProblem", () => {
+  it("reports nothing when AI_PROVIDER is unset, none, or usable", () => {
+    expect(hostedConfigProblem({})).toBeNull()
+    expect(hostedConfigProblem({ AI_PROVIDER: "none" })).toBeNull()
+    expect(
+      hostedConfigProblem({ AI_PROVIDER: "gateway", AI_GATEWAY_API_KEY: "gw-key-123" }),
+    ).toBeNull()
+    expect(
+      hostedConfigProblem({
+        AI_PROVIDER: "cloudflare",
+        CLOUDFLARE_AI_ACCOUNT_ID: ACCOUNT,
+        CLOUDFLARE_AI_API_TOKEN: "cf-token-123",
+      }),
+    ).toBeNull()
+  })
+
+  it("names an unrecognised AI_PROVIDER", () => {
+    expect(hostedConfigProblem({ AI_PROVIDER: "cloudflrae" })).toMatch(/AI_PROVIDER="cloudflrae"/)
+  })
+
+  it("names the missing variables for an explicit provider, never their values", () => {
+    const gw = hostedConfigProblem({ AI_PROVIDER: "gateway" })
+    expect(gw).toMatch(/AI_GATEWAY_API_KEY/)
+    const cf = hostedConfigProblem({
+      AI_PROVIDER: "cloudflare",
+      CLOUDFLARE_AI_API_TOKEN: "cf-secret-token",
+    })
+    expect(cf).toMatch(/CLOUDFLARE_AI_ACCOUNT_ID/)
+    expect(cf).not.toContain("cf-secret-token")
   })
 })
 

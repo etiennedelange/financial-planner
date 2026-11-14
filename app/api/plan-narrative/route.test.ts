@@ -24,6 +24,7 @@ const AI_ENV = [
   "CLOUDFLARE_AI_API_TOKEN",
   "AI_HOSTED_GUEST_ACCESS",
   "VERCEL",
+  "TRUSTED_CLIENT_IP_HEADER",
 ] as const
 
 function validBody(extra: Record<string, unknown> = {}) {
@@ -140,12 +141,27 @@ describe("POST /api/plan-narrative", () => {
       expect(lastModel().modelId).toBe(MODEL_TIERS.gateway.balanced)
     })
 
-    it("are rate-limited per IP, separately from each other", async () => {
+    it("are rate-limited per IP on a platform with a trusted IP header", async () => {
       process.env.AI_HOSTED_GUEST_ACCESS = "true"
-      const from = (ip: string) => request(validBody(), { "x-forwarded-for": ip })
+      process.env.VERCEL = "1"
+      const from = (ip: string) => request(validBody(), { "x-real-ip": ip })
       for (let i = 0; i < 20; i++) expect((await POST(from("198.51.100.1"))).status).toBe(200)
       expect((await POST(from("198.51.100.1"))).status).toBe(429)
       expect((await POST(from("198.51.100.2"))).status).toBe(200)
+    })
+
+    it("regression: can't dodge the limit with a spoofed IP header on an unknown host", async () => {
+      process.env.AI_HOSTED_GUEST_ACCESS = "true"
+      // Other guest tests share this deployment's single bucket; start a fresh window.
+      vi.spyOn(Date, "now").mockReturnValue(Date.UTC(2099, 0, 1))
+      const spoofed = (n: number) =>
+        request(validBody(), {
+          "cf-connecting-ip": `203.0.113.${n}`,
+          "x-forwarded-for": `203.0.113.${n}`,
+          "x-real-ip": `203.0.113.${n}`,
+        })
+      for (let i = 0; i < 20; i++) expect((await POST(spoofed(i))).status).toBe(200)
+      expect((await POST(spoofed(99))).status).toBe(429)
     })
 
     it("get a 400, not a sign-in prompt, for a malformed own key", async () => {
@@ -163,6 +179,16 @@ describe("POST /api/plan-narrative", () => {
     expect(body.code).toBe("ai_not_configured")
     expect(body.error).toMatch(/Settings/)
     expect(streamText).not.toHaveBeenCalled()
+  })
+
+  it("refuses hosted generation for a misspelled AI_PROVIDER and logs why", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    process.env.AI_PROVIDER = "cloudflrae"
+    process.env.AI_GATEWAY_API_KEY = "gw-hosted-key"
+    const response = await POST(request(validBody()))
+    expect(response.status).toBe(503)
+    expect(streamText).not.toHaveBeenCalled()
+    expect(errorSpy.mock.calls.flat().join(" ")).toMatch(/AI_PROVIDER="cloudflrae"/)
   })
 
   it("streams the hosted gateway model at the default tier, ignoring a requested tier", async () => {

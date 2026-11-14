@@ -96,12 +96,32 @@ export function buildAiRequestHeaders(settings: AiKeySettings): Record<string, s
 }
 
 /**
+ * A short one-way fingerprint (32-bit FNV-1a) of the credentials in use. 32
+ * bits of a high-entropy key reveal nothing usable about it; it only has to
+ * change when the key or account changes.
+ */
+export function credentialFingerprint(settings: AiKeySettings): string {
+  const material =
+    settings.provider === "gateway"
+      ? `gateway\u0000${settings.gatewayApiKey.trim()}`
+      : `cloudflare\u0000${settings.cloudflareAccountId.trim().toLowerCase()}\u0000${settings.cloudflareApiToken.trim()}`
+  let hash = 0x811c9dc5
+  for (let i = 0; i < material.length; i++) {
+    hash ^= material.charCodeAt(i)
+    hash = Math.imul(hash, 0x01000193) >>> 0
+  }
+  return hash.toString(16).padStart(8, "0")
+}
+
+/**
  * Identifies where a narrative came from, for the client-side cache, without
- * the secret itself: switching provider or key mode must not replay text that
- * another provider wrote.
+ * the secret itself. Switching key mode, provider, *or the key itself* must not
+ * replay text produced under other credentials — replacing key A with key B
+ * would otherwise show A's cached result without ever calling B.
  */
 export function aiSourceKey(settings: AiKeySettings): string {
-  return settings.mode === "own" ? `own:${settings.provider}` : "hosted"
+  if (settings.mode !== "own") return "hosted"
+  return `own:${settings.provider}:${credentialFingerprint(settings)}`
 }
 
 export type NarrativeRequest =

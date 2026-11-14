@@ -43,14 +43,32 @@ export function createKeyStorage(
       return fallback
     }
   }
+  const write = (storage: () => Storage | undefined, name: string, value: string): boolean =>
+    safe(() => {
+      const target = storage()
+      if (!target) return false
+      target.setItem(name, value)
+      return true
+    }, false)
+
+  return {
+    // Each backend is read on its own: a blocked localStorage (which throws)
+    // must not hide a key that sessionStorage still holds.
     getItem: (name) =>
       safe(() => getLocal()?.getItem(name) ?? null, null) ??
       safe(() => getSession()?.getItem(name) ?? null, null),
     setItem: (name, value) => {
-      const remember = rememberFlag(value)
-      const [keep, drop] = remember ? [getLocal, getSession] : [getSession, getLocal]
-      safe(() => drop()?.removeItem(name), undefined)
-      safe(() => keep()?.setItem(name, value), undefined)
+      if (rememberFlag(value)) {
+        // Remembered keys belong in localStorage. If it is unavailable, keep the
+        // key for this session rather than losing it.
+        if (write(getLocal, name, value)) safe(() => getSession()?.removeItem(name), undefined)
+        else write(getSession, name, value)
+        return
+      }
+      // Never fall back the other way: a key the user didn't ask to remember
+      // must not end up in localStorage.
+      safe(() => getLocal()?.removeItem(name), undefined)
+      write(getSession, name, value)
     },
     removeItem: (name) => {
       safe(() => getLocal()?.removeItem(name), undefined)

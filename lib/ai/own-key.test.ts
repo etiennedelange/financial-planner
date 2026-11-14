@@ -4,6 +4,7 @@ import {
   aiSourceKey,
   buildAiRequestHeaders,
   buildNarrativeRequest,
+  credentialFingerprint,
   maskSecret,
   ownKeyProblem,
   usesOwnKey,
@@ -116,13 +117,63 @@ describe("buildNarrativeRequest", () => {
     expect(cf.cacheKey).not.toContain("cf-token-123")
     expect(own.body).not.toContain("vck_abc12345")
   })
+
+  it("regression: replacing the key (same provider, plan and tier) changes the cache key", () => {
+    // Before, key B hit key A's cached narrative and was never called.
+    const withA = buildNarrativeRequest(payload, "best", gatewayOwn)
+    const withB = buildNarrativeRequest(payload, "best", {
+      ...gatewayOwn,
+      gatewayApiKey: "vck_other_key",
+    })
+    if (!withA.ok || !withB.ok) throw new Error("expected ok")
+    expect(withA.body).toBe(withB.body)
+    expect(withA.cacheKey).not.toBe(withB.cacheKey)
+  })
 })
 
 describe("aiSourceKey", () => {
   it("names the source without the secret", () => {
     expect(aiSourceKey(DEFAULT_AI_KEY_SETTINGS)).toBe("hosted")
-    expect(aiSourceKey(gatewayOwn)).toBe("own:gateway")
-    expect(aiSourceKey(cloudflareOwn)).toBe("own:cloudflare")
+    expect(aiSourceKey(gatewayOwn)).toMatch(/^own:gateway:[0-9a-f]{8}$/)
+    expect(aiSourceKey(cloudflareOwn)).toMatch(/^own:cloudflare:[0-9a-f]{8}$/)
+    expect(aiSourceKey(gatewayOwn)).not.toContain("vck_abc12345")
+  })
+
+  it("hosted mode ignores any stored own key", () => {
+    expect(aiSourceKey({ ...gatewayOwn, mode: "hosted" })).toBe("hosted")
+  })
+})
+
+describe("credentialFingerprint", () => {
+  it("is stable for the same credentials, ignoring surrounding spaces", () => {
+    expect(credentialFingerprint(gatewayOwn)).toBe(
+      credentialFingerprint({ ...gatewayOwn, gatewayApiKey: "vck_abc12345" }),
+    )
+    expect(credentialFingerprint(gatewayOwn)).toMatch(/^[0-9a-f]{8}$/)
+  })
+
+  it("changes when the key changes", () => {
+    expect(credentialFingerprint(gatewayOwn)).not.toBe(
+      credentialFingerprint({ ...gatewayOwn, gatewayApiKey: "vck_abc12346" }),
+    )
+    expect(credentialFingerprint(cloudflareOwn)).not.toBe(
+      credentialFingerprint({ ...cloudflareOwn, cloudflareApiToken: "cf-token-124" }),
+    )
+  })
+
+  it("changes when the Cloudflare account changes, but not with its letter case", () => {
+    expect(credentialFingerprint(cloudflareOwn)).not.toBe(
+      credentialFingerprint({ ...cloudflareOwn, cloudflareAccountId: "f".repeat(32) }),
+    )
+    expect(credentialFingerprint(cloudflareOwn)).toBe(
+      credentialFingerprint({ ...cloudflareOwn, cloudflareAccountId: ACCOUNT.toUpperCase() }),
+    )
+  })
+
+  it("only reads the selected provider's key", () => {
+    expect(credentialFingerprint(gatewayOwn)).toBe(
+      credentialFingerprint({ ...gatewayOwn, cloudflareApiToken: "something-else" }),
+    )
   })
 })
 

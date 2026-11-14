@@ -51,12 +51,36 @@ export function resolveHostedCredentials(env: Env): AiCredentials | null {
       : null
 
   const explicit = nonEmpty(env.AI_PROVIDER)?.toLowerCase()
-  if (explicit === "none") return null
-  if (explicit === "gateway") return gateway
-  if (explicit === "cloudflare") return cloudflare
+  if (explicit !== undefined) {
+    if (explicit === "gateway") return gateway
+    if (explicit === "cloudflare") return cloudflare
+    // "none", and any value we don't recognise: fail closed. A typo such as
+    // "cloudflrae" must not quietly bill a different provider than the one the
+    // operator chose (hostedConfigProblem explains it in the server log).
+    return null
+  }
 
   if (gatewayKey) return gateway
   return cloudflare ?? gateway
+}
+
+/**
+ * Why an explicit AI_PROVIDER yields no hosted provider, for the server log,
+ * or null when there is nothing to report (unset, "none", or usable). Names
+ * the variables involved, never their values (except AI_PROVIDER itself).
+ */
+export function hostedConfigProblem(env: Env): string | null {
+  const raw = nonEmpty(env.AI_PROVIDER)
+  if (raw === undefined) return null
+  const explicit = raw.toLowerCase()
+  if (explicit === "none") return null
+  if (explicit !== "gateway" && explicit !== "cloudflare") {
+    return `AI_PROVIDER="${raw.slice(0, 40)}" is not one of gateway, cloudflare, none; hosted AI is off`
+  }
+  if (resolveHostedCredentials(env)) return null
+  return explicit === "gateway"
+    ? "AI_PROVIDER=gateway but neither AI_GATEWAY_API_KEY nor VERCEL_OIDC_TOKEN is set"
+    : "AI_PROVIDER=cloudflare but CLOUDFLARE_AI_ACCOUNT_ID (32 hex characters) and CLOUDFLARE_AI_API_TOKEN are not both set"
 }
 
 export type UserCredentialsResult =

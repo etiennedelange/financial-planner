@@ -6,13 +6,14 @@ import {
   AI_SIGN_IN_REQUIRED_MESSAGE,
   createLanguageModel,
   describeAiFailure,
+  hostedConfigProblem,
   hostedGuestAccessAllowed,
   parseUserCredentials,
   resolveHostedCredentials,
   resolveTier,
 } from "@/lib/ai/providers"
 import { startNarrativeStream } from "@/lib/ai/narrative-stream"
-import { clientIp } from "@/lib/security/client-ip"
+import { clientRateLimitId } from "@/lib/security/client-ip"
 import { checkRateLimit } from "@/lib/security/rate-limit"
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
@@ -66,7 +67,7 @@ export async function POST(request: Request) {
 
   const rateLimitKey = user
     ? `plan-narrative:${user.id}`
-    : `plan-narrative:ip:${clientIp(request.headers)}`
+    : `plan-narrative:ip:${clientRateLimitId(request.headers)}`
   const { allowed } = checkRateLimit(rateLimitKey, RATE_LIMIT_PER_HOUR, RATE_LIMIT_WINDOW_MS)
   if (!allowed) {
     return NextResponse.json({ error: "Too many requests. Try again later." }, { status: 429 })
@@ -97,6 +98,8 @@ export async function POST(request: Request) {
 
   const credentials = userCredentials.credentials ?? resolveHostedCredentials(process.env)
   if (!credentials) {
+    const problem = hostedConfigProblem(process.env)
+    if (problem) console.error(`[plan-narrative] ${problem}`)
     return NextResponse.json(
       { error: AI_NOT_CONFIGURED_MESSAGE, code: "ai_not_configured" },
       { status: 503 },

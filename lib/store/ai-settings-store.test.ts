@@ -116,6 +116,42 @@ describe("createKeyStorage", () => {
     expect(() => storage.setItem("k", serialized(true))).not.toThrow()
     expect(() => storage.removeItem("k")).not.toThrow()
   })
+
+  const blocked = () => {
+    const store = new MemoryStorage()
+    store.getItem = () => {
+      throw new Error("SecurityError")
+    }
+    store.setItem = () => {
+      throw new Error("SecurityError")
+    }
+    return store
+  }
+
+  it("regression: a throwing localStorage does not hide the sessionStorage key", () => {
+    session.setItem("k", "session-value")
+    const storage = createKeyStorage(blocked, () => session)
+    expect(storage.getItem("k")).toBe("session-value")
+  })
+
+  it("keeps a remembered key in sessionStorage when localStorage can't be written", () => {
+    const storage = createKeyStorage(blocked, () => session)
+    storage.setItem("k", serialized(true))
+    expect(session.getItem("k")).toBe(serialized(true))
+  })
+
+  it("never puts an unremembered key in localStorage, even when sessionStorage fails", () => {
+    const storage = createKeyStorage(() => local, blocked)
+    storage.setItem("k", serialized(false))
+    expect(local.getItem("k")).toBeNull()
+  })
+
+  it("does not delete the session copy until the remembered copy is safely written", () => {
+    session.setItem("k", serialized(false))
+    const storage = createKeyStorage(blocked, () => session)
+    storage.setItem("k", serialized(true))
+    expect(session.getItem("k")).toBe(serialized(true))
+  })
 })
 
 describe("useAiSettingsStore", () => {
