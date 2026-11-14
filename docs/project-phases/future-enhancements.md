@@ -41,6 +41,28 @@ description: "Post-MVP enhancement ideas, split into completed and still pending
 - **Estate planning** — model estate duty, executor fees, bequest goals
 - **Legacy goals** — target end-of-plan balance for inheritance
 
+### E2E journeys (identified 2026-11-14)
+
+Journeys 1-3 were repaired and pass on desktop, tablet and the phone layout; see [history](../history/2026-11-14-number-field-inputs.md). The rest is still open. Journeys 4-7 were assessed by reading the specs (their steps and waits), not by running them.
+
+- [ ] **Port journey 04 (insights exploration).** It clicks the removed "Insights", "Assumptions" and "Goals" tabs and waits for charts on the landing page. Decide which pages now carry what "Insights" documented (Overview's next-best-step card, Charts' sensitivity and cost-of-delay, Risk's investment scenarios), then rebuild the journey on `goToPage`.
+- [ ] **Port journey 05 (display modes).** The display-mode toggle is in the top bar (accessible name `"<Future|Today's> Value, change display mode"`). The compounding method is now two option cards on Plan > Market Assumptions, so the old `getByRole("button", { name: /nominal/i })` is ambiguous. It also visits the removed tabs to check the mode on each.
+- [ ] **Port journey 06 (calculations review).** The "Calculations" tab no longer exists. `/calculator/debug` (reconciliation checks, once merged) is the closest successor; decide what this journey should now document.
+- [ ] **Port journey 07 (responsive layouts).** Visits the removed tabs. Use `goToPage` (works for the sidebar and the phone bottom bar), and note the add-account dialog is a bottom drawer on phones.
+- [ ] **Run and fix journeys 08 (two-factor), 09 (bootstrap data ownership) and 02-password-reset.** They need local Supabase and were not run in this work.
+- [ ] **Make the `mobile` project runnable.** It uses WebKit, which is not installed in the devcontainer (`npx playwright install webkit`), or switch it to Chromium emulation of the iPhone viewport.
+- [ ] **Stop the seed version drifting.** `StateManager.seedState` hard-codes the calculator store's persist version (3). Export the version from `calculator-store.ts` and import it, so a store bump cannot silently produce a seed with `personalInfo` missing (the Overview then shows "Retiring at undefined").
+
+### Follow-ups from the input redesign (identified 2026-11-14)
+
+From PR #43; details in [history](../history/2026-11-14-number-field-inputs.md).
+
+- [ ] **Expense and group delete** still use a confirmation dialog. Give them the same one-click delete with an Undo toast as accounts (`DELETE_UNDO_MS`).
+- [ ] **Undo restores an account at the end of its group**, not its original position. Needs a store API to re-insert at an index.
+- [ ] **Review dark mode and 390 px** for the converted forms beyond the Plan page, and view the auth modal after the base `Input` change.
+- [ ] **Confirm the 1Password icon is gone** from number and name fields (manual check with the extension; the opt-out attributes are verified in the DOM).
+- [ ] **Audit the stepper hit area** (24 x 26 px) at 320 px.
+
 ### Monetization (discussed 2026-08-02, not scoped)
 - **Bill users for AI plan-narrative access** — the AI narrative feature (`app/api/plan-narrative/`) currently has no usage limits or payment gate beyond a client-side cooldown. Two approaches discussed:
   - **Metered credits (leaning this way)** — small free monthly allowance per account, tracked in a Supabase table, top-up packs or subscription via Stripe when exhausted. Mirrors how the AI Gateway itself is billed, reuses the existing anonymous→real Supabase auth upgrade path.
