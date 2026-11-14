@@ -1,5 +1,6 @@
 "use client"
 
+import { noRangeCaption } from "@/lib/utils/simulation-status"
 import { useMemo } from "react"
 import Link from "next/link"
 import { useShallow } from "zustand/react/shallow"
@@ -162,9 +163,7 @@ export function RiskPage() {
           description={
             successRate !== null
               ? `Likely range · ${getSuccessRateStyle(successRate).label}`
-              : isSimulating
-                ? "Simulating…"
-                : "Waiting for simulation"
+              : noRangeCaption(isSimulating, simulationError)
           }
           successRate={successRate ?? undefined}
           tooltip={`Share of simulated markets in which your plan pays your full income every year to life expectancy. The higher figure uses each investment's long-run volatility; the lower one uses ${CAUTIOUS_VOLATILITY_FACTOR}× that, as in SA equity's most turbulent decade. Both use the same simulated markets. The rating follows the lower figure.`}

@@ -97,20 +97,21 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
     ],
   )
 
-  return (
-    <CalculatorContext.Provider
-      value={{
-        projection,
-        simulationResult,
-        cautiousSimulationResult: cautiousResult,
-        isSimulating,
-        isDeferred,
-        simulationError: hasError,
-      }}
-    >
-      {children}
-    </CalculatorContext.Provider>
+  // Stable identity: a new object every render re-rendered every consumer (including
+  // hidden, still-mounted routes) on any store write, even when none of these changed
+  const value = useMemo<CalculatorContextValue>(
+    () => ({
+      projection,
+      simulationResult,
+      cautiousSimulationResult: cautiousResult,
+      isSimulating,
+      isDeferred,
+      simulationError: hasError,
+    }),
+    [projection, simulationResult, cautiousResult, isSimulating, isDeferred, hasError],
   )
+
+  return <CalculatorContext.Provider value={value}>{children}</CalculatorContext.Provider>
 }
 
 export function useCalculator() {

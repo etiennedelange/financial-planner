@@ -82,6 +82,15 @@ export function createRangeWorkerClient(
 ): RangeWorkerClient {
   let worker: WorkerLike | null = null
   let latestId = 0
+  // True from posting a run until its reply arrives: a worker still busy when the next
+  // run is requested is terminated, because it cannot skip messages it already holds
+  let busy = false
+
+  const discard = () => {
+    worker?.terminate()
+    worker = null
+    busy = false
+  }
 
   const ensureWorker = (): WorkerLike => {
     if (worker) return worker
@@ -89,6 +98,7 @@ export function createRangeWorkerClient(
     created.onmessage = (event) => {
       const { id, results } = event.data
       if (id !== latestId) return
+      busy = false
       const [central, cautious] = results ?? []
       if (!central || !cautious) {
         onError(new Error(`Monte Carlo worker returned ${results?.length ?? 0} of 2 results`))
@@ -96,21 +106,26 @@ export function createRangeWorkerClient(
       }
       onResult({ central, cautious })
     }
-    created.onerror = (event) => onError(event)
+    created.onerror = (event) => {
+      // A worker that errored (failed to load, threw) is dead: drop it so the next run
+      // gets a fresh one instead of posting into the void
+      if (worker === created) discard()
+      onError(event)
+    }
     worker = created
     return created
   }
 
   return {
     run(inputs, seed = newRangeSeed()) {
+      // Cancel superseded work: terminating stops the queued simulations from running
+      if (busy) discard()
       const target = ensureWorker()
       const id = ++latestId
+      busy = true
       target.postMessage(buildRangeRequest(id, inputs, seed))
       return id
     },
-    dispose() {
-      worker?.terminate()
-      worker = null
-    },
+    dispose: discard,
   }
 }

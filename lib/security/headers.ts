@@ -42,6 +42,10 @@ export function buildCsp(nonce: string, supabaseUrl: string, isDev: boolean): st
     `img-src 'self' data: blob:`,
     `font-src 'self' data:`,
     `connect-src 'self' ${connectSupabaseUrl} https://vitals.vercel-insights.com`,
+    // Without this, workers fall back to script-src, where 'strict-dynamic' makes browsers
+    // ignore 'self' and a worker cannot carry a nonce: the Monte Carlo worker could be
+    // refused. blob: covers bundlers that start workers from a blob URL.
+    `worker-src 'self' blob:`,
     `frame-src https://challenges.cloudflare.com`,
     `frame-ancestors 'none'`,
     `form-action 'self'`,

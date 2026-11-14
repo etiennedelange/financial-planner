@@ -142,8 +142,11 @@ describe("useScenarioComparisonWorker", () => {
     render(params)
     render(params)
     expect(FakeWorker.instances[0].posted).toHaveLength(1)
+    // A changed input supersedes the busy run: its worker is cancelled, a fresh one runs it
     render({ ...params, currentSavings: 600_000 })
-    expect(FakeWorker.instances[0].posted).toHaveLength(2)
+    expect(FakeWorker.instances).toHaveLength(2)
+    expect(FakeWorker.instances[0].terminated).toBe(true)
+    expect(FakeWorker.instances[1].posted).toHaveLength(1)
   })
 
   it("reports a worker error", () => {

@@ -81,7 +81,16 @@ export function migrateLegacyKeys(): AmbiguousLegacyState[] {
     const scopedKey = scopedKeyFor(legacyKey, { kind: "user", userId: sessionId })
     // Copy, then delete — delete only on success. setItem throws (e.g. quota)
     // before the removeItem runs, leaving the legacy key intact for retry.
-    window.localStorage.setItem(scopedKey, JSON.stringify(payload))
+    if (window.localStorage.getItem(scopedKey) !== null) {
+      // The user already has a scoped plan (a newer one, saved after the scoping change):
+      // never overwrite it with the legacy copy. Keep the legacy payload as a backup.
+      window.localStorage.setItem(
+        `${legacyKey}:legacy-backup:${sessionId}`,
+        JSON.stringify(payload),
+      )
+    } else {
+      window.localStorage.setItem(scopedKey, JSON.stringify(payload))
+    }
     window.localStorage.removeItem(legacyKey)
   }
 

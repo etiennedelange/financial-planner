@@ -181,6 +181,25 @@ Write-up and main-vs-branch comparison: [history](../history/2026-11-01-audit-fi
 
 ---
 
+## 9.8 — Bug and Performance Audit (2026-11-14)
+
+- [x] Risk worker recovers from a dead worker, cancels superseded runs, reports failure; CSP `worker-src`
+- [x] Expenses/calculator store sync races (resurrected deletes, reset while signed in, scenario switching)
+- [x] Shortfall amount applies the spending-phase multiplier (golden file regenerated)
+- [x] Render cost: cached `Intl.NumberFormat`, store selectors, memoized context, nested `<main>`
+- [ ] Decide whether the breakdown/debug window/`computePortfolioTotals` should share one zero-balance weighting rule
+
+Details: [history/2026-11-14-bug-and-performance-audit.md](../history/2026-11-14-bug-and-performance-audit.md)
+
+## 9.9 — Theme Contrast (2026-11-14)
+
+- [x] Light-mode warning and success text, status buttons and tinted panels reach 4.5:1; input borders reach 3:1 in both themes — [history](../history/2026-11-14-theme-contrast-fixes.md)
+- [x] Token contrast regression test covers every text and boundary pair in both themes (`lib/utils/contrast.test.ts`)
+- [ ] Rendered visual pass in light and dark mode at 320px and 1280px (tokens verified; the darker light-mode status colours have not been seen on the real pages)
+- [ ] `--chart-3` fails 3:1 on card in light mode (1.77:1); unused today, fix before it is used for a series
+
+---
+
 ## Suggested Work Order
 
 1. **9.2 Critical** — store tests first; they block meaningful coverage numbers

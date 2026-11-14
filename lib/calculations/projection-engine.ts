@@ -565,14 +565,12 @@ export function selectRawIncomeGap(
   desiredMonthlyIncomeToday: number,
   inflationRate: number,
 ): number {
-  const desiredMonthlyAtRetirement = escalate(
-    desiredMonthlyIncomeToday,
-    yearsToRetirement,
-    inflationRate,
-  )
   return rows.slice(yearsToRetirement).reduce((sum, yp, drawdownYear) => {
-    const desiredAnnualThisYear = escalate(
-      desiredMonthlyAtRetirement * 12,
+    // The same goal the shortfall age and the overview use, including the spending-phase
+    // reduction: without it the slow-go years counted as shortfall
+    const desiredAnnualThisYear = incomeGoalForDrawdownYear(
+      desiredMonthlyIncomeToday,
+      yearsToRetirement,
       drawdownYear,
       inflationRate,
     )

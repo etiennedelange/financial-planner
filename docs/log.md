@@ -1,5 +1,9 @@
 # Documentation Update Log
 
+## 2026-11-14
+* **Update**: [Theme contrast fixes](history/2026-11-14-theme-contrast-fixes.md) - Light-mode warning and success text and input borders in both themes now meet WCAG; a test checks every text and boundary token pair in both themes against `globals.css`.
+* **Update**: [Bug and performance audit](history/2026-11-14-bug-and-performance-audit.md) - Dead Risk worker is replaced and failures are shown, superseded runs are cancelled, store sync races and the shortfall amount are fixed, and render cost is trimmed.
+
 ## 2026-11-12
 * **Update**: [Risk simulation stuck on 'Waiting for simulation': one worker entry](history/2026-11-12-single-worker-entry.md) - The second worker entry added for #34 was crossed with the first in the production build; both request kinds now go through `simulation.worker.ts`, guarded by a test.
 * **Update**: [Page freezes after editing Plan inputs (issue #34)](history/2026-11-12-page-freeze-scenario-worker.md) - A hidden Risk page re-ran 3 × 1,000 main-thread simulations on every Plan keystroke; the scenario comparison now runs in a Web Worker, and Market Assumptions validate before saving (store v3 repairs bad persisted rates).

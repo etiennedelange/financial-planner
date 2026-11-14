@@ -54,6 +54,8 @@ let scenarioSyncTimer: ReturnType<typeof setTimeout> | null = null
 // does not duplicate fetches; a newer generation supersedes an older one.
 const dbSyncInFlight = new Map<string, Promise<void>>()
 let latestGeneration = 0
+// Bumped by every switchScenario call; only the latest call may commit its result
+let latestSwitchToken = 0
 
 function scheduleScenarioSync() {
   if (scenarioSyncTimer) clearTimeout(scenarioSyncTimer)
@@ -224,13 +226,23 @@ export const useCalculatorStore = create<CalculatorState>()(
                 ? current.activeScenarioId
                 : scenarios[0].id
 
-            const [data, accounts] = await Promise.all([
-              fetchScenario(targetId),
-              fetchAccounts(targetId),
-            ])
-            if (data)
-              set({ ...data, accounts, activeScenarioId: targetId, scenarioList: scenarios })
-            else set({ accounts: [], activeScenarioId: scenarios[0].id, scenarioList: scenarios })
+            // If the remembered scenario has no data, fall back to the most recent one and
+            // load ITS data, so the active id and the loaded plan always agree
+            const candidates =
+              targetId === scenarios[0].id ? [targetId] : [targetId, scenarios[0].id]
+            for (const candidate of candidates) {
+              const [data, accounts] = await Promise.all([
+                fetchScenario(candidate),
+                fetchAccounts(candidate),
+              ])
+              if (!data) continue
+              const latest = useCalculatorStore.getState()
+              const latestUserId = latest.identity.kind === "user" ? latest.identity.userId : null
+              if (latestUserId !== userId || generation < latestGeneration) return
+              set({ ...data, accounts, activeScenarioId: candidate, scenarioList: scenarios })
+              return
+            }
+            set({ accounts: [], activeScenarioId: scenarios[0].id, scenarioList: scenarios })
           } finally {
             dbSyncInFlight.delete(key)
           }
@@ -338,7 +350,21 @@ export const useCalculatorStore = create<CalculatorState>()(
         scheduleScenarioSync()
       },
 
-      resetToDefaults: () => set(initialState),
+      resetToDefaults: () => {
+        // Reset the PLAN, not who owns it: wiping identity / activeScenarioId (as
+        // `set(initialState)` did) silently turned a signed-in user into a guest, so every
+        // later edit stayed local until reload.
+        const { identity, activeScenarioId, scenarioList, accounts } = useCalculatorStore.getState()
+        const userId = identity.kind === "user" ? identity.userId : null
+        set({ ...initialState, identity, activeScenarioId, scenarioList })
+        const current = useCalculatorStore.getState()
+        const currentUserId = current.identity.kind === "user" ? current.identity.userId : null
+        if (userId && currentUserId === userId && activeScenarioId) {
+          // Delete the cleared accounts remotely too, or the next sync brings them back
+          accounts.forEach((acc) => deleteAccount(acc.id).catch(console.error))
+          scheduleScenarioSync()
+        }
+      },
 
       loadPlan: (plan) => {
         const { identity, activeScenarioId } = useCalculatorStore.getState()
@@ -366,7 +392,16 @@ export const useCalculatorStore = create<CalculatorState>()(
       },
 
       switchScenario: async (id) => {
+        const owner = useCalculatorStore.getState().identity
+        const ownerId = owner.kind === "user" ? owner.userId : null
+        const token = ++latestSwitchToken
         const [data, accounts] = await Promise.all([fetchScenario(id), fetchAccounts(id)])
+        // A slower earlier switch must not overwrite a later selection, and a sign-out
+        // or user change during the fetch must not load the previous user's scenario
+        if (token !== latestSwitchToken) return
+        const current = useCalculatorStore.getState().identity
+        const currentId = current.kind === "user" ? current.userId : null
+        if (currentId !== ownerId) return
         if (data) set({ ...data, accounts, activeScenarioId: id })
       },
 
@@ -378,7 +413,6 @@ export const useCalculatorStore = create<CalculatorState>()(
           assumptions,
           drawdownConfig,
           displayMode,
-          accounts,
         } = useCalculatorStore.getState()
         const sessionId = identity.kind === "user" ? identity.userId : null
         if (!sessionId) return
@@ -394,8 +428,11 @@ export const useCalculatorStore = create<CalculatorState>()(
           drawdownConfig,
           displayMode,
         })
-        // Clone current accounts into the new scenario so it starts as an independent copy
-        const cloned = await cloneAccounts(accounts, scenarioId)
+        // Clone the CURRENT accounts (not the ones captured before the first await) so edits
+        // made while the scenario was being created are not lost
+        const cloned = await cloneAccounts(useCalculatorStore.getState().accounts, scenarioId)
+        const after = useCalculatorStore.getState().identity
+        if ((after.kind === "user" ? after.userId : null) !== sessionId) return
         const meta: ScenarioMeta = {
           id: scenarioId,
           name,

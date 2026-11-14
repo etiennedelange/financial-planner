@@ -580,3 +580,115 @@ describe("expense sync owner re-check", () => {
     expect(expensesApi.seedExpenses).not.toHaveBeenCalled()
   })
 })
+
+describe("pending syncs vs deletes (resurrection)", () => {
+  const signedIn = () =>
+    useExpensesStore.setState({
+      identity: { kind: "user", userId: "user-a" },
+      groups: [],
+      expenses: [],
+    })
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.clearAllMocks()
+    vi.mocked(expensesApi.upsertGroup).mockResolvedValue(undefined)
+    vi.mocked(expensesApi.upsertExpense).mockResolvedValue(undefined)
+    vi.mocked(expensesApi.deleteExpense).mockResolvedValue(undefined)
+    vi.mocked(expensesApi.deleteGroup).mockResolvedValue(undefined)
+    vi.mocked(expensesApi.clearAllExpenses).mockResolvedValue(undefined)
+    vi.mocked(expensesApi.seedExpenses).mockResolvedValue({ groups: [], expenses: [] })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("does not upsert an expense that was removed before its debounce fired", async () => {
+    signedIn()
+    const store = useExpensesStore.getState()
+    store.addGroup("Food", "#fff")
+    const groupId = useExpensesStore.getState().groups[0].id
+    store.addExpense(groupId, "Milk", 50)
+    const expenseId = useExpensesStore.getState().expenses[0].id
+    await vi.advanceTimersByTimeAsync(1000) // let the adds sync
+    vi.clearAllMocks()
+
+    store.updateExpense(expenseId, { amount: 60 })
+    store.removeExpense(expenseId)
+    await vi.advanceTimersByTimeAsync(1000)
+
+    expect(expensesApi.deleteExpense).toHaveBeenCalledWith(expenseId)
+    expect(expensesApi.upsertExpense).not.toHaveBeenCalled()
+  })
+
+  it("does not upsert a removed group or its children (the reported repro)", async () => {
+    signedIn()
+    const store = useExpensesStore.getState()
+    store.addGroup("Groceries", "#fff")
+    const groupId = useExpensesStore.getState().groups[0].id
+    store.addExpense(groupId, "Milk", 50)
+    const expenseId = useExpensesStore.getState().expenses[0].id
+
+    store.removeExpense(expenseId)
+    store.removeGroup(groupId)
+    await vi.advanceTimersByTimeAsync(1000)
+
+    expect(expensesApi.deleteGroup).toHaveBeenCalledWith(groupId)
+    expect(expensesApi.upsertGroup).not.toHaveBeenCalled()
+    expect(expensesApi.upsertExpense).not.toHaveBeenCalled()
+  })
+
+  it("removing a group cancels its children's pending syncs even when they were not removed first", async () => {
+    signedIn()
+    const store = useExpensesStore.getState()
+    store.addGroup("Groceries", "#fff")
+    const groupId = useExpensesStore.getState().groups[0].id
+    store.addExpense(groupId, "Milk", 50)
+
+    store.removeGroup(groupId)
+    await vi.advanceTimersByTimeAsync(1000)
+
+    expect(expensesApi.upsertExpense).not.toHaveBeenCalled()
+    expect(expensesApi.upsertGroup).not.toHaveBeenCalled()
+  })
+
+  it("clearAll cancels pending syncs so cleared rows are not re-created", async () => {
+    signedIn()
+    const store = useExpensesStore.getState()
+    store.addGroup("Groceries", "#fff")
+    store.clearAll()
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(expensesApi.upsertGroup).not.toHaveBeenCalled()
+  })
+
+  it("still syncs an edited expense with its latest values", async () => {
+    signedIn()
+    const store = useExpensesStore.getState()
+    store.addGroup("Food", "#fff")
+    const groupId = useExpensesStore.getState().groups[0].id
+    store.addExpense(groupId, "Milk", 50)
+    const expenseId = useExpensesStore.getState().expenses[0].id
+    store.updateExpense(expenseId, { amount: 75 })
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(expensesApi.upsertExpense).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(expensesApi.upsertExpense).mock.calls[0][1]).toMatchObject({ amount: 75 })
+  })
+})
+
+describe("expenses persistence payload", () => {
+  it("does not persist identity", () => {
+    useExpensesStore.setState({ identity: { kind: "user", userId: "u1" } })
+    const options = (
+      useExpensesStore as unknown as {
+        persist: { getOptions: () => { partialize?: (s: object) => object } }
+      }
+    ).persist.getOptions()
+    const payload = options.partialize?.(useExpensesStore.getState()) as
+      | Record<string, unknown>
+      | undefined
+    expect(payload).toBeDefined()
+    expect(payload).not.toHaveProperty("identity")
+    expect(Object.keys(payload ?? {}).sort()).toEqual(["expenses", "groups", "monthlyIncome"])
+  })
+})

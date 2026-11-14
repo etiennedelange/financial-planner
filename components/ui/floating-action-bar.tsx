@@ -25,7 +25,7 @@ export function FloatingActionBar({ primary, secondary, hint, className }: Float
   const ticking = useRef(false)
 
   useEffect(() => {
-    const scroller = document.querySelector("main") as HTMLElement | null
+    const scroller = document.querySelector<HTMLElement>("[data-app-scroller]")
     if (!scroller) return
 
     const onScroll = () => {

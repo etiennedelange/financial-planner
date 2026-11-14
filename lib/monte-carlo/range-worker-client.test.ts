@@ -117,12 +117,12 @@ describe("newRangeSeed", () => {
 
 describe("createRangeWorkerClient", () => {
   describe("Lifecycle", () => {
-    it("creates the worker lazily on the first run and reuses it", () => {
+    it("creates the worker lazily on the first run and reuses it once idle", () => {
       const { worker, posted } = fakeWorker()
       const create = vi.fn(() => worker)
       const client = createRangeWorkerClient(create, vi.fn(), vi.fn())
       expect(create).not.toHaveBeenCalled()
-      client.run(inputs, 1)
+      worker.reply(client.run(inputs, 1), [result(1), result(1)])
       client.run(inputs, 2)
       expect(create).toHaveBeenCalledTimes(1)
       expect(posted.map((p) => p.id)).toEqual([1, 2])
@@ -204,6 +204,43 @@ describe("createRangeWorkerClient", () => {
       client.run(inputs, 1)
       worker.fail()
       expect(onError).toHaveBeenCalledWith({ message: "boom" })
+    })
+  })
+  describe("Cancellation and recovery", () => {
+    it("terminates a busy worker when a newer run supersedes it, so queued work never runs", () => {
+      const first = fakeWorker()
+      const second = fakeWorker()
+      const create = vi.fn().mockReturnValueOnce(first.worker).mockReturnValueOnce(second.worker)
+      const client = createRangeWorkerClient(create, vi.fn(), vi.fn())
+      client.run(inputs, 1)
+      client.run(inputs, 2)
+      expect(first.worker.terminated).toBe(true)
+      expect(second.posted.map((p) => p.configs[0].randomSeed)).toEqual([2])
+    })
+
+    it("keeps the worker when the previous run already replied", () => {
+      const first = fakeWorker()
+      const create = vi.fn(() => first.worker)
+      const client = createRangeWorkerClient(create, vi.fn(), vi.fn())
+      first.worker.reply(client.run(inputs, 1), [result(1), result(1)])
+      client.run(inputs, 2)
+      expect(first.worker.terminated).toBe(false)
+      expect(create).toHaveBeenCalledTimes(1)
+    })
+
+    it("replaces a worker that errored, so a later run is not posted into a dead worker", () => {
+      const dead = fakeWorker()
+      const fresh = fakeWorker()
+      const create = vi.fn().mockReturnValueOnce(dead.worker).mockReturnValueOnce(fresh.worker)
+      const onResult = vi.fn()
+      const client = createRangeWorkerClient(create, onResult, vi.fn())
+      client.run(inputs, 1)
+      dead.worker.fail()
+      expect(dead.worker.terminated).toBe(true)
+      const id = client.run(inputs, 2)
+      expect(fresh.posted).toHaveLength(1)
+      fresh.worker.reply(id, [result(70), result(60)])
+      expect(onResult).toHaveBeenCalledTimes(1)
     })
   })
 })

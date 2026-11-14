@@ -33,6 +33,14 @@ export function createScenarioWorkerClient(
 ): ScenarioWorkerClient {
   let worker: ScenarioWorkerLike | null = null
   let latestId = 0
+  // See createRangeWorkerClient: a busy worker is terminated when a newer run supersedes it
+  let busy = false
+
+  const discard = () => {
+    worker?.terminate()
+    worker = null
+    busy = false
+  }
 
   const ensureWorker = (): ScenarioWorkerLike => {
     if (worker) return worker
@@ -40,27 +48,30 @@ export function createScenarioWorkerClient(
     created.onmessage = (event) => {
       const { id, result } = event.data
       if (id !== latestId) return
+      busy = false
       if (!result) {
         onError(new Error("Scenario worker returned no result"))
         return
       }
       onResult(result)
     }
-    created.onerror = (event) => onError(event)
+    created.onerror = (event) => {
+      if (worker === created) discard()
+      onError(event)
+    }
     worker = created
     return created
   }
 
   return {
     run(params) {
+      if (busy) discard()
       const target = ensureWorker()
       const id = ++latestId
+      busy = true
       target.postMessage({ kind: "scenarios", id, params })
       return id
     },
-    dispose() {
-      worker?.terminate()
-      worker = null
-    },
+    dispose: discard,
   }
 }

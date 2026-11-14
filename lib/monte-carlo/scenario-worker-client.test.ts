@@ -56,12 +56,12 @@ function fakeWorker() {
 
 describe("createScenarioWorkerClient", () => {
   describe("Lifecycle", () => {
-    it("creates the worker lazily on the first run and reuses it", () => {
+    it("creates the worker lazily on the first run and reuses it once idle", () => {
       const { worker, posted } = fakeWorker()
       const create = vi.fn(() => worker)
       const client = createScenarioWorkerClient(create, vi.fn(), vi.fn())
       expect(create).not.toHaveBeenCalled()
-      client.run(params)
+      worker.reply(client.run(params), result("a"))
       client.run(params)
       expect(create).toHaveBeenCalledTimes(1)
       expect(posted.map((p) => p.id)).toEqual([1, 2])
@@ -132,6 +132,34 @@ describe("createScenarioWorkerClient", () => {
       client.run(params)
       worker.fail()
       expect(onError).toHaveBeenCalledWith({ message: "boom" })
+    })
+  })
+
+  describe("Cancellation and recovery", () => {
+    it("terminates a busy worker when a newer run supersedes it", () => {
+      const first = fakeWorker()
+      const second = fakeWorker()
+      const create = vi.fn().mockReturnValueOnce(first.worker).mockReturnValueOnce(second.worker)
+      const client = createScenarioWorkerClient(create, vi.fn(), vi.fn())
+      client.run(params)
+      client.run(params)
+      expect(first.worker.terminated).toBe(true)
+      expect(second.posted).toHaveLength(1)
+    })
+
+    it("replaces a worker that errored, so a later run is not posted into a dead worker", () => {
+      const dead = fakeWorker()
+      const fresh = fakeWorker()
+      const create = vi.fn().mockReturnValueOnce(dead.worker).mockReturnValueOnce(fresh.worker)
+      const onResult = vi.fn()
+      const client = createScenarioWorkerClient(create, onResult, vi.fn())
+      client.run(params)
+      dead.worker.fail()
+      expect(dead.worker.terminated).toBe(true)
+      const id = client.run(params)
+      expect(fresh.posted).toHaveLength(1)
+      fresh.worker.reply(id, result("ok"))
+      expect(onResult).toHaveBeenCalledTimes(1)
     })
   })
 })

@@ -5,6 +5,7 @@ import { CalculationsBreakdown } from "@/components/results/calculations-breakdo
 import { ProjectionSummary } from "@/components/results/projection-summary"
 import { WhatIfPanel } from "@/components/results/what-if-panel"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
+import { useShallow } from "zustand/react/shallow"
 import type { ProjectionResult } from "@/types"
 
 interface ProjectionsPageProps {
@@ -12,7 +13,14 @@ interface ProjectionsPageProps {
 }
 
 export function ProjectionsPage({ projection }: ProjectionsPageProps) {
-  const { personalInfo, retirementGoals } = useCalculatorStore()
+  // Selected, not the whole store: this page stays mounted while hidden, and a bare
+  // useCalculatorStore() re-rendered it on every unrelated store write
+  const { personalInfo, retirementGoals } = useCalculatorStore(
+    useShallow((state) => ({
+      personalInfo: state.personalInfo,
+      retirementGoals: state.retirementGoals,
+    })),
+  )
 
   return (
     <div className="space-y-6">

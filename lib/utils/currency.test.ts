@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vite-plus/test"
-import { formatCurrency, formatCurrencyCompact, NO_VALUE, toRealValue } from "./currency"
+import {
+  formatCurrency,
+  formatCurrencyCompact,
+  NO_VALUE,
+  toRealValue,
+  zarFormatter,
+} from "./currency"
 
 /** Intl's en-ZA output uses non-breaking spaces; compare on plain spaces */
 const plain = (s: string) => s.replace(/\s/g, " ")
@@ -148,5 +154,20 @@ describe("toRealValue", () => {
 
   it("0% inflation leaves the value unchanged", () => {
     expect(toRealValue(1000, 30, 0)).toBe(1000)
+  })
+})
+
+describe("zarFormatter cache", () => {
+  it("reuses one formatter per decimals value", () => {
+    expect(zarFormatter(0)).toBe(zarFormatter(0))
+    expect(zarFormatter(2)).toBe(zarFormatter(2))
+    expect(zarFormatter(0)).not.toBe(zarFormatter(2))
+  })
+
+  it("keeps output identical across repeated calls and decimals", () => {
+    const first = formatCurrency(1234567.891)
+    expect(formatCurrency(1234567.891)).toBe(first)
+    expect(formatCurrency(1234567.891, { decimals: 2 })).toMatch(/,89$|\.89$/)
+    expect(formatCurrency(1234567.891)).toBe(first)
   })
 })

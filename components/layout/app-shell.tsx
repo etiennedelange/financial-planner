@@ -26,9 +26,10 @@ export function AppShell({ accountCount, user, isLoaded, children }: AppShellPro
       {/* Content area — offset by sidebar on desktop, full width on mobile */}
       <div className="flex flex-1 flex-col md:pl-(--sidebar-width) overflow-hidden">
         <TopBar user={user} />
-        <main className="flex-1 overflow-y-auto">
+        {/* A div: app/layout.tsx already wraps every page in the one <main> landmark */}
+        <div data-app-scroller className="flex-1 overflow-y-auto">
           <div className="mx-auto w-full max-w-6xl px-4 pt-4 pb-24 md:px-8 md:py-6">{children}</div>
-        </main>
+        </div>
       </div>
 
       {/* Bottom nav — mobile only */}

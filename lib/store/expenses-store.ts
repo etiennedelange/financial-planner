@@ -44,6 +44,24 @@ type PersistedExpensesState = {
 }
 const storage = createGatedPersistStorage<PersistedExpensesState>()
 
+function cancelGroupSync(id: string) {
+  const timer = groupSyncTimers.get(id)
+  if (timer) clearTimeout(timer)
+  groupSyncTimers.delete(id)
+}
+
+function cancelExpenseSync(id: string) {
+  const timer = expenseSyncTimers.get(id)
+  if (timer) clearTimeout(timer)
+  expenseSyncTimers.delete(id)
+}
+
+/** Cancels every pending debounced write (after a bulk clear or reseed) */
+function cancelAllSyncs() {
+  for (const id of [...groupSyncTimers.keys()]) cancelGroupSync(id)
+  for (const id of [...expenseSyncTimers.keys()]) cancelExpenseSync(id)
+}
+
 function scheduleGroupSync(group: ExpenseGroup, sessionId: string) {
   const existing = groupSyncTimers.get(group.id)
   if (existing) clearTimeout(existing)
@@ -55,7 +73,11 @@ function scheduleGroupSync(group: ExpenseGroup, sessionId: string) {
       // must not upsert under a previous user's identity.
       const { identity } = useExpensesStore.getState()
       if (identity.kind !== "user" || identity.userId !== sessionId) return
-      upsertGroup(sessionId, group).catch(console.error)
+      // Write the group as it is NOW; if it was deleted meanwhile, writing the captured
+      // copy would resurrect the row in the database
+      const current = useExpensesStore.getState().groups.find((g) => g.id === group.id)
+      if (!current) return
+      upsertGroup(sessionId, current).catch(console.error)
     }, 800),
   )
 }
@@ -70,10 +92,15 @@ function scheduleExpenseSync(expense: Expense, group: ExpenseGroup, sessionId: s
       // Re-check the owner at fire time (see scheduleGroupSync).
       const { identity } = useExpensesStore.getState()
       if (identity.kind !== "user" || identity.userId !== sessionId) return
+      // Write the rows as they are NOW; a deleted expense or group must not be resurrected
+      const state = useExpensesStore.getState()
+      const currentExpense = state.expenses.find((e) => e.id === expense.id)
+      const currentGroup = state.groups.find((g) => g.id === group.id)
+      if (!currentExpense || !currentGroup) return
       try {
         // Group must exist before expense due to FK constraint — upsert is idempotent.
-        await upsertGroup(sessionId, group)
-        await upsertExpense(sessionId, expense)
+        await upsertGroup(sessionId, currentGroup)
+        await upsertExpense(sessionId, currentExpense)
       } catch (e) {
         console.error(e)
       }
@@ -170,6 +197,7 @@ export const useExpensesStore = create<ExpensesState>()(
         const { identity } = get()
         const userId = identity.kind === "user" ? identity.userId : null
         const { groups: seedGroups, expenses: seedExpensesList } = generateSeedData()
+        cancelAllSyncs()
         set({ groups: seedGroups, expenses: seedExpensesList })
         // Clear existing DB rows then seed — fire-and-forget, don't block UI.
         // clearAllExpenses cascades to expenses via FK, so one query is enough.
@@ -183,6 +211,7 @@ export const useExpensesStore = create<ExpensesState>()(
       clearAll: () => {
         const { identity } = get()
         const userId = identity.kind === "user" ? identity.userId : null
+        cancelAllSyncs()
         set({ groups: [], expenses: [] })
         // One bulk delete; cascade removes all child expenses automatically.
         if (userId) {
@@ -216,6 +245,8 @@ export const useExpensesStore = create<ExpensesState>()(
       removeGroup: (id) => {
         const { identity } = get()
         const userId = identity.kind === "user" ? identity.userId : null
+        cancelGroupSync(id)
+        for (const e of get().expenses) if (e.groupId === id) cancelExpenseSync(e.id)
         set((s) => ({
           groups: s.groups.filter((g) => g.id !== id),
           expenses: s.expenses.filter((e) => e.groupId !== id),
@@ -261,6 +292,7 @@ export const useExpensesStore = create<ExpensesState>()(
       removeExpense: (id) => {
         const { identity } = get()
         const userId = identity.kind === "user" ? identity.userId : null
+        cancelExpenseSync(id)
         set((s) => ({ expenses: s.expenses.filter((e) => e.id !== id) }))
         // Only delete remotely while still signed in as the owner.
         const current = get().identity
@@ -291,6 +323,13 @@ export const useExpensesStore = create<ExpensesState>()(
       storage,
       skipHydration: true,
       version: 2,
+      // `identity` must not be persisted (the storage key encodes the scope): without
+      // this, rehydrate merged a stale persisted identity over the in-memory one
+      partialize: (s): PersistedExpensesState => ({
+        groups: s.groups,
+        expenses: s.expenses,
+        monthlyIncome: s.monthlyIncome,
+      }),
       onRehydrateStorage: () => () => storage?.release(),
       // Sanitize expense amounts / income persisted before the input bounds fix
       // (R1 trillion cap): stale absurd values are clamped on rehydrate so they can
