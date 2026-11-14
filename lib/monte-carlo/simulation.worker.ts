@@ -62,12 +62,27 @@ export interface ScenarioWorkerResponse {
   result: ScenarioComparisonResult
 }
 
+function describeBadRequest(problem: string, data: object): string {
+  return `Worker ${problem} (keys: ${Object.keys(data).join(", ") || "none"}); the page and worker script may be from different builds`
+}
+
 /** The worker's message handler, exported so tests can drive it without a Worker */
 export function handleWorkerMessage(
   data: WorkerRequest | ScenarioWorkerRequest,
 ): WorkerResponse | ScenarioWorkerResponse {
+  if (data === null || typeof data !== "object") {
+    throw new Error(`Worker request must be an object, got ${data === null ? "null" : typeof data}`)
+  }
+
   if ("kind" in data && data.kind === "scenarios") {
+    if (!data.params) throw new Error(describeBadRequest("scenarios request has no params", data))
     return { id: data.id, result: compareScenarios(data.params) }
+  }
+
+  if (!Array.isArray((data as WorkerRequest).configs)) {
+    // A page and a worker script from different builds disagree on the message shape;
+    // name the keys received so that is obvious instead of "undefined.randomSeed"
+    throw new Error(describeBadRequest("range request has no configs array", data))
   }
 
   const {

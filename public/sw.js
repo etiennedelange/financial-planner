@@ -1,4 +1,7 @@
-const ASSET_CACHE = "static-assets-v1"
+// Bump this whenever stale cached assets could be served to a newer page (activate deletes
+// every other cache). v2: users who loaded the app before the single-worker-entry fix kept
+// an old worker script and got "Cannot read properties of undefined" on /calculator/risk.
+const ASSET_CACHE = "static-assets-v2"
 
 self.addEventListener("install", () => {
   self.skipWaiting()

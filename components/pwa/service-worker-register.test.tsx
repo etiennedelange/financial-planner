@@ -66,4 +66,43 @@ describe("ServiceWorkerRegister", () => {
 
     expect(container.textContent).toBe("")
   })
+
+  describe("controller change (service-worker update)", () => {
+    function installFake(controller: unknown) {
+      const target = new EventTarget()
+      const register = vi.fn().mockResolvedValue(undefined)
+      Object.defineProperty(navigator, "serviceWorker", {
+        value: Object.assign(target, { register, controller }),
+        configurable: true,
+      })
+      const reload = vi.fn()
+      vi.spyOn(window, "location", "get").mockReturnValue({ ...window.location, reload })
+      return { target, reload }
+    }
+
+    it("reloads once when a new worker takes over a page an old worker controlled", async () => {
+      vi.stubEnv("NODE_ENV", "production")
+      const { target, reload } = installFake({})
+      await act(async () => {
+        root.render(<ServiceWorkerRegister />)
+      })
+
+      target.dispatchEvent(new Event("controllerchange"))
+      target.dispatchEvent(new Event("controllerchange"))
+
+      expect(reload).toHaveBeenCalledTimes(1)
+    })
+
+    it("does not reload on a first install (no previous controller)", async () => {
+      vi.stubEnv("NODE_ENV", "production")
+      const { target, reload } = installFake(null)
+      await act(async () => {
+        root.render(<ServiceWorkerRegister />)
+      })
+
+      target.dispatchEvent(new Event("controllerchange"))
+
+      expect(reload).not.toHaveBeenCalled()
+    })
+  })
 })
