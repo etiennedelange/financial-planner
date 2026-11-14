@@ -1,6 +1,7 @@
 # Documentation Update Log
 
 ## 2026-11-14
+* **Update**: [Stale service-worker cache broke the Risk workers](history/2026-11-14-stale-service-worker-cache.md) - Asset cache bumped to v2 and the worker now names the keys of a malformed request.
 * **Update**: [Bug and performance audit](history/2026-11-14-bug-and-performance-audit.md) - Dead Risk worker is replaced and failures are shown, superseded runs are cancelled, store sync races and the shortfall amount are fixed, and render cost is trimmed.
 
 ## 2026-11-12

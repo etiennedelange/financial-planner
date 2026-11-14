@@ -5,6 +5,7 @@ import { compareScenarios } from "@/lib/calculations/scenario-comparison"
 import type { ScenarioComparisonParams } from "@/lib/calculations/scenario-comparison"
 import {
   handleWorkerMessage,
+  type ScenarioWorkerRequest,
   type ScenarioWorkerResponse,
   type WorkerRequest,
   type WorkerResponse,
@@ -55,6 +56,26 @@ const scenarioParams: ScenarioComparisonParams = {
 }
 
 describe("handleWorkerMessage", () => {
+  describe("malformed requests (page and worker from different builds)", () => {
+    it("names the received keys when a range request has no configs", () => {
+      const { configs: _configs, ...old } = rangeRequest
+      expect(() => handleWorkerMessage(old as unknown as WorkerRequest)).toThrow(
+        /no configs array \(keys: id, accounts/,
+      )
+    })
+
+    it("rejects a scenarios request without params", () => {
+      expect(() =>
+        handleWorkerMessage({ kind: "scenarios", id: 1 } as unknown as ScenarioWorkerRequest),
+      ).toThrow(/no params \(keys: kind, id\)/)
+    })
+
+    it("rejects a non-object message", () => {
+      expect(() => handleWorkerMessage(null as unknown as WorkerRequest)).toThrow(/got null/)
+      expect(() => handleWorkerMessage("x" as unknown as WorkerRequest)).toThrow(/got string/)
+    })
+  })
+
   it("runs a success-range request exactly as the engine does, one result per config", () => {
     const reply = handleWorkerMessage(rangeRequest) as WorkerResponse
     expect(reply.id).toBe(3)

@@ -190,6 +190,8 @@ Write-up and main-vs-branch comparison: [history](../history/2026-11-01-audit-fi
 - [ ] Decide whether the breakdown/debug window/`computePortfolioTotals` should share one zero-balance weighting rule
 
 Details: [history/2026-11-14-bug-and-performance-audit.md](../history/2026-11-14-bug-and-performance-audit.md)
+- [x] Stale service-worker cache served an old worker script to the Risk page: cache bumped to v2, worker reports malformed requests ([history](../history/2026-11-14-stale-service-worker-cache.md))
+- [ ] Consider network-first for worker scripts in `public/sw.js`
 
 ---
 
