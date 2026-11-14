@@ -13,6 +13,7 @@ describe("removeLocalDataKeys", () => {
       "rc-last-backup-at",
       "plan-narrative-model-tier",
       "plan-narrative-provider",
+      "plan-narrative-mode",
       "rc-llm-key-v1:anthropic",
       "rc-llm-key-v1:openai",
       "rc-llm-key-v1:gemini",
@@ -21,7 +22,7 @@ describe("removeLocalDataKeys", () => {
     }
     localStorage.setItem("theme", "dark")
     const removed = removeLocalDataKeys(localStorage)
-    expect(removed).toHaveLength(8)
+    expect(removed).toHaveLength(9)
     expect(localStorage.length).toBe(1)
     expect(localStorage.getItem("theme")).toBe("dark")
   })

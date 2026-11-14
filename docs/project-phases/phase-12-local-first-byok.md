@@ -23,6 +23,7 @@ Threat model: [BYOK LLM key handling](../security/byok-llm-key-handling.md).
 - [x] Vercel Analytics and Speed Insights removed (no telemetry, no vitals origin in the CSP)
 - [x] `proxy.ts` reduced to nonce CSP + headers; `connect-src` pinned to the three providers; no third-party scripts
 - [x] Key vault (session-only default; opt-in PBKDF2 → AES-GCM encryption), provider clients, `streamNarrative`
+- [x] **Copy prompt** as the no-key default; the API key moved under "Advanced" (`copy-prompt`, `CopyPromptPanel`, mode preference)
 - [x] Tests incl. mechanical key-isolation guards; verified in Chromium against the production build
 
 ## Pending / follow-ups

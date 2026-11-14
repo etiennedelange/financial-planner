@@ -3,7 +3,7 @@
 import { Button, type ButtonProps } from "@/components/ui/button"
 import { PageCard } from "@/components/ui/page-card"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
-import { AiKeySettings } from "@/components/ai/ai-key-settings"
+import { AiAssistantSettings } from "@/components/ai/ai-assistant-settings"
 import { useExpensesStore } from "@/lib/store/expenses-store"
 import { clearAllLocalData } from "@/lib/store/clear-local-data"
 import { exportPlan, parsePlanFile, readLastBackupAt } from "@/lib/utils/plan-io"
@@ -338,7 +338,7 @@ export function SettingsPage({ projection }: SettingsPageProps) {
         )}
       </PageCard>
 
-      <AiKeySettings />
+      <AiAssistantSettings />
 
       {/* Data & privacy: everything lives in this browser only */}
       <PageCard label="Data & Privacy" contentClassName="space-y-3">

@@ -4,7 +4,6 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { PageCard } from "@/components/ui/page-card"
 import {
   Select,
   SelectContent,
@@ -37,7 +36,8 @@ const STATUS_TEXT = {
   unlocked: "Your saved key is unlocked for this session.",
 } as const
 
-export function AiKeySettings() {
+/** Advanced option: the user's own provider API key (see docs/security/byok-llm-key-handling.md). */
+export function AiKeySection() {
   const [provider, setProvider] = useProviderChoice()
   const status = useKeyStatus(provider)
 
@@ -81,11 +81,7 @@ export function AiKeySettings() {
   }
 
   return (
-    <PageCard
-      label="AI Assistant"
-      description="Optional. Bring your own API key to get a plain-English summary of your plan."
-      contentClassName="space-y-4"
-    >
+    <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
         Your key is used only by this browser, talking directly to the provider. It is never sent to
         us. Create a <strong>dedicated key with a spending limit</strong> for this app so you can
@@ -224,6 +220,6 @@ export function AiKeySettings() {
           {isPending ? "Saving…" : "Save key"}
         </Button>
       </form>
-    </PageCard>
+    </div>
   )
 }

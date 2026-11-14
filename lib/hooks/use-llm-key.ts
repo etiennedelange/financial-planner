@@ -1,8 +1,15 @@
 "use client"
 
-import { useCallback, useState, useSyncExternalStore } from "react"
+import { useSyncExternalStore } from "react"
 import { getStatus, subscribeVault, type KeyStatus } from "@/lib/ai/key-vault"
+import {
+  DEFAULT_NARRATIVE_MODE,
+  isNarrativeMode,
+  NARRATIVE_MODE_KEY,
+  type NarrativeMode,
+} from "@/lib/ai/narrative-mode"
 import { PROVIDER_IDS, type ProviderId } from "@/lib/ai/providers/origins"
+import { useLocalPref } from "@/lib/hooks/use-local-pref"
 
 const PROVIDER_KEY = "plan-narrative-provider"
 const DEFAULT_PROVIDER: ProviderId = "anthropic"
@@ -24,21 +31,10 @@ export function useKeyStatus(provider: ProviderId): KeyStatus {
 
 /** The user's chosen provider — a non-secret preference, so it is fine in localStorage. */
 export function useProviderChoice(): [ProviderId, (next: ProviderId) => void] {
-  const [provider, setProviderState] = useState<ProviderId>(() => {
-    try {
-      const stored = window.localStorage.getItem(PROVIDER_KEY)
-      return isProvider(stored) ? stored : DEFAULT_PROVIDER
-    } catch {
-      return DEFAULT_PROVIDER
-    }
-  })
-  const setProvider = useCallback((next: ProviderId) => {
-    setProviderState(next)
-    try {
-      window.localStorage.setItem(PROVIDER_KEY, next)
-    } catch {
-      // Preference only — losing it just resets to the default.
-    }
-  }, [])
-  return [provider, setProvider]
+  return useLocalPref(PROVIDER_KEY, DEFAULT_PROVIDER, isProvider)
+}
+
+/** How the plan summary is produced (copy a prompt / own API key). */
+export function useNarrativeMode(): [NarrativeMode, (next: NarrativeMode) => void] {
+  return useLocalPref(NARRATIVE_MODE_KEY, DEFAULT_NARRATIVE_MODE, isNarrativeMode)
 }

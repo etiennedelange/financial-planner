@@ -64,6 +64,22 @@ SDK on the client). Key handling is documented in
 [`docs/security/byok-llm-key-handling.md`](../security/byok-llm-key-handling.md). The model tier
 selector is now real (the old server ignored it), and every request has a hard token cap.
 
+### 5. Copy prompt is now the default (follow-up, same day)
+Pasting an API key is the weakest part of the design, and AI subscriptions (Claude, ChatGPT,
+Gemini) cannot be used by third-party apps. So the default is now **"Copy a prompt"**
+(`lib/ai/copy-prompt.ts`, `components/ai/copy-prompt-panel.tsx`): the app builds the same prompt
+the other mode sends, shows it in a read-only preview, copies it to the clipboard, and links to
+claude.ai / chatgpt.com / gemini.google.com (plain URLs — no plan data ever goes in a URL). The
+user pastes it into the chat app they already pay for. No key, no network call from this app.
+- Settings → **AI Assistant** has two options: *Copy a prompt* (default) and *Your own API key
+  (advanced)*, which reveals the key form. The choice is a non-secret preference
+  (`plan-narrative-mode`, via the shared `useLocalPref` hook so Settings and Overview stay in sync).
+- An **on-device model** (WebLLM / WebGPU) was built and then **dropped before commit** by
+  decision: it needed a large dependency in the same origin as the key vault, a wildcard CDN
+  origin (`*.hf.co`) and `'wasm-unsafe-eval'` in the CSP — all of which weaken the protection of the
+  key — for a feature few users would enable. The CSP is unchanged. It remains a possible
+  follow-up (Ollama on localhost would need only a localhost `connect-src` entry).
+
 ## Verification
 - 75 test files / 1363 tests pass (coverage 96.6% overall); `tsc --noEmit` clean; `vp check` 0 errors; `pnpm build` clean.
 - New tests: key vault (round-trip, tamper, wrong passphrase, provider binding, idle lock,

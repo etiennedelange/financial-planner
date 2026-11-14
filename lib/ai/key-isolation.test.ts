@@ -75,6 +75,19 @@ describe("the API key stays inside the vault's callers", () => {
     expect(providerFiles.filter((f) => /key-vault/.test(f.text))).toEqual([])
   })
 
+  it("the copy-prompt path never touches the key vault", () => {
+    const keyFree = files.filter((f) =>
+      [
+        "lib/ai/copy-prompt.ts",
+        "components/ai/copy-prompt-panel.tsx",
+
+        "components/ai/ai-assistant-settings.tsx",
+      ].includes(f.path),
+    )
+    expect(keyFree).toHaveLength(3)
+    expect(keyFree.filter((f) => /key-vault/.test(f.text)).map((f) => f.path)).toEqual([])
+  })
+
   it("nothing logs request data to the console", () => {
     const offenders = files
       .filter((f) => f.path.startsWith("lib/ai/") || f.path.startsWith("components/ai/"))

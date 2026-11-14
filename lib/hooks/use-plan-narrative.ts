@@ -82,12 +82,13 @@ export function usePlanNarrative(input: UsePlanNarrativeInput) {
 
     try {
       let fullText = ""
-      for await (const chunk of streamNarrative({
+      const stream = streamNarrative({
         provider: input.provider,
         tier: input.tier,
         payload,
         signal: controller.signal,
-      })) {
+      })
+      for await (const chunk of stream) {
         fullText += chunk
         setText(fullText)
       }
@@ -113,5 +114,14 @@ export function usePlanNarrative(input: UsePlanNarrativeInput) {
 
   const cancel = useCallback(() => abortRef.current?.abort(), [])
 
-  return { text, isStreaming, error, errorCode, cooldownRemaining, generate, cancel, clear }
+  return {
+    text,
+    isStreaming,
+    error,
+    errorCode,
+    cooldownRemaining,
+    generate,
+    cancel,
+    clear,
+  }
 }

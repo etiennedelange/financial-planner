@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { useShallow } from "zustand/react/shallow"
 import { PageCard } from "@/components/ui/page-card"
 import { Button } from "@/components/ui/button"
@@ -12,13 +13,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { CopyPromptPanel } from "@/components/ai/copy-prompt-panel"
+import { UnlockForm } from "@/components/ai/unlock-form"
 import { useCalculatorStore } from "@/lib/store/calculator-store"
 import { useCalculator } from "@/lib/context/calculator-context"
 import { usePlanNarrative } from "@/lib/hooks/use-plan-narrative"
+import { useKeyStatus, useNarrativeMode, useProviderChoice } from "@/lib/hooks/use-llm-key"
 import { DEFAULT_MODEL_TIER, PROVIDER_LABELS, type ModelTier } from "@/lib/ai/model-tiers"
-import { UnlockForm } from "@/components/ai/unlock-form"
-import { useKeyStatus, useProviderChoice } from "@/lib/hooks/use-llm-key"
-import Link from "next/link"
+import { buildPlanNarrativePayload } from "@/lib/ai/plan-narrative-prompt"
 import { Sparkles } from "lucide-react"
 
 const TIER_LABELS: Record<ModelTier, string> = {
@@ -63,6 +65,7 @@ export function PlanNarrativeCard() {
     localStorage.setItem(TIER_STORAGE_KEY, value)
   }
 
+  const [mode] = useNarrativeMode()
   const [provider] = useProviderChoice()
   const keyStatus = useKeyStatus(provider)
   const hasKey = keyStatus === "unlocked" || keyStatus === "session"
@@ -81,6 +84,16 @@ export function PlanNarrativeCard() {
 
   if (accounts.length === 0 || !projection) return null
 
+  const payload = buildPlanNarrativePayload({
+    accounts,
+    personalInfo,
+    retirementGoals,
+    drawdownConfig,
+    projection,
+  })
+
+  // Only "key" mode generates in-app, and only with an unlocked key.
+  const canGenerate = mode === "key" && hasKey
   const buttonLabel = isStreaming
     ? "Generating…"
     : cooldownRemaining > 0
@@ -95,73 +108,85 @@ export function PlanNarrativeCard() {
       leading={<Sparkles className="h-4 w-4 text-primary" />}
       contentClassName="space-y-3"
     >
-      {text && <p className="text-sm leading-relaxed whitespace-pre-wrap">{text}</p>}
+      {mode === "copy" && payload && <CopyPromptPanel payload={payload} />}
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {mode !== "copy" && (
+        <>
+          {text && <p className="text-sm leading-relaxed whitespace-pre-wrap">{text}</p>}
 
-      {!hasKey && keyStatus === "locked" && (
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">
-            Enter your passphrase to unlock your saved {PROVIDER_LABELS[provider]} key.
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+
+          {mode === "key" && !hasKey && keyStatus === "locked" && (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Enter your passphrase to unlock your saved {PROVIDER_LABELS[provider]} key.
+              </p>
+              <UnlockForm provider={provider} />
+            </div>
+          )}
+
+          {mode === "key" && !hasKey && keyStatus === "none" && (
+            <p className="text-sm text-muted-foreground">
+              Add your API key in{" "}
+              <Link
+                href="/calculator/settings"
+                className="text-primary underline underline-offset-2"
+              >
+                Settings
+              </Link>{" "}
+              to get a summary, or switch to copying a prompt there.
+            </p>
+          )}
+
+          <div className={canGenerate ? "flex flex-wrap items-center gap-2" : "hidden"}>
+            <Button
+              variant={text ? "outline" : "default"}
+              size="sm"
+              onClick={generate}
+              disabled={isStreaming || cooldownRemaining > 0}
+            >
+              {buttonLabel}
+            </Button>
+
+            {isStreaming && (
+              <Button variant="ghost" size="sm" onClick={cancel}>
+                Stop
+              </Button>
+            )}
+
+            {text && (
+              <Button variant="ghost" size="sm" onClick={clear} disabled={isStreaming}>
+                Clear
+              </Button>
+            )}
+
+            <Select value={tier} onValueChange={handleTierChange} disabled={isStreaming}>
+              <SelectTrigger className="w-28 h-8 text-xs" aria-label="Model tier">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {(Object.keys(TIER_LABELS) as ModelTier[]).map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {TIER_LABELS[value]}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            {`Generating sends your plan's numbers (balances, contributions, ages, goals) straight from your browser to ${PROVIDER_LABELS[provider]}, using your own key — never to us, and under that provider's terms. `}
+            This is an automated educational summary, not financial advice — consult a licensed
+            financial advisor before making decisions.
           </p>
-          <UnlockForm provider={provider} />
-        </div>
+        </>
       )}
-
-      {!hasKey && keyStatus === "none" && (
-        <p className="text-sm text-muted-foreground">
-          Get a plain-English summary of your plan using your own AI key.{" "}
-          <Link href="/calculator/settings" className="text-primary underline underline-offset-2">
-            Add an API key in Settings
-          </Link>
-          .
-        </p>
-      )}
-
-      <div className={hasKey ? "flex flex-wrap items-center gap-2" : "hidden"}>
-        <Button
-          variant={text ? "outline" : "default"}
-          size="sm"
-          onClick={generate}
-          disabled={isStreaming || cooldownRemaining > 0}
-        >
-          {buttonLabel}
-        </Button>
-
-        {isStreaming && (
-          <Button variant="ghost" size="sm" onClick={cancel}>
-            Stop
-          </Button>
-        )}
-
-        {text && (
-          <Button variant="ghost" size="sm" onClick={clear} disabled={isStreaming}>
-            Clear
-          </Button>
-        )}
-
-        <Select value={tier} onValueChange={handleTierChange} disabled={isStreaming}>
-          <SelectTrigger className="w-28 h-8 text-xs" aria-label="Model tier">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {(Object.keys(TIER_LABELS) as ModelTier[]).map((value) => (
-                <SelectItem key={value} value={value}>
-                  {TIER_LABELS[value]}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <p className="text-xs text-muted-foreground">
-        Generating sends your plan&apos;s numbers (balances, contributions, ages, goals) straight
-        from your browser to {PROVIDER_LABELS[provider]}, using your own key — never to us, and
-        under that provider&apos;s terms. This is an automated educational summary, not financial
-        advice — consult a licensed financial advisor before making decisions.
-      </p>
     </PageCard>
   )
 }

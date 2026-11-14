@@ -1,6 +1,7 @@
 # Documentation Update Log
 
 ## 2026-11-14
+* **Update**: [Copy prompt is now the default AI path](history/2026-11-14-remove-accounts-local-first-byok.md) - The summary no longer needs a key: copy a ready-made prompt into your own Claude, ChatGPT or Gemini chat; the pasted API key is an advanced option.
 * **Update**: [Accounts removed: local-first storage and bring-your-own-key AI](history/2026-11-14-remove-accounts-local-first-byok.md) - No sign-in or database: plan data lives only in the browser, and the AI summary calls the user's chosen provider directly with their own passphrase-encrypted key under a pinned CSP.
 * **Update**: [Stale service-worker cache broke the Risk workers](history/2026-11-14-stale-service-worker-cache.md) - Asset cache bumped to v2 and the worker now names the keys of a malformed request.
 * **Update**: [Bug and performance audit](history/2026-11-14-bug-and-performance-audit.md) - Dead Risk worker is replaced and failures are shown, superseded runs are cancelled, store sync races and the shortfall amount are fixed, and render cost is trimmed.

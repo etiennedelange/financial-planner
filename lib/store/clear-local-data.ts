@@ -13,6 +13,7 @@ const LOCAL_DATA_KEYS = [
   LAST_BACKUP_KEY,
   "plan-narrative-model-tier",
   "plan-narrative-provider",
+  "plan-narrative-mode",
 ] as const
 
 /** Key prefixes that hold user data (encrypted API-key vault entries). */

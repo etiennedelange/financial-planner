@@ -14,6 +14,14 @@ Gemini) with a key the user pastes in Settings. This note records how that key i
 Implementation: `lib/ai/key-vault.ts`, `lib/ai/providers/*`, `lib/ai/stream-narrative.ts`,
 `lib/security/headers.ts`. Context: [history entry](../history/2026-11-14-remove-accounts-local-first-byok.md).
 
+## Modes
+
+Settings → AI Assistant offers two ways to get a summary:
+1. **Copy a prompt (default)** — no key, no network call from this app. The user pastes the
+   prompt into a chat app of their choice (a subscription works). None of the threats below apply.
+2. **Your own API key (advanced)** — the browser calls the provider directly. Everything in this
+   note applies to this mode only.
+
 ## Threats and defences
 
 | # | Threat | Defence |
