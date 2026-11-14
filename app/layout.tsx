@@ -4,8 +4,6 @@ import { ThemeShortcut } from "@/components/theme-shortcut"
 import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register"
 import { CommandPalette } from "@/components/command-palette/command-palette"
 import { Toaster } from "@/components/ui/toaster"
-import { Analytics } from "@vercel/analytics/next"
-import { SpeedInsights } from "@vercel/speed-insights/next"
 import type { Metadata, Viewport } from "next"
 import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google"
 import { connection } from "next/server"
@@ -92,8 +90,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ServiceWorkerRegister />
           <Toaster />
         </ThemeProvider>
-        <Analytics />
-        <SpeedInsights />
       </body>
     </html>
   )

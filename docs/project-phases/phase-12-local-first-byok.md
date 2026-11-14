@@ -20,6 +20,7 @@ Threat model: [BYOK LLM key handling](../security/byok-llm-key-handling.md).
 - [x] Backup v2 (plan + expenses), import sanitised with the same clamps as persisted data
 - [x] Clear all local data
 - [x] Auth, Supabase, MFA, recovery codes, Turnstile, rate limiting, account API routes deleted; dependencies removed
+- [x] Vercel Analytics and Speed Insights removed (no telemetry, no vitals origin in the CSP)
 - [x] `proxy.ts` reduced to nonce CSP + headers; `connect-src` pinned to the three providers; no third-party scripts
 - [x] Key vault (session-only default; opt-in PBKDF2 → AES-GCM encryption), provider clients, `streamNarrative`
 - [x] Tests incl. mechanical key-isolation guards; verified in Chromium against the production build
@@ -28,4 +29,3 @@ Threat model: [BYOK LLM key handling](../security/byok-llm-key-handling.md).
 
 - [ ] **Verify OpenAI and Gemini model ids** in `lib/ai/model-tiers.ts` against current provider docs
 - [ ] **Manual real-key CORS check** for each provider (needs real keys and open network)
-- [ ] Decide whether to keep Vercel Analytics / Speed Insights given the privacy positioning

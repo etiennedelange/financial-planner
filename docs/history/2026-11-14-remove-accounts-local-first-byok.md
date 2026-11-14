@@ -53,7 +53,7 @@ config cleaned. `pnpm build` now needs **no environment variables**.
 `proxy.ts` now only mints the per-request nonce and stamps security headers
 (`lib/security/apply-headers.ts`). Static export was rejected: it would lose the nonce CSP that
 protects the API key. `buildCsp(nonce, isDev)`:
-- `connect-src 'self'` + the three provider origins + Vercel vitals, **no wildcards**
+- `connect-src 'self'` + the three provider origins, **no wildcards**
 - no third-party script origins (Cloudflare Turnstile removed), `frame-src 'none'`
 - provider origins live in one place, `lib/ai/providers/origins.ts`, shared with the clients.
 
@@ -93,4 +93,4 @@ selector is now real (the old server ignored it), and every request has a hard t
 - Safari can evict script-written storage after ~7 days without a visit; clearing site data
   erases everything. Mitigated by the backup nudge and by telling users plainly.
 - Existing data was dropped by decision (pre-launch, no users): no migration of old `:guest` keys or cloud data, and no purge of old account caches.
-- Vercel Analytics / Speed Insights remain (no plan data is sent).
+- Vercel Analytics / Speed Insights were removed too (decided same day): the app now loads no telemetry at all.

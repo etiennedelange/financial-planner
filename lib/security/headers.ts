@@ -8,12 +8,8 @@ export const SECURITY_HEADERS: Record<string, string> = {
   "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
 }
 
-/** Every origin `fetch` may reach (the test pins the exact set). */
-const CONNECT_SRC = [
-  "'self'",
-  ...Object.values(PROVIDER_ORIGINS),
-  "https://vitals.vercel-insights.com",
-] as const
+/** Every origin `fetch` may reach (the test pins the exact set). No telemetry origins. */
+const CONNECT_SRC = ["'self'", ...Object.values(PROVIDER_ORIGINS)] as const
 
 /**
  * Per-request CSP. The nonce must be generated per request and threaded into
@@ -41,7 +37,7 @@ export function buildCsp(nonce: string, isDev: boolean): string {
     `img-src 'self' data: blob:`,
     `font-src 'self' data:`,
     // The exfiltration guard for the user's LLM API key: the page may only talk to
-    // itself, Vercel's vitals beacon and the three provider APIs the user can pick
+    // itself and the three provider APIs the user can pick
     // (bring-your-own-key calls go straight from the browser). No wildcards.
     `connect-src ${CONNECT_SRC.join(" ")}`,
     // Without this, workers fall back to script-src, where 'strict-dynamic' makes browsers

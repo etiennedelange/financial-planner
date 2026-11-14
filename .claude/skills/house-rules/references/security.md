@@ -44,8 +44,8 @@ response body or a caught `error.message` — providers echo masked keys in 401 
 
 ## SEC3 — CSP is the exfiltration guard
 
-**Check:** `connect-src` stays an exact allowlist: `'self'`, the origins in `PROVIDER_ORIGINS`,
-Vercel vitals. No wildcards, no bare schemes. A new provider updates `PROVIDER_ORIGINS` **and**
+**Check:** `connect-src` stays an exact allowlist: `'self'`, the origins in `PROVIDER_ORIGINS`.
+No telemetry, no wildcards, no bare schemes. A new provider updates `PROVIDER_ORIGINS` **and**
 the exact-set assertion in `lib/security/headers.test.ts`.
 
 **Check:** no third-party script origin is added to `script-src`; `frame-src` stays `'none'`.

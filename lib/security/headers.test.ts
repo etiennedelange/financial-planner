@@ -23,7 +23,7 @@ describe("buildCsp", () => {
   })
 
   describe("connect-src — the exfiltration guard for the user's API key", () => {
-    it("allows exactly self, the three LLM providers and Vercel vitals — nothing else", () => {
+    it("allows exactly self and the three LLM providers — nothing else", () => {
       const sources = directive(buildCsp("n", false), "connect-src").split(" ").slice(1)
       expect([...sources].sort()).toEqual(
         [
@@ -31,7 +31,6 @@ describe("buildCsp", () => {
           "https://api.anthropic.com",
           "https://api.openai.com",
           "https://generativelanguage.googleapis.com",
-          "https://vitals.vercel-insights.com",
         ].sort(),
       )
     })
@@ -48,6 +47,7 @@ describe("buildCsp", () => {
       const csp = buildCsp("n", false)
       expect(csp).not.toContain("supabase")
       expect(csp).not.toContain("cloudflare")
+      expect(csp).not.toContain("vercel")
     })
 
     it("derives every provider origin from the shared PROVIDER_ORIGINS list", () => {
