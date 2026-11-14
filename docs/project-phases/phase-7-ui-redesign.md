@@ -53,3 +53,7 @@ app/calculator/
 ## Follow-up: NumberField inputs (2026-11-14)
 
 The Plan page forms moved from full-width `type="number"` boxes to a shared `NumberField` (in-field units, formatted values, widths that fit the data, steppers, stronger focus). See [history/2026-11-14-number-field-inputs.md](../history/2026-11-14-number-field-inputs.md). The same day it was extended to Risk, drawdown, the account dialog and the expense editors, the base `Input` was restyled to match, and account delete lost its confirmation dialog in favour of Undo. Pending: view the auth modal and mobile/dark states of the new forms.
+
+## Follow-up: debug page (2026-11-14)
+
+The floating debug dialog was replaced by `/calculator/debug`, a reconciliation view with a tested data model. See [history/2026-11-14-debug-reconciliation-page.md](../history/2026-11-14-debug-reconciliation-page.md), including the follow-up critique pass (verdict line, tabs, mobile list, mismatch tolerance) and the second pass (filter covers Reconciliation, tolerance on matches, empty state, a11y).

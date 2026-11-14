@@ -22,6 +22,7 @@ import {
   LayoutDashboard,
   ListChecks,
   PiggyBank,
+  Bug,
   Settings,
   Wallet,
 } from "lucide-react"
@@ -44,6 +45,13 @@ const NAV_ITEMS: CommandItemDef[] = [
   { id: "nav-risk", label: "Risk", href: "/calculator/risk", icon: Activity },
   { id: "nav-charts", label: "Charts", href: "/calculator/charts", icon: BarChart3 },
   { id: "nav-settings", label: "Settings", href: "/calculator/settings", icon: Settings },
+  {
+    id: "nav-debug",
+    label: "Debug",
+    subtext: "Reconcile engine figures",
+    href: "/calculator/debug",
+    icon: Bug,
+  },
 ]
 
 const ACCOUNT_ICON: Record<AccountType, React.ElementType> = {

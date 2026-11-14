@@ -80,7 +80,7 @@ Pension Funds, Retirement Annuities (RAs), Preservation Funds, TFSA, Discretiona
   exercising shapes that could not occur in production
 - `npm run shadscan` — audit stays ≥90/100 (or `shadscan:gate` for the hard fail)
 - `npm run docs:check` — if you touched anything under `docs/`
-- Check Debug Window (`components/debug/debug-window.tsx`) — correct compounding method + consistent values across tabs
+- Check the Debug page (`/calculator/debug`, model in `lib/debug/debug-model.ts`) — correct compounding method and every reconciliation check reads Match
 
 **Test structure** (see `projection.test.ts` as reference):
 ```typescript
@@ -94,7 +94,7 @@ describe('functionName', () => {
 ## App Structure (post-redesign)
 
 - Layout: fixed left sidebar (220px) + sticky top bar + scrollable page content area
-- Routes: `app/calculator/{overview,accounts,plan,expenses,projections,risk,charts,settings}/page.tsx`
+- Routes: `app/calculator/{overview,accounts,plan,expenses,projections,risk,charts,settings,debug}/page.tsx` (debug is reached from ⌘K and the account menu, not the sidebar)
 - **Monte Carlo lives only on Risk** (`components/pages/risk-page.tsx`): volatility inputs, success
   rate, fan chart, investment scenarios. The worker runs only on `/calculator/risk`
   (`lib/context/calculator-context.tsx`); every other page shows deterministic results

@@ -27,6 +27,7 @@ const PAGE_TITLES: Record<string, string> = {
   risk: "Risk",
   charts: "Charts",
   settings: "Settings",
+  debug: "Debug",
 }
 
 interface TopBarProps {
